@@ -21,7 +21,7 @@ Nodes in the tree reflect real-time state of external systems through a pluggabl
 - [ ] Read-only tree viewer: renders JSON schema via react-d3-tree; TB and LR layouts; collapse/expand; zoom/pan; status badges; file watcher; schema validation error panel; performance gate (300+ nodes, 10 updates/sec ≥ 30 fps)
 - [ ] Side panel (read-only): opens on node click; shows title, status, type, timestamps, markdown notes; resizable (min 320px, max 50% viewport); pinnable on wide screens
 - [ ] Full node editor: inline rename; add/delete/duplicate/move via keyboard and context menu; CodeMirror 6 markdown editor with autosave (debounced 1s); editable metadata table; atomic writes; `$ref` write-back
-- [ ] Plugin integration system: generic `RoadmapPlugin` interface; transport adapters (WebSocket, Webhook, MQTT, file watcher); Claude Code reference implementation; side panel Integration zone shows generic connection status + last event + key-value state (no custom plugin UI injection); unknown plugin warning on node
+- [ ] Event API: WebSocket server on `ws://127.0.0.1:<port>`; event contract `{ nodeId, status, meta?, source? }`; events routed to nodes within 100ms; Claude Code MCP wrapper as reference Event Producer; side panel Integration zone shows connection status + last event + key-value meta
 - [ ] Export: self-contained HTML and 2x PNG (approach TBD — spike required; html2canvas excluded)
 - [ ] Packaging: macOS `.dmg`, Windows `.exe`, Ubuntu `.deb`; Electrobun auto-updater; npm packages (`@roadmap-viewer/core`, `@roadmap-viewer/react`); plugin authoring guide; README and docs site
 
@@ -39,7 +39,8 @@ Nodes in the tree reflect real-time state of external systems through a pluggabl
 - Cross-boundary `$ref` node moves — blocked in MVP with an error; deferred to v1.1
 - Custom SVG type icons — built-in icon set only for v1; custom SVG deferred to v1.1
 - Undo/redo — deferred from MVP; non-leaf delete has confirmation dialog; plain JSON + git provides recovery; `.bak.json` written on file open as safety net; `$ref` + live-subscription complexity makes retrofit viable later
-- Custom plugin UI injection — plugins cannot inject React components into webview; side panel Integration zone is a generic renderer only (Option A); custom plugin UI deferred to v1.1
+- Plugin system (smart adapters running in Bun) — deferred to v1.1; Event API covers v1 use cases; plugins are for cloud integrations requiring auth/polling/normalisation (Goodreads, GitHub Actions, Linear)
+- Custom plugin UI injection — plugins cannot inject React components into webview; deferred to v1.1 with full plugin system
 
 ## Context
 
@@ -48,7 +49,8 @@ Nodes in the tree reflect real-time state of external systems through a pluggabl
 - **Data model:** Nested JSON schema (not flat+parent-IDs). Node IDs are UUIDs v4. User-defined `statusConfig` and `typeConfig`. Split-file support via `$ref`. Version field reserved for future migration system.
 - **Tree renderer:** react-d3-tree (chosen over React Flow for strict-tree design, built-in collapse/expand, better performance at 1000+ nodes, smaller bundle). Inline rename uses a floating HTML `<input>` positioned over SVG nodes via `getBoundingClientRect()`.
 - **Save behavior:** Debounced 2s write, 30s periodic autosave, flush on `before-quit` Electrobun event. Atomic writes via `.tmp` then rename. No explicit Save button. No unsaved-changes confirmation.
-- **Plugin integration:** Requires dedicated research phase before implementation. Must cover: plugin interface contract, transport adapters, security/isolation model, Bun-to-webview side panel handoff, static vs. dynamic loading.
+- **Integration model (v1 — Event API):** App exposes a WebSocket server on `127.0.0.1`. Any external process (Claude Code MCP wrapper, scripts, CI tools) pushes events using the event contract `{ nodeId, status, meta?, source? }`. App is passive — it receives and routes. No plugin loading, no lifecycle management in v1.
+- **Integration model (v1.1 — Plugin System):** Smart adapters running inside the Bun process. Each plugin owns its connection logic, auth, polling schedule, and data normalisation. Registered by ID; nodes reference them via the `plugin` block. Requires a dedicated research phase before implementation covering: interface contract, lifecycle, secrets management, polling pattern, security model.
 - **Linux packaging:** `bundleCEF: true` required in `electrobun.config.ts`. `ApplicationMenu` not supported — all actions must be reachable via keyboard shortcuts and toolbar buttons.
 - **PNG export:** html2canvas excluded (broken SVG support); approach TBD — spike required before Phase 4. Candidates: direct SVG serialization to canvas (no dependency), or `modern-screenshot`. Blob sent to Bun via RPC for file write regardless.
 - **react-d3-tree performance:** Must use `dataKey` prop from first render. Only increment `dataKey` on structural mutations (add/delete/move). Status-only updates go in-place via Zustand shallow selectors — never change the data reference. Required to pass 30 fps gate at 300+ nodes.
@@ -71,8 +73,11 @@ Nodes in the tree reflect real-time state of external systems through a pluggabl
 | Nested JSON schema (not flat) | Human-readable, maps directly to tree renderer, clean git diffs | — Pending |
 | UUIDs for node IDs | Stable across renames; subscriptions and plugin bindings depend on IDs never changing | — Pending |
 | react-d3-tree over React Flow | Purpose-built for strict trees; built-in collapse/expand; better perf at scale | — Pending |
-| Plugin system (not hardcoded Claude Code) | Generic interface enables any integration; Claude Code is reference impl only | — Pending |
-| Research phase required for plugin system | Integration design (transport, isolation, handoff) is complex enough to warrant dedicated research before any code | — Pending |
+| Event API (not Plugin system) for v1 | Primary use case (Claude Code) only needs a WebSocket server + event contract; plugin architecture adds loading, lifecycle, auth complexity not needed until v1.1 | — Pending |
+| Two integration tiers | Tier 1 (v1): Event API — external processes push to app; Tier 2 (v1.1): Plugin system — app loads smart adapters that own their connection logic | — Pending |
+| Claude Code integration = MCP wrapper + Event API | Claude Code side: MCP tools that call updateNode(); app side: just the WebSocket server. No plugin loaded in the app. | — Pending |
+| Plugin system deferred to v1.1 | Goodreads/GitHub Actions pattern (outbound polling, auth, normalisation) is real complexity; Event API covers MVP; plugin architecture designed properly with first real use case in hand | — Pending |
+| `plugin` + `subscribe` blocks in schema parsed but not acted on in v1 | Schema stability more important than deferring fields; reserved for v1.1 activation | — Pending |
 | Monorepo with `packages/core`, `packages/react`, `packages/desktop` | Core and React packages are publishable to npm independently from the desktop app | — Pending |
 | No undo/redo in MVP | Non-leaf delete has confirmation; file is plain JSON recoverable via git; `.bak.json` on open is the safety net; `$ref` + live-subscription tracking makes it non-trivial to retrofit — but not impossible | — Pending |
 | Plugin side panel = generic state renderer (Option A) | Plugins run in Bun and cannot inject React components into webview; plugins emit serialisable state objects; webview renders generic key-value + event log | — Pending |
@@ -96,4 +101,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-12 after research review — undo/redo deferred, plugin side panel locked to Option A, PNG export deferred, dataKey pattern added, Updater API clarified*
+*Last updated: 2026-04-12 after architecture discussion — Event API/Plugin split defined, plugin system deferred to v1.1, Claude Code = MCP wrapper + Event API (no in-app plugin), two integration tiers documented*
