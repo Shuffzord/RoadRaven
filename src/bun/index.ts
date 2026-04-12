@@ -24,7 +24,7 @@ async function getMainViewUrl(): Promise<string> {
 const url = await getMainViewUrl();
 
 const mainWindow = new BrowserWindow({
-	title: "React + Tailwind + Vite",
+	title: "RoadRaven",
 	url,
 	frame: {
 		width: 900,

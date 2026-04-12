@@ -1,0 +1,42 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## Project
+
+**Roadmap Viewer** — an Electrobun desktop app for creating, editing, and live-monitoring visual roadmap trees. Nodes map to tasks/agents; status updates arrive via WebSocket (Claude Code integration). Plain JSON data model, keyboard-first editing, markdown side panels.
+
+> **IMPORTANT:** This is Electrobun, NOT Electron. Do not use Electron APIs, patterns, or documentation.
+
+## Commands
+
+```bash
+bun install           # Install dependencies
+
+bun run start         # One-shot: vite build → electrobun dev (no file watching)
+bun run dev           # Dev with file watching (auto-restarts bun process on changes)
+bun run dev:hmr       # Dev with HMR — runs Vite dev server + electrobun concurrently (recommended)
+bun run hmr           # Vite dev server only (port 5173) — used internally by dev:hmr
+bun run build:canary  # Production build (canary channel)
+
+# Tests (vitest)
+bunx vitest           # Run all tests in watch mode
+bunx vitest run       # Run once (CI)
+bunx vitest run path/to/file.test.ts  # Run single test file
+```
+
+## Architecture
+
+See `.planning/ARCHITECTURE.md` for the full architecture reference (process model, RPC contract, Zustand store shape, package structure, event flow sequences).
+
+## Electrobun-specific patterns
+
+- Load bundled views with `views://mainview/index.html`
+- Main process imports: `import { BrowserWindow, Updater } from "electrobun/bun"`
+- Renderer imports: `import { Electroview } from "electrobun/view"`
+
+## Electrobun documentation
+
+- Quick start guide: https://blackboard.sh/electrobun/docs/guides/quick-start/
+- Source + issues: https://github.com/blackboardsh/electrobun
+- LLM-optimised API reference: https://blackboard.sh/electrobun/llms.txt

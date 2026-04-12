@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>TECHNICAL_ROADMAP Viewer</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700;800&amp;family=Space+Grotesk:wght@300;400;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-tertiary-fixed": "#ffffff",
+                        "on-primary-fixed": "#ffffff",
+                        "on-secondary-fixed-variant": "#3b3b3b",
+                        "surface-tint": "#c6c6c7",
+                        "tertiary": "#e2e2e2",
+                        "on-secondary-container": "#e4e2e1",
+                        "surface-bright": "#393939",
+                        "inverse-primary": "#5d5f5f",
+                        "error-container": "#93000a",
+                        "surface-container": "#202020",
+                        "on-secondary": "#1b1c1c",
+                        "on-tertiary-fixed-variant": "#e2e2e2",
+                        "tertiary-fixed-dim": "#474747",
+                        "primary": "#ffffff",
+                        "surface-dim": "#131313",
+                        "on-tertiary": "#1b1b1b",
+                        "surface-container-low": "#1b1b1c",
+                        "primary-fixed": "#5d5f5f",
+                        "on-surface-variant": "#c6c6c6",
+                        "primary-fixed-dim": "#454747",
+                        "on-secondary-fixed": "#1b1c1c",
+                        "secondary-container": "#474747",
+                        "tertiary-container": "#919191",
+                        "outline-variant": "#474747",
+                        "on-surface": "#e5e2e1",
+                        "surface-container-high": "#2a2a2a",
+                        "on-background": "#e5e2e1",
+                        "on-primary-fixed-variant": "#e2e2e2",
+                        "error": "#ffb4ab",
+                        "on-tertiary-container": "#000000",
+                        "surface-container-lowest": "#0e0e0e",
+                        "on-error": "#690005",
+                        "inverse-on-surface": "#303030",
+                        "secondary-fixed": "#c8c6c6",
+                        "secondary": "#c8c6c6",
+                        "on-error-container": "#ffdad6",
+                        "surface-variant": "#353535",
+                        "on-primary": "#1a1c1c",
+                        "inverse-surface": "#e5e2e1",
+                        "background": "#131313",
+                        "primary-container": "#d4d4d4",
+                        "outline": "#919191",
+                        "surface": "#131313",
+                        "on-primary-container": "#000000",
+                        "surface-container-highest": "#353535",
+                        "secondary-fixed-dim": "#acabaa",
+                        "tertiary-fixed": "#5e5e5e"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0px",
+                        "lg": "0px",
+                        "xl": "0px",
+                        "full": "9999px"
+                    },
+                    "fontFamily": {
+                        "headline": ["Inter"],
+                        "body": ["Inter"],
+                        "label": ["Space Grotesk"]
+                    }
+                },
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+        }
+        .canvas-grid {
+            background-image: 
+                linear-gradient(to right, rgba(255,255,255,0.03) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255,255,255,0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
+        ::-webkit-scrollbar-track { background: #0e0e0e; }
+        ::-webkit-scrollbar-thumb { background: #2a2a2a; }
+    </style>
+<style>
+        body {
+          min-height: max(884px, 100dvh);
+        }
+    </style>
+</head>
+<body class="bg-surface-container-lowest text-on-background font-body selection:bg-primary selection:text-on-primary">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-[#131313] dark:bg-[#131313] border-b border-white/10 flex justify-between items-center px-4 h-14">
+<div class="flex items-center gap-4">
+<span class="text-lg font-bold tracking-widest text-white font-headline">TECHNICAL_ROADMAP</span>
+</div>
+<div class="flex items-center gap-2">
+<button class="bg-primary text-on-primary px-3 py-1 text-xs font-bold tracking-tighter uppercase flex items-center gap-2 hover:bg-[#d4d4d4] transition-colors duration-75">
+                LOAD_FILE
+                <span class="material-symbols-outlined text-[16px]" data-icon="upload_file">upload_file</span>
+</button>
+</div>
+</header>
+<!-- Main Content Area -->
+<main class="pt-14 pb-10 flex h-screen overflow-hidden">
+<!-- Sidebar Navigation (Hidden on Mobile, Visible on Desktop) -->
+<aside class="hidden md:flex h-full w-64 border-r border-white/5 bg-[#1b1b1c] dark:bg-[#1b1b1c] flex-col">
+<div class="p-4 border-b border-white/5">
+<span class="text-xl font-thin text-white/90 font-headline">SYSTEM_CORE</span>
+</div>
+<nav class="flex-1 py-2">
+<a class="flex items-center gap-3 px-4 py-3 bg-[#2a2a2a] text-white font-label text-sm uppercase tracking-wider" href="#">
+<span class="material-symbols-outlined" data-icon="visibility">visibility</span>
+                    Viewer
+                </a>
+<a class="flex items-center gap-3 px-4 py-3 text-zinc-400 hover:bg-[#202020] font-label text-sm uppercase tracking-wider" href="#">
+<span class="material-symbols-outlined" data-icon="history">history</span>
+                    Recent Files
+                </a>
+<a class="flex items-center gap-3 px-4 py-3 text-zinc-400 hover:bg-[#202020] font-label text-sm uppercase tracking-wider" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+                    Settings
+                </a>
+</nav>
+</aside>
+<!-- Canvas (Roadmap Grid) -->
+<section class="flex-1 relative overflow-auto canvas-grid bg-surface">
+<!-- Toolbar -->
+<div class="sticky top-0 left-0 p-4 z-20 flex gap-2">
+<div class="bg-surface-container-high p-1 border border-outline-variant/20 flex gap-1">
+<button class="p-2 bg-surface-container-highest text-white"><span class="material-symbols-outlined text-sm" data-icon="account_tree">account_tree</span></button>
+<button class="p-2 hover:bg-surface-container-highest transition-colors"><span class="material-symbols-outlined text-sm" data-icon="width_full">width_full</span></button>
+</div>
+</div>
+<!-- Roadmap Hierarchical Tree -->
+<div class="p-8 md:p-20 min-w-[1200px] flex flex-col items-center gap-16">
+<!-- Root -->
+<div class="relative">
+<div class="px-6 py-3 border border-primary bg-surface-container-high text-primary font-label uppercase tracking-widest text-center">
+<div class="text-[10px] text-zinc-500 mb-1">PROJECT_ROOT</div>
+                        PROJECT_ZENO_2024
+                    </div>
+<div class="absolute top-full left-1/2 w-px h-16 bg-white/10"></div>
+</div>
+<!-- Phase Row -->
+<div class="flex gap-12 relative">
+<div class="absolute -top-16 left-1/2 w-px h-16 bg-white/10"></div>
+<!-- Done Node -->
+<div class="relative group">
+<div class="w-64 px-6 py-4 border-l-4 border-l-emerald-500 bg-emerald-500/5 text-white font-label uppercase tracking-widest cursor-pointer outline outline-1 outline-emerald-500/30">
+<div class="flex justify-between items-start mb-2">
+<span class="text-[9px] bg-emerald-500 text-white px-1 font-bold">DONE</span>
+<span class="text-[9px] text-zinc-500 font-mono">ID: 001</span>
+</div>
+                            Foundations
+                        </div>
+<div class="absolute top-full left-1/2 w-px h-16 bg-white/10"></div>
+</div>
+<!-- In Progress Node -->
+<div class="relative">
+<div class="w-64 px-6 py-4 border-l-4 border-l-amber-400 bg-amber-400/5 text-white font-label uppercase tracking-widest cursor-pointer outline outline-1 outline-amber-400/30">
+<div class="flex justify-between items-start mb-2">
+<span class="text-[9px] bg-amber-400 text-black px-1 font-bold">IN_PROGRESS</span>
+<span class="text-[9px] text-zinc-500 font-mono">ID: 002</span>
+</div>
+                            Core_Engine
+                        </div>
+<div class="absolute top-full left-1/2 w-px h-16 bg-white/10"></div>
+</div>
+<!-- Todo Node -->
+<div class="relative">
+<div class="w-64 px-6 py-4 border-l-4 border-l-zinc-600 bg-surface-container text-zinc-400 font-label uppercase tracking-widest cursor-pointer border border-zinc-700/50">
+<div class="flex justify-between items-start mb-2">
+<span class="text-[9px] bg-zinc-700 text-white px-1 font-bold">TODO</span>
+<span class="text-[9px] text-zinc-600 font-mono">ID: 003</span>
+</div>
+                            UI_Refinement
+                        </div>
+</div>
+</div>
+<!-- Sub-Nodes Row -->
+<div class="flex gap-8 relative">
+<!-- Child of 001 -->
+<div class="flex gap-4">
+<div class="px-4 py-3 border-l-2 border-l-emerald-500 bg-emerald-500/5 text-zinc-300 font-label text-xs uppercase tracking-wider w-40">
+<span class="text-[9px] text-emerald-500/40 block mb-1">001.A</span>
+                            SCHEMA_DEF
+                        </div>
+<div class="px-4 py-3 border-l-2 border-l-emerald-500 bg-emerald-500/5 text-zinc-300 font-label text-xs uppercase tracking-wider w-40">
+<span class="text-[9px] text-emerald-500/40 block mb-1">001.B</span>
+                            AUTH_FLOW
+                        </div>
+</div>
+<!-- Child of 002 -->
+<div class="flex gap-4">
+<div class="px-4 py-3 border-l-2 border-l-amber-400 bg-amber-400/5 text-zinc-300 font-label text-xs uppercase tracking-wider w-40">
+<span class="text-[9px] text-amber-400/40 block mb-1">002.A</span>
+                            ASYNC_PROCESS
+                        </div>
+<div class="px-4 py-3 border-l-2 border-l-zinc-600 bg-surface-container text-zinc-500 font-label text-xs uppercase tracking-wider w-40">
+<span class="text-[9px] text-zinc-600 block mb-1">002.B</span>
+                            DATA_SYNC
+                        </div>
+</div>
+</div>
+</div>
+</section>
+<!-- Node Inspector / Bottom Sheet on Mobile, Side Panel on Desktop -->
+<aside class="fixed md:absolute inset-x-0 bottom-0 md:inset-y-0 md:right-0 md:left-auto w-full md:w-96 z-40 bg-[#1b1b1c] border-t md:border-t-0 md:border-l border-white/10 shadow-2xl flex flex-col translate-y-0 transform transition-transform duration-300" id="node-inspector">
+<div class="p-4 bg-surface-container-high flex justify-between items-center md:rounded-t-none rounded-t-2xl">
+<div class="flex flex-col">
+<span class="font-label text-xs font-bold uppercase tracking-tighter text-zinc-400">Node_Inspector</span>
+<div class="md:hidden w-8 h-1 bg-zinc-700 self-center mt-1 rounded-full"></div>
+</div>
+<button class="text-zinc-500 hover:text-white"><span class="material-symbols-outlined" data-icon="close">close</span></button>
+</div>
+<div class="flex-1 overflow-y-auto p-6 space-y-8 max-h-[60vh] md:max-h-full">
+<!-- Header -->
+<div>
+<h2 class="text-3xl font-light tracking-tighter text-white font-headline mb-2 uppercase">FOUNDATIONS</h2>
+<div class="flex gap-2">
+<span class="px-2 py-0.5 bg-emerald-500 text-white text-[10px] font-bold uppercase font-label">Status: Done</span>
+<span class="px-2 py-0.5 border border-white/20 text-zinc-400 text-[10px] uppercase font-label">Priority: P0</span>
+</div>
+</div>
+<!-- Markdown Content -->
+<div class="space-y-4">
+<h3 class="text-[10px] font-bold uppercase text-zinc-500 font-label tracking-widest border-b border-white/5 pb-2">Requirements</h3>
+<div class="text-sm text-zinc-300 space-y-4 font-body leading-relaxed">
+<p>Initialize the core project structure utilizing <code class="bg-surface-container p-1 text-primary text-xs">SPEC.md</code> as the primary source of truth.</p>
+<ul class="list-none space-y-2">
+<li class="flex items-start gap-2">
+<span class="material-symbols-outlined text-emerald-500 text-sm mt-0.5" data-icon="check_box" style="font-variation-settings: 'FILL' 1;">check_box</span>
+                                Define directory hierarchy
+                            </li>
+<li class="flex items-start gap-2">
+<span class="material-symbols-outlined text-emerald-500 text-sm mt-0.5" data-icon="check_box" style="font-variation-settings: 'FILL' 1;">check_box</span>
+                                Configure Tailwind build pipeline
+                            </li>
+<li class="flex items-start gap-2 text-zinc-500">
+<span class="material-symbols-outlined text-sm mt-0.5" data-icon="check_box_outline_blank">check_box_outline_blank</span>
+                                Export initial JSON schema
+                            </li>
+</ul>
+</div>
+</div>
+<!-- Metadata Grid -->
+<div class="space-y-4">
+<h3 class="text-[10px] font-bold uppercase text-zinc-500 font-label tracking-widest border-b border-white/5 pb-2">Metadata</h3>
+<div class="grid grid-cols-2 gap-4">
+<div>
+<div class="text-[10px] text-zinc-600 font-label uppercase">Owner</div>
+<div class="text-xs text-zinc-300 font-mono">arch_lead_01</div>
+</div>
+<div>
+<div class="text-[10px] text-zinc-600 font-label uppercase">Updated</div>
+<div class="text-xs text-zinc-300 font-mono">2024.05.21</div>
+</div>
+<div class="col-span-2">
+<div class="text-[10px] text-zinc-600 font-label uppercase">Git Hash</div>
+<div class="text-xs text-zinc-300 font-mono truncate">bf82a10..de92c11</div>
+</div>
+</div>
+</div>
+<!-- Footer Action -->
+<div class="pt-4 border-t border-white/5">
+<button class="w-full py-3 bg-white/5 hover:bg-white/10 text-white text-xs font-bold uppercase font-label transition-colors">
+                        View in File Explorer
+                    </button>
+</div>
+</div>
+</aside>
+</main>
+<!-- Simplified Status Bar -->
+<footer class="fixed bottom-0 w-full z-50 h-10 bg-[#0e0e0e] border-t border-white/10 flex justify-between items-center px-4">
+<div class="flex gap-6 items-center">
+<div class="flex items-center gap-1.5">
+<span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
+<span class="text-[10px] font-bold uppercase text-white font-label tracking-tighter">System Health: Optimal</span>
+</div>
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-emerald-500 text-sm" data-icon="rss_feed">rss_feed</span>
+<span class="text-[10px] font-bold uppercase text-white font-label tracking-tighter">Live Feed: Connected</span>
+</div>
+</div>
+<div class="flex gap-4 items-center overflow-hidden">
+<div class="text-[10px] font-mono text-zinc-500 truncate max-w-[200px] md:max-w-none">
+                src/projects/zeno_2024/roadmap.json
+            </div>
+</div>
+</footer>
+<!-- Interactive Backdrop for Mobile Inspector -->
+<div class="md:hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-30 hidden" id="inspector-overlay"></div>
+</body></html>
