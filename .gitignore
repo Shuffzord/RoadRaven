@@ -34,3 +34,7 @@ settings.local.json
 /bunny/carrot-artifacts
 **/.zig-cache
 **/zig-out
+
+# Test artifacts
+playwright-report/
+test-results/
