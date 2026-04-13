@@ -11,7 +11,7 @@ test("SCAF-06 Tier 2: main process entry point is parseable by Bun", async () =>
 	// Full tsc --noEmit may fail due to third-party type issues (e.g. electrobun deps);
 	// this test ensures our entry point code is structurally valid.
 	const { stdout } = await execAsync(
-		'bun -e "await import(\'./src/bun/index.ts\'); console.log(\'PARSE_OK\')" 2>&1 || true',
+		"bun -e \"await import('./src/bun/index.ts'); console.log('PARSE_OK')\" 2>&1 || true",
 		{ cwd: DESKTOP_ROOT },
 	);
 	// Bun should be able to parse the file (may fail at runtime due to missing electrobun runtime)
@@ -22,7 +22,7 @@ test("SCAF-06 Tier 2: main process entry point is parseable by Bun", async () =>
 test("SCAF-06 Tier 2: electrobun.config.ts is importable", async () => {
 	// Verify config file can be loaded by Bun without crashing
 	const { stdout } = await execAsync(
-		'bun -e "const c = await import(\'./electrobun.config.ts\'); console.log(c.default.app.name)"',
+		"bun -e \"const c = await import('./electrobun.config.ts'); console.log(c.default.app.name)\"",
 		{ cwd: DESKTOP_ROOT },
 	);
 	expect(stdout.trim()).toContain("RoadRaven");

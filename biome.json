@@ -15,6 +15,13 @@
 		"indentStyle": "tab"
 	},
 	"files": {
-		"includes": ["packages/**", "shared/**", "plugins/**", "biome.json"]
+		"includes": [
+			"packages/**",
+			"shared/**",
+			"plugins/**",
+			"biome.json",
+			"!**/playwright-report",
+			"!**/test-results"
+		]
 	}
 }
