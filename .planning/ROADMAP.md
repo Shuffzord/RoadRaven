@@ -63,7 +63,7 @@ Plans:
 **Plans:** 3 plans
 
 Plans:
-- [ ] 01-01-PLAN.md — Tailwind v4 migration + token system + ThemeProvider + Zustand store
+- [x] 01-01-PLAN.md — Tailwind v4 migration + token system + ThemeProvider + Zustand store
 - [ ] 01-02-PLAN.md — App shell components (TopBar, Sidebar, Canvas, Node, SidePanel, StatusBar, ConfigPanel)
 - [ ] 01-03-PLAN.md — Per-schema themeConfig overrides + LogTape structured logging foundation
 
