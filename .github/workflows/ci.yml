@@ -55,8 +55,9 @@ jobs:
         working-directory: packages/desktop
       - run: bunx playwright test --project=ui
         working-directory: packages/desktop
-      - run: xvfb-run bunx playwright test --project=process || echo "Process tests skipped (no display)"
+      - run: xvfb-run bunx playwright test --project=process
         working-directory: packages/desktop
+        continue-on-error: true
       - uses: actions/upload-artifact@v4
         if: always()
         with:
