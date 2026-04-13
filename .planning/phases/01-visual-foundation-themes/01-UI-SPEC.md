@@ -23,7 +23,7 @@ created: 2026-04-13
 | Preset | not applicable | — |
 | Component library | none — hand-authored React components using Tailwind v4 utilities | CONTEXT.md D-03 |
 | Icon library | Inline SVG (Lucide-style stroke icons, 2px stroke-width) | variant-c-merged.html |
-| Font — UI | Inter (weights 400, 500, 600, 700) loaded via Google Fonts | variant-c-merged.html |
+| Font — UI | Inter (weights 400, 600) loaded via Google Fonts | variant-c-merged.html |
 | Font — Code/Mono | JetBrains Mono or Fira Code (monospace fallback chain) — used for `<code>` blocks only | variant-c-merged.html |
 | Styling engine | Tailwind CSS v4 with `@theme` directive; `--rv-*` tokens mapped to Tailwind utilities | CONTEXT.md D-01 |
 | Token application | `data-theme` attribute on `<html>` element; values defined per `[data-theme="dark"]` / `[data-theme="light"]` / `[data-theme="high-contrast"]` selectors | CONTEXT.md D-02, variant-c-merged.html |
@@ -37,6 +37,8 @@ created: 2026-04-13
 "The Engineered Canvas" — IDE structure with modern polish. Takes structural cues from VS Code and JetBrains (sidebar, panels, status bar) but applies Figma/Linear-inspired refinements: rounded corners, subtle shadows, smooth transitions. The result is a professional tool that doesn't feel cold.
 
 Key attributes: canvas-first layout, configurable density (node edge style, gap, connector), functional typography (monospaced for code/metadata), smooth 150-200ms feedback transitions.
+
+Primary focal point: the canvas area with the rendered node tree — first element the eye lands on; all chrome (top bar, sidebar, status bar, side panel) is visually subordinate.
 
 Source: design.md §1
 
@@ -77,17 +79,19 @@ Source: variant-c-merged.html CSS measurements
 
 Inter is the sole UI font. Monospace is fallback-only for `<code>` inline blocks in the side panel notes.
 
+Two weights only: **400 (Regular)** for body/notes text; **600 (SemiBold)** for all UI chrome — labels, section headers, buttons, brand, node titles, badges.
+
 | Role | Family | Size | Weight | Line Height | Transform | Usage |
 |------|--------|------|--------|-------------|-----------|-------|
-| Node title | Inter | 13px | 500 (Medium) | 1.3 | None | Node card primary label |
-| Body / Panel | Inter | 13px | 400 (Regular) | 1.5 | None | Base page font, side panel notes body text |
-| UI Label | Inter | 12px | 400–500 (Regular/Medium) | 1.4 | None | Topbar buttons, sidebar file names, panel fields |
-| Section header | Inter | 11px | 600 (SemiBold) | 1.2 | Uppercase, tracking 0.05em–0.06em | Sidebar section headers, panel field labels, status bar |
-| Micro / Meta | Inter | 10px | 600 (SemiBold) | 1.2 | Uppercase, tracking-wider | Config panel labels, kbd hints |
-| Status badge | Inter | 11px | 500 (Medium) | — | None | Node status badge pill text |
-| Brand / App name | Inter | 14px | 600 (SemiBold) | — | None, letter-spacing -0.01em | Top bar brand name |
+| Brand / App name + Panel title | Inter | 14px | 600 (SemiBold) | — | None, letter-spacing -0.01em (brand) | Top bar brand name; side panel header title |
+| Node title / Body | Inter | 13px | 400 (Regular) | 1.5 (body) / 1.3 (node title) | None | Node card primary label, side panel notes body text, base page font |
+| UI Label / Meta row | Inter | 12px | 600 (SemiBold) | 1.4 | None | Topbar buttons, sidebar file names, panel field values, meta row key+value |
+| Section header / Badge / Micro | Inter | 11px | 600 (SemiBold) | 1.2 | Uppercase, tracking 0.05em–0.06em (headers) | Sidebar section headers, panel field labels, status bar text, node status badge pill text, config labels, kbd hints |
 
-Weights in use: 400, 500, 600 — three weights (regular, medium, semibold). Note: design.md specifies 400+700 but variant-c-merged.html uses 500 and 600 throughout for UI chrome; 400 is body/base only. 700 (Bold) is loaded via Inter font declaration for future use.
+Consolidation notes:
+- Former 10px (Micro/Meta) → 11px. Former 15px (panel title) → 14px.
+- Former weight 500 (Medium) collapsed to 600 throughout UI chrome.
+- Weight 400 is used only for body copy and side panel notes text.
 
 Source: variant-c-merged.html CSS font-size/font-weight declarations, design.md §3
 
@@ -299,7 +303,7 @@ Source: variant-c-merged.html `#app` grid
 
 **Action buttons (New / Open):**
 - Padding: `5px 10px`, border-radius 6px
-- Font: 12px, weight 500
+- Font: 12px, weight 600
 - Default: `--rv-text-secondary`
 - Hover: `background: var(--rv-bg-hover)`, `color: var(--rv-text-primary)` — 150ms ease
 - Active/pressed: `background: var(--rv-bg-active)`
@@ -311,11 +315,11 @@ Source: variant-c-merged.html `#app` grid
 - Padding: `0 10px`
 - Icon: 13×13px, `--rv-text-tertiary`
 - Input text: 12px, `--rv-text-primary`; placeholder: `--rv-text-tertiary`
-- Kbd hint: 10px, `--rv-text-tertiary`, background `--rv-bg-elevated`, border-radius 3px
+- Kbd hint: 11px, `--rv-text-tertiary`, background `--rv-bg-elevated`, border-radius 3px
 
 **View controls group:**
 
-Fit button — same as action button style (12px, weight 500, 6px radius)
+Fit button — same as action button style (12px, weight 600, 6px radius)
 
 Zoom buttons (- / +):
 - Size: 26×26px, border-radius 5px
@@ -325,7 +329,7 @@ Zoom buttons (- / +):
 
 Layout toggle (TB / LR):
 - Container: `background: var(--rv-bg-input)`, border `var(--rv-border-width) solid var(--rv-border)`, border-radius 6px, height 28px
-- Option: padding `0 10px`, 11px, weight 500
+- Option: padding `0 10px`, 11px, weight 600
   - Default: `--rv-text-tertiary`
   - Active: `background: var(--rv-accent-muted)`, `color: var(--rv-accent)` — 150ms
   - Hover (inactive): `--rv-text-secondary`
@@ -366,7 +370,7 @@ Layout toggle (TB / LR):
 - Padding: `8px 0`
 - Overflow-y: auto
 
-**Section header:** 10px, weight 600, uppercase, tracking 0.06em, `--rv-text-tertiary`, padding `6px 14px`
+**Section header:** 11px, weight 600, uppercase, tracking 0.06em, `--rv-text-tertiary`, padding `6px 14px`
 
 **File item:**
 - Padding: `5px 14px`, gap 8px
@@ -431,11 +435,11 @@ Layout toggle (TB / LR):
 - `box-shadow: 0 0 0 1px var(--rv-accent)`
 
 **Node title:**
-- 13px, weight 500, `--rv-text-primary`, line-height 1.3, margin-bottom 6px
+- 13px, weight 600, `--rv-text-primary`, line-height 1.3, margin-bottom 6px
 
 **Status badge pill:**
 - Display: inline-flex, gap 5px, padding `2px 8px`, border-radius 10px
-- Font: 11px, weight 500
+- Font: 11px, weight 600
 - Background: `var(--badge-bg, var(--rv-status-not-started-bg))` — set per-node via inline CSS variable
 - Color: `var(--badge-color, var(--rv-status-not-started))` — set per-node via inline CSS variable
 - Badge dot: 6×6px circle, `background: var(--badge-color)`
@@ -460,7 +464,7 @@ Layout toggle (TB / LR):
 **Panel header:**
 - Padding: `14px 16px`, min-height 52px
 - Bottom border: `var(--rv-border-width) solid var(--rv-border)`
-- Title: 15px, weight 600, `--rv-text-primary`; hover: `color: var(--rv-accent)` (editable in Phase 3)
+- Title: 14px, weight 600, `--rv-text-primary`; hover: `color: var(--rv-accent)` (editable in Phase 3)
 - Close button: 28×28px, border-radius 6px, `--rv-text-tertiary`
   - Hover: `background: var(--rv-bg-hover)`, `color: var(--rv-text-primary)` — 150ms
   - Icon: 14×14px
@@ -477,7 +481,7 @@ Layout toggle (TB / LR):
 - Label: 12px, `--rv-text-primary`
 
 **Type badge:**
-- Padding: `3px 10px`, 11px, weight 500, border-radius 4px
+- Padding: `3px 10px`, 11px, weight 600, border-radius 4px
 - Background: `--rv-accent-muted`, color: `--rv-accent`
 
 **Meta row:**
@@ -489,7 +493,7 @@ Layout toggle (TB / LR):
 **Divider:** 1px, `background: var(--rv-border)`, margin `16px 0`
 
 **Notes text (Phase 1 skeleton):**
-- 12px, line-height 1.7, `--rv-text-secondary`, white-space: pre-wrap
+- 13px, line-height 1.7, `--rv-text-secondary`, white-space: pre-wrap
 - Inline code: `background: var(--rv-bg-elevated)`, 11px, border-radius 3px, `color: var(--rv-accent)`, monospace font
 
 ---
@@ -533,17 +537,17 @@ Layout toggle (TB / LR):
 
 **Config row:** margin-bottom 14px
 
-**Config label:** 11px, weight 500, `--rv-text-tertiary`, uppercase, tracking 0.04em, margin-bottom 6px
+**Config label:** 11px, weight 600, `--rv-text-tertiary`, uppercase, tracking 0.04em, margin-bottom 6px
 
 **Toggle group (Node corners / Connector style):**
 - Container: `background: var(--rv-bg-input)`, border `var(--rv-border-width) solid var(--rv-border)`, border-radius 6px, overflow hidden
-- Option: flex 1, padding `5px 0`, 11px, weight 500
+- Option: flex 1, padding `5px 0`, 11px, weight 600
   - Default: `--rv-text-tertiary`
   - Active: `background: var(--rv-accent-muted)`, `color: var(--rv-accent)` — 150ms
   - Hover (inactive): `--rv-text-secondary`
 
 **Gap preset buttons (Compact / Default / Spacious):**
-- Each: flex 1, padding `5px 0`, 11px, weight 500, border-radius 6px
+- Each: flex 1, padding `5px 0`, 11px, weight 600, border-radius 6px
 - Default: `background: var(--rv-bg-input)`, border `var(--rv-border-width) solid var(--rv-border)`, `--rv-text-tertiary`
 - Active: `background: var(--rv-accent-muted)`, `color: var(--rv-accent)`, `border-color: var(--rv-accent-border)` — 150ms
 
@@ -680,12 +684,14 @@ Source: CONTEXT.md D-01
 
 ## Copywriting Contract
 
+Note on toolbar labels: "New", "Open", and "Fit" are single-word labels intentionally matching desktop toolbar conventions (VS Code, Figma). Each is paired with an icon that provides noun context — the brevity is appropriate for dense toolbar chrome, not a UX omission.
+
 | Element | Copy | Notes |
 |---------|------|-------|
 | App name (brand) | `RoadRaven` | Mixed case — not all-caps; matches variant-c-merged.html |
-| Top bar — New button | `New` | With file-plus icon |
-| Top bar — Open button | `Open` | With folder icon |
-| Top bar — Fit button | `Fit` | With maximize icon |
+| Top bar — New button | `New` | With file-plus icon; icon+label pair per desktop toolbar convention |
+| Top bar — Open button | `Open` | With folder icon; icon+label pair per desktop toolbar convention |
+| Top bar — Fit button | `Fit` | With maximize icon; icon+label pair per desktop toolbar convention |
 | Top bar — Search placeholder | `Search nodes...` | Matches variant-c-merged.html `placeholder` attribute |
 | Top bar — Search kbd hint | `Ctrl+F` | Keyboard shortcut badge |
 | Layout toggle — TB | `TB` | Top-to-bottom layout direction |
@@ -746,16 +752,3 @@ Source: REQUIREMENTS.md PACK-06; variant-c-merged.html ARIA attributes
 | third-party | none | not applicable |
 
 No third-party component registries used in this phase. All components are hand-authored React components with Tailwind v4 utility classes.
-
----
-
-## Checker Sign-Off
-
-- [ ] Dimension 1 Copywriting: PASS
-- [ ] Dimension 2 Visuals: PASS
-- [ ] Dimension 3 Color: PASS
-- [ ] Dimension 4 Typography: PASS
-- [ ] Dimension 5 Spacing: PASS
-- [ ] Dimension 6 Registry Safety: PASS
-
-**Approval:** pending
