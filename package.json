@@ -1,12 +1,19 @@
 {
   "name": "roadraven-workspace",
   "private": true,
-  "workspaces": ["packages/*", "plugins/*"],
+  "workspaces": [
+    "packages/*",
+    "plugins/*"
+  ],
   "scripts": {
     "dev:hmr": "bun run --cwd packages/desktop dev:hmr",
     "build:canary": "bun run --cwd packages/desktop build:canary",
     "start": "bun run --cwd packages/desktop start",
     "dev": "bun run --cwd packages/desktop dev",
-    "test": "bun run --cwd packages/desktop test"
+    "test": "bun run --cwd packages/desktop test",
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "husky": "^9.1.7"
   }
 }

@@ -1,0 +1,2 @@
+bunx @biomejs/biome check --diagnostic-level=error .
+cd packages/desktop && bunx tsc --noEmit
