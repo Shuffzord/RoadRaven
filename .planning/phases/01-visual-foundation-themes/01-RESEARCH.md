@@ -647,22 +647,25 @@ logMessage: {
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **`@theme` naming convention for non-color tokens (shadows, border-width)**
    - What we know: `--color-*` maps to color utilities. Tailwind v4 has `--shadow-*` for shadows.
    - What's unclear: Whether `--rv-shadow-node` maps as `shadow-rv-shadow-node` or requires a different `@theme` prefix.
    - Recommendation: Shadows and border-width are best referenced directly as `style={{ boxShadow: 'var(--rv-shadow-node)' }}` or via a CSS class in `index.css` rather than through Tailwind utilities. This avoids the naming question entirely.
+   - **RESOLVED:** Plans use inline `style={{ boxShadow: "var(--rv-shadow-node)" }}` for shadows and `border-[length:var(--rv-border-width)]` for border-width. Non-color tokens are NOT mapped through @theme — referenced directly as CSS variables. This was the recommended approach.
 
 2. **`@tailwindcss/vite` + Vite's `root` option**
    - What we know: `vite.config.ts` sets `root: "src/mainview"`. The Tailwind Vite plugin processes CSS files from the configured root.
    - What's unclear: Whether `@import "tailwindcss"` in `src/mainview/index.css` resolves correctly when node_modules are at `packages/desktop/node_modules`.
    - Recommendation: Test migration in Wave 0 immediately; if resolution fails, use explicit `@import "../../node_modules/tailwindcss/index.css"` path.
+   - **RESOLVED:** Plan 01-01 Task 1 tests the migration immediately. If @import "tailwindcss" fails with Vite root, the fallback explicit path is documented. The Vite plugin processes from the configured root — standard behavior confirmed by Tailwind v4 docs.
 
 3. **Bun RPC for settings persistence — method name**
    - What we know: `shared/types.ts` has `loadFile`, `saveFile`, `openFilePicker` RPCs. `logMessage` needs to be added (D-22). A settings persistence RPC also needs adding.
    - What's unclear: Whether settings persistence uses a dedicated `saveSettings`/`loadSettings` RPC or piggybacks on the log message channel.
    - Recommendation: Add `saveSettings` and `loadSettings` as distinct RPCs in `shared/types.ts`. Theme preference is app-level state that outlives any schema.
+   - **RESOLVED:** Plans use `saveSettings` and `loadSettings` as distinct RPCs in shared/types.ts (Plan 01-01 Task 1 step 6). `logMessage` added as a separate RPC (Plan 01-03 Task 2 step 2). All three are distinct request types.
 
 ---
 
