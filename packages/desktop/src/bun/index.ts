@@ -1,4 +1,5 @@
 import { BrowserWindow, Updater } from "electrobun/bun";
+
 // Re-export the RPC type so downstream modules can import from the app entry
 export type { RoadmapRPCType } from "../../../../shared/types.ts";
 

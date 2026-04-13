@@ -1,0 +1,20 @@
+{
+	"$schema": "https://biomejs.dev/schemas/2.4.11/schema.json",
+	"assist": { "actions": { "source": { "organizeImports": "on" } } },
+	"linter": {
+		"enabled": true,
+		"rules": {
+			"recommended": true,
+			"suspicious": {
+				"noUnknownAtRules": "off"
+			}
+		}
+	},
+	"formatter": {
+		"enabled": true,
+		"indentStyle": "tab"
+	},
+	"files": {
+		"includes": ["packages/**", "shared/**", "plugins/**", "biome.json"]
+	}
+}

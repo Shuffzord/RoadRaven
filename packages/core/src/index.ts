@@ -1,1 +1,1 @@
-export type { RoadmapPlugin, IntegrationEvent } from "./plugin.ts";
+export type { IntegrationEvent, RoadmapPlugin } from "./plugin.ts";
