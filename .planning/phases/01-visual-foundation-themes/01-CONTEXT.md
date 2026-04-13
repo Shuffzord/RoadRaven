@@ -36,6 +36,15 @@ Layout composition details (exact sidebar behavior, panel positioning) are defer
 - **D-12:** Bottom status bar for external events and general system status.
 - **D-13:** `phase-1.html` is a color/theme reference, not a layout source of truth. Detailed layout composition will be specified in `/gsd:ui-phase`.
 
+### Testing & TDD Strategy
+- **D-14:** TDD-first — tests written before implementation for all theme system work. Natural order: token-level assertions first, then `ThemeProvider` behavior tests, then component tests.
+- **D-15:** **Token-level unit tests** — Assert that `getComputedStyle(root).getPropertyValue('--rv-surface')` equals the expected value for each theme. Tests the token system itself, not every individual component.
+- **D-16:** **`ThemeProvider` behavior tests** — Switching themes changes CSS custom properties on root. `System` reacts to OS preference. Persistence to/from `.roadmap-settings.json` works correctly.
+- **D-17:** **CI grep for hardcoded colors** — Static analysis step: zero hardcoded color values in component CSS. Already specified in roadmap "Done when" criteria.
+- **D-18:** **Per-schema override tests** — Load a mock schema with `themeConfig`, verify override tokens are applied on the scoped container and don't leak to other UI elements.
+- **D-19:** **DOM and accessibility tests** — Verify correct ARIA attributes, DOM structure, and keyboard accessibility of theme-related UI (menu items, etc.).
+- **D-20:** **No visual regression / screenshot tests.** No snapshot comparisons. These are over-engineering for this phase and create maintenance burden. Token-level and behavior tests are sufficient.
+
 ### Claude's Discretion
 - Exact Tailwind v4 migration steps and codemod usage
 - `@theme` token naming convention (e.g., `--color-rv-surface` vs `--color-rv-bg-surface`)
@@ -43,6 +52,7 @@ Layout composition details (exact sidebar behavior, panel positioning) are defer
 - How `System` theme preference detects and reacts to OS changes (media query listener pattern)
 - Whether theme menu lives in native menu bar, hamburger menu, or both
 - Internal structure of `.roadmap-settings.json` for theme preference storage
+- Specific test framework patterns (test helpers, mock setup for OS preference)
 
 </decisions>
 

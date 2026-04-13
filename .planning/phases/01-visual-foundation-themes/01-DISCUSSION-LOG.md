@@ -5,7 +5,7 @@
 
 **Date:** 2026-04-13
 **Phase:** 01-visual-foundation-themes
-**Areas discussed:** Token architecture & Tailwind integration, App shell layout & composition, Theme persistence & switching UX, Per-schema themeConfig overrides
+**Areas discussed:** Token architecture & Tailwind integration, App shell layout & composition, Theme persistence & switching UX, Per-schema themeConfig overrides, Testing & TDD strategy
 
 ---
 
@@ -61,6 +61,23 @@ Research agent spawned to investigate 5 approaches for integrating `--rv-*` CSS 
 
 **User's choice:** Focused scope initially — status color mapping and node shapes (border radius etc.)
 **Notes:** User initially said "everything, no restrictions for power users" but revised to a simpler initial scope. System should be designed for extensibility so expanding to full overrides later is straightforward. Overrides apply on top of whichever base theme is active (not per-base-theme overrides).
+
+---
+
+## Testing & TDD Strategy
+
+| Option | Description | Selected |
+|--------|-------------|----------|
+| Token-level unit tests | Assert CSS custom property values per theme via `getComputedStyle` | ✓ |
+| `ThemeProvider` behavior tests | Switching, persistence, OS preference reactivity | ✓ |
+| CI grep for hardcoded colors | Static analysis — zero hardcoded colors in component CSS | ✓ |
+| Per-schema override tests | Verify overrides apply on scoped container, don't leak | ✓ |
+| DOM and accessibility tests | ARIA attributes, keyboard accessibility of theme UI | ✓ |
+| Snapshot / screenshot comparison | Visual regression testing across themes | |
+| Computed style assertions per component | Assert exact RGB values on every component | |
+
+**User's choice:** Token + behavior + CI grep + override + DOM/a11y tests. No snapshot or screenshot comparisons.
+**Notes:** User emphasized TDD-first nature of the project. Rejected visual regression / snapshot tests as over-engineering. DOM and accessibility tests are acceptable. Natural TDD order: token assertions first, then ThemeProvider behavior, then component tests.
 
 ---
 
