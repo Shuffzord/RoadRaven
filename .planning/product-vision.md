@@ -51,7 +51,7 @@ Roadmaps go stale the moment you create them. You shouldn't have to check three 
 - Demo: Claude Code agent completes a task → node turns green in real time
 
 ### Slide 4: How It Works
-- Show the tree UI (phase-1.html reference design)
+- Show the tree UI (variant-c-merged.html reference design)
 - JSON file on disk → tree renders → external producer pushes event → node badge updates live
 - Three-layer diagram: Your Plan (JSON) → RoadRaven (viewer) → Your Tools (producers)
 

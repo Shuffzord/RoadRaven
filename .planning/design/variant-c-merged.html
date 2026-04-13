@@ -1,0 +1,1881 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RoadRaven - Variant C: Merged Design</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   CSS CUSTOM PROPERTIES — ALL COLORS VIA --rv-* TOKENS
+   Zero hardcoded colors anywhere in the stylesheet.
+   ============================================================ */
+
+/* ---- DARK THEME (default) ---- */
+[data-theme="dark"] {
+  --rv-bg-base: #131313;
+  --rv-bg-surface: #1b1b1c;
+  --rv-bg-elevated: #252527;
+  --rv-bg-hover: #2e2e30;
+  --rv-bg-active: #363638;
+  --rv-bg-input: #1a1a1c;
+  --rv-bg-canvas: #131313;
+  --rv-bg-toolbar: #1b1b1c;
+  --rv-bg-panel: #1b1b1c;
+  --rv-bg-statusbar: #151516;
+  --rv-bg-node: #1e1e20;
+  --rv-bg-node-hover: #252527;
+  --rv-bg-config: #1b1b1c;
+
+  --rv-text-primary: #e0e0e0;
+  --rv-text-secondary: #999999;
+  --rv-text-tertiary: #666666;
+  --rv-text-on-accent: #ffffff;
+
+  --rv-border: #2a2a2c;
+  --rv-border-subtle: #222224;
+  --rv-border-focus: #4a9eff;
+
+  --rv-accent: #4a9eff;
+  --rv-accent-hover: #3a8eef;
+  --rv-accent-muted: rgba(74, 158, 255, 0.12);
+  --rv-accent-border: rgba(74, 158, 255, 0.3);
+
+  --rv-dot-grid: rgba(255, 255, 255, 0.035);
+  --rv-line-connector: rgba(255, 255, 255, 0.12);
+
+  --rv-shadow-node: 0 1px 3px rgba(0,0,0,0.3);
+  --rv-shadow-node-hover: 0 3px 10px rgba(0,0,0,0.4);
+  --rv-shadow-panel: -2px 0 16px rgba(0,0,0,0.4);
+  --rv-shadow-config: 0 4px 20px rgba(0,0,0,0.5);
+
+  --rv-scrollbar-track: #1a1a1c;
+  --rv-scrollbar-thumb: #333335;
+
+  --rv-status-not-started: #6b6b6b;
+  --rv-status-not-started-bg: rgba(107, 107, 107, 0.1);
+  --rv-status-in-progress: #4a9eff;
+  --rv-status-in-progress-bg: rgba(74, 158, 255, 0.1);
+  --rv-status-completed: #4ade80;
+  --rv-status-completed-bg: rgba(74, 222, 128, 0.1);
+  --rv-status-blocked: #ef4444;
+  --rv-status-blocked-bg: rgba(239, 68, 68, 0.1);
+
+  --rv-border-width: 1px;
+}
+
+/* ---- LIGHT THEME ---- */
+[data-theme="light"] {
+  --rv-bg-base: #ffffff;
+  --rv-bg-surface: #f5f5f5;
+  --rv-bg-elevated: #ffffff;
+  --rv-bg-hover: #ebebeb;
+  --rv-bg-active: #e0e0e0;
+  --rv-bg-input: #f0f0f0;
+  --rv-bg-canvas: #fafafa;
+  --rv-bg-toolbar: #ffffff;
+  --rv-bg-panel: #ffffff;
+  --rv-bg-statusbar: #f5f5f5;
+  --rv-bg-node: #ffffff;
+  --rv-bg-node-hover: #f8f8f8;
+  --rv-bg-config: #ffffff;
+
+  --rv-text-primary: #1a1a1a;
+  --rv-text-secondary: #666666;
+  --rv-text-tertiary: #999999;
+  --rv-text-on-accent: #ffffff;
+
+  --rv-border: #e0e0e0;
+  --rv-border-subtle: #ebebeb;
+  --rv-border-focus: #4a9eff;
+
+  --rv-accent: #4a9eff;
+  --rv-accent-hover: #3a8eef;
+  --rv-accent-muted: rgba(74, 158, 255, 0.08);
+  --rv-accent-border: rgba(74, 158, 255, 0.25);
+
+  --rv-dot-grid: rgba(0, 0, 0, 0.06);
+  --rv-line-connector: rgba(0, 0, 0, 0.15);
+
+  --rv-shadow-node: 0 1px 3px rgba(0,0,0,0.08);
+  --rv-shadow-node-hover: 0 3px 10px rgba(0,0,0,0.12);
+  --rv-shadow-panel: -2px 0 16px rgba(0,0,0,0.08);
+  --rv-shadow-config: 0 4px 20px rgba(0,0,0,0.12);
+
+  --rv-scrollbar-track: #f0f0f0;
+  --rv-scrollbar-thumb: #cccccc;
+
+  --rv-status-not-started: #6b6b6b;
+  --rv-status-not-started-bg: rgba(107, 107, 107, 0.08);
+  --rv-status-in-progress: #4a9eff;
+  --rv-status-in-progress-bg: rgba(74, 158, 255, 0.08);
+  --rv-status-completed: #4ade80;
+  --rv-status-completed-bg: rgba(74, 222, 128, 0.08);
+  --rv-status-blocked: #ef4444;
+  --rv-status-blocked-bg: rgba(239, 68, 68, 0.08);
+
+  --rv-border-width: 1px;
+}
+
+/* ---- HIGH CONTRAST THEME ---- */
+[data-theme="high-contrast"] {
+  --rv-bg-base: #000000;
+  --rv-bg-surface: #0a0a0a;
+  --rv-bg-elevated: #111111;
+  --rv-bg-hover: #1a1a1a;
+  --rv-bg-active: #222222;
+  --rv-bg-input: #0a0a0a;
+  --rv-bg-canvas: #000000;
+  --rv-bg-toolbar: #0a0a0a;
+  --rv-bg-panel: #0a0a0a;
+  --rv-bg-statusbar: #050505;
+  --rv-bg-node: #0e0e0e;
+  --rv-bg-node-hover: #151515;
+  --rv-bg-config: #0a0a0a;
+
+  --rv-text-primary: #ffffff;
+  --rv-text-secondary: #cccccc;
+  --rv-text-tertiary: #999999;
+  --rv-text-on-accent: #ffffff;
+
+  --rv-border: #ffffff;
+  --rv-border-subtle: #666666;
+  --rv-border-focus: #60b0ff;
+
+  --rv-accent: #60b0ff;
+  --rv-accent-hover: #80c0ff;
+  --rv-accent-muted: rgba(96, 176, 255, 0.15);
+  --rv-accent-border: rgba(96, 176, 255, 0.5);
+
+  --rv-dot-grid: rgba(255, 255, 255, 0.08);
+  --rv-line-connector: rgba(255, 255, 255, 0.25);
+
+  --rv-shadow-node: 0 0 0 2px var(--rv-border);
+  --rv-shadow-node-hover: 0 0 0 2px var(--rv-accent);
+  --rv-shadow-panel: -2px 0 16px rgba(0,0,0,0.6);
+  --rv-shadow-config: 0 4px 20px rgba(0,0,0,0.7);
+
+  --rv-scrollbar-track: #0a0a0a;
+  --rv-scrollbar-thumb: #555555;
+
+  --rv-status-not-started: #888888;
+  --rv-status-not-started-bg: rgba(136, 136, 136, 0.15);
+  --rv-status-in-progress: #60b0ff;
+  --rv-status-in-progress-bg: rgba(96, 176, 255, 0.15);
+  --rv-status-completed: #5aee90;
+  --rv-status-completed-bg: rgba(90, 238, 144, 0.15);
+  --rv-status-blocked: #ff5555;
+  --rv-status-blocked-bg: rgba(255, 85, 85, 0.15);
+
+  --rv-border-width: 2px;
+}
+
+/* ============================================================
+   RESET + BASE
+   ============================================================ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  height: 100%;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  font-size: 13px;
+  line-height: 1.5;
+  background: var(--rv-bg-base);
+  color: var(--rv-text-primary);
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+:focus-visible {
+  outline: 2px solid var(--rv-accent);
+  outline-offset: 2px;
+}
+
+button {
+  font-family: inherit;
+  font-size: inherit;
+  border: none;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+  outline: none;
+}
+
+input, select {
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+  outline: none;
+}
+
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--rv-scrollbar-track); }
+::-webkit-scrollbar-thumb { background: var(--rv-scrollbar-thumb); border-radius: 3px; }
+
+/* ============================================================
+   APP GRID LAYOUT
+   ============================================================ */
+#app {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  grid-template-columns: auto 1fr auto;
+  grid-template-areas:
+    "topbar   topbar   topbar"
+    "sidebar  canvas   panel"
+    "status   status   status";
+  height: 100vh;
+  width: 100vw;
+}
+
+/* ============================================================
+   TOP BAR — Figma-style toolbar
+   ============================================================ */
+.topbar {
+  grid-area: topbar;
+  display: flex;
+  align-items: center;
+  height: 50px;
+  background: var(--rv-bg-toolbar);
+  border-bottom: var(--rv-border-width) solid var(--rv-border);
+  padding: 0 12px;
+  gap: 4px;
+  z-index: 100;
+  user-select: none;
+}
+
+.topbar__brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 8px 0 4px;
+  font-weight: 600;
+  font-size: 14px;
+  letter-spacing: -0.01em;
+  color: var(--rv-text-primary);
+  white-space: nowrap;
+}
+
+.topbar__brand svg {
+  width: 20px;
+  height: 20px;
+  color: var(--rv-accent);
+}
+
+.topbar__sep {
+  width: 1px;
+  height: 24px;
+  background: var(--rv-border);
+  margin: 0 6px;
+  flex-shrink: 0;
+}
+
+.topbar__btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--rv-text-secondary);
+  transition: all 150ms ease;
+  white-space: nowrap;
+}
+
+.topbar__btn:hover {
+  background: var(--rv-bg-hover);
+  color: var(--rv-text-primary);
+}
+
+.topbar__btn:active {
+  background: var(--rv-bg-active);
+}
+
+.topbar__btn svg {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+}
+
+.topbar__btn--primary {
+  color: var(--rv-text-primary);
+}
+
+.topbar__search {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--rv-bg-input);
+  border: var(--rv-border-width) solid var(--rv-border);
+  border-radius: 8px;
+  padding: 0 10px;
+  height: 30px;
+  width: 220px;
+  flex-shrink: 0;
+}
+
+.topbar__search svg {
+  width: 13px;
+  height: 13px;
+  color: var(--rv-text-tertiary);
+  flex-shrink: 0;
+}
+
+.topbar__search input {
+  border: none;
+  background: transparent;
+  width: 100%;
+  height: 100%;
+  font-size: 12px;
+  color: var(--rv-text-primary);
+}
+
+.topbar__search input::placeholder {
+  color: var(--rv-text-tertiary);
+}
+
+.topbar__search kbd {
+  font-size: 10px;
+  color: var(--rv-text-tertiary);
+  background: var(--rv-bg-elevated);
+  border: var(--rv-border-width) solid var(--rv-border);
+  border-radius: 3px;
+  padding: 1px 4px;
+  font-family: inherit;
+  flex-shrink: 0;
+}
+
+.topbar__spacer { flex: 1; }
+
+.topbar__view-group {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.topbar__zoom {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.topbar__zoom-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 5px;
+  color: var(--rv-text-secondary);
+  transition: all 150ms ease;
+}
+
+.topbar__zoom-btn:hover {
+  background: var(--rv-bg-hover);
+  color: var(--rv-text-primary);
+}
+
+.topbar__zoom-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+.topbar__layout-toggle {
+  display: flex;
+  align-items: center;
+  background: var(--rv-bg-input);
+  border: var(--rv-border-width) solid var(--rv-border);
+  border-radius: 6px;
+  overflow: hidden;
+  height: 28px;
+}
+
+.topbar__layout-opt {
+  padding: 0 10px;
+  height: 100%;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--rv-text-tertiary);
+  transition: all 150ms ease;
+  display: flex;
+  align-items: center;
+}
+
+.topbar__layout-opt.active {
+  background: var(--rv-accent-muted);
+  color: var(--rv-accent);
+}
+
+.topbar__layout-opt:hover:not(.active) {
+  color: var(--rv-text-secondary);
+}
+
+.topbar__theme-group {
+  display: flex;
+  align-items: center;
+  background: var(--rv-bg-input);
+  border: var(--rv-border-width) solid var(--rv-border);
+  border-radius: 6px;
+  overflow: hidden;
+  height: 28px;
+}
+
+.topbar__theme-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 100%;
+  color: var(--rv-text-tertiary);
+  transition: all 150ms ease;
+}
+
+.topbar__theme-btn:hover {
+  color: var(--rv-text-secondary);
+}
+
+.topbar__theme-btn.active {
+  background: var(--rv-accent-muted);
+  color: var(--rv-accent);
+}
+
+.topbar__theme-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+.topbar__gear {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 6px;
+  color: var(--rv-text-tertiary);
+  transition: all 150ms ease;
+}
+
+.topbar__gear:hover {
+  background: var(--rv-bg-hover);
+  color: var(--rv-text-primary);
+}
+
+.topbar__gear svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* ============================================================
+   LEFT SIDEBAR
+   ============================================================ */
+.sidebar {
+  grid-area: sidebar;
+  width: 220px;
+  background: var(--rv-bg-surface);
+  border-right: var(--rv-border-width) solid var(--rv-border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: width 200ms ease;
+  z-index: 50;
+}
+
+.sidebar.collapsed {
+  width: 48px;
+}
+
+.sidebar__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  height: 40px;
+  border-bottom: var(--rv-border-width) solid var(--rv-border);
+}
+
+.sidebar__title {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--rv-text-tertiary);
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.sidebar.collapsed .sidebar__title { display: none; }
+
+.sidebar__collapse-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  color: var(--rv-text-tertiary);
+  transition: all 150ms ease;
+  flex-shrink: 0;
+}
+
+.sidebar__collapse-btn:hover {
+  background: var(--rv-bg-hover);
+  color: var(--rv-text-primary);
+}
+
+.sidebar__collapse-btn svg {
+  width: 14px;
+  height: 14px;
+  transition: transform 200ms ease;
+}
+
+.sidebar.collapsed .sidebar__collapse-btn svg {
+  transform: rotate(180deg);
+}
+
+.sidebar__content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 0;
+}
+
+.sidebar.collapsed .sidebar__content {
+  padding: 8px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.sidebar__section {
+  margin-bottom: 8px;
+}
+
+.sidebar.collapsed .sidebar__section-header,
+.sidebar.collapsed .sidebar__tree-item span,
+.sidebar.collapsed .sidebar__file-name {
+  display: none;
+}
+
+.sidebar__section-header {
+  padding: 6px 14px;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--rv-text-tertiary);
+}
+
+.sidebar__file-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 14px;
+  color: var(--rv-text-secondary);
+  transition: all 150ms ease;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.sidebar.collapsed .sidebar__file-item {
+  padding: 6px;
+  justify-content: center;
+}
+
+.sidebar__file-item:hover {
+  background: var(--rv-bg-hover);
+  color: var(--rv-text-primary);
+}
+
+.sidebar__file-icon {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  color: var(--rv-text-tertiary);
+}
+
+.sidebar__file-name {
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sidebar__tree-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 14px;
+  color: var(--rv-text-secondary);
+  transition: all 150ms ease;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.sidebar.collapsed .sidebar__tree-item {
+  padding: 6px;
+  justify-content: center;
+}
+
+.sidebar__tree-item:hover {
+  background: var(--rv-bg-hover);
+  color: var(--rv-text-primary);
+}
+
+.sidebar__tree-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.sidebar__tree-indent {
+  display: inline-block;
+}
+
+.sidebar__bottom {
+  border-top: var(--rv-border-width) solid var(--rv-border);
+  padding: 8px;
+}
+
+.sidebar__bottom-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  color: var(--rv-text-tertiary);
+  font-size: 12px;
+  width: 100%;
+  transition: all 150ms ease;
+}
+
+.sidebar.collapsed .sidebar__bottom-btn span { display: none; }
+.sidebar.collapsed .sidebar__bottom-btn { justify-content: center; }
+
+.sidebar__bottom-btn:hover {
+  background: var(--rv-bg-hover);
+  color: var(--rv-text-primary);
+}
+
+.sidebar__bottom-btn svg {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+/* ============================================================
+   MAIN CANVAS
+   ============================================================ */
+.canvas {
+  grid-area: canvas;
+  position: relative;
+  background-color: var(--rv-bg-canvas);
+  background-image: radial-gradient(circle, var(--rv-dot-grid) 1px, transparent 1px);
+  background-size: 40px 40px;
+  overflow: hidden;
+}
+
+.canvas__inner {
+  position: absolute;
+  inset: 0;
+  /* Tree is drawn via JS into this area */
+}
+
+/* ============================================================
+   TREE: SVG connectors
+   ============================================================ */
+.canvas__svg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.canvas__svg path {
+  fill: none;
+  stroke: var(--rv-line-connector);
+  stroke-width: 1.5;
+  transition: stroke 150ms ease;
+}
+
+/* ============================================================
+   NODE CARD
+   ============================================================ */
+.node {
+  position: absolute;
+  background: var(--rv-bg-node);
+  border: var(--rv-border-width) solid var(--rv-border);
+  border-radius: var(--node-radius, 8px);
+  min-width: 180px;
+  max-width: 220px;
+  padding: 10px 12px 10px 16px;
+  cursor: pointer;
+  transition: box-shadow 150ms ease, border-color 150ms ease, background 150ms ease, border-radius 200ms ease;
+  box-shadow: var(--rv-shadow-node);
+  z-index: 10;
+  user-select: none;
+}
+
+.node::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  border-radius: var(--node-radius, 8px) 0 0 var(--node-radius, 8px);
+  background: var(--node-stripe-color, var(--rv-status-not-started));
+}
+
+.node:hover {
+  background: var(--rv-bg-node-hover);
+  box-shadow: var(--rv-shadow-node-hover);
+}
+
+.node.selected {
+  border-color: var(--rv-accent);
+  box-shadow: 0 0 0 1px var(--rv-accent);
+}
+
+.node__title {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--rv-text-primary);
+  margin-bottom: 6px;
+  line-height: 1.3;
+}
+
+.node__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 500;
+  background: var(--badge-bg, var(--rv-status-not-started-bg));
+  color: var(--badge-color, var(--rv-status-not-started));
+}
+
+.node__badge-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--badge-color, var(--rv-status-not-started));
+}
+
+/* ============================================================
+   RIGHT PANEL (detail)
+   ============================================================ */
+.panel {
+  grid-area: panel;
+  width: 0;
+  background: var(--rv-bg-panel);
+  border-left: var(--rv-border-width) solid var(--rv-border);
+  overflow: hidden;
+  transition: width 200ms ease-out;
+  z-index: 50;
+}
+
+.panel.open {
+  width: 340px;
+}
+
+.panel__inner {
+  width: 340px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.panel__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border-bottom: var(--rv-border-width) solid var(--rv-border);
+  min-height: 52px;
+}
+
+.panel__title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--rv-text-primary);
+  border: none;
+  background: transparent;
+  width: 100%;
+  padding: 0;
+  cursor: text;
+  outline: none;
+}
+
+.panel__title:hover {
+  color: var(--rv-accent);
+}
+
+.panel__close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  color: var(--rv-text-tertiary);
+  flex-shrink: 0;
+  margin-left: 8px;
+  transition: all 150ms ease;
+}
+
+.panel__close:hover {
+  background: var(--rv-bg-hover);
+  color: var(--rv-text-primary);
+}
+
+.panel__close svg { width: 14px; height: 14px; }
+
+.panel__body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+}
+
+.panel__field {
+  margin-bottom: 16px;
+}
+
+.panel__label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--rv-text-tertiary);
+  margin-bottom: 6px;
+}
+
+.panel__status-select {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  background: var(--rv-bg-input);
+  border: var(--rv-border-width) solid var(--rv-border);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: border-color 150ms ease;
+}
+
+.panel__status-select:hover {
+  border-color: var(--rv-accent);
+}
+
+.panel__status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.panel__status-label {
+  font-size: 12px;
+  color: var(--rv-text-primary);
+}
+
+.panel__type-badge {
+  display: inline-flex;
+  padding: 3px 10px;
+  font-size: 11px;
+  font-weight: 500;
+  background: var(--rv-accent-muted);
+  color: var(--rv-accent);
+  border-radius: 4px;
+}
+
+.panel__meta-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 0;
+}
+
+.panel__meta-key {
+  font-size: 12px;
+  color: var(--rv-text-tertiary);
+}
+
+.panel__meta-val {
+  font-size: 12px;
+  color: var(--rv-text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.panel__copy-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  color: var(--rv-text-tertiary);
+  transition: all 150ms ease;
+}
+
+.panel__copy-btn:hover {
+  background: var(--rv-bg-hover);
+  color: var(--rv-accent);
+}
+
+.panel__copy-btn svg { width: 12px; height: 12px; }
+
+.panel__divider {
+  height: 1px;
+  background: var(--rv-border);
+  margin: 16px 0;
+}
+
+.panel__notes {
+  font-size: 12px;
+  line-height: 1.7;
+  color: var(--rv-text-secondary);
+  white-space: pre-wrap;
+}
+
+.panel__notes code {
+  background: var(--rv-bg-elevated);
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-size: 11px;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  color: var(--rv-accent);
+}
+
+/* ============================================================
+   CONFIG PANEL (floating)
+   ============================================================ */
+.config-toggle {
+  position: absolute;
+  bottom: 16px;
+  right: 16px;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: var(--rv-bg-elevated);
+  border: var(--rv-border-width) solid var(--rv-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--rv-text-tertiary);
+  z-index: 30;
+  transition: all 150ms ease;
+  box-shadow: var(--rv-shadow-node);
+}
+
+.config-toggle:hover {
+  background: var(--rv-bg-hover);
+  color: var(--rv-text-primary);
+}
+
+.config-toggle svg { width: 16px; height: 16px; }
+
+.config-panel {
+  position: absolute;
+  bottom: 60px;
+  right: 16px;
+  width: 260px;
+  background: var(--rv-bg-config);
+  border: var(--rv-border-width) solid var(--rv-border);
+  border-radius: 10px;
+  padding: 16px;
+  z-index: 30;
+  box-shadow: var(--rv-shadow-config);
+  display: none;
+}
+
+.config-panel.open { display: block; }
+
+.config-panel__title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--rv-text-primary);
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.config-panel__title svg { width: 14px; height: 14px; color: var(--rv-text-tertiary); }
+
+.config-panel__row {
+  margin-bottom: 14px;
+}
+
+.config-panel__row:last-child { margin-bottom: 0; }
+
+.config-panel__label {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--rv-text-tertiary);
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.config-panel__toggle-group {
+  display: flex;
+  background: var(--rv-bg-input);
+  border: var(--rv-border-width) solid var(--rv-border);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.config-panel__toggle-opt {
+  flex: 1;
+  padding: 5px 0;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--rv-text-tertiary);
+  transition: all 150ms ease;
+}
+
+.config-panel__toggle-opt:hover:not(.active) {
+  color: var(--rv-text-secondary);
+}
+
+.config-panel__toggle-opt.active {
+  background: var(--rv-accent-muted);
+  color: var(--rv-accent);
+}
+
+.config-panel__gap-group {
+  display: flex;
+  gap: 4px;
+}
+
+.config-panel__gap-btn {
+  flex: 1;
+  padding: 5px 0;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--rv-text-tertiary);
+  background: var(--rv-bg-input);
+  border: var(--rv-border-width) solid var(--rv-border);
+  border-radius: 6px;
+  transition: all 150ms ease;
+}
+
+.config-panel__gap-btn:hover:not(.active) {
+  color: var(--rv-text-secondary);
+}
+
+.config-panel__gap-btn.active {
+  background: var(--rv-accent-muted);
+  color: var(--rv-accent);
+  border-color: var(--rv-accent-border);
+}
+
+/* ============================================================
+   STATUS BAR
+   ============================================================ */
+.statusbar {
+  grid-area: status;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 14px;
+  background: var(--rv-bg-statusbar);
+  border-top: var(--rv-border-width) solid var(--rv-border);
+  font-size: 11px;
+  color: var(--rv-text-tertiary);
+  z-index: 100;
+  user-select: none;
+}
+
+.statusbar__left,
+.statusbar__center,
+.statusbar__right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.statusbar__left { flex: 1; }
+.statusbar__center { flex: 0 0 auto; }
+.statusbar__right { flex: 1; justify-content: flex-end; }
+
+.statusbar__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--rv-status-completed);
+}
+
+.statusbar__item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.statusbar__item svg { width: 12px; height: 12px; }
+
+/* ============================================================
+   UTILITY / ANIMATIONS
+   ============================================================ */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0,0,0,0);
+  border: 0;
+}
+</style>
+</head>
+<body>
+
+<div id="app">
+
+  <!-- ========== TOP BAR ========== -->
+  <header class="topbar" role="toolbar" aria-label="Main toolbar">
+    <!-- Brand -->
+    <div class="topbar__brand">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+        <path d="M2 17l10 5 10-5"/>
+        <path d="M2 12l10 5 10-5"/>
+      </svg>
+      RoadRaven
+    </div>
+
+    <div class="topbar__sep"></div>
+
+    <!-- Primary actions -->
+    <button class="topbar__btn topbar__btn--primary" aria-label="New file">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+      New
+    </button>
+    <button class="topbar__btn topbar__btn--primary" aria-label="Open file">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+      Open
+    </button>
+
+    <div class="topbar__sep"></div>
+
+    <!-- Search -->
+    <div class="topbar__search" role="search">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" placeholder="Search nodes..." aria-label="Search nodes">
+      <kbd>Ctrl+F</kbd>
+    </div>
+
+    <div class="topbar__sep"></div>
+
+    <!-- View controls -->
+    <div class="topbar__view-group">
+      <button class="topbar__btn" id="fitViewBtn" aria-label="Fit view">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
+        Fit
+      </button>
+
+      <div class="topbar__zoom">
+        <button class="topbar__zoom-btn" id="zoomOutBtn" aria-label="Zoom out">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </button>
+        <button class="topbar__zoom-btn" id="zoomInBtn" aria-label="Zoom in">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </button>
+      </div>
+
+      <div class="topbar__layout-toggle" role="radiogroup" aria-label="Tree layout direction">
+        <button class="topbar__layout-opt active" data-layout="TB" role="radio" aria-checked="true">TB</button>
+        <button class="topbar__layout-opt" data-layout="LR" role="radio" aria-checked="false">LR</button>
+      </div>
+    </div>
+
+    <div class="topbar__sep"></div>
+
+    <div class="topbar__spacer"></div>
+
+    <!-- Theme switcher -->
+    <div class="topbar__theme-group" role="radiogroup" aria-label="Theme switcher">
+      <button class="topbar__theme-btn active" data-theme-select="dark" role="radio" aria-checked="true" aria-label="Dark theme" title="Dark">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+      <button class="topbar__theme-btn" data-theme-select="light" role="radio" aria-checked="false" aria-label="Light theme" title="Light">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      </button>
+      <button class="topbar__theme-btn" data-theme-select="high-contrast" role="radio" aria-checked="false" aria-label="High contrast theme" title="High Contrast">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 0 1 0 20z" fill="currentColor"/></svg>
+      </button>
+    </div>
+
+    <!-- Settings gear -->
+    <button class="topbar__gear" aria-label="Settings" id="topbarGearBtn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    </button>
+  </header>
+
+  <!-- ========== LEFT SIDEBAR ========== -->
+  <nav class="sidebar" id="sidebar" role="navigation" aria-label="Sidebar navigation">
+    <div class="sidebar__header">
+      <span class="sidebar__title">Explorer</span>
+      <button class="sidebar__collapse-btn" id="sidebarCollapseBtn" aria-label="Collapse sidebar" title="Ctrl+B">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+    </div>
+
+    <div class="sidebar__content">
+      <!-- Recent Files -->
+      <div class="sidebar__section">
+        <div class="sidebar__section-header">Recent Files</div>
+        <div class="sidebar__file-item">
+          <svg class="sidebar__file-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          <span class="sidebar__file-name">product-roadmap.json</span>
+        </div>
+        <div class="sidebar__file-item">
+          <svg class="sidebar__file-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          <span class="sidebar__file-name">sprint-23-tasks.json</span>
+        </div>
+        <div class="sidebar__file-item">
+          <svg class="sidebar__file-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          <span class="sidebar__file-name">agent-pipeline.json</span>
+        </div>
+        <div class="sidebar__file-item">
+          <svg class="sidebar__file-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          <span class="sidebar__file-name">q2-milestones.json</span>
+        </div>
+        <div class="sidebar__file-item">
+          <svg class="sidebar__file-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          <span class="sidebar__file-name">onboarding-flow.json</span>
+        </div>
+      </div>
+
+      <!-- Navigator (mini tree) -->
+      <div class="sidebar__section">
+        <div class="sidebar__section-header">Navigator</div>
+        <div class="sidebar__tree-item" data-node-id="root">
+          <span class="sidebar__tree-dot" style="background: var(--rv-status-in-progress)"></span>
+          <span>Product Launch</span>
+        </div>
+        <div class="sidebar__tree-item" data-node-id="design" style="padding-left: 28px;">
+          <span class="sidebar__tree-dot" style="background: var(--rv-status-completed)"></span>
+          <span>Design System</span>
+        </div>
+        <div class="sidebar__tree-item" data-node-id="frontend" style="padding-left: 28px;">
+          <span class="sidebar__tree-dot" style="background: var(--rv-status-in-progress)"></span>
+          <span>Frontend Build</span>
+        </div>
+        <div class="sidebar__tree-item" data-node-id="api" style="padding-left: 28px;">
+          <span class="sidebar__tree-dot" style="background: var(--rv-status-in-progress)"></span>
+          <span>API Layer</span>
+        </div>
+        <div class="sidebar__tree-item" data-node-id="testing" style="padding-left: 42px;">
+          <span class="sidebar__tree-dot" style="background: var(--rv-status-not-started)"></span>
+          <span>Integration Tests</span>
+        </div>
+        <div class="sidebar__tree-item" data-node-id="auth" style="padding-left: 42px;">
+          <span class="sidebar__tree-dot" style="background: var(--rv-status-blocked)"></span>
+          <span>Auth Service</span>
+        </div>
+        <div class="sidebar__tree-item" data-node-id="deploy" style="padding-left: 28px;">
+          <span class="sidebar__tree-dot" style="background: var(--rv-status-not-started)"></span>
+          <span>Deploy Pipeline</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="sidebar__bottom">
+      <button class="sidebar__bottom-btn" aria-label="Settings">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        <span>Settings</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- ========== MAIN CANVAS ========== -->
+  <main class="canvas" id="canvas" role="main" aria-label="Roadmap canvas" tabindex="0">
+    <div class="canvas__inner" id="canvasInner">
+      <svg class="canvas__svg" id="connectorsSvg"></svg>
+      <!-- Nodes are rendered by JS -->
+    </div>
+
+    <!-- Config toggle (gear) -->
+    <button class="config-toggle" id="configToggleBtn" aria-label="Display settings" title="Display settings">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/><line x1="12" y1="8" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="14"/></svg>
+    </button>
+
+    <!-- Config panel -->
+    <div class="config-panel" id="configPanel" role="dialog" aria-label="Display settings">
+      <div class="config-panel__title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
+        Display Settings
+      </div>
+
+      <div class="config-panel__row">
+        <div class="config-panel__label">Node Style</div>
+        <div class="config-panel__toggle-group" role="radiogroup" aria-label="Node corner style">
+          <button class="config-panel__toggle-opt active" data-node-style="rounded" role="radio" aria-checked="true">Rounded</button>
+          <button class="config-panel__toggle-opt" data-node-style="sharp" role="radio" aria-checked="false">Sharp</button>
+        </div>
+      </div>
+
+      <div class="config-panel__row">
+        <div class="config-panel__label">Node Gap</div>
+        <div class="config-panel__gap-group" role="radiogroup" aria-label="Node spacing">
+          <button class="config-panel__gap-btn" data-gap="compact" role="radio" aria-checked="false">Compact</button>
+          <button class="config-panel__gap-btn active" data-gap="default" role="radio" aria-checked="true">Default</button>
+          <button class="config-panel__gap-btn" data-gap="spacious" role="radio" aria-checked="false">Spacious</button>
+        </div>
+      </div>
+
+      <div class="config-panel__row">
+        <div class="config-panel__label">Connectors</div>
+        <div class="config-panel__toggle-group" role="radiogroup" aria-label="Connector line style">
+          <button class="config-panel__toggle-opt active" data-connector="curved" role="radio" aria-checked="true">Curved</button>
+          <button class="config-panel__toggle-opt" data-connector="straight" role="radio" aria-checked="false">Straight</button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ========== RIGHT PANEL ========== -->
+  <aside class="panel" id="panel" role="complementary" aria-label="Node details">
+    <div class="panel__inner">
+      <div class="panel__header">
+        <input class="panel__title" id="panelTitle" value="" aria-label="Node title">
+        <button class="panel__close" id="panelCloseBtn" aria-label="Close panel">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+
+      <div class="panel__body" id="panelBody">
+        <!-- Filled by JS when a node is selected -->
+      </div>
+    </div>
+  </aside>
+
+  <!-- ========== STATUS BAR ========== -->
+  <footer class="statusbar" role="status" aria-label="Status bar">
+    <div class="statusbar__left">
+      <span class="statusbar__item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        product-roadmap.json
+      </span>
+    </div>
+    <div class="statusbar__center">
+      <span id="nodeCount">7 nodes</span>
+    </div>
+    <div class="statusbar__right">
+      <span id="zoomLevel">100%</span>
+      <span id="themeIndicator">Dark</span>
+      <span class="statusbar__item" title="WebSocket connected">
+        <span class="statusbar__dot"></span>
+        Connected
+      </span>
+    </div>
+  </footer>
+
+</div>
+
+<script>
+// ============================================================
+//  DATA MODEL
+// ============================================================
+const NODES = [
+  { id: 'root', title: 'Product Launch', status: 'in-progress', type: 'milestone', parent: null,
+    notes: 'Main product launch initiative for Q2.\n\nTracking all workstreams including design,\nfrontend, API, and deployment.',
+    created: '2026-03-15', updated: '2026-04-12' },
+  { id: 'design', title: 'Design System', status: 'completed', type: 'task', parent: 'root',
+    notes: 'Component library with tokens, primitives,\nand composites. Uses <code>--rv-*</code> custom\nproperties throughout.',
+    created: '2026-03-16', updated: '2026-04-01' },
+  { id: 'frontend', title: 'Frontend Build', status: 'in-progress', type: 'task', parent: 'root',
+    notes: 'Vite + React with Zustand store.\nHMR pipeline configured.',
+    created: '2026-03-18', updated: '2026-04-11' },
+  { id: 'api', title: 'API Layer', status: 'in-progress', type: 'task', parent: 'root',
+    notes: 'RPC contract between main and renderer.\nWebSocket bridge for live status updates.',
+    created: '2026-03-20', updated: '2026-04-10' },
+  { id: 'testing', title: 'Integration Tests', status: 'not-started', type: 'task', parent: 'api',
+    notes: 'Vitest suite covering RPC handlers\nand store mutations.',
+    created: '2026-03-22', updated: '2026-03-22' },
+  { id: 'auth', title: 'Auth Service', status: 'blocked', type: 'task', parent: 'api',
+    notes: 'Blocked on upstream OAuth provider\napproval. ETA unknown.',
+    created: '2026-03-25', updated: '2026-04-08' },
+  { id: 'deploy', title: 'Deploy Pipeline', status: 'not-started', type: 'task', parent: 'root',
+    notes: 'Electrobun build + canary channel\ndistribution. Auto-update flow.',
+    created: '2026-03-28', updated: '2026-03-28' },
+];
+
+// ============================================================
+//  STATE
+// ============================================================
+const state = {
+  selectedNodeId: null,
+  sidebarCollapsed: false,
+  layout: 'TB',         // TB or LR
+  nodeRadius: 8,        // 8 = rounded, 2 = sharp
+  connectorStyle: 'curved',
+  gap: 'default',       // compact, default, spacious
+  zoom: 100,
+};
+
+const GAP_PRESETS = {
+  compact:  { hGap: 40, vGap: 50 },
+  default:  { hGap: 60, vGap: 70 },
+  spacious: { hGap: 90, vGap: 100 },
+};
+
+// ============================================================
+//  STATUS HELPERS
+// ============================================================
+function statusColor(s) {
+  return `var(--rv-status-${s.replace('-', '-')})`;
+}
+function statusBg(s) {
+  return `var(--rv-status-${s.replace('-', '-')}-bg)`;
+}
+function statusLabel(s) {
+  return s.split('-').map(w => w[0].toUpperCase() + w.slice(1)).join(' ');
+}
+
+// ============================================================
+//  TREE LAYOUT (simple recursive)
+// ============================================================
+function buildTree() {
+  const map = {};
+  NODES.forEach(n => { map[n.id] = { ...n, children: [] }; });
+  let root = null;
+  NODES.forEach(n => {
+    if (n.parent && map[n.parent]) {
+      map[n.parent].children.push(map[n.id]);
+    } else if (!n.parent) {
+      root = map[n.id];
+    }
+  });
+  return root;
+}
+
+function layoutTree(root) {
+  const g = GAP_PRESETS[state.gap];
+  const nodeW = 200;
+  const nodeH = 60;
+  const isLR = state.layout === 'LR';
+
+  // Measure subtree widths
+  function measure(node) {
+    if (!node.children.length) {
+      node._w = nodeW;
+      node._h = nodeH;
+      return;
+    }
+    node.children.forEach(measure);
+    if (isLR) {
+      node._h = node.children.reduce((sum, c) => sum + c._h, 0) + (node.children.length - 1) * g.vGap;
+      node._w = nodeW;
+    } else {
+      node._w = node.children.reduce((sum, c) => sum + c._w, 0) + (node.children.length - 1) * g.hGap;
+      node._h = nodeH;
+    }
+  }
+
+  function position(node, x, y) {
+    if (isLR) {
+      node._x = x;
+      node._y = y + (node._h - nodeH) / 2;
+      let cy = y;
+      node.children.forEach(child => {
+        position(child, x + nodeW + g.hGap, cy);
+        cy += child._h + g.vGap;
+      });
+    } else {
+      node._x = x + (node._w - nodeW) / 2;
+      node._y = y;
+      let cx = x;
+      node.children.forEach(child => {
+        position(child, cx, y + nodeH + g.vGap);
+        cx += child._w + g.hGap;
+      });
+    }
+  }
+
+  measure(root);
+  position(root, 0, 0);
+  return root;
+}
+
+// ============================================================
+//  RENDER
+// ============================================================
+function renderNodes() {
+  const inner = document.getElementById('canvasInner');
+  const svg = document.getElementById('connectorsSvg');
+  const canvas = document.getElementById('canvas');
+
+  // Remove old nodes
+  inner.querySelectorAll('.node').forEach(el => el.remove());
+
+  const tree = buildTree();
+  layoutTree(tree);
+
+  // Compute bounding box for centering
+  const allNodes = [];
+  (function collect(n) { allNodes.push(n); n.children.forEach(collect); })(tree);
+
+  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  allNodes.forEach(n => {
+    minX = Math.min(minX, n._x);
+    minY = Math.min(minY, n._y);
+    maxX = Math.max(maxX, n._x + 200);
+    maxY = Math.max(maxY, n._y + 60);
+  });
+
+  const canvasRect = canvas.getBoundingClientRect();
+  const treeW = maxX - minX;
+  const treeH = maxY - minY;
+  const offsetX = Math.max(40, (canvasRect.width - treeW) / 2) - minX;
+  const offsetY = Math.max(40, (canvasRect.height - treeH) / 2) - minY;
+
+  // Render nodes
+  allNodes.forEach(n => {
+    const el = document.createElement('div');
+    el.className = 'node' + (n.id === state.selectedNodeId ? ' selected' : '');
+    el.dataset.nodeId = n.id;
+    el.setAttribute('role', 'button');
+    el.setAttribute('tabindex', '0');
+    el.setAttribute('aria-label', `${n.title} - ${statusLabel(n.status)}`);
+    el.style.left = (n._x + offsetX) + 'px';
+    el.style.top = (n._y + offsetY) + 'px';
+    el.style.setProperty('--node-radius', state.nodeRadius + 'px');
+    el.style.setProperty('--node-stripe-color', statusColor(n.status));
+
+    el.innerHTML = `
+      <div class="node__title">${n.title}</div>
+      <div class="node__badge" style="--badge-bg: ${statusBg(n.status)}; --badge-color: ${statusColor(n.status)};">
+        <span class="node__badge-dot" style="background: ${statusColor(n.status)}"></span>
+        ${statusLabel(n.status)}
+      </div>
+    `;
+
+    el.addEventListener('click', (e) => {
+      e.stopPropagation();
+      selectNode(n.id);
+    });
+    el.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        selectNode(n.id);
+      }
+    });
+
+    inner.appendChild(el);
+
+    // Store rendered position for connector drawing
+    n._rx = n._x + offsetX;
+    n._ry = n._y + offsetY;
+  });
+
+  // Render connectors
+  let pathsHTML = '';
+  const nodeW = 200;
+  const nodeH = 60;
+  const isLR = state.layout === 'LR';
+
+  function drawConnectors(node) {
+    node.children.forEach(child => {
+      let sx, sy, ex, ey;
+      if (isLR) {
+        sx = node._rx + nodeW;
+        sy = node._ry + nodeH / 2;
+        ex = child._rx;
+        ey = child._ry + nodeH / 2;
+      } else {
+        sx = node._rx + nodeW / 2;
+        sy = node._ry + nodeH;
+        ex = child._rx + nodeW / 2;
+        ey = child._ry;
+      }
+
+      let d;
+      if (state.connectorStyle === 'curved') {
+        if (isLR) {
+          const mx = (sx + ex) / 2;
+          d = `M ${sx} ${sy} C ${mx} ${sy}, ${mx} ${ey}, ${ex} ${ey}`;
+        } else {
+          const my = (sy + ey) / 2;
+          d = `M ${sx} ${sy} C ${sx} ${my}, ${ex} ${my}, ${ex} ${ey}`;
+        }
+      } else {
+        // Straight (angled, not diagonal)
+        if (isLR) {
+          const mx = (sx + ex) / 2;
+          d = `M ${sx} ${sy} L ${mx} ${sy} L ${mx} ${ey} L ${ex} ${ey}`;
+        } else {
+          const my = (sy + ey) / 2;
+          d = `M ${sx} ${sy} L ${sx} ${my} L ${ex} ${my} L ${ex} ${ey}`;
+        }
+      }
+
+      pathsHTML += `<path d="${d}"/>`;
+      drawConnectors(child);
+    });
+  }
+
+  drawConnectors(tree);
+  svg.innerHTML = pathsHTML;
+}
+
+// ============================================================
+//  NODE SELECTION + PANEL
+// ============================================================
+function selectNode(id) {
+  state.selectedNodeId = id;
+  renderNodes();
+  openPanel(id);
+  // Update navigator highlight
+  document.querySelectorAll('.sidebar__tree-item').forEach(el => {
+    el.style.background = el.dataset.nodeId === id ? 'var(--rv-bg-hover)' : '';
+  });
+}
+
+function deselectNode() {
+  state.selectedNodeId = null;
+  renderNodes();
+  closePanel();
+  document.querySelectorAll('.sidebar__tree-item').forEach(el => {
+    el.style.background = '';
+  });
+}
+
+function openPanel(id) {
+  const panel = document.getElementById('panel');
+  const node = NODES.find(n => n.id === id);
+  if (!node) return;
+
+  document.getElementById('panelTitle').value = node.title;
+
+  const body = document.getElementById('panelBody');
+  body.innerHTML = `
+    <div class="panel__field">
+      <div class="panel__label">Status</div>
+      <div class="panel__status-select">
+        <span class="panel__status-dot" style="background: ${statusColor(node.status)}"></span>
+        <span class="panel__status-label">${statusLabel(node.status)}</span>
+      </div>
+    </div>
+
+    <div class="panel__field">
+      <div class="panel__label">Type</div>
+      <span class="panel__type-badge">${node.type}</span>
+    </div>
+
+    <div class="panel__field">
+      <div class="panel__label">Metadata</div>
+      <div class="panel__meta-row">
+        <span class="panel__meta-key">ID</span>
+        <span class="panel__meta-val">
+          <code style="font-size:11px; font-family: 'JetBrains Mono', monospace; color: var(--rv-accent);">${node.id}</code>
+          <button class="panel__copy-btn" aria-label="Copy ID" onclick="navigator.clipboard.writeText('${node.id}')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          </button>
+        </span>
+      </div>
+      <div class="panel__meta-row">
+        <span class="panel__meta-key">Created</span>
+        <span class="panel__meta-val">${node.created}</span>
+      </div>
+      <div class="panel__meta-row">
+        <span class="panel__meta-key">Updated</span>
+        <span class="panel__meta-val">${node.updated}</span>
+      </div>
+    </div>
+
+    <div class="panel__divider"></div>
+
+    <div class="panel__field">
+      <div class="panel__label">Notes</div>
+      <div class="panel__notes">${node.notes}</div>
+    </div>
+  `;
+
+  panel.classList.add('open');
+}
+
+function closePanel() {
+  document.getElementById('panel').classList.remove('open');
+}
+
+// ============================================================
+//  SIDEBAR COLLAPSE
+// ============================================================
+function toggleSidebar() {
+  const sb = document.getElementById('sidebar');
+  state.sidebarCollapsed = !state.sidebarCollapsed;
+  sb.classList.toggle('collapsed', state.sidebarCollapsed);
+  // Re-render after transition to re-center
+  setTimeout(renderNodes, 220);
+}
+
+// ============================================================
+//  THEME SWITCHING
+// ============================================================
+function setTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  // Update theme buttons
+  document.querySelectorAll('[data-theme-select]').forEach(btn => {
+    const isActive = btn.dataset.themeSelect === theme;
+    btn.classList.toggle('active', isActive);
+    btn.setAttribute('aria-checked', isActive);
+  });
+  // Update status bar
+  const labels = { dark: 'Dark', light: 'Light', 'high-contrast': 'Hi-Con' };
+  document.getElementById('themeIndicator').textContent = labels[theme] || theme;
+}
+
+// ============================================================
+//  CONFIG PANEL
+// ============================================================
+function toggleConfigPanel() {
+  document.getElementById('configPanel').classList.toggle('open');
+}
+
+// Node style
+function setNodeStyle(style) {
+  state.nodeRadius = style === 'rounded' ? 8 : 2;
+  document.querySelectorAll('[data-node-style]').forEach(btn => {
+    const isActive = btn.dataset.nodeStyle === style;
+    btn.classList.toggle('active', isActive);
+    btn.setAttribute('aria-checked', isActive);
+  });
+  renderNodes();
+}
+
+// Node gap
+function setNodeGap(gap) {
+  state.gap = gap;
+  document.querySelectorAll('[data-gap]').forEach(btn => {
+    const isActive = btn.dataset.gap === gap;
+    btn.classList.toggle('active', isActive);
+    btn.setAttribute('aria-checked', isActive);
+  });
+  renderNodes();
+}
+
+// Connector style
+function setConnectorStyle(style) {
+  state.connectorStyle = style;
+  document.querySelectorAll('[data-connector]').forEach(btn => {
+    const isActive = btn.dataset.connector === style;
+    btn.classList.toggle('active', isActive);
+    btn.setAttribute('aria-checked', isActive);
+  });
+  renderNodes();
+}
+
+// Layout direction
+function setLayout(dir) {
+  state.layout = dir;
+  document.querySelectorAll('[data-layout]').forEach(btn => {
+    const isActive = btn.dataset.layout === dir;
+    btn.classList.toggle('active', isActive);
+    btn.setAttribute('aria-checked', isActive);
+  });
+  renderNodes();
+}
+
+// ============================================================
+//  EVENT WIRING
+// ============================================================
+document.addEventListener('DOMContentLoaded', () => {
+  // Initial render
+  renderNodes();
+
+  // Canvas click => deselect
+  document.getElementById('canvas').addEventListener('click', (e) => {
+    if (e.target.closest('.node') || e.target.closest('.config-toggle') || e.target.closest('.config-panel')) return;
+    deselectNode();
+  });
+
+  // Sidebar collapse
+  document.getElementById('sidebarCollapseBtn').addEventListener('click', toggleSidebar);
+
+  // Panel close
+  document.getElementById('panelCloseBtn').addEventListener('click', closePanel);
+
+  // Theme buttons
+  document.querySelectorAll('[data-theme-select]').forEach(btn => {
+    btn.addEventListener('click', () => setTheme(btn.dataset.themeSelect));
+  });
+
+  // Layout toggle
+  document.querySelectorAll('[data-layout]').forEach(btn => {
+    btn.addEventListener('click', () => setLayout(btn.dataset.layout));
+  });
+
+  // Config panel toggle
+  document.getElementById('configToggleBtn').addEventListener('click', toggleConfigPanel);
+  document.getElementById('topbarGearBtn').addEventListener('click', toggleConfigPanel);
+
+  // Node style toggle
+  document.querySelectorAll('[data-node-style]').forEach(btn => {
+    btn.addEventListener('click', () => setNodeStyle(btn.dataset.nodeStyle));
+  });
+
+  // Node gap
+  document.querySelectorAll('[data-gap]').forEach(btn => {
+    btn.addEventListener('click', () => setNodeGap(btn.dataset.gap));
+  });
+
+  // Connector style
+  document.querySelectorAll('[data-connector]').forEach(btn => {
+    btn.addEventListener('click', () => setConnectorStyle(btn.dataset.connector));
+  });
+
+  // Navigator tree click
+  document.querySelectorAll('.sidebar__tree-item').forEach(el => {
+    el.addEventListener('click', () => {
+      const id = el.dataset.nodeId;
+      if (id) selectNode(id);
+    });
+  });
+
+  // Keyboard shortcuts
+  document.addEventListener('keydown', (e) => {
+    // Ctrl+B => toggle sidebar
+    if (e.ctrlKey && e.key === 'b') {
+      e.preventDefault();
+      toggleSidebar();
+    }
+    // Escape => close panel / deselect
+    if (e.key === 'Escape') {
+      if (document.getElementById('configPanel').classList.contains('open')) {
+        toggleConfigPanel();
+      } else if (state.selectedNodeId) {
+        deselectNode();
+      }
+    }
+    // Ctrl+F => focus search
+    if (e.ctrlKey && e.key === 'f') {
+      e.preventDefault();
+      document.querySelector('.topbar__search input').focus();
+    }
+  });
+
+  // Window resize => re-render
+  let resizeTimer;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(renderNodes, 100);
+  });
+});
+</script>
+
+</body>
+</html>

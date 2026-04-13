@@ -34,7 +34,7 @@ Layout composition details (exact sidebar behavior, panel positioning) are defer
 - **D-10:** Right side panel appears on node click for detail view.
 - **D-11:** Left sidebar for navigation/tools/recent files/settings — may move to top bar; not locked.
 - **D-12:** Bottom status bar for external events and general system status.
-- **D-13:** `phase-1.html` is a color/theme reference, not a layout source of truth. Detailed layout composition will be specified in `/gsd:ui-phase`.
+- **D-13:** `variant-c-merged.html` is the canonical design reference (layout, color, interactions). Replaces `phase-1.html` after user-approved design iteration.
 
 ### Testing & TDD Strategy
 - **D-14:** TDD-first — tests written before implementation for all theme system work. Natural order: token-level assertions first, then `ThemeProvider` behavior tests, then component tests.
@@ -73,7 +73,7 @@ Layout composition details (exact sidebar behavior, panel positioning) are defer
 - `.planning/REQUIREMENTS.md` §Theme System (THEME-01 through THEME-05) — full acceptance criteria for each theme requirement
 
 ### Design Reference
-- `.planning/design/phase-1.html` — color/theme reference (not layout source of truth); use for color palette and visual tone guidance
+- `.planning/design/variant-c-merged.html` — canonical design reference (layout, color, interactions, theme switching)
 
 ### Architecture & Constraints
 - `.planning/PROJECT.md` §Architecture — two-process model, Electrobun patterns

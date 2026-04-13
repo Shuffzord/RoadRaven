@@ -101,19 +101,19 @@ All steps follow a **TDD-first** approach — tests are written before implement
 
 #### Step 1 — Visual Foundation & Themes
 
-**Goal:** The app renders the design shown in `.planning/design/phase-1.html`. Theme loading and switching works before any real data is wired up.
+**Goal:** The app renders the design shown in `.planning/design/variant-c-merged.html`. Theme loading and switching works before any real data is wired up.
 
 - `ThemeProvider` applies the active theme as `--rv-*` CSS custom properties on `:root`
-- Built-in themes: `dark` (default, matching `phase-1.html`), `light`, `high-contrast`
+- Built-in themes: `dark` (default, matching `variant-c-merged.html`), `light`, `high-contrast`
 - App-level preference persisted in `.roadmap-settings.json`; OS `prefers-color-scheme` respected when preference is `'system'`
-- Static sample components matching the `phase-1.html` design:
-  - App shell: top bar, sidebar, canvas with dot-grid, status bar
-  - Node component: left colour-stripe (4 px), status badge (pill + text label), title, child-count
-  - Side panel: header zone, metadata grid, notes area, actions footer
+- Static sample components matching the `variant-c-merged.html` design:
+  - App shell: top bar (with search, new/open, view controls), collapsible sidebar, canvas with dot-grid, status bar
+  - Node component: left colour-stripe (4 px), status badge (pill + text label), title — rounded corners (8px) default
+  - Side panel: slides in from right on node click, header zone, metadata grid, notes area
 - Schema-scoped `themeConfig` block overrides the active base theme for a loaded file
 - All components use `--rv-*` tokens — no hardcoded colours
 
-**Done when:** App visually matches `phase-1.html`. All three built-in themes switch without reload. Component tests for `ThemeProvider` and sample components pass.
+**Done when:** App visually matches `variant-c-merged.html`. All three built-in themes switch without reload. Component tests for `ThemeProvider` and sample components pass.
 
 ---
 
@@ -589,7 +589,7 @@ The `plugin` block replaces the former `claudeCode` hardcoded field. Migrating: 
 
 Optional. Defines schema-scoped theme overrides. When present, the schema's theme takes precedence over the app-level preference for this file. Unspecified tokens fall back to the active base theme.
 
-**Design note:** The app is dark-first. The `dark` theme (default) matches the design shown in `.planning/design/phase-1.html` — sharp corners, dark surfaces, high-contrast status colours, monospaced/uppercase label typography. The `light` theme is the alternative.
+**Design note:** The app is dark-first. The `dark` theme (default) matches the design shown in `.planning/design/variant-c-merged.html` — rounded corners (8px default, configurable), dark surfaces, subtle shadows on hover, blue accent. The `light` theme is the alternative.
 
 ```json
 "themeConfig": {
@@ -1439,6 +1439,6 @@ Decisions logged here when raised; marked resolved when answer is incorporated i
 | 10 | Drag and drop in MVP? | ✅ Resolved | Removed from MVP. v1.1 feature. |
 | 11 | Multi-window support? | ✅ Resolved | Out of scope for MVP. One window only. |
 | 12 | Integration model: hardcoded adapters vs plugin system? | ✅ Resolved | Plugin system. Each integration is a plugin implementing `RoadmapPlugin`. Claude Code ships as the reference implementation. `claudeCode` node field replaced by generic `plugin: { id, config }`. |
-| 13 | Theming: CSS-in-JS vs CSS custom properties vs JSON tokens? | ✅ Resolved | CSS custom properties (`--rv-*`). Built-in base themes: `dark` (default), `light`, `high-contrast`. App is dark-first; default matches `phase-1.html` design. Schema-scoped `themeConfig` overrides app preference for that file. |
+| 13 | Theming: CSS-in-JS vs CSS custom properties vs JSON tokens? | ✅ Resolved | CSS custom properties (`--rv-*`). Built-in base themes: `dark` (default), `light`, `high-contrast`. App is dark-first; default matches `variant-c-merged.html` design. Schema-scoped `themeConfig` overrides app preference for that file. |
 | 14 | Should third-party plugins be loadable at runtime? | ✅ Resolved | MVP uses static compile-time imports — all plugins bundled into the app. The `RoadmapPlugin` interface is designed to be loadable either way. Dynamic runtime loading from a local `plugins/` directory is v1.1. Sandboxing model is deferred to v1.1 research. |
 | 15 | Should `themeConfig.tokens` accept full CSS values or only predefined scales? | ✅ Resolved | Free-form CSS strings for MVP. Zod validates only that keys start with `--rv-` and values are non-empty strings. Invalid CSS values are silently ignored by the browser and fall back to the base theme token. Token-type enforcement (e.g. validating a color token isn't given a length) is a v1.1 lint rule, not a runtime validator. |

@@ -66,7 +66,7 @@ Plans:
 3. Per-schema theme overrides — `themeConfig` block in JSON schema parsed and applied as token overrides on top of the active base theme; component tests for `ThemeProvider` and sample components pass
 
 **Done when:**
-- App visually matches `phase-1.html` design reference
+- App visually matches `variant-c-merged.html` design reference
 - All three built-in themes switch without page reload
 - Switching to `'system'` preference reflects the OS `prefers-color-scheme` value
 - Loading a schema with a `themeConfig` block overrides the active theme tokens for that file
