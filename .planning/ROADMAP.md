@@ -60,10 +60,12 @@ Plans:
 
 **Requirements covered:** THEME-01, THEME-02, THEME-03, THEME-04, THEME-05
 
-**Plans:**
-1. Theme token system — `ThemeProvider` applies active theme as `--rv-*` CSS custom properties on `:root`; `dark` (default), `light`, `high-contrast` themes defined; app-level preference persisted in `.roadmap-settings.json`; OS `prefers-color-scheme` respected when set to `'system'`
-2. App shell components — static top bar, sidebar, canvas with dot-grid, status bar, node component (4px left colour-stripe, status badge pill, title), and side panel skeleton; all use `--rv-*` tokens exclusively — no hardcoded colours
-3. Per-schema theme overrides — `themeConfig` block in JSON schema parsed and applied as token overrides on top of the active base theme; component tests for `ThemeProvider` and sample components pass
+**Plans:** 3 plans
+
+Plans:
+- [ ] 01-01-PLAN.md — Tailwind v4 migration + token system + ThemeProvider + Zustand store
+- [ ] 01-02-PLAN.md — App shell components (TopBar, Sidebar, Canvas, Node, SidePanel, StatusBar, ConfigPanel)
+- [ ] 01-03-PLAN.md — Per-schema themeConfig overrides + LogTape structured logging foundation
 
 **Done when:**
 - App visually matches `variant-c-merged.html` design reference
@@ -209,7 +211,7 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | Prerequisite: App Scaffold | 0/3 | Planned | - |
-| 1. Visual Foundation & Themes | 0/3 | Not started | - |
+| 1. Visual Foundation & Themes | 0/3 | Planned | - |
 | 2. Read-Only Viewer | 0/4 | Not started | - |
 | 3. Full Editor | 0/4 | Not started | - |
 | 4. Event API | 0/4 | Not started | - |
