@@ -67,6 +67,15 @@ export type RoadmapRPCType = {
 				params: Record<string, never>;
 				response: { settings: AppSettings };
 			};
+			logMessage: {
+				params: {
+					level: "debug" | "info" | "warning" | "error" | "fatal";
+					category: string[];
+					message: string;
+					data?: Record<string, unknown>;
+				};
+				response: void;
+			};
 		};
 		messages: {
 			nodeStatusUpdate: {

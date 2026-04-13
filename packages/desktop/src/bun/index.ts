@@ -1,7 +1,18 @@
 import { BrowserWindow, Updater, Utils } from "electrobun/bun";
+import { getLogger } from "@logtape/logtape";
+import { setupBunLogging, bunLogger } from "./logging";
+import { loadSettings, saveSettings } from "./settings";
 
 // Re-export the RPC type so downstream modules can import from the app entry
 export type { RoadmapRPCType } from "../../../../shared/types.ts";
+
+// Initialize logging before anything else (D-21)
+await setupBunLogging();
+bunLogger.info("Bun process starting");
+
+// Load settings on startup
+const initialSettings = loadSettings();
+bunLogger.info`Loaded settings: ${JSON.stringify(initialSettings)}`;
 
 const DEV_SERVER_PORT = 5173;
 const DEV_SERVER_URL = `http://localhost:${DEV_SERVER_PORT}`;
@@ -45,7 +56,27 @@ export const mainWindow = new BrowserWindow({
 	},
 });
 
+// Register RPC handlers for webview communication
+// logMessage handler -- receives forwarded webview logs (per D-22)
+mainWindow.rpc.handle("logMessage", ({ level, category, message, data }) => {
+	const logger = getLogger(category);
+	logger[level](message, data ? { ...data } : undefined);
+});
+
+// saveSettings handler
+mainWindow.rpc.handle("saveSettings", ({ settings }) => {
+	saveSettings(settings);
+	return { success: true };
+});
+
+// loadSettings handler
+mainWindow.rpc.handle("loadSettings", () => {
+	return { settings: loadSettings() };
+});
+
 Utils.showNotification({
 	title: "RoadRaven",
 	body: "RoadRaven is running.",
 });
+
+bunLogger.info("RoadRaven main process initialized");

@@ -2,7 +2,11 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App";
 import { ThemeProvider } from "./components/ThemeProvider";
+import { setupWebviewLogging } from "./logging/logger";
 import "./index.css";
+
+// Initialize logging before React render (per Research Pitfall 5)
+await setupWebviewLogging();
 
 const rootEl = document.getElementById("root");
 if (!rootEl) {
