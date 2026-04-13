@@ -104,7 +104,7 @@ describe("setupBunLogging", () => {
 			"utf-8",
 		);
 		expect(loggingSource).toContain("getStreamSink");
-		expect(loggingSource).toContain("createWriteStream");
+		expect(loggingSource).toContain("WritableStream");
 		expect(loggingSource).toContain("roadraven.log");
 	});
 });

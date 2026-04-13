@@ -5,7 +5,8 @@ import {
 	getStreamSink,
 } from "@logtape/logtape";
 import { join } from "node:path";
-import { existsSync, mkdirSync, createWriteStream } from "node:fs";
+import { existsSync, mkdirSync } from "node:fs";
+import type { FileSink } from "bun";
 
 export function getLogDirectory(): string {
 	// Platform-specific log directory per D-23
@@ -37,18 +38,28 @@ export async function setupBunLogging(): Promise<void> {
 
 	const logFilePath = join(logDir, "roadraven.log");
 
-	// LogTape 2.0.5 does not provide getFileSink or getRotatingFileSink.
-	// Using getStreamSink with a Node.js WriteStream as fallback.
-	// Manual rotation deferred to Phase 2 enhancement.
-	const fileStream = createWriteStream(logFilePath, {
-		flags: "a",
-		encoding: "utf-8",
+	// getStreamSink requires a Web WritableStream (not Node.js stream).
+	// For Bun: use Bun.file().writer() wrapped in a WritableStream.
+	let writer: FileSink | undefined;
+	const fileWritable = new WritableStream({
+		start() {
+			writer = Bun.file(logFilePath).writer();
+		},
+		write(chunk) {
+			writer?.write(chunk);
+		},
+		close() {
+			writer?.flush();
+		},
+		abort() {
+			writer?.flush();
+		},
 	});
 
 	await configure({
 		sinks: {
 			console: getConsoleSink(),
-			file: getStreamSink(fileStream),
+			file: getStreamSink(fileWritable),
 		},
 		loggers: [
 			{

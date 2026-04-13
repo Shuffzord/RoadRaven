@@ -1,10 +1,11 @@
-import { BrowserWindow, Updater, Utils } from "electrobun/bun";
+import { BrowserView, BrowserWindow, Updater, Utils } from "electrobun/bun";
 import { getLogger } from "@logtape/logtape";
+import type { RoadmapRPCType } from "../../../../shared/types.ts";
 import { setupBunLogging, bunLogger } from "./logging";
 import { loadSettings, saveSettings } from "./settings";
 
 // Re-export the RPC type so downstream modules can import from the app entry
-export type { RoadmapRPCType } from "../../../../shared/types.ts";
+export type { RoadmapRPCType };
 
 // Initialize logging before anything else (D-21)
 await setupBunLogging();
@@ -42,36 +43,42 @@ async function getMainViewUrl(): Promise<string> {
 	return "views://mainview/index.html";
 }
 
+// Define RPC handlers before creating the window (Electrobun pattern)
+const rpc = BrowserView.defineRPC<RoadmapRPCType>({
+	handlers: {
+		requests: {
+			// logMessage handler -- receives forwarded webview logs (per D-22)
+			logMessage: ({ level, category, message, data }) => {
+				const logger = getLogger(category);
+				logger[level](message, data ? { ...data } : undefined);
+			},
+			// saveSettings handler
+			saveSettings: ({ settings }) => {
+				saveSettings(settings);
+				return { success: true };
+			},
+			// loadSettings handler
+			loadSettings: () => {
+				return { settings: loadSettings() };
+			},
+		},
+		messages: {},
+	},
+});
+
 // Create the main application window
 const url = await getMainViewUrl();
 
 export const mainWindow = new BrowserWindow({
 	title: "RoadRaven",
 	url,
+	rpc,
 	frame: {
 		width: 900,
 		height: 700,
 		x: 200,
 		y: 200,
 	},
-});
-
-// Register RPC handlers for webview communication
-// logMessage handler -- receives forwarded webview logs (per D-22)
-mainWindow.rpc.handle("logMessage", ({ level, category, message, data }) => {
-	const logger = getLogger(category);
-	logger[level](message, data ? { ...data } : undefined);
-});
-
-// saveSettings handler
-mainWindow.rpc.handle("saveSettings", ({ settings }) => {
-	saveSettings(settings);
-	return { success: true };
-});
-
-// loadSettings handler
-mainWindow.rpc.handle("loadSettings", () => {
-	return { settings: loadSettings() };
 });
 
 Utils.showNotification({
