@@ -1,0 +1,2 @@
+* text=auto eol=lf
+*.{png,jpg,ico,gif,webp,svg,woff,woff2,ttf,eot} binary
