@@ -9,6 +9,20 @@ export type { IntegrationEvent };
  */
 type RPCSchema<T> = T;
 
+// -- Theme types -------------------------------------------------------------
+
+export type ThemePreference = "dark" | "light" | "high-contrast" | "system";
+
+/**
+ * Strict settings interface — add fields here as new phases need them.
+ * Each field is optional so partial updates work via saveSettings RPC.
+ */
+export interface AppSettings {
+	theme?: ThemePreference;
+	// Phase 2 adds: layout?: 'TB' | 'LR';
+	// Phase 2 adds: recentFiles?: string[];
+}
+
 // -- Placeholder types (filled in Phase 2 with Zod schemas) ----------------
 
 /** Placeholder -- full Zod-validated schema defined in @roadraven/core Phase 2 */
@@ -45,6 +59,14 @@ export type RoadmapRPCType = {
 				response: string | null;
 			};
 			resolveRef: { params: { refPath: string }; response: RoadmapNode[] };
+			saveSettings: {
+				params: { settings: Partial<AppSettings> };
+				response: { success: boolean };
+			};
+			loadSettings: {
+				params: Record<string, never>;
+				response: { settings: AppSettings };
+			};
 		};
 		messages: {
 			nodeStatusUpdate: {
