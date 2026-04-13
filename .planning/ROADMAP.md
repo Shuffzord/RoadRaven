@@ -34,9 +34,9 @@ Starting from a bare Electrobun shell, we build outward through the visual stack
 **Plans:** 3 plans
 
 Plans:
-- [ ] 00-01-PLAN.md — Monorepo bootstrap: workspace structure, migrate code to packages/desktop, bundleCEF: true
-- [ ] 00-02-PLAN.md — RPC contract + Updater fix: shared/types.ts with RoadmapRPCType, SCAF-09 try/catch
-- [ ] 00-03-PLAN.md — TDD pipeline: Biome, Vitest, Playwright two-tier, GitHub Actions CI
+- [x] 00-01-PLAN.md — Monorepo bootstrap: workspace structure, migrate code to packages/desktop, bundleCEF: true
+- [x] 00-02-PLAN.md — RPC contract + Updater fix: shared/types.ts with RoadmapRPCType, SCAF-09 try/catch
+- [x] 00-03-PLAN.md — TDD pipeline: Biome, Vitest, Playwright two-tier, GitHub Actions CI
 
 **Done when:**
 - `bun run dev` opens a blank window without errors
