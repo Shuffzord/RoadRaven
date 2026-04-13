@@ -1,0 +1,47 @@
+import { create } from "zustand";
+import { electroview } from "../rpc";
+
+export type ThemePreference = "dark" | "light" | "high-contrast" | "system";
+export type ResolvedTheme = "dark" | "light" | "high-contrast";
+
+export interface ThemeState {
+	preference: ThemePreference;
+	systemResolution: "dark" | "light";
+	resolvedTheme: ResolvedTheme;
+	setTheme: (pref: ThemePreference) => void;
+	updateSystemResolution: (resolved: "dark" | "light") => void;
+}
+
+export const useThemeStore = create<ThemeState>((set, get) => ({
+	preference: "dark",
+	systemResolution: (() => {
+		try {
+			return typeof window !== "undefined" &&
+				window.matchMedia?.("(prefers-color-scheme: dark)").matches
+				? "dark"
+				: "light";
+		} catch {
+			return "dark";
+		}
+	})(),
+	resolvedTheme: "dark",
+	setTheme: (pref) => {
+		const resolved: ResolvedTheme =
+			pref === "system" ? get().systemResolution : pref;
+		set({ preference: pref, resolvedTheme: resolved });
+		// Persist theme preference via saveSettings RPC (D-05)
+		electroview.rpc.request
+			.saveSettings({ settings: { theme: pref } })
+			.catch(() => {
+				// RPC may not be available in test/dev environment
+			});
+	},
+	updateSystemResolution: (resolved) => {
+		const { preference } = get();
+		set({
+			systemResolution: resolved,
+			resolvedTheme:
+				preference === "system" ? resolved : get().resolvedTheme,
+		});
+	},
+}));

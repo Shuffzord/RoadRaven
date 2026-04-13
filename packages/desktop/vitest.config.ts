@@ -7,6 +7,6 @@ export default defineConfig({
 		globals: true,
 		environment: "node",
 		include: ["tests/unit/**/*.test.ts", "tests/unit/**/*.test.tsx"],
-		environmentMatchGlobs: [["tests/unit/ui/**", "jsdom"]],
+		environmentMatchGlobs: [["tests/unit/ui/**/*.test.{ts,tsx}", "jsdom"]],
 	},
 });
