@@ -395,22 +395,13 @@ export type RoadmapRPCType = {
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **shared/types.ts import strategy — relative vs. path alias**
-   - What we know: TypeScript needs explicit configuration to resolve workspace-root `shared/` from `packages/desktop/`
-   - What's unclear: Whether to use `../../shared/types` (relative) or a `tsconfig.json paths` alias
-   - Recommendation: Use relative import for Phase 0 (simpler, zero config); revisit if import depth becomes annoying in later phases
+1. **shared/types.ts import strategy — relative vs. path alias** — RESOLVED: Use relative import `../../shared/types` from `packages/desktop/`. Plan 00-02 implements this.
 
-2. **Playwright Tier 2 (Bun-native) smoke test — what exactly to assert**
-   - What we know: Tier 2 tests `BrowserWindow` creates without crashing; Electrobun must actually run
-   - What's unclear: Whether Playwright can launch an Electrobun app in a headless CI environment on Linux with `bundleCEF: true` (requires display server or virtual framebuffer)
-   - Recommendation: Add `xvfb-run` wrapper in CI for process-tier Playwright tests on Linux; mark as `skip` if xvfb unavailable rather than failing CI
+2. **Playwright Tier 2 (Bun-native) smoke test — what exactly to assert** — RESOLVED: Use `bunx tsc --noEmit` and `electrobun.config.ts` import as proxy assertions for BrowserWindow validity. Actual BrowserWindow launch requires `xvfb` on Linux CI; Plan 00-03 documents this as an accepted Phase 0 constraint and adds `xvfb-run` wrapper in CI.
 
-3. **`plugins/claude-code/` — bare directory vs. package.json stub**
-   - What we know: D-05 says placeholder; Bun workspace glob is `plugins/*`
-   - What's unclear: Whether Bun workspace resolution errors on a directory without `package.json`
-   - Recommendation: Add a minimal `package.json` (`{ "name": "@roadraven/plugin-claude-code", "version": "0.0.1", "private": true }`) to be safe
+3. **`plugins/claude-code/` — bare directory vs. package.json stub** — RESOLVED: Create minimal `package.json` stub (`{ "name": "@roadraven/plugin-claude-code", "version": "0.0.1", "private": true }`). Plan 00-01 implements this.
 
 ---
 
