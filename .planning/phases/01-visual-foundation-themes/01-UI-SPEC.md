@@ -1,7 +1,8 @@
 ---
 phase: 1
 slug: visual-foundation-themes
-status: draft
+status: approved
+reviewed_at: 2026-04-13
 shadcn_initialized: false
 preset: none
 created: 2026-04-13
