@@ -17,14 +17,8 @@ export interface RoadmapNode {
 	children?: RoadmapNode[];
 }
 
-/** Event emitted by integration plugins */
-export interface IntegrationEvent {
-	nodeId: string;
-	status: string;
-	meta?: Record<string, unknown>;
-	source?: string;
-	timestamp?: string;
-}
+import type { IntegrationEvent } from "../packages/core/src/plugin.ts";
+export type { IntegrationEvent };
 
 // -- RPC Contract -----------------------------------------------------------
 
