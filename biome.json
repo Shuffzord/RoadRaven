@@ -12,7 +12,8 @@
 	},
 	"formatter": {
 		"enabled": true,
-		"indentStyle": "tab"
+		"indentStyle": "tab",
+		"lineEnding": "lf"
 	},
 	"files": {
 		"includes": [
@@ -20,6 +21,8 @@
 			"shared/**",
 			"plugins/**",
 			"biome.json",
+			"!**/dist",
+			"!**/build",
 			"!**/playwright-report",
 			"!**/test-results"
 		]

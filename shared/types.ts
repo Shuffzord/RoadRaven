@@ -1,4 +1,13 @@
-import type { RPCSchema } from "electrobun/bun";
+import type { IntegrationEvent } from "../packages/core/src/plugin.ts";
+
+export type { IntegrationEvent };
+
+/**
+ * RPCSchema type from electrobun/bun. Defined here as a passthrough generic
+ * because shared/ is outside the desktop package and cannot resolve electrobun.
+ * The actual RPCSchema constraint is enforced at usage site in packages/desktop/.
+ */
+type RPCSchema<T> = T;
 
 // -- Placeholder types (filled in Phase 2 with Zod schemas) ----------------
 
@@ -16,9 +25,6 @@ export interface RoadmapNode {
 	status: string;
 	children?: RoadmapNode[];
 }
-
-import type { IntegrationEvent } from "../packages/core/src/plugin.ts";
-export type { IntegrationEvent };
 
 // -- RPC Contract -----------------------------------------------------------
 
