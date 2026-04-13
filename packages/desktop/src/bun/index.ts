@@ -1,4 +1,4 @@
-import { BrowserWindow, Updater } from "electrobun/bun";
+import { BrowserWindow, Updater, Utils } from "electrobun/bun";
 
 // Re-export the RPC type so downstream modules can import from the app entry
 export type { RoadmapRPCType } from "../../../../shared/types.ts";
@@ -43,4 +43,9 @@ export const mainWindow = new BrowserWindow({
 		x: 200,
 		y: 200,
 	},
+});
+
+Utils.showNotification({
+	title: "RoadRaven",
+	body: "RoadRaven is running.",
 });
