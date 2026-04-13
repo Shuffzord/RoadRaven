@@ -1,46 +1,19 @@
 {
-	"name": "electrobun-react-tailwind-vite",
-	"version": "1.0.0",
-	"description": "Electrobun app with React, Tailwind CSS, and Vite HMR",
-	"scripts": {
-		"start": "vite build && electrobun dev",
-		"dev": "electrobun dev --watch",
-		"dev:hmr": "concurrently \"bun run hmr\" \"bun run start\"",
-		"hmr": "vite --port 5173",
-		"build:canary": "vite build && electrobun build --env=canary"
-	},
-	"dependencies": {
-		"@codemirror/lang-markdown": "^6.5.0",
-		"@codemirror/state": "^6.6.0",
-		"@codemirror/view": "^6.41.0",
-		"@radix-ui/react-context-menu": "^2.2.16",
-		"@radix-ui/react-dialog": "^1.1.15",
-		"@radix-ui/react-dropdown-menu": "^2.1.16",
-		"electrobun": "1.16.0",
-		"fuse.js": "^7.3.0",
-		"react": "^19.2.5",
-		"react-d3-tree": "^3.6.6",
-		"react-dom": "^19.2.5",
-		"rehype": "^13.0.2",
-		"remark": "^15.0.1",
-		"uuid": "^13.0.0",
-		"zod": "^4.3.6",
-		"zustand": "^5.0.12"
-	},
-	"devDependencies": {
-		"@testing-library/jest-dom": "^6.9.1",
-		"@testing-library/react": "^16.3.2",
-		"@types/bun": "latest",
-		"@types/node": "^25.6.0",
-		"@types/react": "^19.2.14",
-		"@types/react-dom": "^19.2.3",
-		"@vitejs/plugin-react": "^4.3.4",
-		"autoprefixer": "^10.4.20",
-		"concurrently": "^9.1.0",
-		"postcss": "^8.4.49",
-		"tailwindcss": "^3.4.16",
-		"typescript": "^6.0.2",
-		"vite": "^6.0.3",
-		"vitest": "^4.1.4"
-	}
+  "name": "roadraven-workspace",
+  "private": true,
+  "workspaces": [
+    "packages/*",
+    "plugins/*"
+  ],
+  "scripts": {
+    "dev:hmr": "bun run --cwd packages/desktop dev:hmr",
+    "build:canary": "bun run --cwd packages/desktop build:canary",
+    "start": "bun run --cwd packages/desktop start",
+    "dev": "bun run --cwd packages/desktop dev",
+    "test": "bun run --cwd packages/desktop test",
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "husky": "^9.1.7"
+  }
 }

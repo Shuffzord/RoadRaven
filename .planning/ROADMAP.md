@@ -31,10 +31,12 @@ Starting from a bare Electrobun shell, we build outward through the visual stack
 
 **Requirements covered:** SCAF-01, SCAF-02, SCAF-03, SCAF-04, SCAF-05, SCAF-06, SCAF-07, SCAF-08, SCAF-09
 
-**Plans:**
-1. Monorepo bootstrap — `packages/core`, `packages/react`, `packages/desktop`, `plugins/` directories with Bun workspace config; `bun install` succeeds; `bun run dev:hmr` and `bun run build:canary` both succeed; `bundleCEF: true` in `electrobun.config.ts` from day one
-2. RPC contract + plugin interface skeleton — `shared/types.ts` typed RPC contract imported by both processes; `RoadmapPlugin` interface in `packages/core/src/plugin.ts` (no implementation); Updater wrapped in try/catch
-3. TDD pipeline — Vitest configured with first passing unit test; Playwright configured (two-tier: Vite dev server + mock RPC for UI; Bun-native for process logic) with first passing test; GitHub Actions CI running lint + `bunx tsc --noEmit` + unit tests on every PR
+**Plans:** 3 plans
+
+Plans:
+- [x] 00-01-PLAN.md — Monorepo bootstrap: workspace structure, migrate code to packages/desktop, bundleCEF: true
+- [x] 00-02-PLAN.md — RPC contract + Updater fix: shared/types.ts with RoadmapRPCType, SCAF-09 try/catch
+- [x] 00-03-PLAN.md — TDD pipeline: Biome, Vitest, Playwright two-tier, GitHub Actions CI
 
 **Done when:**
 - `bun run dev` opens a blank window without errors
@@ -206,7 +208,7 @@ Starting from a bare Electrobun shell, we build outward through the visual stack
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| Prerequisite: App Scaffold | 0/3 | Not started | - |
+| Prerequisite: App Scaffold | 0/3 | Planned | - |
 | 1. Visual Foundation & Themes | 0/3 | Not started | - |
 | 2. Read-Only Viewer | 0/4 | Not started | - |
 | 3. Full Editor | 0/4 | Not started | - |
