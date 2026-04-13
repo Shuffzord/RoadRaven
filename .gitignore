@@ -20,6 +20,8 @@ dist-*
 /package/src/cli/templates/embedded.ts
 /package/src/bun/preload/.generated
 *.tar.gz
+*.tar.zst
+artifacts/
 settings.local.json
 
 # Bunny
