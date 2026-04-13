@@ -45,6 +45,14 @@ Layout composition details (exact sidebar behavior, panel positioning) are defer
 - **D-19:** **DOM and accessibility tests** — Verify correct ARIA attributes, DOM structure, and keyboard accessibility of theme-related UI (menu items, etc.).
 - **D-20:** **No visual regression / screenshot tests.** No snapshot comparisons. These are over-engineering for this phase and create maintenance burden. Token-level and behavior tests are sufficient.
 
+### Logging Foundation
+- **D-21:** Establish structured logging in Phase 1 using **LogTape** (`@logtape/logtape`). Zero dependencies, native Bun + browser support, 5.3 KB.
+- **D-22:** **Two-process architecture:** Webview forwards logs to Bun main process via typed RPC (`logMessage` in `shared/types.ts`). Main process owns all file I/O — single writer, no corruption risk.
+- **D-23:** **Sinks:** Console sink (pretty-printed) for dev, rotating file sink (structured JSON) for production. Log files in platform-specific app data directory (`%LOCALAPPDATA%/RoadRaven/logs/` on Windows, `~/Library/Logs/RoadRaven/` on macOS, `~/.local/share/RoadRaven/logs/` on Linux).
+- **D-24:** **Hierarchical categories:** e.g., `["bun", "theme"]`, `["bun", "settings"]`, `["webview", "store"]`, `["webview", "theme"]`. Categories established in Phase 1, extended by subsequent phases.
+- **D-25:** **Log levels:** `debug` in development, `info` in production. Configurable at runtime.
+- **D-26:** **Rotation:** Size-based, ~5-10 MB per file, keep 3-5 old files. Desktop app should never fill user's disk.
+
 ### Claude's Discretion
 - Exact Tailwind v4 migration steps and codemod usage
 - `@theme` token naming convention (e.g., `--color-rv-surface` vs `--color-rv-bg-surface`)

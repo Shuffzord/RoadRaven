@@ -5,7 +5,7 @@
 
 **Date:** 2026-04-13
 **Phase:** 01-visual-foundation-themes
-**Areas discussed:** Token architecture & Tailwind integration, App shell layout & composition, Theme persistence & switching UX, Per-schema themeConfig overrides, Testing & TDD strategy
+**Areas discussed:** Token architecture & Tailwind integration, App shell layout & composition, Theme persistence & switching UX, Per-schema themeConfig overrides, Testing & TDD strategy, Logging foundation
 
 ---
 
@@ -81,6 +81,23 @@ Research agent spawned to investigate 5 approaches for integrating `--rv-*` CSS 
 
 ---
 
+## Logging Foundation
+
+Research agent investigated logging options for Electrobun's two-process model (Bun main + webview).
+
+| Option | Description | Selected |
+|--------|-------------|----------|
+| LogTape | Zero deps, native Bun + browser, structured, 5.3 KB | ✓ |
+| Pino | Fast JSON logging, needs bun-plugin-pino for Bun | |
+| Winston | Broken on Bun >= 1.2.x, 17 deps | |
+| Consola | Lightweight, no built-in file sink | |
+| Bun console.* only | No persistence, no structure | |
+
+**User's choice:** LogTape with RPC forwarding from webview to main process
+**Notes:** Electrobun has no built-in logging API and no onConsoleMessage callback. Webview logs must forward via typed RPC. Main process owns all file I/O. User flagged logging as critical early in the project — established in Phase 1 so all subsequent phases just use it.
+
+---
+
 ## Claude's Discretion
 
 - Tailwind v4 migration steps and codemod usage
@@ -89,6 +106,7 @@ Research agent spawned to investigate 5 approaches for integrating `--rv-*` CSS 
 - OS theme detection mechanism
 - Theme menu placement
 - `.roadmap-settings.json` internal structure
+- LogTape sink configuration details and category naming
 
 ## Deferred Ideas
 
