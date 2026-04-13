@@ -4,6 +4,14 @@
   "workspaces": {
     "": {
       "name": "electrobun-react-tailwind-vite",
+    },
+    "packages/core": {
+      "name": "@roadraven/core",
+      "version": "0.0.1",
+    },
+    "packages/desktop": {
+      "name": "@roadraven/desktop",
+      "version": "0.0.1",
       "dependencies": {
         "@codemirror/lang-markdown": "^6.5.0",
         "@codemirror/state": "^6.6.0",
@@ -39,6 +47,18 @@
         "vite": "^6.0.3",
         "vitest": "^4.1.4",
       },
+    },
+    "packages/react": {
+      "name": "@roadraven/react",
+      "version": "0.0.1",
+      "peerDependencies": {
+        "react": "^19.0.0",
+        "react-dom": "^19.0.0",
+      },
+    },
+    "plugins/claude-code": {
+      "name": "@roadraven/plugin-claude-code",
+      "version": "0.0.1",
     },
   },
   "packages": {
@@ -275,6 +295,14 @@
     "@radix-ui/react-use-size": ["@radix-ui/react-use-size@1.1.1", "", { "dependencies": { "@radix-ui/react-use-layout-effect": "1.1.1" }, "peerDependencies": { "@types/react": "*", "react": "^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc" }, "optionalPeers": ["@types/react"] }, "sha512-ewrXRDTAqAXlkl6t/fkXWNAhFX9I+CkKlw6zjEwk86RSPKwZr3xpBRso655aqYafwtnbpHLj6toFzmd6xdVptQ=="],
 
     "@radix-ui/rect": ["@radix-ui/rect@1.1.1", "", {}, "sha512-HPwpGIzkl28mWyZqG52jiqDJ12waP11Pa1lGoiyUkIEuMLBP0oeK/C89esbXrxsky5we7dfd8U58nm0SgAWpVw=="],
+
+    "@roadraven/core": ["@roadraven/core@workspace:packages/core"],
+
+    "@roadraven/desktop": ["@roadraven/desktop@workspace:packages/desktop"],
+
+    "@roadraven/plugin-claude-code": ["@roadraven/plugin-claude-code@workspace:plugins/claude-code"],
+
+    "@roadraven/react": ["@roadraven/react@workspace:packages/react"],
 
     "@rolldown/pluginutils": ["@rolldown/pluginutils@1.0.0-beta.27", "", {}, "sha512-+d0F4MKMCbeVUJwG96uQ4SgAznZNSq93I3V+9NHA4OpvqG8mRCpGdKmK8l/dl02h2CCDHwW2FqilnTyDcAnqjA=="],
 
