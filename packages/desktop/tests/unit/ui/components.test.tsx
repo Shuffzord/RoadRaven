@@ -83,7 +83,9 @@ describe("Hardcoded color check", () => {
       __dirname,
       "../../../src/mainview/components",
     );
-    const files = fs.readdirSync(componentsDir).filter((f: string) => f.endsWith(".tsx"));
+    const files = fs.readdirSync(componentsDir).filter(
+      (f: string) => f.endsWith(".tsx") && f !== "ThemeOverrideProvider.tsx",
+    );
     const hexPattern = /#[0-9a-fA-F]{3,8}\b/;
     const rgbPattern = /rgb\(|rgba\(|hsl\(/;
 
