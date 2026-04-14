@@ -5,6 +5,7 @@
     "": {
       "name": "electrobun-react-tailwind-vite",
       "devDependencies": {
+        "@biomejs/biome": "^2.4.11",
         "husky": "^9.1.7",
       },
     },

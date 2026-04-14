@@ -15,7 +15,8 @@ export function loadSettings(basePath?: string): AppSettings {
 	try {
 		const raw = readFileSync(path, "utf-8");
 		return JSON.parse(raw) as AppSettings;
-	} catch {
+	} catch (e) {
+		console.warn("[settings] Failed to parse .roadmap-settings.json:", e);
 		return {};
 	}
 }

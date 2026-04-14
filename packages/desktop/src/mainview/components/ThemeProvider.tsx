@@ -19,8 +19,8 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 					useThemeStore.getState().setTheme(saved);
 				}
 			})
-			.catch(() => {
-				// RPC may not be available in test/dev — use default
+			.catch((e) => {
+				console.warn("[ThemeProvider] loadSettings RPC failed, using defaults:", e);
 			});
 	}, []);
 

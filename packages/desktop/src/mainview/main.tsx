@@ -9,8 +9,8 @@ import "./index.css";
 // Catch errors so Electrobun RPC unavailability doesn't block rendering
 try {
 	await setupWebviewLogging();
-} catch {
-	// electrobun/view may not be available outside Electrobun runtime
+} catch (e) {
+	console.warn("[logging] setupWebviewLogging failed — RPC forwarding disabled:", e);
 }
 
 const rootEl = document.getElementById("root");

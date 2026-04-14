@@ -1,3 +1,4 @@
+import { ConfigPanel } from "./ConfigPanel";
 import { RoadmapNode } from "./RoadmapNode";
 
 export function Canvas() {
@@ -38,6 +39,8 @@ export function Canvas() {
           strokeWidth="1.5"
         />
       </svg>
+
+      <ConfigPanel />
     </div>
   );
 }

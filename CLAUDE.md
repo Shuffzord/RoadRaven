@@ -10,6 +10,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 > **IMPORTANT:** This is Electrobun, NOT Electron. Do not use Electron APIs, patterns, or documentation.
 
+> **IMPORTANT:** Use `bun` and `bunx` for all package management and script execution. Do not use `npm`, `npx`, `yarn`, or `pnpm`.
+
 ## Commands
 
 ```bash
@@ -25,6 +27,10 @@ bun run build:canary  # Production build (canary channel)
 bunx vitest           # Run all tests in watch mode
 bunx vitest run       # Run once (CI)
 bunx vitest run path/to/file.test.ts  # Run single test file
+
+# Linting (biome)
+bunx @biomejs/biome lint packages/desktop/src/ shared/  # Lint source
+bunx @biomejs/biome check --write .                      # Auto-fix
 ```
 
 ## Architecture
@@ -37,7 +43,8 @@ See `docs/` for detailed architecture documentation, design system guide, and de
 
 Before creating a PR, ensure:
 1. `bunx vitest run` — all tests pass
-2. `npx vite build` — production build succeeds (catches import/CSS issues that unit tests miss)
+2. `bunx vite build` — production build succeeds (catches import/CSS issues that unit tests miss)
+3. `bunx @biomejs/biome lint packages/desktop/src/ shared/` — no lint errors
 
 ## Electrobun-specific patterns
 

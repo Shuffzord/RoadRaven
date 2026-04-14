@@ -1,12 +1,21 @@
 {
 	"$schema": "https://biomejs.dev/schemas/2.4.11/schema.json",
 	"assist": { "actions": { "source": { "organizeImports": "on" } } },
+	"css": {
+		"parser": {
+			"tailwindDirectives": true
+		}
+	},
 	"linter": {
 		"enabled": true,
 		"rules": {
 			"recommended": true,
 			"suspicious": {
-				"noUnknownAtRules": "off"
+				"noUnknownAtRules": "off",
+				"noEmptyBlockStatements": "error"
+			},
+			"complexity": {
+				"noImportantStyles": "warn"
 			}
 		}
 	},
