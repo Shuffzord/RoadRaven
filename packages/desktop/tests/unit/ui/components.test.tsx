@@ -18,7 +18,7 @@ vi.mock("../../../src/mainview/rpc", () => ({
 	},
 }));
 
-import { RoadmapNodeCard } from "../../../src/mainview/components/RoadmapNodeCard";
+import { RoadmapNodeCard } from "../../../src/mainview/components/RoadmapNode";
 import { SidePanel } from "../../../src/mainview/components/SidePanel";
 
 describe("RoadmapNodeCard", () => {
