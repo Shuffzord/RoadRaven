@@ -6,7 +6,12 @@ import { setupWebviewLogging } from "./logging/logger";
 import "./index.css";
 
 // Initialize logging before React render (per Research Pitfall 5)
-await setupWebviewLogging();
+// Catch errors so Electrobun RPC unavailability doesn't block rendering
+try {
+	await setupWebviewLogging();
+} catch {
+	// electrobun/view may not be available outside Electrobun runtime
+}
 
 const rootEl = document.getElementById("root");
 if (!rootEl) {

@@ -1,5 +1,4 @@
 import { configure, getConsoleSink, getLogger } from "@logtape/logtape";
-import { electroview } from "../rpc";
 
 // Buffer + retry for RPC log forwarding failures (D-22)
 const failedLogs: Array<{
@@ -11,10 +10,23 @@ const failedLogs: Array<{
 let consecutiveFailures = 0;
 
 export async function setupWebviewLogging(): Promise<void> {
+	// Lazy-import rpc to avoid crashing when electrobun/view is unavailable
+	// (e.g. during Vite HMR dev server outside Electrobun runtime)
+	let rpcSend: ((payload: Record<string, unknown>) => Promise<void>) | null =
+		null;
+	try {
+		const { electroview } = await import("../rpc");
+		rpcSend = (payload) =>
+			electroview.rpc.request.logMessage(payload as never);
+	} catch {
+		// electrobun/view not available — RPC forwarding disabled, console-only
+	}
+
 	await configure({
 		sinks: {
 			console: getConsoleSink(),
 			rpc: (record) => {
+				if (!rpcSend) return;
 				// Per D-22: Forward webview logs to Bun main process via typed RPC
 				const payload = {
 					level: record.level as
@@ -32,16 +44,13 @@ export async function setupWebviewLogging(): Promise<void> {
 						? { ...record.properties }
 						: undefined,
 				};
-				electroview.rpc.request
-					.logMessage(payload)
+				rpcSend(payload)
 					.then(() => {
 						consecutiveFailures = 0;
 						// Flush any buffered logs
 						while (failedLogs.length) {
 							const queued = failedLogs.shift()!;
-							electroview.rpc.request
-								.logMessage(queued)
-								.catch(() => {});
+							rpcSend!(queued).catch(() => {});
 						}
 					})
 					.catch(() => {

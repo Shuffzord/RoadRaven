@@ -64,8 +64,8 @@ Plans:
 
 Plans:
 - [x] 01-01-PLAN.md — Tailwind v4 migration + token system + ThemeProvider + Zustand store
-- [ ] 01-02-PLAN.md — App shell components (TopBar, Sidebar, Canvas, Node, SidePanel, StatusBar, ConfigPanel)
-- [ ] 01-03-PLAN.md — Per-schema themeConfig overrides + LogTape structured logging foundation
+- [x] 01-02-PLAN.md — App shell components (TopBar, Sidebar, Canvas, Node, SidePanel, StatusBar, ConfigPanel)
+- [x] 01-03-PLAN.md — Per-schema themeConfig overrides + LogTape structured logging foundation
 
 **Done when:**
 - App visually matches `variant-c-merged.html` design reference
