@@ -20,7 +20,7 @@ function formatStatus(status: string): string {
 		.join(" ");
 }
 
-export function RoadmapNode({
+export function RoadmapNodeCard({
 	title,
 	status,
 }: {

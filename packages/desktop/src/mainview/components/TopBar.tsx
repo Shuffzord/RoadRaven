@@ -224,7 +224,7 @@ function ToggleGroup({
 }) {
 	return (
 		<div
-			className="flex items-center bg-rv-bg-input border border-rv-border rounded-[6px] h-[28px]"
+			className="flex items-center bg-rv-bg-input border border-rv-border rounded-[6px] h-[28px] opacity-60"
 			role="radiogroup"
 			aria-label={label}
 		>
@@ -234,9 +234,11 @@ function ToggleGroup({
 					className={`px-2.5 h-full text-[11px] font-semibold transition duration-150 ${
 						active === opt.value
 							? "bg-rv-accent-muted text-rv-accent"
-							: "text-rv-text-tertiary hover:text-rv-text-secondary"
+							: "text-rv-text-tertiary"
 					}`}
 					type="button"
+					disabled
+					aria-pressed={active === opt.value}
 				>
 					{opt.label}
 				</button>

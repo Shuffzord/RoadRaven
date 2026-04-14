@@ -77,7 +77,7 @@ describe("settings", () => {
 	afterEach(() => {
 		// Clean up temp settings file
 		if (tempDir) {
-			const settingsPath = join(tempDir, ".roadmap-settings.json");
+			const settingsPath = join(tempDir, "settings.json");
 			try {
 				if (existsSync(settingsPath)) {
 					unlinkSync(settingsPath);
@@ -92,7 +92,7 @@ describe("settings", () => {
 		const { getSettingsPath } = await import("../../src/bun/settings");
 		const result = getSettingsPath("/some/custom/path");
 		const normalized = result.replace(/\\/g, "/");
-		expect(normalized).toBe("/some/custom/path/.roadmap-settings.json");
+		expect(normalized).toBe("/some/custom/path/settings.json");
 	});
 
 	it("loadSettings returns empty object when file does not exist", async () => {

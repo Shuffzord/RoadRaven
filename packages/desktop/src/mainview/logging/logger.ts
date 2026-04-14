@@ -1,6 +1,8 @@
 import { configure, getConsoleSink, getLogger } from "@logtape/logtape";
 
-// Buffer + retry for RPC log forwarding failures (D-22)
+// RPC log forwarding: on failure, buffer up to 3 entries for one retry
+// on next success. After 3 consecutive failures, entries are dropped
+// to console.warn to avoid unbounded memory growth. (D-22)
 const failedLogs: Array<{
 	level: string;
 	category: string[];

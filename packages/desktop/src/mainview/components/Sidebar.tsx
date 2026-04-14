@@ -22,7 +22,7 @@ export function Sidebar() {
 					className="flex items-center justify-center w-6 h-6 rounded-[4px] text-rv-text-tertiary hover:bg-rv-bg-hover hover:text-rv-text-primary transition-all duration-150 ml-auto"
 					type="button"
 					onClick={() => setCollapsed(!collapsed)}
-					aria-label="Collapse sidebar"
+					aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
 					title="Ctrl+B"
 				>
 					<svg

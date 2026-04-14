@@ -1,8 +1,9 @@
 import { create } from "zustand";
+import type { ThemePreference } from "../../../../../shared/types";
 import { electroview } from "../rpc";
 
-export type ThemePreference = "dark" | "light" | "high-contrast" | "system";
-export type ResolvedTheme = "dark" | "light" | "high-contrast";
+export type { ThemePreference };
+export type ResolvedTheme = Exclude<ThemePreference, "system">;
 
 export interface ThemeState {
 	preference: ThemePreference;

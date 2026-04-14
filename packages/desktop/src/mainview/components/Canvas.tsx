@@ -1,5 +1,5 @@
 import { ConfigPanel } from "./ConfigPanel";
-import { RoadmapNode } from "./RoadmapNode";
+import { RoadmapNodeCard } from "./RoadmapNode";
 
 export function Canvas() {
 	return (
@@ -13,13 +13,13 @@ export function Canvas() {
 		>
 			{/* Sample nodes to demonstrate theme tokens */}
 			<div className="absolute" style={{ top: 100, left: 200 }}>
-				<RoadmapNode title="Setup Project" status="completed" />
+				<RoadmapNodeCard title="Setup Project" status="completed" />
 			</div>
 			<div className="absolute" style={{ top: 100, left: 500 }}>
-				<RoadmapNode title="Build Theme System" status="in-progress" />
+				<RoadmapNodeCard title="Build Theme System" status="in-progress" />
 			</div>
 			<div className="absolute" style={{ top: 250, left: 350 }}>
-				<RoadmapNode title="Wire Data Layer" status="not-started" />
+				<RoadmapNodeCard title="Wire Data Layer" status="not-started" />
 			</div>
 
 			{/* SVG connector placeholder */}

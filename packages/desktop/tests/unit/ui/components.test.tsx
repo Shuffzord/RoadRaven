@@ -18,23 +18,23 @@ vi.mock("../../../src/mainview/rpc", () => ({
 	},
 }));
 
-import { RoadmapNode } from "../../../src/mainview/components/RoadmapNode";
+import { RoadmapNodeCard } from "../../../src/mainview/components/RoadmapNodeCard";
 import { SidePanel } from "../../../src/mainview/components/SidePanel";
 
-describe("RoadmapNode", () => {
+describe("RoadmapNodeCard", () => {
 	it("renders title text", () => {
-		render(<RoadmapNode title="Test Node" status="in-progress" />);
+		render(<RoadmapNodeCard title="Test Node" status="in-progress" />);
 		expect(screen.getByText("Test Node")).toBeTruthy();
 	});
 
 	it("renders status badge with text label", () => {
-		render(<RoadmapNode title="Test Node" status="in-progress" />);
+		render(<RoadmapNodeCard title="Test Node" status="in-progress" />);
 		expect(screen.getByText("In Progress")).toBeTruthy();
 	});
 
 	it("sets --node-stripe-color CSS variable matching status", () => {
 		const { container } = render(
-			<RoadmapNode title="Test Node" status="completed" />,
+			<RoadmapNodeCard title="Test Node" status="completed" />,
 		);
 		const node = container.querySelector(".node");
 		expect(node).toBeTruthy();
@@ -45,7 +45,7 @@ describe("RoadmapNode", () => {
 
 	it("sets --badge-color and --badge-bg CSS variables", () => {
 		const { container } = render(
-			<RoadmapNode title="Test Node" status="blocked" />,
+			<RoadmapNodeCard title="Test Node" status="blocked" />,
 		);
 		const node = container.querySelector(".node");
 		const style = node?.getAttribute("style") ?? "";

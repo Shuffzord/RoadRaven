@@ -1,5 +1,7 @@
 import { useState } from "react";
 
+// TODO(Phase 2): Persist nodeCorners, connector, and gap via saveSettings RPC
+// like theme preference. Currently resets each session.
 export function ConfigPanel() {
 	const [open, setOpen] = useState(false);
 	const [nodeCorners, setNodeCorners] = useState<"rounded" | "sharp">(
