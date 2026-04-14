@@ -1,3 +1,4 @@
+import ravenLogo from "../assets/raven-logo.svg";
 import { useTheme } from "../hooks/useTheme";
 
 export function TopBar() {
@@ -11,20 +12,20 @@ export function TopBar() {
 		>
 			{/* Brand */}
 			<div className="flex items-center gap-1.5 shrink-0">
-				<svg
+				<div
 					aria-hidden="true"
-					width="20"
-					height="20"
-					viewBox="0 0 24 24"
-					fill="none"
-					stroke="currentColor"
-					strokeWidth="2"
-					strokeLinecap="round"
-					strokeLinejoin="round"
-					className="text-rv-accent"
-				>
-					<path d="M3 12h4l3-9 4 18 3-9h4" />
-				</svg>
+					className="w-[35px] h-[35px] bg-rv-accent"
+					style={{
+						maskImage: `url(${ravenLogo})`,
+						maskSize: "contain",
+						maskRepeat: "no-repeat",
+						maskPosition: "center",
+						WebkitMaskImage: `url(${ravenLogo})`,
+						WebkitMaskSize: "contain",
+						WebkitMaskRepeat: "no-repeat",
+						WebkitMaskPosition: "center",
+					}}
+				/>
 				<span className="text-[14px] font-semibold tracking-tight text-rv-text-primary">
 					RoadRaven
 				</span>
