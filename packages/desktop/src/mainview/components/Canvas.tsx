@@ -32,13 +32,31 @@ export function Canvas() {
 					fill="none"
 					style={{ stroke: "var(--rv-line-connector)" }}
 					strokeWidth="1.5"
-				/>
+					strokeDasharray="6 4"
+				>
+					<animate
+						attributeName="stroke-dashoffset"
+						from="20"
+						to="0"
+						dur="1s"
+						repeatCount="indefinite"
+					/>
+				</path>
 				<path
 					d="M 350 130 C 350 180, 350 220, 440 280"
 					fill="none"
 					style={{ stroke: "var(--rv-line-connector)" }}
 					strokeWidth="1.5"
-				/>
+					strokeDasharray="6 4"
+				>
+					<animate
+						attributeName="stroke-dashoffset"
+						from="20"
+						to="0"
+						dur="1s"
+						repeatCount="indefinite"
+					/>
+				</path>
 			</svg>
 
 			<ConfigPanel />
