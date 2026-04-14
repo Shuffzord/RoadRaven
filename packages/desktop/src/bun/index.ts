@@ -1,7 +1,7 @@
-import { BrowserView, BrowserWindow, Updater, Utils } from "electrobun/bun";
 import { getLogger } from "@logtape/logtape";
+import { BrowserView, BrowserWindow, Updater, Utils } from "electrobun/bun";
 import type { RoadmapRPCType } from "../../../../shared/types.ts";
-import { setupBunLogging, bunLogger } from "./logging";
+import { bunLogger, setupBunLogging } from "./logging";
 import { loadSettings, saveSettings } from "./settings";
 
 // Re-export the RPC type so downstream modules can import from the app entry

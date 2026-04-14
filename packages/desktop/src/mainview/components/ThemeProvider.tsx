@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
-import { useThemeStore } from "../store/themeStore";
 import { electroview } from "../rpc";
+import { useThemeStore } from "../store/themeStore";
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
 	const resolvedTheme = useThemeStore((s) => s.resolvedTheme);
@@ -20,7 +20,10 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 				}
 			})
 			.catch((e) => {
-				console.warn("[ThemeProvider] loadSettings RPC failed, using defaults:", e);
+				console.warn(
+					"[ThemeProvider] loadSettings RPC failed, using defaults:",
+					e,
+				);
 			});
 	}, []);
 

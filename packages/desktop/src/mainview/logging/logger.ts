@@ -16,8 +16,7 @@ export async function setupWebviewLogging(): Promise<void> {
 		null;
 	try {
 		const { electroview } = await import("../rpc");
-		rpcSend = (payload) =>
-			electroview.rpc.request.logMessage(payload as never);
+		rpcSend = (payload) => electroview.rpc.request.logMessage(payload as never);
 	} catch {
 		// electrobun/view not available — RPC forwarding disabled, console-only
 	}
@@ -40,9 +39,7 @@ export async function setupWebviewLogging(): Promise<void> {
 						typeof record.message === "string"
 							? record.message
 							: record.message.map((part) => String(part)).join(""),
-					data: record.properties
-						? { ...record.properties }
-						: undefined,
+					data: record.properties ? { ...record.properties } : undefined,
 				};
 				rpcSend(payload)
 					.then(() => {

@@ -10,7 +10,10 @@ import "./index.css";
 try {
 	await setupWebviewLogging();
 } catch (e) {
-	console.warn("[logging] setupWebviewLogging failed — RPC forwarding disabled:", e);
+	console.warn(
+		"[logging] setupWebviewLogging failed — RPC forwarding disabled:",
+		e,
+	);
 }
 
 const rootEl = document.getElementById("root");

@@ -1,11 +1,11 @@
+import { existsSync, mkdirSync } from "node:fs";
+import { join } from "node:path";
 import {
 	configure,
 	getConsoleSink,
 	getLogger,
 	getStreamSink,
 } from "@logtape/logtape";
-import { join } from "node:path";
-import { existsSync, mkdirSync } from "node:fs";
 import type { FileSink } from "bun";
 
 export function getLogDirectory(): string {

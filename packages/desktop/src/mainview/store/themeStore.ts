@@ -41,8 +41,7 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
 		const { preference } = get();
 		set({
 			systemResolution: resolved,
-			resolvedTheme:
-				preference === "system" ? resolved : get().resolvedTheme,
+			resolvedTheme: preference === "system" ? resolved : get().resolvedTheme,
 		});
 	},
 }));
