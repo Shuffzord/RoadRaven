@@ -31,6 +31,14 @@ bunx vitest run path/to/file.test.ts  # Run single test file
 
 See `.planning/ARCHITECTURE.md` for the full architecture reference (process model, RPC contract, Zustand store shape, package structure, event flow sequences).
 
+See `docs/` for detailed architecture documentation, design system guide, and developer workflow.
+
+## Verification
+
+Before creating a PR, ensure:
+1. `bunx vitest run` — all tests pass
+2. `npx vite build` — production build succeeds (catches import/CSS issues that unit tests miss)
+
 ## Electrobun-specific patterns
 
 - Load bundled views with `views://mainview/index.html`

@@ -4,13 +4,13 @@ import type { AppSettings } from "../../../../shared/types";
 
 const SETTINGS_FILE = ".roadmap-settings.json";
 
-function getSettingsPath(): string {
+export function getSettingsPath(basePath?: string): string {
 	// Settings file in current working directory per D-05
-	return join(process.cwd(), SETTINGS_FILE);
+	return join(basePath ?? process.cwd(), SETTINGS_FILE);
 }
 
-export function loadSettings(): AppSettings {
-	const path = getSettingsPath();
+export function loadSettings(basePath?: string): AppSettings {
+	const path = getSettingsPath(basePath);
 	if (!existsSync(path)) return {};
 	try {
 		const raw = readFileSync(path, "utf-8");
@@ -20,9 +20,12 @@ export function loadSettings(): AppSettings {
 	}
 }
 
-export function saveSettings(settings: Partial<AppSettings>): void {
-	const path = getSettingsPath();
-	const existing = loadSettings();
+export function saveSettings(
+	settings: Partial<AppSettings>,
+	basePath?: string,
+): void {
+	const path = getSettingsPath(basePath);
+	const existing = loadSettings(basePath);
 	const merged: AppSettings = { ...existing, ...settings };
 	writeFileSync(path, JSON.stringify(merged, null, 2), "utf-8");
 }

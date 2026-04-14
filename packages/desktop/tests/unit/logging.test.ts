@@ -1,6 +1,7 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { existsSync, readFileSync, writeFileSync, unlinkSync } from "node:fs";
+import { describe, it, expect, afterEach } from "vitest";
+import { existsSync, unlinkSync, mkdtempSync } from "node:fs";
 import { join } from "node:path";
+import { tmpdir } from "node:os";
 
 // Test getLogDirectory platform-specific paths
 describe("getLogDirectory", () => {
@@ -39,72 +40,93 @@ describe("getLogDirectory", () => {
 		expect(dir).toContain("RoadRaven");
 		expect(dir).toContain("logs");
 	});
-});
 
-// Test settings persistence
-describe("settings", () => {
-	const testDir = join(process.cwd(), ".test-settings-" + Date.now());
-	const originalCwd = process.cwd;
-
-	beforeEach(() => {
-		// We'll test in the actual cwd since settings uses process.cwd()
+	it("uses XDG_DATA_HOME on linux when set", async () => {
+		Object.defineProperty(process, "platform", { value: "linux" });
+		process.env.HOME = "/home/test";
+		process.env.XDG_DATA_HOME = "/custom/data";
+		const { getLogDirectory } = await import("../../src/bun/logging");
+		const dir = getLogDirectory();
+		// Normalize separators for cross-platform test execution
+		const normalized = dir.replace(/\\/g, "/");
+		expect(normalized).toContain("/custom/data");
+		expect(normalized).toContain("RoadRaven");
 	});
 
+	it("falls back to USERPROFILE when HOME is unset on win32", async () => {
+		Object.defineProperty(process, "platform", { value: "win32" });
+		delete process.env.HOME;
+		delete process.env.LOCALAPPDATA;
+		process.env.USERPROFILE = "C:\\Users\\Fallback";
+		const { getLogDirectory } = await import("../../src/bun/logging");
+		const dir = getLogDirectory();
+		expect(dir).toContain("RoadRaven");
+		expect(dir).toContain("AppData");
+	});
+});
+
+// Test settings persistence using isolated temp directories
+describe("settings", () => {
+	let tempDir: string;
+
+	const createTempDir = () => {
+		tempDir = mkdtempSync(join(tmpdir(), "roadraven-test-"));
+		return tempDir;
+	};
+
 	afterEach(() => {
-		// Clean up any test settings file
-		const settingsPath = join(process.cwd(), ".roadmap-settings.json");
-		try {
-			if (existsSync(settingsPath)) {
-				unlinkSync(settingsPath);
+		// Clean up temp settings file
+		if (tempDir) {
+			const settingsPath = join(tempDir, ".roadmap-settings.json");
+			try {
+				if (existsSync(settingsPath)) {
+					unlinkSync(settingsPath);
+				}
+			} catch {
+				// ignore cleanup errors
 			}
-		} catch {
-			// ignore cleanup errors
 		}
+	});
+
+	it("getSettingsPath uses basePath when provided", async () => {
+		const { getSettingsPath } = await import("../../src/bun/settings");
+		const result = getSettingsPath("/some/custom/path");
+		const normalized = result.replace(/\\/g, "/");
+		expect(normalized).toBe("/some/custom/path/.roadmap-settings.json");
 	});
 
 	it("loadSettings returns empty object when file does not exist", async () => {
-		// Ensure settings file does not exist
-		const settingsPath = join(process.cwd(), ".roadmap-settings.json");
-		try {
-			unlinkSync(settingsPath);
-		} catch {
-			// file doesn't exist, which is what we want
-		}
+		const dir = createTempDir();
 		const { loadSettings } = await import("../../src/bun/settings");
-		const result = loadSettings();
+		const result = loadSettings(dir);
 		expect(result).toEqual({});
 	});
 
 	it("saveSettings + loadSettings round-trip preserves data", async () => {
+		const dir = createTempDir();
 		const { loadSettings, saveSettings } = await import(
 			"../../src/bun/settings"
 		);
-		saveSettings({ theme: "light" });
-		const result = loadSettings();
+		saveSettings({ theme: "light" }, dir);
+		const result = loadSettings(dir);
 		expect(result.theme).toBe("light");
 	});
 
 	it("saveSettings merges with existing settings", async () => {
+		const dir = createTempDir();
 		const { loadSettings, saveSettings } = await import(
 			"../../src/bun/settings"
 		);
-		saveSettings({ theme: "dark" });
-		saveSettings({ theme: "high-contrast" });
-		const result = loadSettings();
+		saveSettings({ theme: "dark" }, dir);
+		saveSettings({ theme: "high-contrast" }, dir);
+		const result = loadSettings(dir);
 		expect(result.theme).toBe("high-contrast");
 	});
 });
 
-// Test that setupBunLogging configures sinks
-describe("setupBunLogging", () => {
-	it("configures file sink via getStreamSink", async () => {
-		// Verify the module imports getStreamSink from @logtape/logtape
-		const loggingSource = readFileSync(
-			join(__dirname, "../../src/bun/logging.ts"),
-			"utf-8",
-		);
-		expect(loggingSource).toContain("getStreamSink");
-		expect(loggingSource).toContain("WritableStream");
-		expect(loggingSource).toContain("roadraven.log");
-	});
-});
+// NOTE: setupBunLogging cannot be tested in vitest because it depends on
+// Bun.file() and the Bun-native WritableStream/FileSink APIs which are not
+// available in the vitest (Node.js) runtime. The Vite build smoke test in
+// tests/integration/build.test.ts validates that the module compiles and
+// bundles correctly, which would catch import resolution and top-level
+// compatibility issues.
