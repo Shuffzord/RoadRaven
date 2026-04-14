@@ -1,6 +1,6 @@
-import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import { describe, expect, it } from "vitest";
 
 describe("CSS @import ordering", () => {
 	it("@import 'tailwindcss' appears before any @import url(...) statements", () => {

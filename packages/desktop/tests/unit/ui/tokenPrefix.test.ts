@@ -1,6 +1,6 @@
-import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import { describe, expect, it } from "vitest";
 
 describe("CSS token naming convention", () => {
 	it("all custom properties in @theme block use --rv-* or --color-rv-* prefix", () => {

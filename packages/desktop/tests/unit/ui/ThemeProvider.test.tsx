@@ -1,7 +1,8 @@
 // @vitest-environment jsdom
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, cleanup, act } from "@testing-library/react";
+
+import { act, cleanup, render } from "@testing-library/react";
 import React from "react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // Mock the rpc module
 vi.mock("../../../src/mainview/rpc", () => ({
@@ -9,18 +10,16 @@ vi.mock("../../../src/mainview/rpc", () => ({
 		rpc: {
 			request: {
 				saveSettings: vi.fn(() => Promise.resolve({ success: true })),
-				loadSettings: vi.fn(() =>
-					Promise.resolve({ settings: {} }),
-				),
+				loadSettings: vi.fn(() => Promise.resolve({ settings: {} })),
 			},
 		},
 	},
 }));
 
 import { ThemeProvider } from "../../../src/mainview/components/ThemeProvider";
-import { useThemeStore } from "../../../src/mainview/store/themeStore";
 import { useTheme } from "../../../src/mainview/hooks/useTheme";
 import { electroview } from "../../../src/mainview/rpc";
+import { useThemeStore } from "../../../src/mainview/store/themeStore";
 
 // Mock matchMedia
 function createMockMatchMedia(matches: boolean) {
@@ -28,13 +27,17 @@ function createMockMatchMedia(matches: boolean) {
 	const mql = {
 		matches,
 		media: "(prefers-color-scheme: dark)",
-		addEventListener: vi.fn((_event: string, handler: (e: MediaQueryListEvent) => void) => {
-			listeners.push(handler);
-		}),
-		removeEventListener: vi.fn((_event: string, handler: (e: MediaQueryListEvent) => void) => {
-			const idx = listeners.indexOf(handler);
-			if (idx >= 0) listeners.splice(idx, 1);
-		}),
+		addEventListener: vi.fn(
+			(_event: string, handler: (e: MediaQueryListEvent) => void) => {
+				listeners.push(handler);
+			},
+		),
+		removeEventListener: vi.fn(
+			(_event: string, handler: (e: MediaQueryListEvent) => void) => {
+				const idx = listeners.indexOf(handler);
+				if (idx >= 0) listeners.splice(idx, 1);
+			},
+		),
 		dispatchEvent: vi.fn(),
 		onchange: null,
 		addListener: vi.fn(),
@@ -70,7 +73,9 @@ describe("ThemeProvider", () => {
 			</ThemeProvider>,
 		);
 		// Wait for effects
-		await act(async () => {});
+		await act(async () => {
+			/* flush effects */
+		});
 		expect(document.documentElement.getAttribute("data-theme")).toBe("dark");
 	});
 

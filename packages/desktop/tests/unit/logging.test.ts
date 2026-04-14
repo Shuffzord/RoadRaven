@@ -1,7 +1,7 @@
-import { describe, it, expect, afterEach } from "vitest";
-import { existsSync, unlinkSync, mkdtempSync } from "node:fs";
-import { join } from "node:path";
+import { existsSync, mkdtempSync, unlinkSync } from "node:fs";
 import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { afterEach, describe, expect, it } from "vitest";
 
 // Test getLogDirectory platform-specific paths
 describe("getLogDirectory", () => {

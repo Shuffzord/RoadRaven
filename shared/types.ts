@@ -88,6 +88,7 @@ export type RoadmapRPCType = {
 		};
 	}>;
 	webview: RPCSchema<{
+		requests: Record<string, never>;
 		messages: {
 			pushStatusUpdate: {
 				nodeId: string;

@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import type { ThemePreference } from "../../../../../shared/types";
 import { electroview } from "../rpc";
 import { useThemeStore } from "../store/themeStore";
 
@@ -11,15 +12,15 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 	useEffect(() => {
 		if (hasLoadedSettings.current) return;
 		hasLoadedSettings.current = true;
-		electroview.rpc.request
+		electroview?.rpc?.request
 			.loadSettings({})
-			.then((response) => {
+			.then((response: { settings?: { theme?: ThemePreference } }) => {
 				const saved = response?.settings?.theme;
 				if (saved && saved !== useThemeStore.getState().preference) {
 					useThemeStore.getState().setTheme(saved);
 				}
 			})
-			.catch((e) => {
+			.catch((e: unknown) => {
 				console.warn(
 					"[ThemeProvider] loadSettings RPC failed, using defaults:",
 					e,

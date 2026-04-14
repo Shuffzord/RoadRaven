@@ -1,6 +1,6 @@
-import { describe, it, expect } from "vitest";
 import { execSync } from "node:child_process";
 import { join } from "node:path";
+import { describe, expect, it } from "vitest";
 
 describe("Vite build", () => {
 	it("production build succeeds without errors", () => {

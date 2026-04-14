@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // Mock the rpc module before importing the store
 vi.mock("../../../src/mainview/rpc", () => ({
@@ -7,16 +7,14 @@ vi.mock("../../../src/mainview/rpc", () => ({
 		rpc: {
 			request: {
 				saveSettings: vi.fn(() => Promise.resolve({ success: true })),
-				loadSettings: vi.fn(() =>
-					Promise.resolve({ settings: {} }),
-				),
+				loadSettings: vi.fn(() => Promise.resolve({ settings: {} })),
 			},
 		},
 	},
 }));
 
-import { useThemeStore } from "../../../src/mainview/store/themeStore";
 import { electroview } from "../../../src/mainview/rpc";
+import { useThemeStore } from "../../../src/mainview/store/themeStore";
 
 describe("themeStore", () => {
 	beforeEach(() => {

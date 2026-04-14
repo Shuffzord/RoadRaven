@@ -96,7 +96,7 @@
 	--rv-accent-border: rgba(74, 158, 255, 0.3);
 
 	/* Canvas visuals */
-	--rv-dot-grid: rgba(255, 255, 255, 0.035);
+	--rv-dot-grid: rgba(255, 255, 255, 0.2);
 	--rv-line-connector: rgba(255, 255, 255, 0.12);
 
 	/* Shadows */
@@ -158,7 +158,7 @@
 	--rv-accent-border: rgba(74, 158, 255, 0.25);
 
 	/* Canvas visuals */
-	--rv-dot-grid: rgba(0, 0, 0, 0.06);
+	--rv-dot-grid: rgba(0, 0, 0, 0.12);
 	--rv-line-connector: rgba(0, 0, 0, 0.15);
 
 	/* Shadows */

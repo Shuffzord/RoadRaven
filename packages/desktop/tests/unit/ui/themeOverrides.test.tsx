@@ -1,8 +1,8 @@
 // @vitest-environment jsdom
-import { describe, it, expect, beforeEach, vi } from "vitest";
+
 import { render, screen } from "@testing-library/react";
-import { act } from "react";
-import React from "react";
+import React, { act } from "react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // Mock the rpc module to prevent WebSocket connection
 vi.mock("../../../src/mainview/rpc", () => ({

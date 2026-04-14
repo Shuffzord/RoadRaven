@@ -30,9 +30,9 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
 			pref === "system" ? get().systemResolution : pref;
 		set({ preference: pref, resolvedTheme: resolved });
 		// Persist theme preference via saveSettings RPC (D-05)
-		electroview.rpc.request
+		electroview?.rpc?.request
 			.saveSettings({ settings: { theme: pref } })
-			.catch((e) => {
+			.catch((e: unknown) => {
 				// RPC unavailable outside Electrobun runtime (test/Vite dev server)
 				console.warn("[themeStore] saveSettings RPC failed:", e);
 			});

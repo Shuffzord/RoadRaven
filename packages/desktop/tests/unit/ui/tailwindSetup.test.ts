@@ -1,6 +1,6 @@
-import { describe, it, expect } from "vitest";
-import { readFileSync, existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
+import { describe, expect, it } from "vitest";
 
 const root = resolve(__dirname, "../../..");
 
@@ -96,10 +96,7 @@ describe("index.css token system", () => {
 		for (const theme of ["dark", "light", "high-contrast"]) {
 			const block = extractThemeBlock(content, theme);
 			for (const token of requiredTokens) {
-				expect(
-					block,
-					`Missing ${token} in ${theme} theme`,
-				).toContain(token);
+				expect(block, `Missing ${token} in ${theme} theme`).toContain(token);
 			}
 		}
 	});
