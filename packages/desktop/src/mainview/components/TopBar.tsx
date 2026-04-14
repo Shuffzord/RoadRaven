@@ -1,5 +1,4 @@
 import { useTheme } from "../hooks/useTheme";
-import type { ThemePreference } from "../store/themeStore";
 
 export function TopBar() {
   const { preference, setTheme } = useTheme();
@@ -13,6 +12,7 @@ export function TopBar() {
       {/* Brand */}
       <div className="flex items-center gap-1.5 shrink-0">
         <svg
+          aria-hidden="true"
           width="20"
           height="20"
           viewBox="0 0 24 24"
@@ -38,7 +38,7 @@ export function TopBar() {
         className="flex items-center gap-1.5 px-2.5 py-[5px] rounded-[6px] text-[12px] font-semibold text-rv-text-secondary hover:bg-rv-bg-hover hover:text-rv-text-primary transition-all duration-150"
         type="button"
       >
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <svg aria-hidden="true" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
           <polyline points="14 2 14 8 20 8" />
           <line x1="12" y1="18" x2="12" y2="12" />
@@ -50,7 +50,7 @@ export function TopBar() {
         className="flex items-center gap-1.5 px-2.5 py-[5px] rounded-[6px] text-[12px] font-semibold text-rv-text-secondary hover:bg-rv-bg-hover hover:text-rv-text-primary transition-all duration-150"
         type="button"
       >
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <svg aria-hidden="true" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
         </svg>
         Open
@@ -60,7 +60,7 @@ export function TopBar() {
       <div className="flex-1" />
 
       {/* Search */}
-      <div className="relative flex items-center" role="search">
+      <search className="relative flex items-center">
         <input
           className="w-[220px] h-[30px] bg-rv-bg-input border border-rv-border rounded-lg px-3 pr-14 text-[12px] text-rv-text-primary placeholder:text-rv-text-tertiary outline-none focus:border-rv-border-focus"
           type="text"
@@ -70,7 +70,7 @@ export function TopBar() {
         <kbd className="absolute right-2 top-1/2 -translate-y-1/2 text-[11px] bg-rv-bg-elevated rounded-[3px] px-1.5 py-0.5 text-rv-text-tertiary pointer-events-none">
           Ctrl+F
         </kbd>
-      </div>
+      </search>
 
       {/* Spacer */}
       <div className="flex-1" />
@@ -89,7 +89,7 @@ export function TopBar() {
         type="button"
         aria-label="Zoom out"
       >
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <line x1="5" y1="12" x2="19" y2="12" />
         </svg>
       </button>
@@ -98,7 +98,7 @@ export function TopBar() {
         type="button"
         aria-label="Zoom in"
       >
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <line x1="12" y1="5" x2="12" y2="19" />
           <line x1="5" y1="12" x2="19" y2="12" />
         </svg>
@@ -121,28 +121,24 @@ export function TopBar() {
         aria-label="Theme switcher"
       >
         <ThemeButton
-          value="dark"
           active={preference === "dark"}
           onClick={() => setTheme("dark")}
           label="Dark theme"
           icon={<MoonIcon />}
         />
         <ThemeButton
-          value="light"
           active={preference === "light"}
           onClick={() => setTheme("light")}
           label="Light theme"
           icon={<SunIcon />}
         />
         <ThemeButton
-          value="high-contrast"
           active={preference === "high-contrast"}
           onClick={() => setTheme("high-contrast")}
           label="High contrast theme"
           icon={<EyeIcon />}
         />
         <ThemeButton
-          value="system"
           active={preference === "system"}
           onClick={() => setTheme("system")}
           label="System theme"
@@ -156,7 +152,7 @@ export function TopBar() {
         type="button"
         aria-label="Settings"
       >
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <circle cx="12" cy="12" r="3" />
           <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
         </svg>
@@ -191,8 +187,6 @@ function ToggleGroup({
               : "text-rv-text-tertiary hover:text-rv-text-secondary"
           }`}
           type="button"
-          role="radio"
-          aria-checked={active === opt.value}
         >
           {opt.label}
         </button>
@@ -202,19 +196,18 @@ function ToggleGroup({
 }
 
 function ThemeButton({
-  value,
   active,
   onClick,
   label,
   icon,
 }: {
-  value: ThemePreference;
   active: boolean;
   onClick: () => void;
   label: string;
   icon: React.ReactNode;
 }) {
   return (
+    // biome-ignore lint/a11y/useSemanticElements: custom styled radio buttons cannot use input[type=radio]
     <button
       className={`flex items-center justify-center w-[30px] h-[28px] transition duration-150 ${
         active
@@ -236,7 +229,7 @@ function ThemeButton({
 
 function MoonIcon() {
   return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
     </svg>
   );
@@ -244,7 +237,7 @@ function MoonIcon() {
 
 function SunIcon() {
   return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <circle cx="12" cy="12" r="5" />
       <line x1="12" y1="1" x2="12" y2="3" />
       <line x1="12" y1="21" x2="12" y2="23" />
@@ -260,7 +253,7 @@ function SunIcon() {
 
 function EyeIcon() {
   return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
       <circle cx="12" cy="12" r="3" />
     </svg>
@@ -269,7 +262,7 @@ function EyeIcon() {
 
 function MonitorIcon() {
   return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
       <line x1="8" y1="21" x2="16" y2="21" />
       <line x1="12" y1="17" x2="12" y2="21" />

@@ -24,6 +24,7 @@ export function Canvas() {
 
       {/* SVG connector placeholder */}
       <svg
+        aria-hidden="true"
         className="absolute inset-0 w-full h-full pointer-events-none z-[1]"
       >
         <path

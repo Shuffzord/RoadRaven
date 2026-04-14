@@ -259,7 +259,9 @@
 	*,
 	*::before,
 	*::after {
+		/* biome-ignore lint/complexity/noImportantStyles: accessibility override for motion sensitivity */
 		transition-duration: 0ms !important;
+		/* biome-ignore lint/complexity/noImportantStyles: accessibility override for motion sensitivity */
 		animation-duration: 0ms !important;
 	}
 }

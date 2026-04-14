@@ -17,6 +17,7 @@ export function ConfigPanel() {
           {/* Title */}
           <div className="flex items-center gap-2 mb-4">
             <svg
+              aria-hidden="true"
               width="14"
               height="14"
               viewBox="0 0 24 24"
@@ -91,6 +92,7 @@ export function ConfigPanel() {
         aria-label="Toggle canvas options"
       >
         <svg
+          aria-hidden="true"
           width="16"
           height="16"
           viewBox="0 0 24 24"

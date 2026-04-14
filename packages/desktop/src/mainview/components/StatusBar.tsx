@@ -22,6 +22,7 @@ export function StatusBar() {
       <div className="flex items-center gap-2.5">
         <span>42 nodes</span>
         <svg
+          aria-hidden="true"
           width="12"
           height="12"
           viewBox="0 0 24 24"

@@ -51,9 +51,9 @@ export type RoadmapRPCType = {
 	bun: RPCSchema<{
 		requests: {
 			loadFile: { params: { path: string }; response: RoadmapSchema };
-			saveFile: { params: { schema: RoadmapSchema }; response: void };
-			exportHtml: { params: { path: string }; response: void };
-			exportPng: { params: { path: string }; response: void };
+			saveFile: { params: { schema: RoadmapSchema }; response: undefined };
+			exportHtml: { params: { path: string }; response: undefined };
+			exportPng: { params: { path: string }; response: undefined };
 			openFilePicker: {
 				params: Record<string, never>;
 				response: string | null;
@@ -74,7 +74,7 @@ export type RoadmapRPCType = {
 					message: string;
 					data?: Record<string, unknown>;
 				};
-				response: void;
+				response: undefined;
 			};
 		};
 		messages: {

@@ -49,8 +49,9 @@ export async function setupWebviewLogging(): Promise<void> {
 						consecutiveFailures = 0;
 						// Flush any buffered logs
 						while (failedLogs.length) {
-							const queued = failedLogs.shift()!;
-							rpcSend!(queued).catch((retryErr) => {
+							const queued = failedLogs.shift();
+							if (!queued) break;
+							rpcSend?.(queued).catch((retryErr) => {
 								console.warn("[log-fwd-retry-fail]", retryErr);
 							});
 						}
