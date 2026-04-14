@@ -22,7 +22,7 @@
 ### Theme System (THEME)
 
 - [ ] **THEME-01**: `ThemeProvider` applies active theme as `--rv-*` CSS custom properties on `:root`
-- [ ] **THEME-02**: Built-in themes: `dark` (default, matches `phase-1.html` design), `light`, `high-contrast`
+- [ ] **THEME-02**: Built-in themes: `dark` (default, matches `variant-c-merged.html` design), `light`, `high-contrast`
 - [ ] **THEME-03**: App-level theme preference persisted in `.roadmap-settings.json`; OS `prefers-color-scheme` respected when set to `'system'`
 - [ ] **THEME-04**: Per-schema `themeConfig` block overrides the active base theme for a loaded file
 - [ ] **THEME-05**: All components use `--rv-*` tokens exclusively — no hardcoded colors anywhere

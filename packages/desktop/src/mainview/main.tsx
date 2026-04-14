@@ -1,7 +1,20 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import "./index.css";
 import App from "./App";
+import { ThemeProvider } from "./components/ThemeProvider";
+import { setupWebviewLogging } from "./logging/logger";
+import "./index.css";
+
+// Initialize logging before React render (per Research Pitfall 5)
+// Catch errors so Electrobun RPC unavailability doesn't block rendering
+try {
+	await setupWebviewLogging();
+} catch (e) {
+	console.warn(
+		"[logging] setupWebviewLogging failed — RPC forwarding disabled:",
+		e,
+	);
+}
 
 const rootEl = document.getElementById("root");
 if (!rootEl) {
@@ -10,6 +23,8 @@ if (!rootEl) {
 
 createRoot(rootEl).render(
 	<StrictMode>
-		<App />
+		<ThemeProvider>
+			<App />
+		</ThemeProvider>
 	</StrictMode>,
 );

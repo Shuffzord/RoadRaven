@@ -1,5 +1,7 @@
 # CLAUDE.md
 
+@.claude/PRINCIPLES.md
+
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Project
@@ -7,6 +9,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 **Roadmap Viewer** — an Electrobun desktop app for creating, editing, and live-monitoring visual roadmap trees. Nodes map to tasks/agents; status updates arrive via WebSocket (Claude Code integration). Plain JSON data model, keyboard-first editing, markdown side panels.
 
 > **IMPORTANT:** This is Electrobun, NOT Electron. Do not use Electron APIs, patterns, or documentation.
+
+> **IMPORTANT:** Use `bun` and `bunx` for all package management and script execution. Do not use `npm`, `npx`, `yarn`, or `pnpm`.
 
 ## Commands
 
@@ -23,11 +27,24 @@ bun run build:canary  # Production build (canary channel)
 bunx vitest           # Run all tests in watch mode
 bunx vitest run       # Run once (CI)
 bunx vitest run path/to/file.test.ts  # Run single test file
+
+# Linting (biome)
+bunx @biomejs/biome lint packages/desktop/src/ shared/  # Lint source
+bunx @biomejs/biome check --write .                      # Auto-fix
 ```
 
 ## Architecture
 
 See `.planning/ARCHITECTURE.md` for the full architecture reference (process model, RPC contract, Zustand store shape, package structure, event flow sequences).
+
+See `docs/` for detailed architecture documentation, design system guide, and developer workflow.
+
+## Verification
+
+Before creating a PR, ensure:
+1. `bunx vitest run` — all tests pass
+2. `bunx vite build` — production build succeeds (catches import/CSS issues that unit tests miss)
+3. `bunx @biomejs/biome lint packages/desktop/src/ shared/` — no lint errors
 
 ## Electrobun-specific patterns
 
