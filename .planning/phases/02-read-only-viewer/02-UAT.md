@@ -1,5 +1,5 @@
 ---
-status: complete
+status: diagnosed
 phase: 02-read-only-viewer
 source: [02-01-SUMMARY.md, 02-02-SUMMARY.md, 02-03-SUMMARY.md, 02-04-SUMMARY.md]
 started: 2026-04-15T14:30:00Z
@@ -101,16 +101,27 @@ blocked: 0
   reason: "User reported: Selection ring does not show on neither of themes. Side panel does open - copy button works. Markdown works but did not test advanced formatting"
   severity: major
   test: 4
-  root_cause: ""
-  artifacts: []
-  missing: []
+  root_cause: "SVG foreignObject clips the ring-1 outline. The foreignObject in Canvas.tsx (line 79) has fixed dimensions (240x100) and SVG foreignObject defaults to clipping content beyond its bounds. The Tailwind ring-1 ring-[var(--rv-accent)] extends outside the element box and gets clipped."
+  artifacts:
+    - path: "packages/desktop/src/mainview/components/Canvas.tsx"
+      issue: "foreignObject missing overflow=visible attribute (line 79)"
+    - path: "packages/desktop/src/mainview/components/RoadmapNode.tsx"
+      issue: "ring-1 class applied correctly (line 51) but invisible due to clipping"
+  missing:
+    - "Add overflow='visible' to foreignObject element in Canvas.tsx"
   debug_session: ""
 - truth: "Fit View recenters tree without expanding collapsed nodes"
   status: failed
   reason: "User reported: Yes - although clicking fit view expands all collapsed elements and thats not the expected behaviour"
   severity: minor
   test: 7
-  root_cause: ""
-  artifacts: []
-  missing: []
+  root_cause: "Fit View uses viewResetKey as React key prop on Tree component (Canvas.tsx line 144). Changing the key forces React to unmount/remount the entire Tree, destroying react-d3-tree's internal collapsed state (__rd3t.collapsed). On remount, initialDepth=3 re-expands all nodes."
+  artifacts:
+    - path: "packages/desktop/src/mainview/components/Canvas.tsx"
+      issue: "key={`tree-${viewResetKey}`} on line 144 forces full remount"
+    - path: "packages/desktop/src/mainview/store/roadmapStore.ts"
+      issue: "resetView() increments viewResetKey (line 179)"
+  missing:
+    - "Remove viewResetKey from key prop — update only translate and zoomLevel props to reset viewport without remounting"
+    - "Remove viewResetKey from store state and actions"
   debug_session: ""
