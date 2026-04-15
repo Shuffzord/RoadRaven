@@ -203,8 +203,9 @@ const rpc = BrowserView.defineRPC<RoadmapRPCType>({
 			// openFilePicker handler (Electrobun native dialog)
 			openFilePicker: async () => {
 				try {
+					const { homedir } = await import("node:os");
 					const paths = await Utils.openFileDialog({
-						startingFolder: undefined,
+						startingFolder: homedir(),
 						allowedFileTypes: "json",
 						canChooseFiles: true,
 						canChooseDirectory: false,

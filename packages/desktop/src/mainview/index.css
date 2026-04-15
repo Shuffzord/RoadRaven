@@ -283,11 +283,13 @@
 }
 
 /* react-d3-tree connector lines — override the library's hardcoded #000 stroke.
-   .rd3t-link sets stroke: #000 via injected <style>. We need higher specificity. */
+   The library injects <style>.rd3t-link { stroke: #000 }</style> inside its
+   component render, which appears AFTER our stylesheet in the DOM and wins
+   the cascade at equal specificity. We use !important to ensure theme colors win. */
 .rd3t-link {
-	stroke: var(--rv-line-connector);
-	stroke-width: 1.5px;
-	fill: none;
+	stroke: var(--rv-line-connector) !important;
+	stroke-width: 1.5px !important;
+	fill: none !important;
 }
 
 /* Node status stripe */
