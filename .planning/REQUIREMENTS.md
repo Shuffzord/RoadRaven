@@ -29,9 +29,9 @@
 
 ### Read-Only Viewer (VIEW)
 
-- [ ] **VIEW-01**: JSON schema loads and validates via Zod; blocking validation errors shown in an inline error panel identifying type, severity, and location
-- [ ] **VIEW-02**: Tree renders from JSON using react-d3-tree with `dataKey` pattern — `dataKey` increments only on structural changes (add/delete/move), never on status-only updates
-- [ ] **VIEW-03**: TB and LR layout toggle; layout preference persisted per file in `.roadmap-settings.json`
+- [x] **VIEW-01**: JSON schema loads and validates via Zod; blocking validation errors shown in an inline error panel identifying type, severity, and location
+- [x] **VIEW-02**: Tree renders from JSON using react-d3-tree with `dataKey` pattern — `dataKey` increments only on structural changes (add/delete/move), never on status-only updates
+- [x] **VIEW-03**: TB and LR layout toggle; layout preference persisted per file in `.roadmap-settings.json`
 - [ ] **VIEW-04**: Collapse/expand subtrees; nodes beyond depth 3 collapse by default
 - [ ] **VIEW-05**: Zoom and pan (scroll wheel, pinch, click-drag) in both layouts
 - [ ] **VIEW-06**: Status badges on nodes: left border stripe (4px) + pill label with correct theme colors
