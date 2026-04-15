@@ -1,12 +1,14 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { CustomNodeElementProps } from "react-d3-tree";
 import Tree from "react-d3-tree";
 import { useShallow } from "zustand/react/shallow";
 import ravenLogo from "../assets/raven-logo.svg";
+import { electroview } from "../rpc";
 import { useRoadmapStore } from "../store/roadmapStore";
 import type { NodeStatus } from "./RoadmapNode";
 import { RoadmapNodeCard } from "./RoadmapNode";
 import { SchemaErrorPanel } from "./SchemaErrorPanel";
+import { WelcomeScreen } from "./WelcomeScreen";
 
 export function Canvas() {
 	const {
@@ -36,6 +38,23 @@ export function Canvas() {
 	const containerRef = useRef<HTMLDivElement>(null);
 	const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
 
+	// Recent files state for WelcomeScreen
+	const [recentFiles, setRecentFiles] = useState<string[]>([]);
+
+	// Load recent files on mount
+	useEffect(() => {
+		if (electroview?.rpc) {
+			electroview.rpc.request
+				.loadSettings({})
+				.then((result) => {
+					setRecentFiles(result.settings.recentFiles ?? []);
+				})
+				.catch(() => {
+					// Settings load failed; leave empty
+				});
+		}
+	}, []);
+
 	useEffect(() => {
 		if (!containerRef.current) return;
 		const observer = new ResizeObserver((entries) => {
@@ -44,6 +63,70 @@ export function Canvas() {
 		});
 		observer.observe(containerRef.current);
 		return () => observer.disconnect();
+	}, []);
+
+	const handleOpenFile = useCallback(async () => {
+		if (electroview) {
+			const path = await electroview.rpc?.request.openFilePicker({});
+			if (!path) return;
+			const response = await electroview.rpc?.request.loadFile({ path });
+			if (response?.data) {
+				useRoadmapStore.getState().loadSchema(response.data, path);
+			}
+			useRoadmapStore.getState().setSchemaErrors(response?.errors ?? []);
+		} else {
+			// Dev mode fallback
+			const { RoadmapSchemaSchema } = await import(
+				"../../../../../packages/core/src/schema"
+			);
+			const sample = (
+				await import("../../../../../samples/getting-started.json")
+			).default;
+			const result = RoadmapSchemaSchema.safeParse(sample);
+			if (result.success) {
+				useRoadmapStore
+					.getState()
+					.loadSchema(result.data, "getting-started.json");
+			}
+		}
+	}, []);
+
+	const handleNewRoadmap = useCallback(() => {
+		// Phase 3 implements File > New. No-op for now.
+	}, []);
+
+	const handleOpenRecent = useCallback(async (path: string) => {
+		if (electroview) {
+			const response = await electroview.rpc?.request.loadFile({ path });
+			if (response?.data) {
+				useRoadmapStore.getState().loadSchema(response.data, path);
+			}
+			useRoadmapStore.getState().setSchemaErrors(response?.errors ?? []);
+		}
+	}, []);
+
+	const handleOpenSample = useCallback(async (name: string) => {
+		try {
+			let sampleData: unknown;
+			if (name === "hello-world") {
+				sampleData = (await import("../../../../../samples/hello-world.json"))
+					.default;
+			} else {
+				sampleData = (
+					await import("../../../../../samples/getting-started.json")
+				).default;
+			}
+
+			const { RoadmapSchemaSchema } = await import(
+				"../../../../../packages/core/src/schema"
+			);
+			const result = RoadmapSchemaSchema.safeParse(sampleData);
+			if (result.success) {
+				useRoadmapStore.getState().loadSchema(result.data, `${name}.json`);
+			}
+		} catch {
+			// Sample load failed silently
+		}
 	}, []);
 
 	const renderNode = ({ nodeDatum, toggleNode }: CustomNodeElementProps) => {
@@ -107,7 +190,15 @@ export function Canvas() {
 				}}
 			/>
 
-			{treeData && (
+			{treeData === null ? (
+				<WelcomeScreen
+					recentFiles={recentFiles}
+					onOpenFile={handleOpenFile}
+					onNewRoadmap={handleNewRoadmap}
+					onOpenRecent={handleOpenRecent}
+					onOpenSample={handleOpenSample}
+				/>
+			) : (
 				<Tree
 					key={`tree-${viewResetKey}`}
 					data={treeData}

@@ -4,7 +4,7 @@ import { BrowserView, BrowserWindow, Updater, Utils } from "electrobun/bun";
 import type { RoadmapNode, RoadmapRPCType } from "../../../../shared/types.ts";
 import { stopAllWatchers, watchFile } from "./fileWatcher";
 import { bunLogger, setupBunLogging } from "./logging";
-import { loadSettings, saveSettings } from "./settings";
+import { addRecentFile, loadSettings, saveSettings } from "./settings";
 
 // Re-export the RPC type so downstream modules can import from the app entry
 export type { RoadmapRPCType };
@@ -194,6 +194,9 @@ const rpc = BrowserView.defineRPC<RoadmapRPCType>({
 				// Start file watcher for the main file
 				stopAllWatchers();
 				watchFile(filePath, fileChangeCallback);
+
+				// Track recent file
+				addRecentFile(filePath);
 
 				return {
 					data: schemaData as RoadmapRPCType["bun"]["requests"]["loadFile"]["response"]["data"],

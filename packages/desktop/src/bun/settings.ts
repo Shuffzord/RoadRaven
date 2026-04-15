@@ -54,3 +54,17 @@ export function saveSettings(
 		console.warn("[settings] Failed to save settings:", e);
 	}
 }
+
+/**
+ * Add a file path to the recent files list.
+ * Deduplicates (moves existing entry to front) and caps at 10 entries.
+ */
+export function addRecentFile(filePath: string, basePath?: string): void {
+	const settings = loadSettings(basePath);
+	const recentFiles = settings.recentFiles ?? [];
+	const updated = [
+		filePath,
+		...recentFiles.filter((f) => f !== filePath),
+	].slice(0, 10);
+	saveSettings({ recentFiles: updated }, basePath);
+}

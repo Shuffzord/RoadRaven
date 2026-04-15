@@ -20,6 +20,7 @@ vi.mock("../../../src/mainview/rpc", () => ({
 
 import { RoadmapNodeCard } from "../../../src/mainview/components/RoadmapNode";
 import { SidePanel } from "../../../src/mainview/components/SidePanel";
+import { useRoadmapStore } from "../../../src/mainview/store/roadmapStore";
 
 describe("RoadmapNodeCard", () => {
 	it("renders title text", () => {
@@ -58,6 +59,25 @@ describe("RoadmapNodeCard", () => {
 
 describe("SidePanel", () => {
 	it("renders field labels: STATUS, TYPE, CREATED, UPDATED, ID, NOTES", () => {
+		// Set up store with a selected node so field labels render
+		useRoadmapStore.getState().loadSchema(
+			{
+				version: "1.0",
+				title: "Test",
+				nodes: [
+					{
+						id: "test-node-1",
+						title: "Test Node",
+						status: "in-progress",
+						type: "task",
+						notes: "Some notes",
+					},
+				],
+			},
+			"test.json",
+		);
+		useRoadmapStore.getState().setSelectedNode("test-node-1");
+
 		render(
 			<SidePanel
 				isOpen={true}
@@ -76,6 +96,9 @@ describe("SidePanel", () => {
 		]) {
 			expect(screen.getByText(label)).toBeTruthy();
 		}
+
+		// Clean up store state
+		useRoadmapStore.getState().setSelectedNode(null);
 	});
 
 	it("close button has aria-label='Close panel'", () => {

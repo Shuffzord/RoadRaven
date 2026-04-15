@@ -77,10 +77,7 @@ describe("addRecentFile", () => {
 	});
 
 	it("loadSettings returns recentFiles from persisted settings", () => {
-		saveSettings(
-			{ recentFiles: ["/saved/a.json", "/saved/b.json"] },
-			tempDir,
-		);
+		saveSettings({ recentFiles: ["/saved/a.json", "/saved/b.json"] }, tempDir);
 		const result = loadSettings(tempDir);
 		expect(result.recentFiles).toEqual(["/saved/a.json", "/saved/b.json"]);
 	});
