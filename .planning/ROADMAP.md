@@ -93,7 +93,7 @@ Plans:
 
 Plans:
 - [x] 02-01-PLAN.md — Schema + Zustand store foundation: Zod schemas, roadmapStore with dataKey pattern, sample schemas
-- [ ] 02-02-PLAN.md — Tree renderer: react-d3-tree integration, file watcher, layout toggle, schema error panel
+- [x] 02-02-PLAN.md — Tree renderer: react-d3-tree integration, file watcher, layout toggle, schema error panel
 - [ ] 02-03-PLAN.md — Side panel + welcome screen: data-driven panel, markdown renderer, recent files
 - [ ] 02-04-PLAN.md — Performance gate: 300+ node benchmark, dataKey stability verification
 
