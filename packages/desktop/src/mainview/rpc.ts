@@ -2,6 +2,7 @@ import { Electroview } from "electrobun/view";
 import type { RoadmapRPCType } from "../../../../shared/types";
 
 const rpc = Electroview.defineRPC<RoadmapRPCType>({
+	maxRequestTime: 120_000, // 2 min — native file dialogs block until user picks a file
 	handlers: {
 		requests: {},
 		messages: {

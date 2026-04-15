@@ -88,6 +88,7 @@ async function resolveRefs(
 
 // Define RPC handlers before creating the window (Electrobun pattern)
 const rpc = BrowserView.defineRPC<RoadmapRPCType>({
+	maxRequestTime: 120_000, // 2 min — native file dialogs block until user picks a file
 	handlers: {
 		requests: {
 			// logMessage handler -- receives forwarded webview logs (per D-22)
@@ -211,8 +212,6 @@ const rpc = BrowserView.defineRPC<RoadmapRPCType>({
 						canChooseDirectory: false,
 						allowsMultipleSelection: false,
 					});
-					// Return first selected path, or empty string if user cancelled.
-					// Avoid returning null — Electrobun's RPC serializer can fail on null string responses.
 					return paths?.[0] ?? "";
 				} catch (err) {
 					bunLogger.error`openFileDialog failed: ${String(err)}`;
