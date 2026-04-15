@@ -82,9 +82,14 @@ export function RoadmapNodeCard({
 			{/* Collapse/expand chevron */}
 			{hasChildren && (
 				<button
-					className="absolute bottom-1 right-1 flex items-center gap-0.5 px-1.5 py-0.5 rounded-[4px] bg-[var(--rv-bg-elevated)] border border-[var(--rv-border)] text-[var(--rv-text-secondary)] hover:text-[var(--rv-text-primary)] hover:bg-[var(--rv-bg-hover)] transition-colors duration-150"
+					className="absolute bottom-1.5 right-1.5 flex items-center gap-1 px-2 py-[3px] rounded-[6px] border transition-colors duration-150"
 					type="button"
 					aria-label={isCollapsed ? "Expand subtree" : "Collapse subtree"}
+					style={{
+						backgroundColor: `var(${tokens.bg})`,
+						borderColor: `var(${tokens.color})`,
+						color: `var(${tokens.color})`,
+					}}
 					onClick={(e) => {
 						e.stopPropagation();
 						onToggle?.();
@@ -92,8 +97,8 @@ export function RoadmapNodeCard({
 				>
 					<svg
 						aria-hidden="true"
-						width="10"
-						height="10"
+						width="12"
+						height="12"
 						viewBox="0 0 24 24"
 						fill="none"
 						stroke="currentColor"
@@ -108,7 +113,7 @@ export function RoadmapNodeCard({
 						)}
 					</svg>
 					{childCount !== undefined && childCount > 0 && (
-						<span className="text-[9px] font-semibold">{childCount}</span>
+						<span className="text-[11px] font-bold">{childCount}</span>
 					)}
 				</button>
 			)}

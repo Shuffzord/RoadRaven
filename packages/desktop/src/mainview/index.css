@@ -282,8 +282,9 @@
 	border-radius: 3px;
 }
 
-/* react-d3-tree connector lines — theme-aware via CSS variable */
-.rv-connector-path {
+/* react-d3-tree connector lines — override the library's hardcoded #000 stroke.
+   .rd3t-link sets stroke: #000 via injected <style>. We need higher specificity. */
+.rd3t-link {
 	stroke: var(--rv-line-connector);
 	stroke-width: 1.5px;
 	fill: none;

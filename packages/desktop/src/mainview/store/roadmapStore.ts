@@ -60,6 +60,7 @@ interface RoadmapState {
 	// Viewport state for Fit View
 	translate: { x: number; y: number };
 	zoomLevel: number;
+	viewResetKey: number;
 
 	// Schema validation errors
 	schemaErrors: Array<{ path: string; message: string; code: string }>;
@@ -98,6 +99,7 @@ export const useRoadmapStore = create<RoadmapState>((set, get) => ({
 	isPanelPinned: false,
 	translate: { x: 400, y: 50 },
 	zoomLevel: 0.8,
+	viewResetKey: 0,
 	schemaErrors: [],
 
 	loadSchema: (schema, filePath) => {
@@ -162,6 +164,7 @@ export const useRoadmapStore = create<RoadmapState>((set, get) => ({
 		set({
 			translate: { x: canvasWidth / 2, y: canvasHeight / 3 },
 			zoomLevel: 0.8,
+			viewResetKey: get().viewResetKey + 1,
 		});
 	},
 

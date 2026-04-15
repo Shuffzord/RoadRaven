@@ -151,9 +151,7 @@ const rpc = BrowserView.defineRPC<RoadmapRPCType>({
 				let schemaData: RoadmapNode["children"] extends infer _
 					? typeof parsed
 					: never;
-				let errors:
-					| Array<{ path: string; message: string; code: string }>
-					| undefined;
+				let errors: Array<{ path: string; message: string; code: string }> = [];
 
 				if (!result.success) {
 					errors = result.error.issues.map((issue) => ({

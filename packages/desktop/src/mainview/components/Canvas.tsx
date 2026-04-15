@@ -16,6 +16,7 @@ export function Canvas() {
 		schemaErrors,
 		translate,
 		zoomLevel,
+		viewResetKey,
 	} = useRoadmapStore(
 		useShallow((s) => ({
 			treeData: s.treeData,
@@ -24,6 +25,7 @@ export function Canvas() {
 			schemaErrors: s.schemaErrors,
 			translate: s.translate,
 			zoomLevel: s.zoomLevel,
+			viewResetKey: s.viewResetKey,
 		})),
 	);
 	const setSchemaErrors = useRoadmapStore((s) => s.setSchemaErrors);
@@ -107,6 +109,7 @@ export function Canvas() {
 
 			{treeData && (
 				<Tree
+					key={`tree-${viewResetKey}`}
 					data={treeData}
 					dataKey={dataKey}
 					orientation={layoutOrientation === "TB" ? "vertical" : "horizontal"}
@@ -123,7 +126,6 @@ export function Canvas() {
 					draggable={true}
 					translate={translate}
 					dimensions={dimensions}
-					pathClassFunc={() => "rv-connector-path"}
 				/>
 			)}
 
