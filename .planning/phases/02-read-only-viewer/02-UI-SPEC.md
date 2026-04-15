@@ -1,7 +1,8 @@
 ---
 phase: 2
 slug: read-only-viewer
-status: draft
+status: approved
+reviewed_at: 2026-04-15
 shadcn_initialized: false
 preset: none
 created: 2026-04-15
@@ -463,11 +464,11 @@ Phase 2 read-only accessibility requirements (PACK-06 baseline):
 
 ## Checker Sign-Off
 
-- [ ] Dimension 1 Copywriting: PASS
-- [ ] Dimension 2 Visuals: PASS
-- [ ] Dimension 3 Color: PASS
-- [ ] Dimension 4 Typography: PASS
-- [ ] Dimension 5 Spacing: PASS
-- [ ] Dimension 6 Registry Safety: PASS
+- [x] Dimension 1 Copywriting: PASS
+- [x] Dimension 2 Visuals: PASS
+- [x] Dimension 3 Color: PASS
+- [x] Dimension 4 Typography: FLAG (non-blocking — 1px size increments differentiated by weight/family/case)
+- [x] Dimension 5 Spacing: FLAG (non-blocking — Phase 1 component heights are exceptions, not spacing tokens)
+- [x] Dimension 6 Registry Safety: PASS
 
-**Approval:** pending
+**Approval:** approved 2026-04-15
