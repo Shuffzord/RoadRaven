@@ -1,4 +1,4 @@
-const STATUS_TOKEN_MAP = {
+export const STATUS_TOKEN_MAP = {
 	"not-started": {
 		color: "--rv-status-not-started",
 		bg: "--rv-status-not-started-bg",
@@ -13,7 +13,7 @@ const STATUS_TOKEN_MAP = {
 
 export type NodeStatus = keyof typeof STATUS_TOKEN_MAP;
 
-function formatStatus(status: string): string {
+export function formatStatus(status: string): string {
 	return status
 		.split("-")
 		.map((word) => word.charAt(0).toUpperCase() + word.slice(1))

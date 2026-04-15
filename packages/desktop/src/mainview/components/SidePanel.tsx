@@ -1,21 +1,79 @@
-export function SidePanel({
-	isOpen = false,
-	onClose,
-}: {
-	isOpen?: boolean;
-	onClose?: () => void;
-}) {
+import { useCallback, useEffect, useState } from "react";
+import { useRoadmapStore } from "../store/roadmapStore";
+import { MarkdownRenderer } from "./MarkdownRenderer";
+import { ResizeHandle } from "./ResizeHandle";
+import { formatStatus, STATUS_TOKEN_MAP } from "./RoadmapNode";
+
+interface SidePanelProps {
+	isOpen: boolean;
+	onClose: () => void;
+}
+
+function formatDate(dateStr: string | undefined): string {
+	if (!dateStr) return "N/A";
+	try {
+		const d = new Date(dateStr);
+		if (Number.isNaN(d.getTime())) return "N/A";
+		return d.toLocaleDateString(undefined, {
+			year: "numeric",
+			month: "short",
+			day: "numeric",
+		});
+	} catch {
+		return "N/A";
+	}
+}
+
+export function SidePanel({ isOpen, onClose }: SidePanelProps) {
+	const selectedNode = useRoadmapStore((s) => s.getSelectedNode());
+	const [width, setWidth] = useState(340);
+	const [_isPinnable, setIsPinnable] = useState(
+		typeof window !== "undefined" ? window.innerWidth > 1400 : false,
+	);
+	const [copied, setCopied] = useState(false);
+
+	// Listen for viewport changes to determine pin mode
+	useEffect(() => {
+		const handleResize = () => {
+			setIsPinnable(window.innerWidth > 1400);
+		};
+		window.addEventListener("resize", handleResize);
+		return () => window.removeEventListener("resize", handleResize);
+	}, []);
+
+	const maxWidth =
+		typeof window !== "undefined" ? Math.floor(window.innerWidth * 0.5) : 480;
+
+	const handleCopyId = useCallback(async () => {
+		if (!selectedNode) return;
+		await navigator.clipboard.writeText(selectedNode.id);
+		setCopied(true);
+		setTimeout(() => setCopied(false), 1000);
+	}, [selectedNode]);
+
+	const status = selectedNode?.status ?? "not-started";
+	const tokens =
+		STATUS_TOKEN_MAP[status as keyof typeof STATUS_TOKEN_MAP] ??
+		STATUS_TOKEN_MAP["not-started"];
+
 	return (
 		<aside
-			className="[grid-area:panel] bg-rv-bg-panel border-l border-rv-border z-[50] overflow-hidden flex flex-col"
+			className="[grid-area:panel] bg-rv-bg-panel border-l border-rv-border z-[50] overflow-hidden flex flex-col relative"
 			style={{
-				width: isOpen ? 340 : 0,
+				width: isOpen ? width : 0,
 				transitionProperty: "width",
 				transitionDuration: "200ms",
 				transitionTimingFunction: "ease-out",
 				boxShadow: isOpen ? "var(--rv-shadow-panel)" : "none",
 			}}
+			// biome-ignore lint/a11y/noRedundantRoles: plan requires explicit role="complementary" for accessibility contract
+			role="complementary"
+			aria-label="Node details"
 		>
+			{isOpen && (
+				<ResizeHandle onResize={setWidth} minWidth={320} maxWidth={maxWidth} />
+			)}
+
 			{/* Header */}
 			<div className="flex items-center justify-between min-h-[52px] px-4 py-3.5 border-b border-rv-border shrink-0">
 				<span className="text-[14px] font-semibold text-rv-text-primary whitespace-nowrap">
@@ -46,69 +104,106 @@ export function SidePanel({
 
 			{/* Body */}
 			<div className="flex-1 p-4 overflow-y-auto">
-				{/* STATUS */}
-				<FieldLabel>STATUS</FieldLabel>
-				<div className="flex items-center gap-2 px-2.5 py-1.5 bg-rv-bg-input border border-rv-border rounded-[6px] mb-4">
-					<span className="w-2 h-2 rounded-full bg-rv-status-not-started" />
-					<span className="text-[12px] text-rv-text-primary">Not Started</span>
-				</div>
+				{selectedNode ? (
+					<>
+						{/* Title */}
+						<h2 className="text-[14px] font-semibold text-rv-text-primary mb-4">
+							{selectedNode.title}
+						</h2>
 
-				{/* TYPE */}
-				<FieldLabel>TYPE</FieldLabel>
-				<div className="mb-4">
-					<span className="inline-block px-2.5 py-[3px] text-[11px] font-semibold rounded-[4px] bg-rv-accent-muted text-rv-accent">
-						Task
-					</span>
-				</div>
+						{/* STATUS */}
+						<FieldLabel>STATUS</FieldLabel>
+						<div className="flex items-center gap-2 px-2.5 py-1.5 bg-rv-bg-input border border-rv-border rounded-[6px] mb-4">
+							<span
+								className="w-2 h-2 rounded-full"
+								style={{
+									backgroundColor: `var(${tokens.color})`,
+								}}
+							/>
+							<span className="text-[12px] text-rv-text-primary">
+								{formatStatus(status)}
+							</span>
+						</div>
 
-				{/* CREATED / UPDATED */}
-				<FieldLabel>CREATED</FieldLabel>
-				<MetaRow label="Date" value="2026-04-10" />
+						{/* TYPE */}
+						<FieldLabel>TYPE</FieldLabel>
+						<div className="mb-4">
+							<span className="inline-block px-2.5 py-[3px] text-[11px] font-semibold rounded-[4px] bg-rv-accent-muted text-rv-accent">
+								{selectedNode.type ?? "Unknown"}
+							</span>
+						</div>
 
-				<FieldLabel>UPDATED</FieldLabel>
-				<MetaRow label="Date" value="2026-04-13" />
+						{/* CREATED */}
+						<FieldLabel>CREATED</FieldLabel>
+						<MetaRow label="Date" value={formatDate(selectedNode.createdAt)} />
 
-				{/* ID */}
-				<FieldLabel>ID</FieldLabel>
-				<div className="flex items-center gap-2 mb-4">
-					<span className="text-[12px] text-rv-text-secondary font-mono">
-						node-abc-123
-					</span>
-					<button
-						className="flex items-center justify-center w-5 h-5 rounded-[4px] hover:bg-rv-bg-hover hover:text-rv-accent transition-colors duration-150 text-rv-text-tertiary"
-						type="button"
-						aria-label="Copy ID"
-					>
-						<svg
-							aria-hidden="true"
-							width="12"
-							height="12"
-							viewBox="0 0 24 24"
-							fill="none"
-							stroke="currentColor"
-							strokeWidth="2"
-							strokeLinecap="round"
-							strokeLinejoin="round"
-						>
-							<rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-							<path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-						</svg>
-					</button>
-				</div>
+						{/* UPDATED */}
+						<FieldLabel>UPDATED</FieldLabel>
+						<MetaRow label="Date" value={formatDate(selectedNode.updatedAt)} />
 
-				{/* Divider */}
-				<div className="h-px bg-rv-border my-4" />
+						{/* ID */}
+						<FieldLabel>ID</FieldLabel>
+						<div className="flex items-center gap-2 mb-4">
+							<span className="text-[12px] text-rv-text-secondary font-mono">
+								{selectedNode.id}
+							</span>
+							<button
+								className="flex items-center justify-center w-5 h-5 rounded-[4px] hover:bg-rv-bg-hover hover:text-rv-accent transition-colors duration-150 text-rv-text-tertiary"
+								type="button"
+								aria-label={copied ? "Node ID copied" : "Copy node ID"}
+								onClick={handleCopyId}
+							>
+								{copied ? (
+									<svg
+										aria-hidden="true"
+										width="12"
+										height="12"
+										viewBox="0 0 24 24"
+										fill="none"
+										stroke="currentColor"
+										strokeWidth="2"
+										strokeLinecap="round"
+										strokeLinejoin="round"
+									>
+										<polyline points="20 6 9 17 4 12" />
+									</svg>
+								) : (
+									<svg
+										aria-hidden="true"
+										width="12"
+										height="12"
+										viewBox="0 0 24 24"
+										fill="none"
+										stroke="currentColor"
+										strokeWidth="2"
+										strokeLinecap="round"
+										strokeLinejoin="round"
+									>
+										<rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+										<path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+									</svg>
+								)}
+							</button>
+						</div>
 
-				{/* NOTES */}
-				<FieldLabel>NOTES</FieldLabel>
-				<div className="text-[13px] leading-[1.7] text-rv-text-secondary whitespace-pre-wrap">
-					Initial setup for the project foundation. Configure the build pipeline
-					and establish the{" "}
-					<code className="bg-rv-bg-elevated text-rv-accent text-[11px] rounded-[3px] font-mono px-1 py-0.5">
-						theme system
-					</code>{" "}
-					before proceeding with component work.
-				</div>
+						{/* Divider */}
+						<div className="h-px bg-rv-border my-4" />
+
+						{/* NOTES */}
+						<FieldLabel>NOTES</FieldLabel>
+						{selectedNode.notes ? (
+							<MarkdownRenderer content={selectedNode.notes} />
+						) : (
+							<p className="text-[13px] leading-[1.7] text-rv-text-tertiary">
+								No notes for this node.
+							</p>
+						)}
+					</>
+				) : (
+					<p className="text-[13px] text-rv-text-tertiary">
+						Select a node to view details.
+					</p>
+				)}
 			</div>
 		</aside>
 	);
