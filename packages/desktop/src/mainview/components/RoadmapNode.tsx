@@ -27,6 +27,7 @@ interface RoadmapNodeCardProps {
 	isSelected?: boolean;
 	hasChildren?: boolean;
 	isCollapsed?: boolean;
+	childCount?: number;
 	onToggle?: () => void;
 	onSelect?: () => void;
 }
@@ -38,6 +39,7 @@ export function RoadmapNodeCard({
 	isSelected,
 	hasChildren,
 	isCollapsed,
+	childCount,
 	onToggle,
 	onSelect,
 }: RoadmapNodeCardProps) {
@@ -80,7 +82,7 @@ export function RoadmapNodeCard({
 			{/* Collapse/expand chevron */}
 			{hasChildren && (
 				<button
-					className="absolute bottom-1.5 right-1.5 flex items-center justify-center w-[14px] h-[14px] text-[var(--rv-text-tertiary)] hover:text-[var(--rv-text-primary)] transition-colors duration-150"
+					className="absolute bottom-1 right-1 flex items-center gap-0.5 px-1.5 py-0.5 rounded-[4px] bg-[var(--rv-bg-elevated)] border border-[var(--rv-border)] text-[var(--rv-text-secondary)] hover:text-[var(--rv-text-primary)] hover:bg-[var(--rv-bg-hover)] transition-colors duration-150"
 					type="button"
 					aria-label={isCollapsed ? "Expand subtree" : "Collapse subtree"}
 					onClick={(e) => {
@@ -90,12 +92,12 @@ export function RoadmapNodeCard({
 				>
 					<svg
 						aria-hidden="true"
-						width="14"
-						height="14"
+						width="10"
+						height="10"
 						viewBox="0 0 24 24"
 						fill="none"
 						stroke="currentColor"
-						strokeWidth="2"
+						strokeWidth="2.5"
 						strokeLinecap="round"
 						strokeLinejoin="round"
 					>
@@ -105,6 +107,9 @@ export function RoadmapNodeCard({
 							<polyline points="6 9 12 15 18 9" />
 						)}
 					</svg>
+					{childCount !== undefined && childCount > 0 && (
+						<span className="text-[9px] font-semibold">{childCount}</span>
+					)}
 				</button>
 			)}
 		</div>

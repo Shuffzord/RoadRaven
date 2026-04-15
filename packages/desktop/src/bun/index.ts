@@ -204,14 +204,21 @@ const rpc = BrowserView.defineRPC<RoadmapRPCType>({
 
 			// openFilePicker handler (Electrobun native dialog)
 			openFilePicker: async () => {
-				const paths = await Utils.openFileDialog({
-					startingFolder: undefined,
-					allowedFileTypes: "json",
-					canChooseFiles: true,
-					canChooseDirectory: false,
-					allowsMultipleSelection: false,
-				});
-				return paths?.[0] ?? null;
+				try {
+					const paths = await Utils.openFileDialog({
+						startingFolder: undefined,
+						allowedFileTypes: "json",
+						canChooseFiles: true,
+						canChooseDirectory: false,
+						allowsMultipleSelection: false,
+					});
+					// Return first selected path, or empty string if user cancelled.
+					// Avoid returning null — Electrobun's RPC serializer can fail on null string responses.
+					return paths?.[0] ?? "";
+				} catch (err) {
+					bunLogger.error`openFileDialog failed: ${String(err)}`;
+					return "";
+				}
 			},
 
 			// resolveRef handler

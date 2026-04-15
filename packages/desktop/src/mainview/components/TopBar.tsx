@@ -19,13 +19,29 @@ export function TopBar() {
 	};
 
 	const handleOpenFile = async () => {
-		const path = await electroview?.rpc?.request.openFilePicker({});
-		if (!path) return;
-		const response = await electroview?.rpc?.request.loadFile({ path });
-		if (response?.data) {
-			useRoadmapStore.getState().loadSchema(response.data, path);
+		if (electroview) {
+			const path = await electroview.rpc?.request.openFilePicker({});
+			if (!path) return;
+			const response = await electroview.rpc?.request.loadFile({ path });
+			if (response?.data) {
+				useRoadmapStore.getState().loadSchema(response.data, path);
+			}
+			useRoadmapStore.getState().setSchemaErrors(response?.errors ?? []);
+		} else {
+			// Dev mode fallback: load sample schema directly when Electrobun is unavailable
+			const { RoadmapSchemaSchema } = await import(
+				"../../../../../packages/core/src/schema"
+			);
+			const sample = (
+				await import("../../../../../samples/getting-started.json")
+			).default;
+			const result = RoadmapSchemaSchema.safeParse(sample);
+			if (result.success) {
+				useRoadmapStore
+					.getState()
+					.loadSchema(result.data, "getting-started.json");
+			}
 		}
-		useRoadmapStore.getState().setSchemaErrors(response?.errors ?? []);
 	};
 
 	const handleFitView = () => {

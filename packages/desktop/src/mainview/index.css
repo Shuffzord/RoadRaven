@@ -282,6 +282,13 @@
 	border-radius: 3px;
 }
 
+/* react-d3-tree connector lines — theme-aware via CSS variable */
+.rv-connector-path {
+	stroke: var(--rv-line-connector);
+	stroke-width: 1.5px;
+	fill: none;
+}
+
 /* Node status stripe */
 .node::before {
 	content: "";

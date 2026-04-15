@@ -47,7 +47,8 @@ export function Canvas() {
 	const renderNode = ({ nodeDatum, toggleNode }: CustomNodeElementProps) => {
 		const status = (nodeDatum.attributes?.status as string) ?? "not-started";
 		const nodeId = nodeDatum.attributes?.id as string;
-		const hasChildren = nodeDatum.children && nodeDatum.children.length > 0;
+		const children = nodeDatum.children ?? [];
+		const hasChildren = children.length > 0;
 		const isCollapsed = nodeDatum.__rd3t?.collapsed;
 		return (
 			<foreignObject width={240} height={100} x={-120} y={-50}>
@@ -56,8 +57,9 @@ export function Canvas() {
 					status={status as NodeStatus}
 					nodeId={nodeId}
 					isSelected={selectedNodeId === nodeId}
-					hasChildren={!!hasChildren}
+					hasChildren={hasChildren}
 					isCollapsed={!!isCollapsed}
+					childCount={children.length}
 					onToggle={toggleNode}
 					onSelect={() => setSelectedNode(nodeId)}
 				/>
@@ -121,9 +123,7 @@ export function Canvas() {
 					draggable={true}
 					translate={translate}
 					dimensions={dimensions}
-					pathClassFunc={() =>
-						"stroke-[var(--rv-line-connector)] stroke-[1.5px] fill-none"
-					}
+					pathClassFunc={() => "rv-connector-path"}
 				/>
 			)}
 

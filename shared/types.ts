@@ -59,7 +59,7 @@ export type RoadmapRPCType = {
 			exportPng: { params: { path: string }; response: undefined };
 			openFilePicker: {
 				params: Record<string, never>;
-				response: string | null;
+				response: string;
 			};
 			resolveRef: { params: { refPath: string }; response: RoadmapNode[] };
 			saveSettings: {

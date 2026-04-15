@@ -153,8 +153,16 @@ export const useRoadmapStore = create<RoadmapState>((set, get) => ({
 	},
 
 	resetView: () => {
-		const width = typeof window !== "undefined" ? window.innerWidth / 2 : 400;
-		set({ translate: { x: width, y: 50 }, zoomLevel: 0.8 });
+		// Center the root node in the canvas area.
+		// Canvas occupies the area after the sidebar (~40px) and below the topbar (~50px).
+		const canvasWidth =
+			typeof window !== "undefined" ? window.innerWidth - 40 : 800;
+		const canvasHeight =
+			typeof window !== "undefined" ? window.innerHeight - 50 - 26 : 600;
+		set({
+			translate: { x: canvasWidth / 2, y: canvasHeight / 3 },
+			zoomLevel: 0.8,
+		});
 	},
 
 	setTranslate: (translate) => set({ translate }),
