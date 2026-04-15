@@ -89,13 +89,14 @@ Plans:
 
 **Requirements covered:** VIEW-01, VIEW-02, VIEW-03, VIEW-04, VIEW-05, VIEW-06, VIEW-07, VIEW-08, VIEW-09, VIEW-10, VIEW-11, VIEW-12, VIEW-13, VIEW-14
 
-**Plans:** 4 plans
+**Plans:** 5 plans
 
 Plans:
 - [x] 02-01-PLAN.md — Schema + Zustand store foundation: Zod schemas, roadmapStore with dataKey pattern, sample schemas
 - [x] 02-02-PLAN.md — Tree renderer: react-d3-tree integration, file watcher, layout toggle, schema error panel
-- [ ] 02-03-PLAN.md — Side panel + welcome screen: data-driven panel, markdown renderer, recent files
-- [ ] 02-04-PLAN.md — Performance gate: 300+ node benchmark, dataKey stability verification
+- [x] 02-03-PLAN.md — Side panel + welcome screen: data-driven panel, markdown renderer, recent files
+- [x] 02-04-PLAN.md — Performance gate: 300+ node benchmark, dataKey stability verification
+- [ ] 02-05-PLAN.md — UAT gap closure: selection ring clipping fix, Fit View collapse preservation
 
 **Done when:**
 - Any valid schema file renders a correct interactive tree within 300ms for up to 500 nodes
@@ -212,9 +213,9 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| Prerequisite: App Scaffold | 0/3 | Planned | - |
-| 1. Visual Foundation & Themes | 0/3 | Planned | - |
-| 2. Read-Only Viewer | 0/4 | Planned | - |
+| Prerequisite: App Scaffold | 3/3 | Complete | - |
+| 1. Visual Foundation & Themes | 3/3 | Complete | - |
+| 2. Read-Only Viewer | 4/5 | UAT Gap Closure | - |
 | 3. Full Editor | 0/4 | Not started | - |
 | 4. Event API | 0/4 | Not started | - |
 | 5. Export & Packaging | 0/4 | Not started | - |
