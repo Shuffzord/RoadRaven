@@ -72,7 +72,7 @@ completed: 2026-04-15
 - **Duration:** 11 min
 - **Started:** 2026-04-15T11:17:19Z
 - **Completed:** 2026-04-15T11:29:16Z
-- **Tasks:** 2 of 3 (Task 3 is human verification checkpoint -- pending)
+- **Tasks:** 3 of 3 (Task 3 human verification checkpoint passed)
 - **Files modified:** 13
 
 ## Accomplishments
@@ -87,7 +87,7 @@ Each task was committed atomically:
 
 1. **Task 1: UI components -- Canvas, RoadmapNode, TopBar, StatusBar, SchemaErrorPanel, App.tsx, roadmapStore** - `caa99d7` (feat)
 2. **Task 2: Bun RPC handlers -- loadFile, openFilePicker, resolveRef, fileWatcher, rpcHandlers** - `a6677fd` (feat)
-3. **Task 3: Human verification checkpoint** - PENDING (user must verify tree rendering)
+3. **Task 3: Human verification checkpoint** - PASSED (user verified tree rendering, filed fixes for connectors, chevron, fit view, RPC timeout)
 
 ## Files Created/Modified
 - `packages/desktop/src/mainview/components/Canvas.tsx` - react-d3-tree Tree with dataKey, ResizeObserver, renderNode foreignObject, SchemaErrorPanel
@@ -157,9 +157,17 @@ None beyond the auto-fixed deviations above.
 ## User Setup Required
 None - no external service configuration required.
 
+## Post-Checkpoint Fixes
+- **Connector lines**: Overrode `.rd3t-link` with `!important` — library injects own `<style>` tag after our CSS
+- **Collapse chevron**: Status-colored badge with 12px icon and child count
+- **Fit View**: Added `viewResetKey` counter forcing Tree remount on each click
+- **RPC timeout**: Set `maxRequestTime: 120_000` on both Bun and webview — native file dialogs block for user duration
+- **openFileDialog**: Pass `homedir()` as `startingFolder` — Electrobun crashes on `undefined`
+- **loadFile errors**: Default to `[]` instead of `undefined` — avoids serialization issues
+
 ## Next Phase Readiness
-- Task 3 (human verification checkpoint) is pending -- user needs to visually verify tree rendering
-- After verification passes, Plan 02-03 (side panel + welcome screen) can proceed
+- Task 3 human verification checkpoint PASSED
+- Plan 02-03 (side panel + welcome screen) ready to proceed
 - All data flows are wired: file open -> Zod validate -> loadSchema -> treeData -> Canvas -> react-d3-tree -> RoadmapNodeCard
 - File watcher pipeline ready: fs.watch -> debounce -> RPC pushFileChanged -> rpcHandlers -> reloadSchema
 - SchemaErrorPanel wired to display Zod validation errors from loadFile response
