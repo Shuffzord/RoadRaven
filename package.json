@@ -15,9 +15,13 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^2.4.11",
-    "husky": "^9.1.7"
+    "husky": "^9.1.7",
+    "lint-staged": "^16.4.0"
   },
   "dependencies": {
     "rehype-sanitize": "^6.0.0"
+  },
+  "lint-staged": {
+    "{packages,shared,plugins}/**/*.{ts,tsx,js,jsx,json,css}": "bunx @biomejs/biome check --write --diagnostic-level=error"
   }
 }
