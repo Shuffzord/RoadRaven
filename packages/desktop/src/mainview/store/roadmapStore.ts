@@ -57,6 +57,13 @@ interface RoadmapState {
 	layoutOrientation: "TB" | "LR";
 	isPanelPinned: boolean;
 
+	// Viewport state for Fit View
+	translate: { x: number; y: number };
+	zoomLevel: number;
+
+	// Schema validation errors
+	schemaErrors: Array<{ path: string; message: string; code: string }>;
+
 	// Actions -- structural (increment dataKey)
 	loadSchema: (schema: RoadmapSchema, filePath: string) => void;
 	reloadSchema: (schema: RoadmapSchema) => void;
@@ -67,6 +74,16 @@ interface RoadmapState {
 	setLayout: (orientation: "TB" | "LR") => void;
 	getSelectedNode: () => RoadmapNode | undefined;
 	getNodeCount: () => number;
+
+	// Viewport actions
+	resetView: () => void;
+	setTranslate: (translate: { x: number; y: number }) => void;
+	setZoomLevel: (zoom: number) => void;
+
+	// Schema error actions
+	setSchemaErrors: (
+		errors: Array<{ path: string; message: string; code: string }>,
+	) => void;
 }
 
 export const useRoadmapStore = create<RoadmapState>((set, get) => ({
@@ -79,6 +96,9 @@ export const useRoadmapStore = create<RoadmapState>((set, get) => ({
 	selectedNodeId: null,
 	layoutOrientation: "TB",
 	isPanelPinned: false,
+	translate: { x: 400, y: 50 },
+	zoomLevel: 0.8,
+	schemaErrors: [],
 
 	loadSchema: (schema, filePath) => {
 		const treeData = schema.nodes[0] ? toTreeDatum(schema.nodes[0]) : null;
@@ -131,4 +151,15 @@ export const useRoadmapStore = create<RoadmapState>((set, get) => ({
 	getNodeCount: () => {
 		return get().nodeIndex.size;
 	},
+
+	resetView: () => {
+		const width = typeof window !== "undefined" ? window.innerWidth / 2 : 400;
+		set({ translate: { x: width, y: 50 }, zoomLevel: 0.8 });
+	},
+
+	setTranslate: (translate) => set({ translate }),
+
+	setZoomLevel: (zoom) => set({ zoomLevel: zoom }),
+
+	setSchemaErrors: (errors) => set({ schemaErrors: errors }),
 }));

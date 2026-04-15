@@ -19,8 +19,8 @@ export type ThemePreference = "dark" | "light" | "high-contrast" | "system";
  */
 export interface AppSettings {
 	theme?: ThemePreference;
-	// Phase 2 adds: layout?: 'TB' | 'LR';
-	// Phase 2 adds: recentFiles?: string[];
+	recentFiles?: string[];
+	fileSettings?: Record<string, { layout?: "TB" | "LR" }>;
 }
 
 // -- Zod-inferred types from @roadraven/core --------------------------------
@@ -47,7 +47,13 @@ export type StatusConfig = _StatusConfig;
 export type RoadmapRPCType = {
 	bun: RPCSchema<{
 		requests: {
-			loadFile: { params: { path: string }; response: RoadmapSchema };
+			loadFile: {
+				params: { path: string };
+				response: {
+					data: RoadmapSchema | null;
+					errors?: Array<{ path: string; message: string; code: string }>;
+				};
+			};
 			saveFile: { params: { schema: RoadmapSchema }; response: undefined };
 			exportHtml: { params: { path: string }; response: undefined };
 			exportPng: { params: { path: string }; response: undefined };
