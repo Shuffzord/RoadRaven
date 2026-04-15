@@ -143,6 +143,8 @@ export const useRoadmapStore = create<RoadmapState>((set, get) => ({
 		// Mutate in-place -- do NOT increment dataKey or create new treeData ref.
 		// This is the critical performance path per D-02: status-only updates
 		// bypass react-d3-tree's deep-clone by keeping the same data reference.
+		// NOTE: Canvas.tsx currently reads status from treeData.attributes (stale copy).
+		// Phase 3 must update renderCustomNode to read from nodeIndex + statusTick.
 		node.status = status as RoadmapNode["status"];
 		set({ statusTick: get().statusTick + 1 });
 	},

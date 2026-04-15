@@ -68,10 +68,6 @@ export function Canvas() {
 
 	const { openFile, openRecent, openSample } = useFileActions();
 
-	const handleNewRoadmap = useCallback(() => {
-		// Phase 3 implements File > New. No-op for now.
-	}, []);
-
 	const renderNode = useCallback(
 		({ nodeDatum, toggleNode }: CustomNodeElementProps) => {
 			const status = (nodeDatum.attributes?.status as string) ?? "not-started";
@@ -140,7 +136,6 @@ export function Canvas() {
 				<WelcomeScreen
 					recentFiles={recentFiles}
 					onOpenFile={openFile}
-					onNewRoadmap={handleNewRoadmap}
 					onOpenRecent={openRecent}
 					onOpenSample={openSample}
 				/>

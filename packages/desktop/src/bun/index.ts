@@ -1,4 +1,4 @@
-import { dirname, resolve as pathResolve } from "node:path";
+import { dirname, resolve as pathResolve, sep } from "node:path";
 import { getLogger } from "@logtape/logtape";
 import { BrowserView, BrowserWindow, Updater, Utils } from "electrobun/bun";
 import type { RoadmapNode, RoadmapRPCType } from "../../../../shared/types.ts";
@@ -54,11 +54,26 @@ async function resolveRefs(
 	nodes: RoadmapNode[],
 	basePath: string,
 	watchCallback: (path: string) => void,
+	visited: Set<string> = new Set(),
 ): Promise<RoadmapNode[]> {
+	const baseDir = dirname(basePath);
 	const resolved: RoadmapNode[] = [];
 	for (const node of nodes) {
 		if (node.$ref) {
-			const refAbsPath = pathResolve(dirname(basePath), node.$ref);
+			const refAbsPath = pathResolve(baseDir, node.$ref);
+			// Guard: reject $ref paths that escape the base directory
+			if (!refAbsPath.startsWith(baseDir + sep)) {
+				bunLogger.error`$ref escapes base directory: ${node.$ref}`;
+				resolved.push(node);
+				continue;
+			}
+			// Guard: detect circular $ref chains
+			if (visited.has(refAbsPath)) {
+				bunLogger.warn`Circular $ref detected, skipping: ${node.$ref}`;
+				resolved.push(node);
+				continue;
+			}
+			visited.add(refAbsPath);
 			try {
 				const raw = await Bun.file(refAbsPath).text();
 				const parsed = JSON.parse(raw);
@@ -78,6 +93,7 @@ async function resolveRefs(
 					node.children,
 					basePath,
 					watchCallback,
+					visited,
 				);
 			}
 			resolved.push(nodeWithResolvedChildren);
@@ -149,9 +165,7 @@ const rpc = BrowserView.defineRPC<RoadmapRPCType>({
 				// Validate with Zod
 				const result = RoadmapSchemaSchema.safeParse(parsed);
 
-				let schemaData: RoadmapNode["children"] extends infer _
-					? typeof parsed
-					: never;
+				let schemaData: unknown;
 				let errors: Array<{ path: string; message: string; code: string }> = [];
 
 				if (!result.success) {

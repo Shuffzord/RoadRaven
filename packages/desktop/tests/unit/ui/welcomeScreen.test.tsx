@@ -12,7 +12,6 @@ vi.mock("../../../src/mainview/rpc", () => ({
 const defaultProps = {
 	recentFiles: [],
 	onOpenFile: vi.fn(),
-	onNewRoadmap: vi.fn(),
 	onOpenRecent: vi.fn(),
 	onOpenSample: vi.fn(),
 };

@@ -8,7 +8,7 @@ export function SchemaErrorPanel({ errors, onDismiss }: SchemaErrorPanelProps) {
 
 	return (
 		<div
-			className="absolute bottom-0 left-0 right-0 bg-[var(--rv-bg-surface)] border-t-2 border-t-[var(--rv-status-blocked)] z-[20] max-h-[200px] overflow-y-auto"
+			className="absolute bottom-0 left-0 right-0 bg-rv-bg-surface border-t-2 border-t-rv-status-blocked z-[20] max-h-[200px] overflow-y-auto"
 			role="alert"
 		>
 			{/* Header */}
@@ -30,12 +30,12 @@ export function SchemaErrorPanel({ errors, onDismiss }: SchemaErrorPanelProps) {
 						<line x1="12" y1="9" x2="12" y2="13" />
 						<line x1="12" y1="17" x2="12.01" y2="17" />
 					</svg>
-					<span className="text-[14px] font-semibold text-[var(--rv-text-primary)]">
+					<span className="text-[14px] font-semibold text-rv-text-primary">
 						Schema Error
 					</span>
 				</div>
 				<button
-					className="flex items-center justify-center w-7 h-7 rounded-[6px] text-[var(--rv-text-tertiary)] hover:bg-[var(--rv-bg-hover)] hover:text-[var(--rv-text-primary)] transition-colors duration-150"
+					className="flex items-center justify-center w-7 h-7 rounded-[6px] text-rv-text-tertiary hover:bg-rv-bg-hover hover:text-rv-text-primary transition-colors duration-150"
 					type="button"
 					onClick={onDismiss}
 					aria-label="Dismiss errors"
@@ -64,14 +64,14 @@ export function SchemaErrorPanel({ errors, onDismiss }: SchemaErrorPanelProps) {
 						key={`${error.code}-${error.path}-${error.message}`}
 						className="flex items-start gap-3 py-1.5"
 					>
-						<span className="text-[11px] font-semibold uppercase text-[var(--rv-status-blocked)] shrink-0">
+						<span className="text-[11px] font-semibold uppercase text-rv-status-blocked shrink-0">
 							ERROR
 						</span>
-						<span className="text-[12px] text-[var(--rv-text-primary)] flex-1">
+						<span className="text-[12px] text-rv-text-primary flex-1">
 							{error.message}
 						</span>
 						{error.path && (
-							<span className="text-[11px] font-[family-name:var(--rv-font-mono,'Space_Grotesk')] text-[var(--rv-text-tertiary)] shrink-0">
+							<span className="text-[11px] font-[family-name:var(--rv-font-mono,'Space_Grotesk')] text-rv-text-tertiary shrink-0">
 								at /{error.path}
 							</span>
 						)}
@@ -80,8 +80,8 @@ export function SchemaErrorPanel({ errors, onDismiss }: SchemaErrorPanelProps) {
 			</div>
 
 			{/* Footer */}
-			<div className="px-4 py-2 border-t border-[var(--rv-border)]">
-				<span className="text-[12px] text-[var(--rv-text-secondary)]">
+			<div className="px-4 py-2 border-t border-rv-border">
+				<span className="text-[12px] text-rv-text-secondary">
 					Fix the JSON file and save -- the viewer will reload automatically.
 				</span>
 			</div>

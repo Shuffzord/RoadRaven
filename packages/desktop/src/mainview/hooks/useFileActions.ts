@@ -3,11 +3,21 @@ import { electroview } from "../rpc";
 import { useRoadmapStore } from "../store/roadmapStore";
 
 async function loadAndApply(path: string): Promise<void> {
-	const response = await electroview?.rpc?.request.loadFile({ path });
-	if (response?.data) {
-		useRoadmapStore.getState().loadSchema(response.data, path);
+	try {
+		const response = await electroview?.rpc?.request.loadFile({ path });
+		if (response?.data) {
+			useRoadmapStore.getState().loadSchema(response.data, path);
+		}
+		useRoadmapStore.getState().setSchemaErrors(response?.errors ?? []);
+	} catch {
+		useRoadmapStore.getState().setSchemaErrors([
+			{
+				path: "",
+				message: `Failed to load file: ${path}`,
+				code: "rpc_error",
+			},
+		]);
 	}
-	useRoadmapStore.getState().setSchemaErrors(response?.errors ?? []);
 }
 
 export function useFileActions() {

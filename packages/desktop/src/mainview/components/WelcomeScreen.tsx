@@ -8,7 +8,6 @@ function basename(filePath: string): string {
 interface WelcomeScreenProps {
 	recentFiles: string[];
 	onOpenFile: () => void;
-	onNewRoadmap: () => void;
 	onOpenRecent: (path: string) => void;
 	onOpenSample: (name: string) => void;
 }
@@ -16,7 +15,6 @@ interface WelcomeScreenProps {
 export function WelcomeScreen({
 	recentFiles,
 	onOpenFile,
-	onNewRoadmap,
 	onOpenRecent,
 	onOpenSample,
 }: WelcomeScreenProps) {
@@ -61,9 +59,10 @@ export function WelcomeScreen({
 						Open File
 					</button>
 					<button
-						className="h-8 px-4 bg-transparent border border-rv-accent text-rv-accent text-[12px] font-semibold rounded-[8px] hover:bg-rv-accent-muted transition-colors duration-150"
+						className="h-8 px-4 bg-transparent border border-rv-border text-rv-text-tertiary text-[12px] font-semibold rounded-[8px] cursor-not-allowed opacity-60"
 						type="button"
-						onClick={onNewRoadmap}
+						disabled
+						title="Coming soon"
 					>
 						New Roadmap
 					</button>

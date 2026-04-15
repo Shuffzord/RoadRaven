@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { Fragment, jsx, jsxs } from "react/jsx-runtime";
 import rehypeReact from "rehype-react";
+import rehypeSanitize, { defaultSchema } from "rehype-sanitize";
 import remarkGfm from "remark-gfm";
 import remarkParse from "remark-parse";
 import remarkRehype from "remark-rehype";
@@ -10,6 +11,7 @@ const processor = unified()
 	.use(remarkParse)
 	.use(remarkGfm)
 	.use(remarkRehype)
+	.use(rehypeSanitize, defaultSchema)
 	.use(rehypeReact, {
 		Fragment,
 		jsx,
@@ -39,19 +41,15 @@ const processor = unified()
 					{...props}
 				/>
 			),
-			a: ({ href, children, ...rest }: React.ComponentProps<"a">) => {
-				// T-02-08: Block javascript: hrefs for security
-				const safeHref = href && /^javascript:/i.test(href) ? undefined : href;
-				return (
-					<a
-						href={safeHref}
-						className="text-rv-accent no-underline hover:underline"
-						{...rest}
-					>
-						{children}
-					</a>
-				);
-			},
+			a: ({ href, children, ...rest }: React.ComponentProps<"a">) => (
+				<a
+					href={href}
+					className="text-rv-accent no-underline hover:underline"
+					{...rest}
+				>
+					{children}
+				</a>
+			),
 			code: ({
 				children,
 				className,
