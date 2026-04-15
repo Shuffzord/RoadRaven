@@ -5,6 +5,7 @@ status: draft
 shadcn_initialized: false
 preset: none
 created: 2026-04-15
+revised: 2026-04-15
 ---
 
 # Phase 2 — UI Design Contract: Read-Only Viewer
@@ -166,7 +167,7 @@ Source: `index.css` (all three theme blocks), `RoadmapNode.tsx` (STATUS_TOKEN_MA
 | Zoom out | Scroll wheel down | Zoom centered on cursor; built into react-d3-tree |
 | Pinch zoom | Two-finger trackpad | Standard pinch; built into react-d3-tree |
 | Pan | Click + drag on empty canvas | Pans the tree; built into react-d3-tree |
-| Fit to view | Click "Fit" button in TopBar | Calls react-d3-tree translate/zoom reset to fit all nodes |
+| Fit to view | Click "Fit View" button in TopBar | Calls react-d3-tree translate/zoom reset to fit all nodes |
 | Select node | Single click on node | Opens side panel; adds 1px accent border ring to node |
 | Collapse subtree | Click collapse button on node | Collapses children; button is small (14px) chevron on node |
 | Expand subtree | Click expand button on collapsed node | Expands children |
@@ -252,7 +253,7 @@ Source: `index.css` (reduced motion rule), `SidePanel.tsx` (200ms ease-out), `Ro
 | Copy ID aria-label | "Copy node ID" |
 | Copy ID confirmation | (icon swap only, no text) |
 | Close panel aria-label | "Close panel" |
-| Fit button label | "Fit" |
+| Fit button label | "Fit View" |
 | Layout toggle: top-to-bottom | "TB" |
 | Layout toggle: left-to-right | "LR" |
 | Status bar: file watching indicator | file name (path basename only) |
@@ -276,22 +277,24 @@ Destructive actions in Phase 2: **none**. This is a read-only viewer. No confirm
 
 Rendered output is styled using --rv-* tokens only. No external CSS frameworks in rendered content.
 
+Typography note: h1 and h2 both render at 14px (Heading size from the 4-size scale). h1 is distinguished from h2 via larger margin-bottom (16px vs 8px) and no further size difference — the markdown side panel is a compact reading context where a 5th font size would break the type scale contract.
+
 | Markdown element | Styling |
 |-----------------|---------|
 | Body text | 13px, Regular, line-height 1.7, color: --rv-text-secondary |
-| `h1` | 16px, Semibold, line-height 1.3, color: --rv-text-primary, margin-bottom 12px |
+| `h1` | 14px, Semibold, line-height 1.3, color: --rv-text-primary, margin-bottom 16px |
 | `h2` | 14px, Semibold, line-height 1.3, color: --rv-text-primary, margin-bottom 8px |
-| `h3` | 13px, Semibold, line-height 1.3, color: --rv-text-primary, margin-bottom 6px |
-| `p` | margin-bottom 12px |
+| `h3` | 13px, Semibold, line-height 1.3, color: --rv-text-primary, margin-bottom 8px |
+| `p` | margin-bottom 8px |
 | `a` | color: --rv-accent, no underline default, underline on hover |
 | `code` (inline) | 11px, Space Grotesk, bg: --rv-bg-elevated, color: --rv-accent, border-radius 3px, px-1 py-0.5 |
-| `pre code` (block) | 11px, Space Grotesk, bg: --rv-bg-elevated, border: 1px --rv-border, border-radius 6px, p-3 |
-| `ul` / `ol` | margin-left 16px, margin-bottom 12px |
+| `pre code` (block) | 11px, Space Grotesk, bg: --rv-bg-elevated, border: 1px --rv-border, border-radius 6px, padding 8px |
+| `ul` / `ol` | margin-left 16px, margin-bottom 8px |
 | `li` | margin-bottom 4px |
-| `blockquote` | left border 3px --rv-accent, pl-3, color: --rv-text-secondary, italic |
+| `blockquote` | left border 3px --rv-accent, padding-left 16px, color: --rv-text-secondary, italic |
 | `table` | full width, border-collapse, 1px --rv-border-subtle rows |
-| `th` | 11px semibold uppercase, bg: --rv-bg-elevated, px-3 py-2 |
-| `td` | 12px regular, px-3 py-2, border-bottom 1px --rv-border-subtle |
+| `th` | 11px semibold uppercase, bg: --rv-bg-elevated, padding 8px 16px |
+| `td` | 12px regular, padding 8px 16px, border-bottom 1px --rv-border-subtle |
 | Task list `[ ]` | Custom checkbox: 14px square, --rv-border, unchecked |
 | Task list `[x]` | Custom checkbox: 14px square, --rv-accent fill, checked |
 | `del` (strikethrough) | color: --rv-text-tertiary |
@@ -452,6 +455,8 @@ Phase 2 read-only accessibility requirements (PACK-06 baseline):
 | Copy ID button | aria-label="Copy node ID"; after copy: aria-label="Node ID copied" |
 | Close panel button | aria-label="Close panel" |
 | Layout toggle | role="radiogroup", each button role="radio" + aria-pressed |
+| Collapse chevron | aria-label="Collapse subtree" when subtree is expanded |
+| Expand chevron | aria-label="Expand subtree" when subtree is collapsed |
 | Reduced motion | All transitions collapse to 0ms via prefers-reduced-motion (existing global rule) |
 
 ---
