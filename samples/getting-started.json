@@ -1,0 +1,134 @@
+{
+  "version": "1.0",
+  "title": "Getting Started Guide",
+  "statusConfig": [
+    { "id": "not-started", "label": "Not Started" },
+    { "id": "in-progress", "label": "In Progress" },
+    { "id": "completed", "label": "Completed" },
+    { "id": "blocked", "label": "Blocked" }
+  ],
+  "typeConfig": [
+    { "id": "milestone", "label": "Milestone" },
+    { "id": "task", "label": "Task" },
+    { "id": "feature", "label": "Feature" }
+  ],
+  "themeConfig": {
+    "statusColors": {
+      "not-started": "#6b6b6b",
+      "in-progress": "#4a9eff",
+      "completed": "#4ade80",
+      "blocked": "#ef4444"
+    }
+  },
+  "nodes": [
+    {
+      "id": "10000000-0000-4000-8000-000000000001",
+      "title": "Getting Started with RoadRaven",
+      "status": "in-progress",
+      "type": "milestone",
+      "notes": "# Welcome to RoadRaven\n\nThis sample roadmap demonstrates the key features of RoadRaven.\n\n## What you can do\n\n- View your roadmap as an interactive tree\n- Toggle between top-down and left-right layouts\n- Click nodes to see details in the side panel\n- Collapse and expand subtrees\n\n> Tip: Try clicking different nodes to explore the side panel.",
+      "createdAt": "2026-04-01T09:00:00Z",
+      "updatedAt": "2026-04-15T10:30:00Z",
+      "children": [
+        {
+          "id": "10000000-0000-4000-8000-000000000002",
+          "title": "Installation",
+          "status": "completed",
+          "type": "milestone",
+          "notes": "# Installation\n\nRoadRaven is distributed as a desktop application.\n\n```bash\n# Download the latest release from GitHub\n# or build from source:\nbun install\nbun run build:canary\n```\n\nSee the [README](https://github.com/roadraven/roadraven) for more details.",
+          "createdAt": "2026-04-01T09:00:00Z",
+          "updatedAt": "2026-04-05T14:00:00Z",
+          "children": [
+            {
+              "id": "10000000-0000-4000-8000-000000000003",
+              "title": "Download Application",
+              "status": "completed",
+              "type": "task"
+            },
+            {
+              "id": "10000000-0000-4000-8000-000000000004",
+              "title": "Install Dependencies",
+              "status": "completed",
+              "type": "task",
+              "metadata": { "priority": "high", "assignee": "Claude" }
+            },
+            {
+              "id": "10000000-0000-4000-8000-000000000005",
+              "title": "Verify Setup",
+              "status": "completed",
+              "type": "task"
+            }
+          ]
+        },
+        {
+          "id": "10000000-0000-4000-8000-000000000006",
+          "title": "Create Your First Roadmap",
+          "status": "in-progress",
+          "type": "feature",
+          "children": [
+            {
+              "id": "10000000-0000-4000-8000-000000000007",
+              "title": "Define Schema Structure",
+              "status": "completed",
+              "type": "task",
+              "notes": "Create a JSON file with `version`, `title`, and `nodes` array."
+            },
+            {
+              "id": "10000000-0000-4000-8000-000000000008",
+              "title": "Add Nodes and Children",
+              "status": "in-progress",
+              "type": "task",
+              "children": [
+                {
+                  "id": "10000000-0000-4000-8000-000000000009",
+                  "title": "Root Node",
+                  "status": "completed",
+                  "type": "task"
+                },
+                {
+                  "id": "10000000-0000-4000-8000-000000000010",
+                  "title": "Child Nodes",
+                  "status": "in-progress",
+                  "type": "task"
+                },
+                {
+                  "id": "10000000-0000-4000-8000-000000000011",
+                  "title": "Deep Nesting (Level 4+)",
+                  "status": "not-started",
+                  "type": "task"
+                }
+              ]
+            },
+            {
+              "id": "10000000-0000-4000-8000-000000000012",
+              "title": "Configure Status Types",
+              "status": "not-started",
+              "type": "task"
+            }
+          ]
+        },
+        {
+          "id": "10000000-0000-4000-8000-000000000013",
+          "title": "Explore Advanced Features",
+          "status": "blocked",
+          "type": "feature",
+          "notes": "Advanced features require completing the basic setup first.",
+          "children": [
+            {
+              "id": "10000000-0000-4000-8000-000000000014",
+              "title": "File Watching",
+              "status": "not-started",
+              "type": "task"
+            },
+            {
+              "id": "10000000-0000-4000-8000-000000000015",
+              "title": "Theme Customization",
+              "status": "not-started",
+              "type": "task"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

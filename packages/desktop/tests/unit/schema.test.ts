@@ -1,5 +1,7 @@
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
-
+import type { RoadmapNode } from "../../../../packages/core/src/schema";
 // Use relative path since workspace alias may not resolve in vitest
 import {
 	NodeStatusSchema,
@@ -237,5 +239,86 @@ describe("RoadmapSchemaSchema", () => {
 		};
 		const result = RoadmapSchemaSchema.safeParse(schema);
 		expect(result.success).toBe(true);
+	});
+});
+
+// -- Sample schema validation tests ------------------------------------------
+
+const SAMPLES_DIR = resolve(__dirname, "../../../../samples");
+
+function getMaxDepth(nodes: RoadmapNode[], currentDepth = 1): number {
+	let max = currentDepth;
+	for (const node of nodes) {
+		if (node.children && node.children.length > 0) {
+			const childDepth = getMaxDepth(node.children, currentDepth + 1);
+			if (childDepth > max) max = childDepth;
+		}
+	}
+	return max;
+}
+
+function collectStatuses(nodes: RoadmapNode[]): Set<string> {
+	const statuses = new Set<string>();
+	for (const node of nodes) {
+		statuses.add(node.status);
+		if (node.children) {
+			for (const s of collectStatuses(node.children)) {
+				statuses.add(s);
+			}
+		}
+	}
+	return statuses;
+}
+
+describe("Sample schemas", () => {
+	const helloWorldPath = resolve(SAMPLES_DIR, "hello-world.json");
+	const gettingStartedPath = resolve(SAMPLES_DIR, "getting-started.json");
+
+	it("hello-world.json validates against RoadmapSchemaSchema", () => {
+		const raw = JSON.parse(readFileSync(helloWorldPath, "utf-8"));
+		const result = RoadmapSchemaSchema.safeParse(raw);
+		expect(result.success).toBe(true);
+	});
+
+	it("getting-started.json validates against RoadmapSchemaSchema", () => {
+		const raw = JSON.parse(readFileSync(gettingStartedPath, "utf-8"));
+		const result = RoadmapSchemaSchema.safeParse(raw);
+		expect(result.success).toBe(true);
+	});
+
+	it("getting-started.json has nodes at depth >= 3", () => {
+		const raw = JSON.parse(readFileSync(gettingStartedPath, "utf-8"));
+		const result = RoadmapSchemaSchema.safeParse(raw);
+		expect(result.success).toBe(true);
+		if (result.success) {
+			const depth = getMaxDepth(result.data.nodes);
+			expect(depth).toBeGreaterThanOrEqual(3);
+		}
+	});
+
+	it("hello-world.json contains at least one node of each status", () => {
+		const raw = JSON.parse(readFileSync(helloWorldPath, "utf-8"));
+		const result = RoadmapSchemaSchema.safeParse(raw);
+		expect(result.success).toBe(true);
+		if (result.success) {
+			const statuses = collectStatuses(result.data.nodes);
+			expect(statuses.has("not-started")).toBe(true);
+			expect(statuses.has("in-progress")).toBe(true);
+			expect(statuses.has("completed")).toBe(true);
+			expect(statuses.has("blocked")).toBe(true);
+		}
+	});
+
+	it("getting-started.json contains at least one node of each status", () => {
+		const raw = JSON.parse(readFileSync(gettingStartedPath, "utf-8"));
+		const result = RoadmapSchemaSchema.safeParse(raw);
+		expect(result.success).toBe(true);
+		if (result.success) {
+			const statuses = collectStatuses(result.data.nodes);
+			expect(statuses.has("not-started")).toBe(true);
+			expect(statuses.has("in-progress")).toBe(true);
+			expect(statuses.has("completed")).toBe(true);
+			expect(statuses.has("blocked")).toBe(true);
+		}
 	});
 });

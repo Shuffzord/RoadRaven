@@ -1,0 +1,40 @@
+{
+  "version": "1.0",
+  "title": "Hello World",
+  "statusConfig": [
+    { "id": "not-started", "label": "Not Started" },
+    { "id": "in-progress", "label": "In Progress" },
+    { "id": "completed", "label": "Completed" },
+    { "id": "blocked", "label": "Blocked" }
+  ],
+  "nodes": [
+    {
+      "id": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
+      "title": "Hello World",
+      "status": "in-progress",
+      "type": "milestone",
+      "notes": "A simple roadmap to get started.",
+      "children": [
+        {
+          "id": "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e",
+          "title": "First Step",
+          "status": "completed",
+          "type": "task"
+        },
+        {
+          "id": "c3d4e5f6-a7b8-4c9d-ae1f-2a3b4c5d6e7f",
+          "title": "Second Step",
+          "status": "not-started",
+          "type": "task"
+        },
+        {
+          "id": "d4e5f6a7-b8c9-4d0e-8f2a-3b4c5d6e7f80",
+          "title": "Blocked Step",
+          "status": "blocked",
+          "type": "task",
+          "notes": "Waiting on external dependency."
+        }
+      ]
+    }
+  ]
+}
