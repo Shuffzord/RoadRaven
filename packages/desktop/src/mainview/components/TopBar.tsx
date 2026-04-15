@@ -1,4 +1,5 @@
 import ravenLogo from "../assets/raven-logo.svg";
+import { useFileActions } from "../hooks/useFileActions";
 import { useTheme } from "../hooks/useTheme";
 import { electroview } from "../rpc";
 import { useRoadmapStore } from "../store/roadmapStore";
@@ -8,6 +9,7 @@ export function TopBar() {
 	const layoutOrientation = useRoadmapStore((s) => s.layoutOrientation);
 	const setLayout = useRoadmapStore((s) => s.setLayout);
 	const filePath = useRoadmapStore((s) => s.filePath);
+	const { openFile } = useFileActions();
 
 	const handleLayoutChange = (value: "TB" | "LR") => {
 		setLayout(value);
@@ -15,32 +17,6 @@ export function TopBar() {
 			electroview?.rpc?.request.saveSettings({
 				settings: { fileSettings: { [filePath]: { layout: value } } },
 			});
-		}
-	};
-
-	const handleOpenFile = async () => {
-		if (electroview) {
-			const path = await electroview.rpc?.request.openFilePicker({});
-			if (!path) return;
-			const response = await electroview.rpc?.request.loadFile({ path });
-			if (response?.data) {
-				useRoadmapStore.getState().loadSchema(response.data, path);
-			}
-			useRoadmapStore.getState().setSchemaErrors(response?.errors ?? []);
-		} else {
-			// Dev mode fallback: load sample schema directly when Electrobun is unavailable
-			const { RoadmapSchemaSchema } = await import(
-				"../../../../../packages/core/src/schema"
-			);
-			const sample = (
-				await import("../../../../../samples/getting-started.json")
-			).default;
-			const result = RoadmapSchemaSchema.safeParse(sample);
-			if (result.success) {
-				useRoadmapStore
-					.getState()
-					.loadSchema(result.data, "getting-started.json");
-			}
 		}
 	};
 
@@ -104,7 +80,7 @@ export function TopBar() {
 			<button
 				className="flex items-center gap-1.5 px-2.5 py-[5px] rounded-[6px] text-[12px] font-semibold text-rv-text-secondary hover:bg-rv-bg-hover hover:text-rv-text-primary transition-all duration-150"
 				type="button"
-				onClick={handleOpenFile}
+				onClick={openFile}
 			>
 				<svg
 					aria-hidden="true"

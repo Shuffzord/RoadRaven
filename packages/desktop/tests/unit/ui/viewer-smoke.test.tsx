@@ -4,24 +4,11 @@ import {
 	collectNodeIds,
 	generateLargeSchema,
 } from "../../bench/generateSchema";
+import { resetStore } from "../../helpers/resetStore";
 
 describe("Viewer smoke tests", () => {
 	beforeEach(() => {
-		// Reset store between tests
-		useRoadmapStore.setState({
-			schema: null,
-			filePath: null,
-			treeData: null,
-			dataKey: "0",
-			nodeIndex: new Map(),
-			selectedNodeId: null,
-			layoutOrientation: "TB",
-			isPanelPinned: false,
-			translate: { x: 400, y: 50 },
-			zoomLevel: 0.8,
-			viewResetKey: 0,
-			schemaErrors: [],
-		});
+		resetStore();
 	});
 
 	it("generateLargeSchema(300) produces at least 300 nodes", () => {

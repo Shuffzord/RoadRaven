@@ -5,6 +5,7 @@ import {
 	toTreeDatum,
 	useRoadmapStore,
 } from "../../../src/mainview/store/roadmapStore";
+import { resetStore } from "../../helpers/resetStore";
 
 // Test fixture: a schema with 2 levels of nesting (4 nodes total)
 const TEST_SCHEMA: RoadmapSchema = {
@@ -46,16 +47,7 @@ const TEST_FILE_PATH = "/path/to/roadmap.json";
 
 // Reset store between tests
 afterEach(() => {
-	useRoadmapStore.setState({
-		schema: null,
-		filePath: null,
-		treeData: null,
-		dataKey: "0",
-		nodeIndex: new Map(),
-		selectedNodeId: null,
-		layoutOrientation: "TB",
-		isPanelPinned: false,
-	});
+	resetStore();
 });
 
 describe("Initial state", () => {

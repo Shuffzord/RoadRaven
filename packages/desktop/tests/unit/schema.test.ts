@@ -322,3 +322,39 @@ describe("Sample schemas", () => {
 		}
 	});
 });
+
+describe("Schema validation — negative cases", () => {
+	it("rejects node with empty title", () => {
+		const node = { id: crypto.randomUUID(), title: "", status: "not-started" };
+		const result = RoadmapNodeSchema.safeParse(node);
+		expect(result.success).toBe(false);
+	});
+
+	it("rejects node with invalid status", () => {
+		const node = {
+			id: crypto.randomUUID(),
+			title: "Test",
+			status: "invalid-status",
+		};
+		const result = RoadmapNodeSchema.safeParse(node);
+		expect(result.success).toBe(false);
+	});
+
+	it("rejects schema with missing version", () => {
+		const schema = { title: "Test", nodes: [] };
+		const result = RoadmapSchemaSchema.safeParse(schema);
+		expect(result.success).toBe(false);
+	});
+
+	it("rejects schema with missing title", () => {
+		const schema = { version: "1.0", nodes: [] };
+		const result = RoadmapSchemaSchema.safeParse(schema);
+		expect(result.success).toBe(false);
+	});
+
+	it("rejects schema with missing nodes", () => {
+		const schema = { version: "1.0", title: "Test" };
+		const result = RoadmapSchemaSchema.safeParse(schema);
+		expect(result.success).toBe(false);
+	});
+});

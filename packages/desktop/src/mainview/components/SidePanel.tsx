@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { useRoadmapStore } from "../store/roadmapStore";
 import { MarkdownRenderer } from "./MarkdownRenderer";
 import { ResizeHandle } from "./ResizeHandle";
@@ -25,21 +25,14 @@ function formatDate(dateStr: string | undefined): string {
 }
 
 export function SidePanel({ isOpen, onClose }: SidePanelProps) {
-	const selectedNode = useRoadmapStore((s) => s.getSelectedNode());
+	const selectedNodeId = useRoadmapStore((s) => s.selectedNodeId);
+	const nodeIndex = useRoadmapStore((s) => s.nodeIndex);
+	useRoadmapStore((s) => s.statusTick); // re-render on status changes
+	const selectedNode = selectedNodeId
+		? nodeIndex.get(selectedNodeId)
+		: undefined;
 	const [width, setWidth] = useState(340);
-	const [_isPinnable, setIsPinnable] = useState(
-		typeof window !== "undefined" ? window.innerWidth > 1400 : false,
-	);
 	const [copied, setCopied] = useState(false);
-
-	// Listen for viewport changes to determine pin mode
-	useEffect(() => {
-		const handleResize = () => {
-			setIsPinnable(window.innerWidth > 1400);
-		};
-		window.addEventListener("resize", handleResize);
-		return () => window.removeEventListener("resize", handleResize);
-	}, []);
 
 	const maxWidth =
 		typeof window !== "undefined" ? Math.floor(window.innerWidth * 0.5) : 480;

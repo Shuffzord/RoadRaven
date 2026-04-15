@@ -168,11 +168,15 @@ const rpc = BrowserView.defineRPC<RoadmapRPCType>({
 
 				// Resolve $ref nodes
 				const fileChangeCallback = (changedPath: string) => {
+					if (changedPath.endsWith(".bak.json")) return;
 					bunLogger.info`File changed: ${changedPath}`;
 					mainWindow.webview.rpc?.send.pushFileChanged({
 						path: changedPath,
 					});
 				};
+
+				// Stop existing watchers before resolveRefs sets up new $ref watchers
+				stopAllWatchers();
 
 				try {
 					if (
@@ -192,7 +196,6 @@ const rpc = BrowserView.defineRPC<RoadmapRPCType>({
 				}
 
 				// Start file watcher for the main file
-				stopAllWatchers();
 				watchFile(filePath, fileChangeCallback);
 
 				// Track recent file

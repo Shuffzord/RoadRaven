@@ -3,6 +3,7 @@ import type { CustomNodeElementProps } from "react-d3-tree";
 import Tree from "react-d3-tree";
 import { useShallow } from "zustand/react/shallow";
 import ravenLogo from "../assets/raven-logo.svg";
+import { useFileActions } from "../hooks/useFileActions";
 import { electroview } from "../rpc";
 import { useRoadmapStore } from "../store/roadmapStore";
 import type { NodeStatus } from "./RoadmapNode";
@@ -65,92 +66,37 @@ export function Canvas() {
 		return () => observer.disconnect();
 	}, []);
 
-	const handleOpenFile = useCallback(async () => {
-		if (electroview) {
-			const path = await electroview.rpc?.request.openFilePicker({});
-			if (!path) return;
-			const response = await electroview.rpc?.request.loadFile({ path });
-			if (response?.data) {
-				useRoadmapStore.getState().loadSchema(response.data, path);
-			}
-			useRoadmapStore.getState().setSchemaErrors(response?.errors ?? []);
-		} else {
-			// Dev mode fallback
-			const { RoadmapSchemaSchema } = await import(
-				"../../../../../packages/core/src/schema"
-			);
-			const sample = (
-				await import("../../../../../samples/getting-started.json")
-			).default;
-			const result = RoadmapSchemaSchema.safeParse(sample);
-			if (result.success) {
-				useRoadmapStore
-					.getState()
-					.loadSchema(result.data, "getting-started.json");
-			}
-		}
-	}, []);
+	const { openFile, openRecent, openSample } = useFileActions();
 
 	const handleNewRoadmap = useCallback(() => {
 		// Phase 3 implements File > New. No-op for now.
 	}, []);
 
-	const handleOpenRecent = useCallback(async (path: string) => {
-		if (electroview) {
-			const response = await electroview.rpc?.request.loadFile({ path });
-			if (response?.data) {
-				useRoadmapStore.getState().loadSchema(response.data, path);
-			}
-			useRoadmapStore.getState().setSchemaErrors(response?.errors ?? []);
-		}
-	}, []);
-
-	const handleOpenSample = useCallback(async (name: string) => {
-		try {
-			let sampleData: unknown;
-			if (name === "hello-world") {
-				sampleData = (await import("../../../../../samples/hello-world.json"))
-					.default;
-			} else {
-				sampleData = (
-					await import("../../../../../samples/getting-started.json")
-				).default;
-			}
-
-			const { RoadmapSchemaSchema } = await import(
-				"../../../../../packages/core/src/schema"
+	const renderNode = useCallback(
+		({ nodeDatum, toggleNode }: CustomNodeElementProps) => {
+			const status = (nodeDatum.attributes?.status as string) ?? "not-started";
+			const nodeId = nodeDatum.attributes?.id as string;
+			const children = nodeDatum.children ?? [];
+			const hasChildren = children.length > 0;
+			const isCollapsed = nodeDatum.__rd3t?.collapsed;
+			return (
+				<foreignObject width={240} height={100} x={-120} y={-50}>
+					<RoadmapNodeCard
+						title={nodeDatum.name}
+						status={status as NodeStatus}
+						nodeId={nodeId}
+						isSelected={selectedNodeId === nodeId}
+						hasChildren={hasChildren}
+						isCollapsed={!!isCollapsed}
+						childCount={children.length}
+						onToggle={toggleNode}
+						onSelect={() => setSelectedNode(nodeId)}
+					/>
+				</foreignObject>
 			);
-			const result = RoadmapSchemaSchema.safeParse(sampleData);
-			if (result.success) {
-				useRoadmapStore.getState().loadSchema(result.data, `${name}.json`);
-			}
-		} catch {
-			// Sample load failed silently
-		}
-	}, []);
-
-	const renderNode = ({ nodeDatum, toggleNode }: CustomNodeElementProps) => {
-		const status = (nodeDatum.attributes?.status as string) ?? "not-started";
-		const nodeId = nodeDatum.attributes?.id as string;
-		const children = nodeDatum.children ?? [];
-		const hasChildren = children.length > 0;
-		const isCollapsed = nodeDatum.__rd3t?.collapsed;
-		return (
-			<foreignObject width={240} height={100} x={-120} y={-50}>
-				<RoadmapNodeCard
-					title={nodeDatum.name}
-					status={status as NodeStatus}
-					nodeId={nodeId}
-					isSelected={selectedNodeId === nodeId}
-					hasChildren={hasChildren}
-					isCollapsed={!!isCollapsed}
-					childCount={children.length}
-					onToggle={toggleNode}
-					onSelect={() => setSelectedNode(nodeId)}
-				/>
-			</foreignObject>
-		);
-	};
+		},
+		[selectedNodeId, setSelectedNode],
+	);
 
 	return (
 		<div
@@ -193,10 +139,10 @@ export function Canvas() {
 			{treeData === null ? (
 				<WelcomeScreen
 					recentFiles={recentFiles}
-					onOpenFile={handleOpenFile}
+					onOpenFile={openFile}
 					onNewRoadmap={handleNewRoadmap}
-					onOpenRecent={handleOpenRecent}
-					onOpenSample={handleOpenSample}
+					onOpenRecent={openRecent}
+					onOpenSample={openSample}
 				/>
 			) : (
 				<Tree

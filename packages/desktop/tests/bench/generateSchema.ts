@@ -23,7 +23,7 @@ export function generateLargeSchema(
 	let nodeCount = 0;
 
 	function generateNode(depth: number): RoadmapNode {
-		const id = crypto.randomUUID();
+		const id = `node-${nodeCount}`;
 		const node: RoadmapNode = {
 			id,
 			title: `Node ${nodeCount}`,

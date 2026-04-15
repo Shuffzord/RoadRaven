@@ -65,6 +65,9 @@ interface RoadmapState {
 	// Schema validation errors
 	schemaErrors: Array<{ path: string; message: string; code: string }>;
 
+	// Status change counter — incremented on updateNodeStatus to trigger re-renders
+	statusTick: number;
+
 	// Actions -- structural (increment dataKey)
 	loadSchema: (schema: RoadmapSchema, filePath: string) => void;
 	reloadSchema: (schema: RoadmapSchema) => void;
@@ -87,20 +90,24 @@ interface RoadmapState {
 	) => void;
 }
 
-export const useRoadmapStore = create<RoadmapState>((set, get) => ({
-	// Initial state
-	schema: null,
-	filePath: null,
-	treeData: null,
+export const INITIAL_STATE = {
+	schema: null as RoadmapSchema | null,
+	filePath: null as string | null,
+	treeData: null as RawNodeDatum | null,
 	dataKey: "0",
-	nodeIndex: new Map(),
-	selectedNodeId: null,
-	layoutOrientation: "TB",
+	nodeIndex: new Map<string, RoadmapNode>(),
+	selectedNodeId: null as string | null,
+	layoutOrientation: "TB" as const,
 	isPanelPinned: false,
 	translate: { x: 400, y: 50 },
 	zoomLevel: 0.8,
 	viewResetKey: 0,
-	schemaErrors: [],
+	schemaErrors: [] as Array<{ path: string; message: string; code: string }>,
+	statusTick: 0,
+};
+
+export const useRoadmapStore = create<RoadmapState>((set, get) => ({
+	...INITIAL_STATE,
 
 	loadSchema: (schema, filePath) => {
 		const treeData = schema.nodes[0] ? toTreeDatum(schema.nodes[0]) : null;
@@ -112,6 +119,7 @@ export const useRoadmapStore = create<RoadmapState>((set, get) => ({
 			treeData,
 			nodeIndex,
 			dataKey: nextKey,
+			statusTick: 0,
 		});
 	},
 
@@ -124,17 +132,19 @@ export const useRoadmapStore = create<RoadmapState>((set, get) => ({
 			treeData,
 			nodeIndex,
 			dataKey: nextKey,
+			statusTick: 0,
 		});
 	},
 
 	updateNodeStatus: (nodeId, status) => {
 		const node = get().nodeIndex.get(nodeId);
 		if (!node) return;
+		if (node.status === status) return;
 		// Mutate in-place -- do NOT increment dataKey or create new treeData ref.
 		// This is the critical performance path per D-02: status-only updates
 		// bypass react-d3-tree's deep-clone by keeping the same data reference.
 		node.status = status as RoadmapNode["status"];
-		set({});
+		set({ statusTick: get().statusTick + 1 });
 	},
 
 	setSelectedNode: (id) => {
