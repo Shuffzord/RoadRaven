@@ -34,12 +34,15 @@ Single source of truth for the Bun↔webview interface. Both sides import from i
 export type RoadmapRPCType = {
   bun: RPCSchema<{
     requests: {
-      loadFile:        { params: { path: string };          response: RoadmapSchema }
-      saveFile:        { params: { schema: RoadmapSchema }; response: void }
-      exportHtml:      { params: { path: string };          response: void }
-      exportPng:       { params: { path: string };          response: void }
-      openFilePicker:  { params: {};                        response: string | null }
-      resolveRef:      { params: { refPath: string };       response: RoadmapNode[] }
+      loadFile:        { params: { path: string };                          response: { data: RoadmapSchema | null; errors?: Array<{ path: string; message: string; code: string }> } }
+      saveFile:        { params: { schema: RoadmapSchema };                 response: undefined }
+      exportHtml:      { params: { path: string };                          response: undefined }
+      exportPng:       { params: { path: string };                          response: undefined }
+      openFilePicker:  { params: Record<string, never>;                     response: string }
+      resolveRef:      { params: { refPath: string };                       response: RoadmapNode[] }
+      saveSettings:    { params: { settings: Partial<AppSettings> };        response: { success: boolean } }
+      loadSettings:    { params: Record<string, never>;                     response: { settings: AppSettings } }
+      logMessage:      { params: { level, category: string[], message: string, data?: Record<string, unknown> };  response: undefined }
     }
     messages: {
       nodeStatusUpdate: { nodeId: string; status: string; meta?: Record<string, unknown> }
@@ -48,6 +51,7 @@ export type RoadmapRPCType = {
     }
   }>
   webview: RPCSchema<{
+    requests: Record<string, never>
     messages: {
       pushStatusUpdate: { nodeId: string; status: string; meta?: Record<string, unknown> }
       pushEventLog:     { event: IntegrationEvent }
@@ -61,86 +65,128 @@ export type RoadmapRPCType = {
 
 ## Zustand store shape
 
-No undo/redo history in MVP. The store is the in-memory working copy of the schema.
+The store is the in-memory working copy of the schema. It uses the **dataKey pattern** for react-d3-tree performance: structural changes increment `dataKey`, status updates mutate in-place without changing it.
 
 ```typescript
-interface RoadmapStore {
+interface RoadmapState {
+  // Document data
   schema:      RoadmapSchema | null
-  selectedId:  string | null
-  panelOpen:   boolean
-  layout:      'TB' | 'LR'
-  saveStatus:  'saved' | 'saving' | 'error'
-  activeTheme: string             // matches a themeConfig.id or 'default'
+  filePath:    string | null
+  treeData:    RawNodeDatum | null       // react-d3-tree format via toTreeDatum()
+  dataKey:     string                     // increment = full tree re-layout
+  nodeIndex:   Map<string, RoadmapNode>  // O(1) lookup by ID via buildNodeIndex()
 
-  loadSchema:    (s: RoadmapSchema) => void
-  updateNode:    (id: string, patch: Partial<RoadmapNode>) => void
-  addNode:       (parentId: string | null, position: InsertPosition) => void
-  deleteNode:    (id: string) => void
-  duplicateNode: (id: string) => void
-  moveNode:      (id: string, direction: 'up' | 'down') => void
-  setLayout:     (layout: 'TB' | 'LR') => void
-  selectNode:    (id: string | null) => void
-  setSaveStatus: (status: 'saved' | 'saving' | 'error') => void
-  setTheme:      (themeId: string) => void
+  // UI state
+  selectedNodeId:     string | null
+  layoutOrientation:  'TB' | 'LR'
+  isPanelPinned:      boolean
+
+  // Viewport state (Fit View)
+  translate:     { x: number; y: number }
+  zoomLevel:     number
+  viewResetKey:  number                   // increment = force Tree remount
+
+  // Schema validation errors (from Zod)
+  schemaErrors:  Array<{ path: string; message: string; code: string }>
+
+  // Actions -- structural (increment dataKey)
+  loadSchema:    (schema: RoadmapSchema, filePath: string) => void
+  reloadSchema:  (schema: RoadmapSchema) => void
+
+  // Actions -- in-place (NO dataKey change -- critical performance path)
+  updateNodeStatus: (nodeId: string, status: string) => void
+  setSelectedNode:  (id: string | null) => void
+  setLayout:        (orientation: 'TB' | 'LR') => void
+  getSelectedNode:  () => RoadmapNode | undefined
+  getNodeCount:     () => number
+
+  // Viewport actions
+  resetView:     () => void
+  setTranslate:  (translate: { x: number; y: number }) => void
+  setZoomLevel:  (zoom: number) => void
+
+  // Schema error actions
+  setSchemaErrors: (errors: Array<{ path: string; message: string; code: string }>) => void
 }
 ```
+
+Theme state is managed separately in `useThemeStore` (see `store/themeStore.ts`).
 
 ---
 
 ## Monorepo package structure
 
 ```
-roadmap-viewer/
+RoadRaven/
+├── shared/
+│   └── types.ts                     # RPC type contract + Zod-inferred type re-exports
+│
 ├── packages/
-│   ├── core/                        # Framework-agnostic — @roadmap-viewer/core
+│   ├── core/                        # Framework-agnostic — @roadraven/core
 │   │   └── src/
-│   │       ├── schema.ts            # Zod schema + TypeScript types
-│   │       ├── parser.ts            # Load, validate, resolve $refs
-│   │       ├── mutations.ts         # Pure tree mutation functions
-│   │       ├── theme.ts             # Theme resolution + CSS var generation
-│   │       └── adapters/            # Transport adapters (websocket, webhook, mqtt, file)
+│   │       ├── schema.ts            # Zod v4 schemas + inferred TypeScript types
+│   │       ├── plugin.ts            # IntegrationEvent type
+│   │       └── index.ts             # Re-exports
 │   │
-│   ├── react/                       # React components — @roadmap-viewer/react
-│   │   └── src/
-│   │       ├── RoadmapTree.tsx
-│   │       ├── RoadmapNode.tsx
-│   │       ├── SidePanel.tsx
-│   │       ├── MarkdownEditor.tsx
-│   │       ├── ContextMenu.tsx
-│   │       ├── Toolbar.tsx
-│   │       ├── StatusBar.tsx
-│   │       └── ThemeProvider.tsx    # Applies active theme as CSS custom properties
-│   │
-│   └── desktop/                     # Electrobun app — not published
-│       └── src/
-│           ├── bun/
-│           │   ├── index.ts         # App bootstrap + BrowserWindow setup
-│           │   ├── rpc.ts           # RPC handler definitions
-│           │   ├── plugins/         # Plugin host — loads/unloads integration plugins
-│           │   └── db.ts            # SQLite event log
-│           ├── webview/
-│           │   ├── index.tsx        # React entry point
-│           │   ├── store.ts         # Zustand store
-│           │   └── rpc.ts           # Webview RPC client
-│           └── shared/
-│               └── types.ts         # RPC type contract
+│   └── desktop/                     # Electrobun app — @roadraven/desktop
+│       ├── src/
+│       │   ├── bun/                 # Bun main process
+│       │   │   ├── index.ts         # App bootstrap, BrowserWindow, RPC handlers
+│       │   │   ├── fileWatcher.ts   # File watching with 500ms debounce
+│       │   │   ├── logging.ts       # LogTape setup, file sink, category loggers
+│       │   │   └── settings.ts      # Settings read/write + addRecentFile
+│       │   │
+│       │   └── mainview/            # Webview (React application)
+│       │       ├── main.tsx         # React entry point
+│       │       ├── App.tsx          # App shell (CSS Grid layout)
+│       │       ├── index.css        # Token system + theme definitions
+│       │       ├── rpc.ts           # Electroview RPC client
+│       │       ├── rpcHandlers.ts   # ESM-safe inbound message handlers
+│       │       ├── store/
+│       │       │   ├── roadmapStore.ts   # Schema, tree, viewport, dataKey pattern
+│       │       │   └── themeStore.ts     # Theme preference + system resolution
+│       │       ├── components/
+│       │       │   ├── Canvas.tsx              # react-d3-tree renderer + WelcomeScreen
+│       │       │   ├── RoadmapNode.tsx         # Custom node card (foreignObject)
+│       │       │   ├── SidePanel.tsx           # Node detail panel + markdown
+│       │       │   ├── MarkdownRenderer.tsx    # unified/remark/rehype pipeline
+│       │       │   ├── ResizeHandle.tsx        # Drag-to-resize handle
+│       │       │   ├── WelcomeScreen.tsx       # Landing screen, recent files, samples
+│       │       │   ├── SchemaErrorPanel.tsx    # Zod validation error display
+│       │       │   ├── TopBar.tsx              # Toolbar (open, layout, theme, fit)
+│       │       │   ├── StatusBar.tsx           # File name + node count
+│       │       │   ├── Sidebar.tsx             # Left icon rail
+│       │       │   ├── ThemeProvider.tsx        # data-theme attribute management
+│       │       │   └── ThemeOverrideProvider.tsx # Per-schema CSS overrides
+│       │       ├── hooks/
+│       │       │   └── useTheme.ts
+│       │       └── logging/
+│       │           └── logger.ts    # Webview LogTape + RPC forwarding
+│       │
+│       ├── tests/
+│       │   ├── unit/                # Unit tests (node env)
+│       │   │   └── ui/             # Component tests (jsdom env)
+│       │   └── bench/              # Vitest benchmarks
+│       │
+│       ├── vite.config.ts
+│       ├── vitest.config.ts
+│       └── electrobun.config
 │
-├── plugins/                         # Built-in integration plugins
-│   ├── claude-code/                 # Reference plugin implementation
-│   ├── github-actions/
-│   └── mqtt/
+├── samples/
+│   ├── hello-world.json             # 4 nodes, all statuses
+│   └── getting-started.json         # 15 nodes, 4 depth levels
 │
-└── examples/
-    ├── hello-world.json
-    ├── getting-started.json
-    └── roadmap-viewer-itself.json
+├── docs/                            # Developer documentation
+└── .planning/                       # Project planning artifacts
 ```
+
+> **Note:** The planned `packages/react/` (shared component library) and `plugins/` (integration plugins) directories are future work. Currently all React components live inside `packages/desktop/src/mainview/components/`.
 
 ---
 
-## Plugin interface
+## Plugin interface (planned -- not yet implemented)
 
-Every integration plugin implements this interface in the Bun process:
+Every integration plugin will implement this interface in the Bun process:
 
 ```typescript
 interface RoadmapPlugin {
@@ -164,15 +210,19 @@ interface RoadmapPlugin {
 }
 ```
 
-The plugin host (`desktop/src/bun/plugins/`) loads plugins at startup, routes node `plugin` blocks to the correct plugin by `id`, and forwards events to the webview via RPC.
+The RPC contract already includes `nodeStatusUpdate`, `integrationEvent`, and `pushStatusUpdate` messages in preparation for plugin support. The `IntegrationEvent` type is defined in `packages/core/src/plugin.ts`. The plugin host and built-in plugins (claude-code, github-actions, mqtt) are planned for a future phase.
 
 ---
 
 ## Theme engine
 
-Themes are applied as CSS custom properties on `:root` in the webview. The active theme is resolved from:
-1. The `themeConfig` array in the loaded schema (schema-scoped themes)
-2. App-level theme preference in `.roadmap-settings.json`
-3. `'default'` built-in theme (fallback)
+Themes are applied via `data-theme` attribute on `<html>` in the webview. Three built-in themes: **dark** (default), **light**, **high-contrast**. System preference detection supported via `"system"` option.
 
-See `SPEC.md §4.X` for the `themeConfig` JSON schema.
+The active theme is resolved from:
+1. App-level theme preference persisted in `settings.json` (platform-specific directory)
+2. System OS preference (when set to `"system"`)
+3. `"dark"` fallback
+
+Per-schema overrides (`themeConfig.statusColors`, `themeConfig.nodeRadius`) are applied via `ThemeOverrideProvider` as scoped inline CSS custom properties on a wrapper div -- they do not leak to global UI.
+
+See [Design System docs](../docs/design-system.md) for token naming, theme mechanism, and how to add themes.

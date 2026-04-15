@@ -1,6 +1,6 @@
 # Design System
 
-> Last updated: 2026-04-14 | Phase: 01-visual-foundation-themes
+> Last updated: 2026-04-15 | Phase: 02-read-only-viewer
 
 ## Overview
 
@@ -37,13 +37,18 @@ Tokens are organized by function. Here is the naming pattern:
 
 | Category | Pattern | Example | Purpose |
 |----------|---------|---------|---------|
-| Background | `--rv-bg-*` | `--rv-bg-base`, `--rv-bg-surface` | Surface colors for app areas |
-| Text | `--rv-text-*` | `--rv-text-primary`, `--rv-text-secondary` | Text color hierarchy |
-| Border | `--rv-border*` | `--rv-border`, `--rv-border-focus` | Border and outline colors |
-| Accent | `--rv-accent*` | `--rv-accent`, `--rv-accent-hover` | Interactive element highlights |
-| Status | `--rv-status-*` | `--rv-status-completed`, `--rv-status-blocked` | Node status indicators |
+| Background | `--rv-bg-*` | `--rv-bg-base`, `--rv-bg-surface`, `--rv-bg-canvas` | Surface colors for app areas |
+| Node backgrounds | `--rv-bg-node*` | `--rv-bg-node`, `--rv-bg-node-hover` | Tree node card backgrounds |
+| Panel backgrounds | `--rv-bg-panel`, `--rv-bg-toolbar`, `--rv-bg-statusbar` | | Specific panel area backgrounds |
+| Input backgrounds | `--rv-bg-input`, `--rv-bg-hover`, `--rv-bg-elevated` | | Interactive element backgrounds |
+| Text | `--rv-text-*` | `--rv-text-primary`, `--rv-text-secondary`, `--rv-text-tertiary` | Text color hierarchy |
+| Text on accent | `--rv-text-on-accent` | | Text on accent-colored backgrounds |
+| Border | `--rv-border*` | `--rv-border`, `--rv-border-focus`, `--rv-border-width` | Border colors and widths |
+| Accent | `--rv-accent*` | `--rv-accent`, `--rv-accent-hover`, `--rv-accent-muted` | Interactive element highlights |
+| Status | `--rv-status-*` | `--rv-status-completed`, `--rv-status-blocked` | Node status indicator colors |
+| Status backgrounds | `--rv-status-*-bg` | `--rv-status-completed-bg`, `--rv-status-blocked-bg` | Status badge background fills |
 | Canvas | `--rv-dot-grid`, `--rv-line-connector` | | Tree visualization elements |
-| Shadow | `--rv-shadow-*` | `--rv-shadow-node`, `--rv-shadow-panel` | Elevation shadows |
+| Shadow | `--rv-shadow-*` | `--rv-shadow-node`, `--rv-shadow-panel`, `--rv-shadow-config` | Elevation shadows |
 | Scrollbar | `--rv-scrollbar-*` | `--rv-scrollbar-track`, `--rv-scrollbar-thumb` | Custom scrollbar styling |
 
 ### How Tokens Map to Tailwind Utilities
@@ -174,6 +179,23 @@ Values that fail validation are silently dropped.
 ```
 
 Source: [`packages/desktop/src/mainview/components/ThemeOverrideProvider.tsx`](../packages/desktop/src/mainview/components/ThemeOverrideProvider.tsx)
+
+## Node Card Styling
+
+Tree node cards (`RoadmapNodeCard`) use a combination of token-driven and dynamic CSS custom properties. The status color and badge background are set via inline `style` using `STATUS_TOKEN_MAP`:
+
+```typescript
+const STATUS_TOKEN_MAP = {
+  "not-started": { color: "--rv-status-not-started", bg: "--rv-status-not-started-bg" },
+  "in-progress": { color: "--rv-status-in-progress", bg: "--rv-status-in-progress-bg" },
+  "completed":   { color: "--rv-status-completed",   bg: "--rv-status-completed-bg" },
+  "blocked":     { color: "--rv-status-blocked",      bg: "--rv-status-blocked-bg" },
+};
+```
+
+The card reads `--node-radius` from the theme (defaulting to `8px`), applies a selection ring via `ring-1 ring-[var(--rv-accent)]`, and sets the node shadow via `var(--rv-shadow-node)`. The collapse/expand chevron button uses the status color for its border and background.
+
+Source: [`packages/desktop/src/mainview/components/RoadmapNode.tsx`](../packages/desktop/src/mainview/components/RoadmapNode.tsx)
 
 ## How to Add a New Token
 
