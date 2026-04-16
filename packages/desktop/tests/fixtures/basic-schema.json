@@ -1,0 +1,23 @@
+{
+  "version": "1.0",
+  "title": "Basic Test Schema",
+  "nodes": [
+    {
+      "id": "aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee",
+      "title": "Root",
+      "status": "not-started",
+      "children": [
+        {
+          "id": "11111111-2222-4333-8444-555555555555",
+          "title": "A",
+          "status": "not-started"
+        },
+        {
+          "id": "22222222-3333-4444-8555-666666666666",
+          "title": "B",
+          "status": "not-started"
+        }
+      ]
+    }
+  ]
+}
