@@ -231,3 +231,25 @@ describe("reloadSchema", () => {
 		);
 	});
 });
+
+describe("resetView", () => {
+	it("resets translate and zoomLevel to defaults", () => {
+		// Move viewport away from defaults
+		useRoadmapStore.getState().setTranslate({ x: 999, y: 999 });
+		useRoadmapStore.getState().setZoomLevel(2.5);
+
+		// Reset
+		useRoadmapStore.getState().resetView();
+
+		const state = useRoadmapStore.getState();
+		expect(state.zoomLevel).toBe(0.8);
+		// translate.y should be roughly canvasHeight/3 (calculation depends on window size)
+		expect(state.translate.y).toBeGreaterThan(0);
+		expect(state.translate.x).toBeGreaterThan(0);
+	});
+
+	it("does not contain viewResetKey in state", () => {
+		const state = useRoadmapStore.getState();
+		expect(state).not.toHaveProperty("viewResetKey");
+	});
+});
