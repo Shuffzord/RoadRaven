@@ -19,7 +19,6 @@ export function Canvas() {
 		schemaErrors,
 		translate,
 		zoomLevel,
-		viewResetKey,
 	} = useRoadmapStore(
 		useShallow((s) => ({
 			treeData: s.treeData,
@@ -28,7 +27,6 @@ export function Canvas() {
 			schemaErrors: s.schemaErrors,
 			translate: s.translate,
 			zoomLevel: s.zoomLevel,
-			viewResetKey: s.viewResetKey,
 		})),
 	);
 	const setSchemaErrors = useRoadmapStore((s) => s.setSchemaErrors);
@@ -76,7 +74,7 @@ export function Canvas() {
 			const hasChildren = children.length > 0;
 			const isCollapsed = nodeDatum.__rd3t?.collapsed;
 			return (
-				<foreignObject width={240} height={100} x={-120} y={-50}>
+				<foreignObject width={240} height={100} x={-120} y={-50} overflow="visible">
 					<RoadmapNodeCard
 						title={nodeDatum.name}
 						status={status as NodeStatus}
@@ -141,7 +139,6 @@ export function Canvas() {
 				/>
 			) : (
 				<Tree
-					key={`tree-${viewResetKey}`}
 					data={treeData}
 					dataKey={dataKey}
 					orientation={layoutOrientation === "TB" ? "vertical" : "horizontal"}
