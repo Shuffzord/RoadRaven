@@ -43,16 +43,19 @@ describe("SCAF-04: RoadmapPlugin interface", () => {
 });
 
 describe("SCAF-08: bundleCEF configuration", () => {
-	it("electrobun.config.ts has bundleCEF: true for all platforms", () => {
+	it("electrobun.config.ts uses CI env var for bundleCEF on all platforms", () => {
 		const content = readFileSync(
 			join(DESKTOP_ROOT, "electrobun.config.ts"),
 			"utf-8",
 		);
-		// Must have bundleCEF: true and NOT bundleCEF: false
-		const trueMatches = content.match(/bundleCEF:\s*true/g);
-		const falseMatches = content.match(/bundleCEF:\s*false/g);
-		expect(trueMatches).toHaveLength(3); // mac, linux, win
-		expect(falseMatches).toBeNull();
+		// Config must derive bundleCEF from CI env var
+		expect(content).toMatch(/process\.env\.CI/);
+		// All three platforms must reference the shared bundleCEF variable
+		expect(content).toContain("mac: { bundleCEF }");
+		expect(content).toContain("linux: { bundleCEF }");
+		expect(content).toContain("win: { bundleCEF }");
+		// Must NOT have hardcoded false
+		expect(content).not.toMatch(/bundleCEF:\s*false/);
 	});
 });
 
