@@ -123,13 +123,20 @@ Plans:
 
 **Requirements covered:** EDIT-01, EDIT-02, EDIT-03, EDIT-04, EDIT-05, EDIT-06, EDIT-07, EDIT-08, EDIT-09, EDIT-10, EDIT-11, EDIT-12, EDIT-13, EDIT-14, EDIT-15, EDIT-16, EDIT-17, EDIT-18
 
-**Plans:** 4 plans
+**Plans:** 6 plans
+
+Wave structure:
+- **Wave 1** (parallel): 03-01 + 03-04a
+- **Wave 2** (parallel): 03-02 + 03-03 + 03-04b
+- **Wave 3**: 03-04c
 
 Plans:
 - [ ] 03-01-PLAN.md — Node mutation operations + inline rename + confirmation dialog + clipboard + keyboard router (EDIT-01..EDIT-08)
 - [ ] 03-02-PLAN.md — Context menu via Radix ContextMenu, satisfies Linux fallback via same custom-div (EDIT-09, EDIT-18)
 - [ ] 03-03-PLAN.md — Side panel editor with CodeMirror 6 Edit/Preview/Split + metadata + editable title/status/type (EDIT-10..EDIT-12)
-- [ ] 03-04-PLAN.md — Autosave + atomic writes (Windows retry) +  write-back + File > New + failure escalation (EDIT-13..EDIT-17, EDIT-18 flush)
+- [ ] 03-04a-PLAN.md — Persistence infrastructure: atomic write + ref ownership + saveFile RPC with path-traversal allowlist + Zod pre-write (EDIT-14, EDIT-16, EDIT-17 saveFile, EDIT-18 cross-boundary) — Wave 1
+- [ ] 03-04b-PLAN.md — Autosave wiring + save-state UI: triple-timer debounce + SaveIndicator + SaveFailureModal + Warning-8 snapshots (EDIT-13 debounce, EDIT-15) — Wave 2
+- [ ] 03-04c-PLAN.md — Shell features: before-quit + SIGTERM flush + File > New + external-edit toast (EDIT-13 flush-on-quit, EDIT-17 File>New, EDIT-18 Linux SIGTERM, D-14) — Wave 3
 
 **Plans:**
 1. Node mutation operations — inline rename (double-click / F2) using floating `<input>` with inverse D3 zoom transform; add child / add sibling above and below via keyboard shortcuts and context menu; delete (immediate for leaf, confirmation dialog for non-leaf showing count); duplicate node + subtree (`Ctrl+D`); copy/paste node + subtree (`Ctrl+C` / `Ctrl+V`) with JSON clipboard format; move node up/down within siblings (`Ctrl+↑` / `Ctrl+↓`); change node status via context menu sub-menu; arrow-key tree focus navigation (Up/Down siblings, Right expand/enter, Left collapse/return)
@@ -224,6 +231,6 @@ Plans:
 | Prerequisite: App Scaffold | 3/3 | Complete | - |
 | 1. Visual Foundation & Themes | 3/3 | Complete | - |
 | 2. Read-Only Viewer | 4/5 | UAT Gap Closure | - |
-| 3. Full Editor | 0/4 | Planned | - |
+| 3. Full Editor | 0/6 | Planned | - |
 | 4. Event API | 0/4 | Not started | - |
 | 5. Export & Packaging | 0/4 | Not started | - |
