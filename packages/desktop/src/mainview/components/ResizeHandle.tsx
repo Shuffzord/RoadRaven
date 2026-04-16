@@ -4,12 +4,14 @@ interface ResizeHandleProps {
 	onResize: (width: number) => void;
 	minWidth: number;
 	maxWidth: number;
+	currentWidth: number;
 }
 
 export function ResizeHandle({
 	onResize,
 	minWidth,
 	maxWidth,
+	currentWidth,
 }: ResizeHandleProps) {
 	const isDragging = useRef(false);
 
@@ -53,7 +55,9 @@ export function ResizeHandle({
 			onMouseDown={handleMouseDown}
 			role="separator"
 			aria-orientation="vertical"
-			aria-valuenow={0}
+			aria-valuenow={currentWidth}
+			aria-valuemin={minWidth}
+			aria-valuemax={maxWidth}
 			aria-label="Resize panel"
 			tabIndex={0}
 		/>
