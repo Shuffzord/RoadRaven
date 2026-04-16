@@ -54,7 +54,10 @@ export type RoadmapRPCType = {
 					errors?: Array<{ path: string; message: string; code: string }>;
 				};
 			};
-			saveFile: { params: { schema: RoadmapSchema }; response: undefined };
+			saveFile: {
+				params: { schema: RoadmapSchema; filePath?: string };
+				response: { ok: true } | { ok: false; error: string };
+			};
 			exportHtml: { params: { path: string }; response: undefined };
 			exportPng: { params: { path: string }; response: undefined };
 			openFilePicker: {
@@ -100,6 +103,7 @@ export type RoadmapRPCType = {
 			};
 			pushEventLog: { event: IntegrationEvent };
 			pushFileChanged: { path: string };
+			pushOwnershipMap: { entries: Array<[string, string]> };
 		};
 	}>;
 };
