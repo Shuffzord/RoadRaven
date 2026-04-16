@@ -64,7 +64,12 @@ export function SidePanel({ isOpen, onClose }: SidePanelProps) {
 			aria-label="Node details"
 		>
 			{isOpen && (
-				<ResizeHandle onResize={setWidth} minWidth={320} maxWidth={maxWidth} currentWidth={width} />
+				<ResizeHandle
+					onResize={setWidth}
+					minWidth={320}
+					maxWidth={maxWidth}
+					currentWidth={width}
+				/>
 			)}
 
 			{/* Header */}
