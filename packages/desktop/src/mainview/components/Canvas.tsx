@@ -74,7 +74,13 @@ export function Canvas() {
 			const hasChildren = children.length > 0;
 			const isCollapsed = nodeDatum.__rd3t?.collapsed;
 			return (
-				<foreignObject width={240} height={100} x={-120} y={-50} overflow="visible">
+				<foreignObject
+					width={240}
+					height={100}
+					x={-120}
+					y={-50}
+					overflow="visible"
+				>
 					<RoadmapNodeCard
 						title={nodeDatum.name}
 						status={status as NodeStatus}
