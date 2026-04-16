@@ -410,7 +410,7 @@ Source: 03-CONTEXT.md D-10, D-11, D-12, D-13.
 **Edit mode:**
 - Panel header shows "Editing" label (11px / 600 / --rv-text-secondary) next to "Node Details"
 - All editable fields become inputs/selects
-- Title: `<input type="text">` — background `var(--rv-bg-input)`, border `1px solid var(--rv-border)`, focus border `1px solid var(--rv-border-focus)`, border-radius 6px, 14px / 600 / `var(--rv-text-primary)`, padding 6px 10px, full width
+- Title: `<input type="text">` — background `var(--rv-bg-input)`, border `1px solid var(--rv-border)`, focus border `1px solid var(--rv-border-focus)`, border-radius 6px, 14px / 600 / `var(--rv-text-primary)`, padding 8px 12px, full width
 - Status: `<select>` — same background/border spec as title input; options from `statusConfig`
 - Type: `<select>` — same spec; options from `typeConfig`
 - Created / Updated timestamps: read-only display (formatted date string), not editable in UI
