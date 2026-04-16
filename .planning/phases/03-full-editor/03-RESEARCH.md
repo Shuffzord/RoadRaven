@@ -1162,32 +1162,37 @@ async function resolveRefs(
 
 **If this table has entries:** The planner MUST either verify each assumption before committing to a plan, OR include a fallback task in the plan to validate early (e.g., "Task 1.1: Verify `Electrobun.events.on('before-quit')` API exists; if not, adopt fallback pattern X").
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Does Electrobun expose clipboard-read permission toggling?**
    - What we know: `navigator.clipboard.writeText` works in Phase 2. `readText` behavior is undocumented for Electrobun.
    - What's unclear: Whether the CEF build grants clipboard-read by default.
    - Recommendation: Plan 1 first task probes `navigator.clipboard.readText()` and logs result. If denied, implement the in-memory buffer fallback for Ctrl+V (still works within-app, fails gracefully for cross-app paste).
+   - **RESOLVED:** Clipboard probe + in-memory buffer fallback specified in Plan 01 Task 0 and Plan 01 clipboard.ts (A2).
 
 2. **How does react-d3-tree handle `dataKey` changes while the inline rename is open?**
    - What we know: `dataKey` change deep-clones the tree, which would re-render all nodes.
    - What's unclear: Does the rename's `<input>` get unmounted, or does its `ref` survive because it's a DOM peer of the SVG tree, not a child?
    - Recommendation: The rename input is rendered as a portal to `document.body` (per UI-SPEC "position: fixed"). It's NOT inside the Tree's SVG. It survives tree re-renders. **Not actually an issue** — but verify during Plan 1.
+   - **RESOLVED:** Rename input is a portal to document.body — survives dataKey-driven tree re-renders. Verified pattern in Plan 01.
 
 3. **What happens to `selectedNodeId` when a node is deleted?**
    - What we know: Selection is a single ID reference.
    - What's unclear: Should selection move to the parent, to the previous sibling, or simply clear?
    - Recommendation: Clear selection (set to `null`) — simplest, consistent with "no undo." UI-SPEC copy suggests "Keep Node" is the confirmation default, so this path is rare. Phase 3 ships with clear-on-delete; Phase v2 could add smarter focus retargeting.
+   - **RESOLVED:** Delete clears selectedNodeId to null (simplest, consistent with no-undo semantics). Encoded in Plan 01 deleteNode.
 
 4. **Should `File > New` show the welcome screen or create an untitled tree immediately?**
    - What we know: EDIT-17 says "creates in-memory schema with a single root node and prompts for save location on first edit."
    - What's unclear: Does the prompt happen on the user's first mutation, or on first autosave timer fire (which is 2s after the first mutation)?
    - Recommendation: Prompt on first *autosave attempt*, not first mutation. This matches the 2s debounce — user gets 2s to hit Escape without being prompted. If user clicks File > New then immediately closes the app, no prompt is needed.
+   - **RESOLVED:** Prompt fires on first autosave attempt (2s after first mutation), not first mutation. Encoded in Plan 04 useAutosave / flushNow.
 
 5. **How does `$ref` ownership handle a $ref file that fails to resolve (e.g., permission denied)?**
    - What we know: Phase 2 handles failure by pushing the unresolved `$ref` node through.
    - What's unclear: In Phase 3, an unresolved `$ref` has no owner. Mutations inside it become ambiguous.
    - Recommendation: If a `$ref` fails to resolve, the `$ref` node itself remains — user sees the error via SchemaErrorPanel. Mutations are blocked on that subtree because there are no descendant nodes to mutate (the $ref didn't expand). No special code needed beyond Phase 2's existing handling.
+   - **RESOLVED:** Unresolved ref keeps placeholder node; no owner needed because descendants were never expanded. No extra code beyond Phase 2 handling.
 
 ## Environment Availability
 

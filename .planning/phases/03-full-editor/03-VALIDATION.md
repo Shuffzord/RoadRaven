@@ -46,17 +46,18 @@ created: 2026-04-16
 | 01-T3 | 01 | 1 | EDIT-01, EDIT-07 | T-03.01-03 | F2/arrow-key focus, activeElement guards | unit+integration | bunx vitest run tests/unit/hooks/useKeyboardRouter.test.ts tests/unit/hooks/useInlineRename.test.ts && bunx vite build | Wave 0 | ⬜ pending |
 | 01-T4 | 01 | 1 | EDIT-03 | — | Non-leaf confirm via Radix Dialog | unit | bunx vitest run tests/unit/ui/ConfirmationDialog.test.tsx | Wave 0 | ⬜ pending |
 | 01-T5 | 01 | 1 | EDIT-01..EDIT-08 | — | Manual verification of running app | MANUAL UAT | N/A (checkpoint) | ✓ existing | ⬜ pending |
-| 02-T1 | 02 | 2 | EDIT-09 | T-03.02-01, T-03.02-02 | Radix ARIA + data-source-id validation | unit+integration | bunx vitest run tests/unit/ui/ContextMenu.test.tsx tests/unit/ui/ContextMenu.keyboard.test.tsx | Wave 0 | ⬜ pending |
+| 02-T1 | 02 | 2 | EDIT-09 | T-03.02-01, T-03.02-02 | Radix ARIA + data-source-id validation + no-double-fire assertion | unit+integration | bunx vitest run tests/unit/ui/ContextMenu.test.tsx tests/unit/ui/ContextMenu.keyboard.test.tsx | Wave 0 | ⬜ pending |
 | 02-T2 | 02 | 2 | EDIT-09, EDIT-18 | T-03.02-01 | Canvas wiring + CustomEvent bridge | integration | bunx vitest run && bunx vite build && bunx @biomejs/biome lint packages/desktop/src/ shared/ | existing | ⬜ pending |
-| 02-T3 | 02 | 2 | EDIT-09, EDIT-18 | — | 50ms render budget (DevTools timing) | MANUAL UAT | DevTools performance trace | ✓ existing | ⬜ pending |
+| 02-T3 | 02 | 2 | EDIT-09 | — | 50ms render budget — AUTOMATED (Playwright median-of-5, small + 300-node trees) | Playwright ui | bunx playwright test --project=ui tests/ui/context-menu-50ms.spec.ts | Wave 0 (Plan 02 Task 3 creates; depends on Plan 01 Task 0 large-schema.json fixture) | ⬜ pending |
+| 02-T4 | 02 | 2 | EDIT-09, EDIT-18 | — | Visual polish + Linux fallback spot-check | MANUAL UAT | N/A (checkpoint) | ✓ existing | ⬜ pending |
 | 03-T1 | 03 | 2 | EDIT-10 | T-03.03-02 | CodeMirror extension whitelist | unit | bunx vitest run tests/unit/hooks/useCodeMirror.test.ts && bunx vite build | Wave 0 | ⬜ pending |
 | 03-T2 | 03 | 2 | EDIT-10 | T-03.03-01 | Preview via remark/rehype (Phase 2 sanitization) | unit | bunx vitest run tests/unit/ui/NotesEditor.test.tsx && bunx vite build | Wave 0 | ⬜ pending |
 | 03-T3 | 03 | 2 | EDIT-11 | T-03.03-03 | Metadata key/value edit | unit | bunx vitest run tests/unit/ui/MetadataEditor.test.tsx | Wave 0 | ⬜ pending |
 | 03-T4 | 03 | 2 | EDIT-12 | T-03.03-05 | Title/status/type edit; copy-ID preserved | unit+integration | bunx vitest run tests/unit/ui/SidePanel.edit-mode.test.tsx && bunx vitest run && bunx vite build && bunx @biomejs/biome lint packages/desktop/src/ shared/ | Wave 0 | ⬜ pending |
 | 03-T5 | 03 | 2 | EDIT-10..EDIT-12 | — | Manual verification + theme switching | MANUAL UAT | N/A (checkpoint) | ✓ existing | ⬜ pending |
-| 04-T1 | 04 | 3 | EDIT-14, EDIT-16 | T-03.04-01, T-03.04-02 | Atomic write path-traversal + Windows retry +  ownership | unit | bunx vitest run tests/unit/bun/atomicWrite.test.ts tests/unit/bun/refMap.test.ts | Wave 0 + fixtures | ⬜ pending |
-| 04-T2 | 04 | 3 | EDIT-13, EDIT-14, EDIT-16, EDIT-17, EDIT-18 | T-03.04-01, T-03.04-07, T-03.04-08 | Zod pre-write validation + before-quit flush | integration (tsc + tests) | bunx vitest run && bunx tsc --noEmit | existing | ⬜ pending |
-| 04-T3 | 04 | 3 | EDIT-13, EDIT-15 | T-03.04-05 | Failure escalation bounded at 3; no tight loop | unit | bunx vitest run tests/unit/hooks/useAutosave.test.ts tests/unit/ui/SaveIndicator.test.tsx tests/unit/store/roadmapStore.mutations.test.ts && bunx vite build | Wave 0 | ⬜ pending |
+| 04-T1 | 04 | 3 | EDIT-14, EDIT-16 | T-03.04-01, T-03.04-02 | Atomic write path-traversal + Windows retry + ref-ownership + deleted-template-node drop + saveFile RED scaffold | unit | bunx vitest run tests/unit/bun/atomicWrite.test.ts tests/unit/bun/refMap.test.ts (saveFile.test.ts committed as RED scaffold) | Wave 0 + fixtures + saveFile.test.ts | ⬜ pending |
+| 04-T2 | 04 | 3 | EDIT-13, EDIT-14, EDIT-16, EDIT-17, EDIT-18 | T-03.04-01, T-03.04-07, T-03.04-08 | Path-traversal allowlist + Zod pre-write validation + idempotent flushPending + Electrobun before-quit + SIGTERM/SIGINT (GREEN for saveFile.test.ts 7 tests) | unit+integration (tsc + tests) | bunx vitest run tests/unit/bun/saveFile.test.ts tests/unit/bun/atomicWrite.test.ts tests/unit/bun/refMap.test.ts && bunx vitest run && bunx tsc --noEmit | saveFile.test.ts | ⬜ pending |
+| 04-T3 | 04 | 3 | EDIT-13, EDIT-15 | T-03.04-05 | Failure escalation bounded at 3; no tight loop; derived-dirty condition via lastSavedDataKey/lastSavedStatusTick (Warning 8) | unit | bunx vitest run tests/unit/hooks/useAutosave.test.ts tests/unit/ui/SaveIndicator.test.tsx tests/unit/store/roadmapStore.mutations.test.ts && bunx vite build | Wave 0 | ⬜ pending |
 | 04-T4 | 04 | 3 | EDIT-17, D-14 | — | File > New in-memory; external conflict toast | unit+integration | bunx vitest run tests/unit/store/fileActions.test.ts && bunx vitest run && bunx vite build && bunx @biomejs/biome lint packages/desktop/src/ shared/ | Wave 0 | ⬜ pending |
 | 04-T5 | 04 | 3 | EDIT-13..EDIT-18, D-14, D-15 | — | 15-subtest manual UAT including SIGKILL survival | MANUAL UAT | N/A (checkpoint) | ✓ existing | ⬜ pending |
 
@@ -72,8 +73,10 @@ See `.planning/phases/03-full-editor/03-RESEARCH.md` §Validation Architecture f
 - [ ] `packages/desktop/tests/unit/ui/ContextMenu.test.tsx` + `tests/unit/ui/ContextMenu.keyboard.test.tsx` — context menu a11y + keyboard stubs (created by Plan 02 Task 1)
 - [ ] `packages/desktop/tests/unit/ui/SidePanel.edit-mode.test.tsx` + `NotesEditor.test.tsx` + `MetadataEditor.test.tsx` — panel editor (created by Plan 03 Tasks 2-4)
 - [ ] `packages/desktop/tests/unit/bun/atomicWrite.test.ts` — atomic write + Windows retry (created by Plan 04 Task 1)
-- [ ] `packages/desktop/tests/unit/bun/refMap.test.ts` —  ownership + split-by-owner (created by Plan 04 Task 1)
-- [ ] `packages/desktop/tests/fixtures/roadmap-with-refs.json` + `referenced-part.json` + `basic-schema.json` + `large-schema.json` — shared fixtures (created by Plan 01 Task 0 and Plan 04 Task 1)
+- [ ] `packages/desktop/tests/unit/bun/refMap.test.ts` — ownership + split-by-owner + deleted-template-node drop test (Warning 4; created by Plan 04 Task 1)
+- [ ] `packages/desktop/tests/unit/bun/saveFile.test.ts` — path-traversal allowlist + Zod pre-write + flushPending idempotency + loadFile ownership hydration (Blocker 2; RED scaffold created by Plan 04 Task 1, GREEN in Plan 04 Task 2)
+- [ ] `packages/desktop/tests/ui/context-menu-50ms.spec.ts` — Playwright median-of-5 50ms budget test (Warning 6; created by Plan 02 Task 3; depends on Plan 01 Task 0 large-schema.json fixture of ≥300 nodes)
+- [ ] `packages/desktop/tests/fixtures/roadmap-with-refs.json` + `referenced-part.json` + `basic-schema.json` + `large-schema.json` (300-node tree) — shared fixtures (created by Plan 01 Task 0 and Plan 04 Task 1)
 
 ---
 
@@ -81,7 +84,7 @@ See `.planning/phases/03-full-editor/03-RESEARCH.md` §Validation Architecture f
 
 | Behavior | Requirement | Why Manual | Test Instructions |
 |----------|-------------|------------|-------------------|
-| Context menu appears within 50ms | EDIT-09 | Timing budget must be measured in real render, not unit test | Right-click a node; use DevTools performance trace or `performance.mark()` around open/close; assert first paint < 50ms from contextmenu event |
+| Context menu visual polish + Linux native fallback spot-check | EDIT-09, EDIT-18 | Visual verification of animation/colours + confirmation that Linux does not show native OS menu. 50ms budget is AUTOMATED in 02-T3 — this manual step is a spot-check of that gate on the local machine. | `bunx playwright test --project=ui tests/ui/context-menu-50ms.spec.ts` (automated), then manual visual confirm during Task 4 checkpoint |
 | Atomic write survives process kill | EDIT-14 | Requires OS-level SIGKILL mid-write | Open a file, make edit, trigger save, kill process during `.tmp` write; verify original file unchanged and `.tmp` either committed or orphaned |
 | Flush on `before-quit` | EDIT-13 | Requires quit triggers (Cmd+Q, Ctrl+C, dock quit) | Make unsaved edit; quit via each trigger path; re-open file and verify edit persisted |
 | Windows 3-attempt retry under lock | EDIT-14 | Requires Windows antivirus/sync tool holding file handle | On Windows, open file in another process that briefly locks it; trigger save; verify retry succeeds within 3 attempts |
