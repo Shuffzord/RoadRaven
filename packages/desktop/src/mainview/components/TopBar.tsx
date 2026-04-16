@@ -1,8 +1,28 @@
 import ravenLogo from "../assets/raven-logo.svg";
+import { useFileActions } from "../hooks/useFileActions";
 import { useTheme } from "../hooks/useTheme";
+import { electroview } from "../rpc";
+import { useRoadmapStore } from "../store/roadmapStore";
 
 export function TopBar() {
 	const { preference, setTheme } = useTheme();
+	const layoutOrientation = useRoadmapStore((s) => s.layoutOrientation);
+	const setLayout = useRoadmapStore((s) => s.setLayout);
+	const filePath = useRoadmapStore((s) => s.filePath);
+	const { openFile } = useFileActions();
+
+	const handleLayoutChange = (value: "TB" | "LR") => {
+		setLayout(value);
+		if (filePath) {
+			electroview?.rpc?.request.saveSettings({
+				settings: { fileSettings: { [filePath]: { layout: value } } },
+			});
+		}
+	};
+
+	const handleFitView = () => {
+		useRoadmapStore.getState().resetView();
+	};
 
 	return (
 		<header
@@ -60,6 +80,7 @@ export function TopBar() {
 			<button
 				className="flex items-center gap-1.5 px-2.5 py-[5px] rounded-[6px] text-[12px] font-semibold text-rv-text-secondary hover:bg-rv-bg-hover hover:text-rv-text-primary transition-all duration-150"
 				type="button"
+				onClick={openFile}
 			>
 				<svg
 					aria-hidden="true"
@@ -100,6 +121,7 @@ export function TopBar() {
 			<button
 				className="flex items-center gap-1.5 px-2.5 py-[5px] rounded-[6px] text-[12px] font-semibold text-rv-text-secondary hover:bg-rv-bg-hover hover:text-rv-text-primary transition-all duration-150"
 				type="button"
+				onClick={handleFitView}
 			>
 				Fit
 			</button>
@@ -152,7 +174,8 @@ export function TopBar() {
 					{ value: "TB", label: "TB" },
 					{ value: "LR", label: "LR" },
 				]}
-				active="TB"
+				active={layoutOrientation}
+				onChange={(value) => handleLayoutChange(value as "TB" | "LR")}
 			/>
 
 			{/* Theme switcher */}
@@ -218,14 +241,16 @@ function ToggleGroup({
 	label,
 	options,
 	active,
+	onChange,
 }: {
 	label: string;
 	options: { value: string; label: string }[];
 	active: string;
+	onChange?: (value: string) => void;
 }) {
 	return (
 		<div
-			className="flex items-center bg-rv-bg-input border border-rv-border rounded-[6px] h-[28px] opacity-60"
+			className="flex items-center bg-rv-bg-input border border-rv-border rounded-[6px] h-[28px]"
 			role="radiogroup"
 			aria-label={label}
 		>
@@ -235,11 +260,11 @@ function ToggleGroup({
 					className={`px-2.5 h-full text-[11px] font-semibold transition duration-150 ${
 						active === opt.value
 							? "bg-rv-accent-muted text-rv-accent"
-							: "text-rv-text-tertiary"
+							: "text-rv-text-tertiary hover:text-rv-text-secondary"
 					}`}
 					type="button"
-					disabled
 					aria-pressed={active === opt.value}
+					onClick={() => onChange?.(opt.value)}
 				>
 					{opt.label}
 				</button>

@@ -2,9 +2,22 @@ import { Electroview } from "electrobun/view";
 import type { RoadmapRPCType } from "../../../../shared/types";
 
 const rpc = Electroview.defineRPC<RoadmapRPCType>({
+	maxRequestTime: 120_000, // 2 min — native file dialogs block until user picks a file
 	handlers: {
 		requests: {},
-		messages: {},
+		messages: {
+			pushFileChanged: (msg) => {
+				import("./rpcHandlers").then(({ handlePushFileChanged }) => {
+					handlePushFileChanged(msg);
+				});
+			},
+			pushStatusUpdate: () => {
+				// Phase 3: wire to roadmapStore.updateNodeStatus
+			},
+			pushEventLog: () => {
+				// Phase 3: wire to event logging
+			},
+		},
 	},
 });
 

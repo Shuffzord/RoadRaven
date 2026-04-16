@@ -89,11 +89,14 @@ Plans:
 
 **Requirements covered:** VIEW-01, VIEW-02, VIEW-03, VIEW-04, VIEW-05, VIEW-06, VIEW-07, VIEW-08, VIEW-09, VIEW-10, VIEW-11, VIEW-12, VIEW-13, VIEW-14
 
-**Plans:**
-1. Schema + Zustand store foundation — Zod v4 schema validator with full unit coverage; two sample schemas committed (`hello-world.json`, `getting-started.json`); Zustand store with `dataKey` pattern designed before any component work: `dataKey` increments only on structural changes, status-only updates go in-place via `useShallow` selectors; `.bak.json` written on every file open
-2. Tree renderer — react-d3-tree renders from JSON using `dataKey` pattern; TB and LR layout toggle; layout preference persisted per file in `.roadmap-settings.json`; collapse/expand with depth 3 default; zoom/pan (scroll wheel, pinch, click-drag); status badges (4px stripe + pill label) with correct theme colours; `$ref` resolution at load time with independent file watchers per referenced file; schema validation error panel
-3. Side panel + welcome screen — side panel opens in read-only mode (title, status, type, timestamps, markdown notes rendered via remark/rehype); resizable (min 320px, max 50% viewport); pin mode on screens wider than 1400px; welcome screen when no recent files open; recent files list (last 10) persisted in `.roadmap-settings.json` and shown in File menu
-4. Performance gate — benchmark harness: 300+ visible nodes + 10 simulated `store.updateNode()` calls/sec measured at ≥ 30 fps on a mid-range machine; file watcher reloads tree on external change without restarting the app; read-only E2E tests pass; phase does NOT ship until benchmark is green
+**Plans:** 5 plans
+
+Plans:
+- [x] 02-01-PLAN.md — Schema + Zustand store foundation: Zod schemas, roadmapStore with dataKey pattern, sample schemas
+- [x] 02-02-PLAN.md — Tree renderer: react-d3-tree integration, file watcher, layout toggle, schema error panel
+- [x] 02-03-PLAN.md — Side panel + welcome screen: data-driven panel, markdown renderer, recent files
+- [x] 02-04-PLAN.md — Performance gate: 300+ node benchmark, dataKey stability verification
+- [x] 02-05-PLAN.md — UAT gap closure: selection ring clipping fix, Fit View collapse preservation
 
 **Done when:**
 - Any valid schema file renders a correct interactive tree within 300ms for up to 500 nodes
@@ -103,7 +106,7 @@ Plans:
 - Side panel is resizable and pins on wide screens
 - Invalid schema shows an inline error panel identifying type, severity, and location
 - File watcher reloads tree when the JSON file is edited externally
-- 300+ nodes + 10 `updateNode()` calls/sec holds ≥ 30 fps (benchmark test must be green)
+- 300+ nodes + 10 `updateNode()` calls/sec holds >= 30 fps (benchmark test must be green)
 - Recent files list persists across sessions
 
 **Dependencies:** Phase 1
@@ -124,7 +127,7 @@ Plans:
 1. Node mutation operations — inline rename (double-click / F2) using floating `<input>` with inverse D3 zoom transform; add child / add sibling above and below via keyboard shortcuts and context menu; delete (immediate for leaf, confirmation dialog for non-leaf showing count); duplicate node + subtree (`Ctrl+D`); copy/paste node + subtree (`Ctrl+C` / `Ctrl+V`) with JSON clipboard format; move node up/down within siblings (`Ctrl+↑` / `Ctrl+↓`); change node status via context menu sub-menu; arrow-key tree focus navigation (Up/Down siblings, Right expand/enter, Left collapse/return)
 2. Context menu + Linux fallback — right-click context menu with full action set; keyboard-navigable (arrow keys + Enter + Escape); ARIA compliant; appears within 50ms; Linux fallback: custom webview-rendered `<div>` context menu (native `ContextMenu.showContextMenu()` is a no-op on Linux)
 3. Side panel editor — CodeMirror 6 markdown editor with Edit / Preview / Split modes; autosave debounced 1s; no explicit Save button; editable metadata key-value table; editable title, status dropdown, type dropdown, created/updated timestamps, copy-ID button
-4. Autosave + atomic writes + $ref — debounced 2s write, 30s periodic autosave, flush on `before-quit` Electrobun event and `SIGTERM` (Linux); atomic writes via `.tmp` then rename on all platforms; Windows retry loop (3 attempts, 50ms apart); save indicator in status bar (`Saved ✓` / `Saving…` / `Error saving — click to retry`); `$ref` write-back writes mutations to the originating file; cross-boundary moves blocked with a clear error message; `File > New` creates in-memory schema with single root node and prompts for save location on first edit
+4. Autosave + atomic writes + $ref — debounced 2s write, 30s periodic autosave, flush on `before-quit` Electrobun event and `SIGTERM` (Linux); atomic writes via `.tmp` then rename on all platforms; Windows retry loop (3 attempts, 50ms apart); save indicator in status bar (`Saved ✓` / `Saving...` / `Error saving — click to retry`); `$ref` write-back writes mutations to the originating file; cross-boundary moves blocked with a clear error message; `File > New` creates in-memory schema with single root node and prompts for save location on first edit
 
 **Done when:**
 - A complete roadmap can be created from `File > New`, all nodes added, edited, and saved without touching JSON
@@ -135,7 +138,7 @@ Plans:
 - On Linux, right-click opens the webview-rendered fallback menu (not a no-op)
 - CodeMirror markdown editor autosaves debounced 1s; all three view modes work
 - Status bar shows correct save state at all times
-- Atomic write: if the process is killed during a write, the file is not corrupted (`.tmp` → rename)
+- Atomic write: if the process is killed during a write, the file is not corrupted (`.tmp` -> rename)
 - Flush on `before-quit` confirmed: closing the app writes any pending changes
 - `$ref` mutations write to the correct originating file; cross-boundary move shows an error
 
@@ -184,7 +187,7 @@ Plans:
 **Requirements covered:** EXPO-01, EXPO-02, EXPO-03, PACK-01, PACK-02, PACK-03, PACK-04, PACK-05, PACK-06
 
 **Plans:**
-1. PNG export spike — before committing to an approach, spike both candidates (direct SVG serialization: `XMLSerializer.serializeToString(svgElement)` → canvas → `toDataURL('image/png')`, and `modern-screenshot`); measure output quality on a 300-node tree; choose one; raise `maxRequestTime` for `exportPng` RPC call to 15s; no production PNG code written until spike concludes
+1. PNG export spike — before committing to an approach, spike both candidates (direct SVG serialization: `XMLSerializer.serializeToString(svgElement)` -> canvas -> `toDataURL('image/png')`, and `modern-screenshot`); measure output quality on a 300-node tree; choose one; raise `maxRequestTime` for `exportPng` RPC call to 15s; no production PNG code written until spike concludes
 2. Export implementation — HTML export: self-contained single-file HTML with interactive tree and active theme tokens embedded; PNG export: full tree at 2x resolution using the approach chosen in the spike; both export types accessible via `Ctrl+Shift+E` and `File > Export` menu; export E2E tests pass
 3. Packaging + auto-updater — macOS `.dmg`, Windows `.exe`, Ubuntu `.deb` native installers; Electrobun auto-updater configured (canary + stable channels); Linux: `bundleCEF: true` confirmed; all export and file actions reachable via keyboard/toolbar (no `ApplicationMenu` dependency); `process.on('SIGTERM', flushWriteQueue)` registered
 4. npm packages + accessibility + docs — `@roadmap-viewer/core` and `@roadmap-viewer/react` published to npm; `react`, `react-dom`, `react-d3-tree` marked as `peerDependencies` in `packages/react`; all peer deps externalized in Vite library build; `packages/core` has zero desktop dependencies (enforced in CI); accessibility audit: full keyboard navigation, ARIA roles on context menu and modal dialogs, colour not used as sole status indicator, focus indicators visible; README, docs site, plugin authoring guide, contribution guide
@@ -210,9 +213,9 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| Prerequisite: App Scaffold | 0/3 | Planned | - |
-| 1. Visual Foundation & Themes | 0/3 | Planned | - |
-| 2. Read-Only Viewer | 0/4 | Not started | - |
+| Prerequisite: App Scaffold | 3/3 | Complete | - |
+| 1. Visual Foundation & Themes | 3/3 | Complete | - |
+| 2. Read-Only Viewer | 4/5 | UAT Gap Closure | - |
 | 3. Full Editor | 0/4 | Not started | - |
 | 4. Event API | 0/4 | Not started | - |
 | 5. Export & Packaging | 0/4 | Not started | - |

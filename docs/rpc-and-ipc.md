@@ -1,6 +1,6 @@
 # RPC and IPC
 
-> Last updated: 2026-04-14 | Phase: 01-visual-foundation-themes
+> Last updated: 2026-04-15 | Phase: 02-read-only-viewer
 
 ## Overview
 
@@ -74,15 +74,19 @@ The full contract is defined in `shared/types.ts`. Here is what each endpoint do
 
 | Request | Parameters | Response | Purpose |
 |---------|-----------|----------|---------|
-| `loadFile` | `{ path: string }` | `RoadmapSchema` | Load a roadmap JSON file from disk |
-| `saveFile` | `{ schema: RoadmapSchema }` | `void` | Write roadmap JSON to disk |
-| `exportHtml` | `{ path: string }` | `void` | Export roadmap as HTML |
-| `exportPng` | `{ path: string }` | `void` | Export roadmap as PNG |
-| `openFilePicker` | `{}` | `string \| null` | Open native file dialog, return selected path |
+| `loadFile` | `{ path: string }` | `{ data: RoadmapSchema \| null, errors?: Array<{ path, message, code }> }` | Load + Zod-validate a roadmap JSON file, create .bak.json backup, resolve $ref nodes, start file watchers |
+| `saveFile` | `{ schema: RoadmapSchema }` | `undefined` | Write roadmap JSON to disk |
+| `exportHtml` | `{ path: string }` | `undefined` | Export roadmap as HTML (future) |
+| `exportPng` | `{ path: string }` | `undefined` | Export roadmap as PNG (future) |
+| `openFilePicker` | `{}` | `string` | Open native file dialog, return selected path (empty string if cancelled) |
 | `resolveRef` | `{ refPath: string }` | `RoadmapNode[]` | Resolve `$ref` links in roadmap nodes |
 | `saveSettings` | `{ settings: Partial<AppSettings> }` | `{ success: boolean }` | Persist app settings to disk |
 | `loadSettings` | `{}` | `{ settings: AppSettings }` | Read app settings from disk |
-| `logMessage` | `{ level, category, message, data? }` | `void` | Forward a webview log entry to Bun for file writing |
+| `logMessage` | `{ level, category, message, data? }` | `undefined` | Forward a webview log entry to Bun for file writing |
+
+**Note on `loadFile`:** The response always includes `data` (which may be `null` on read failure) and optionally `errors` (Zod validation issues). When validation fails, the raw parsed data is still returned for partial rendering -- the errors are displayed separately in SchemaErrorPanel. On successful load, the handler also writes a `.bak.json` backup, resolves `$ref` nodes recursively, starts file watchers (500ms debounce), and tracks the file in recent files (capped at 10).
+
+**Note on `openFilePicker`:** Returns an empty string (not `null`) when the user cancels, because Electrobun's `Utils.openFileDialog` returns an array. The `maxRequestTime` is set to 120 seconds on both sides because native file dialogs block until the user picks a file.
 
 ### Bun-Side Messages (Bun pushes these to webview)
 
@@ -101,6 +105,54 @@ The full contract is defined in `shared/types.ts`. Here is what each endpoint do
 | `pushFileChanged` | `{ path }` | Notify UI that the file changed on disk |
 
 Source: [`shared/types.ts`](../shared/types.ts)
+
+## Data Flow: File Loading with Validation
+
+When the user opens a file, this is the full pipeline from dialog to rendered tree:
+
+```
+Webview                              Bun Process                    Disk
+-------                              -----------                    ----
+handleOpenFile()
+       |
+       v
+electroview.rpc.request.openFilePicker({})
+       |
+       v (RPC transport)
+                                     Utils.openFileDialog({
+                                       startingFolder: homedir(),
+                                       allowedFileTypes: "json"
+                                     })
+                                            |               <---- Native file dialog
+                                            v
+                                     return paths[0] ?? ""
+       |
+       v (RPC response, path string)
+if (!path) return              // User cancelled
+       |
+       v
+electroview.rpc.request.loadFile({ path })
+       |
+       v (RPC transport)
+                                     1. Bun.file(path).text()       <---- Read file
+                                     2. Bun.write(bakPath, raw)     ----> .bak.json backup
+                                     3. JSON.parse(raw)
+                                     4. RoadmapSchemaSchema.safeParse(parsed)
+                                     5. resolveRefs(nodes, path)    <---- Read $ref files
+                                     6. stopAllWatchers()
+                                     7. watchFile(path, callback)   ----> File watcher (500ms debounce)
+                                     8. addRecentFile(path)         ----> settings.json
+                                     9. return { data, errors }
+       |
+       v (RPC response)
+roadmapStore.loadSchema(data, path)
+  - toTreeDatum()       // Convert to react-d3-tree format
+  - buildNodeIndex()    // Flat Map for O(1) lookups
+  - dataKey++           // Trigger tree re-layout
+setSchemaErrors(errors ?? [])
+```
+
+> **Why this flow matters:** The multi-step pipeline handles several failure modes gracefully. If the file cannot be read, a `file_read_error` is returned. If JSON parsing fails, a `json_parse_error` is returned. If Zod validation fails, the raw data is still returned for partial rendering alongside the validation errors. The `.bak.json` backup protects against data loss. File watchers enable live reload when the file changes externally. The `stopAllWatchers()` call before starting new watchers prevents leaked watchers from previous file opens.
 
 ## Data Flow: Settings Persistence
 
@@ -123,7 +175,7 @@ electroview.rpc.request.saveSettings(
                                      loadSettings() (read existing)
                                      merge with new settings
                                      writeFileSync()
-                                            |               ----> .roadmap-settings.json
+                                            |               ----> settings.json
                                             v
                                      return { success: true }
        |
@@ -132,12 +184,30 @@ electroview.rpc.request.saveSettings(
 ```
 
 <!-- Structured flow (machine-readable) -->
-<!-- FLOW: themeStore.setTheme -> rpc.saveSettings -> BunProcess.saveSettingsHandler -> loadSettings(existing) -> merge -> writeFileSync -> .roadmap-settings.json -->
-<!-- RETURNS: .roadmap-settings.json -> { success: true } -> WebviewProcess -> .catch(swallow) -->
+<!-- FLOW: themeStore.setTheme -> rpc.saveSettings -> BunProcess.saveSettingsHandler -> loadSettings(existing) -> merge -> writeFileSync -> settings.json -->
+<!-- RETURNS: settings.json -> { success: true } -> WebviewProcess -> .catch(swallow) -->
 
 > **Why this flow matters:** Settings must survive app restarts, which requires disk persistence. The merge strategy (load existing, overlay changed fields, write back) prevents one setting change from wiping unrelated settings. The `.catch(() => {})` on the webview side is intentional -- in Vite dev mode or tests, the Bun process may not be running, and swallowing the error lets the UI remain functional without persistence. Without this flow, the user's theme preference, sidebar state, and other settings would reset on every app launch.
 
-The settings file (`.roadmap-settings.json`) is stored in the current working directory. It uses a merge strategy: existing settings are preserved, and only the changed fields are updated.
+The settings file (`settings.json`) is stored in a platform-specific directory:
+
+| Platform | Path |
+|----------|------|
+| Windows | `%LOCALAPPDATA%\RoadRaven\settings.json` |
+| macOS | `~/Library/Application Support/RoadRaven/settings.json` |
+| Linux | `$XDG_CONFIG_HOME/RoadRaven/settings.json` (default: `~/.config/RoadRaven/`) |
+
+The `AppSettings` interface tracks:
+
+```typescript
+interface AppSettings {
+  theme?: ThemePreference;                          // "dark" | "light" | "high-contrast" | "system"
+  recentFiles?: string[];                           // Up to 10 most recent file paths
+  fileSettings?: Record<string, { layout?: "TB" | "LR" }>;  // Per-file layout preference
+}
+```
+
+It uses a merge strategy: existing settings are preserved, and only the changed fields are updated. The `addRecentFile` function deduplicates entries, moves existing entries to the front, and caps at 10.
 
 Source: [`packages/desktop/src/bun/settings.ts`](../packages/desktop/src/bun/settings.ts)
 

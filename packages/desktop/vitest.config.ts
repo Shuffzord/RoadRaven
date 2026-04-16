@@ -12,5 +12,9 @@ export default defineConfig({
 			"tests/integration/**/*.test.ts",
 		],
 		environmentMatchGlobs: [["tests/unit/ui/**/*.test.{ts,tsx}", "jsdom"]],
+		benchmark: {
+			include: ["tests/bench/**/*.bench.ts"],
+			environment: "node",
+		},
 	},
 });

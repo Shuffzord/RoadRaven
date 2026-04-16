@@ -27,7 +27,12 @@
 		"react-d3-tree": "^3.6.6",
 		"react-dom": "^19.2.5",
 		"rehype": "^13.0.2",
+		"rehype-react": "^8.0.0",
 		"remark": "^15.0.1",
+		"remark-gfm": "^4.0.1",
+		"remark-parse": "^11.0.0",
+		"remark-rehype": "^11.1.2",
+		"unified": "^11.0.5",
 		"uuid": "^13.0.0",
 		"zod": "^4.3.6",
 		"zustand": "^5.0.12"

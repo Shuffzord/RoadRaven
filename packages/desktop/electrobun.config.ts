@@ -1,5 +1,7 @@
 import type { ElectrobunConfig } from "electrobun";
 
+const bundleCEF = process.env.CI === "true";
+
 export default {
 	app: {
 		name: "RoadRaven",
@@ -12,8 +14,8 @@ export default {
 			"dist/assets": "views/mainview/assets",
 		},
 		watchIgnore: ["dist/**"],
-		mac: { bundleCEF: true },
-		linux: { bundleCEF: true },
-		win: { bundleCEF: true },
+		mac: { bundleCEF },
+		linux: { bundleCEF },
+		win: { bundleCEF },
 	},
 } satisfies ElectrobunConfig;

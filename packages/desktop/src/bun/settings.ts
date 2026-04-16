@@ -32,7 +32,7 @@ export function loadSettings(basePath?: string): AppSettings {
 		const raw = readFileSync(path, "utf-8");
 		return JSON.parse(raw) as AppSettings;
 	} catch (e) {
-		console.warn("[settings] Failed to parse .roadmap-settings.json:", e);
+		console.warn("[settings] Failed to parse settings.json:", e);
 		return {};
 	}
 }
@@ -40,6 +40,7 @@ export function loadSettings(basePath?: string): AppSettings {
 export function saveSettings(
 	settings: Partial<AppSettings>,
 	basePath?: string,
+	preloaded?: AppSettings,
 ): void {
 	const dir = basePath ?? getSettingsDirectory();
 	const path = join(dir, SETTINGS_FILE);
@@ -47,10 +48,28 @@ export function saveSettings(
 		if (!existsSync(dir)) {
 			mkdirSync(dir, { recursive: true });
 		}
-		const existing = loadSettings(basePath);
-		const merged: AppSettings = { ...existing, ...settings };
+		const existing = preloaded ?? loadSettings(basePath);
+		const merged: AppSettings = {
+			...existing,
+			...settings,
+			fileSettings: { ...existing.fileSettings, ...settings.fileSettings },
+		};
 		writeFileSync(path, JSON.stringify(merged, null, 2), "utf-8");
 	} catch (e) {
 		console.warn("[settings] Failed to save settings:", e);
 	}
+}
+
+/**
+ * Add a file path to the recent files list.
+ * Deduplicates (moves existing entry to front) and caps at 10 entries.
+ */
+export function addRecentFile(filePath: string, basePath?: string): void {
+	const existing = loadSettings(basePath);
+	const recentFiles = existing.recentFiles ?? [];
+	const updated = [
+		filePath,
+		...recentFiles.filter((f) => f !== filePath),
+	].slice(0, 10);
+	saveSettings({ recentFiles: updated }, basePath, existing);
 }

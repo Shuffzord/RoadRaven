@@ -1,4 +1,4 @@
-const STATUS_TOKEN_MAP = {
+export const STATUS_TOKEN_MAP = {
 	"not-started": {
 		color: "--rv-status-not-started",
 		bg: "--rv-status-not-started-bg",
@@ -11,27 +11,44 @@ const STATUS_TOKEN_MAP = {
 	blocked: { color: "--rv-status-blocked", bg: "--rv-status-blocked-bg" },
 } as const;
 
-type NodeStatus = keyof typeof STATUS_TOKEN_MAP;
+export type NodeStatus = keyof typeof STATUS_TOKEN_MAP;
 
-function formatStatus(status: string): string {
+export function formatStatus(status: string): string {
 	return status
 		.split("-")
 		.map((word) => word.charAt(0).toUpperCase() + word.slice(1))
 		.join(" ");
 }
 
+interface RoadmapNodeCardProps {
+	title: string;
+	status: NodeStatus;
+	nodeId?: string;
+	isSelected?: boolean;
+	hasChildren?: boolean;
+	isCollapsed?: boolean;
+	childCount?: number;
+	onToggle?: () => void;
+	onSelect?: () => void;
+}
+
 export function RoadmapNodeCard({
 	title,
 	status,
-}: {
-	title: string;
-	status: NodeStatus;
-}) {
-	const tokens = STATUS_TOKEN_MAP[status];
+	nodeId,
+	isSelected,
+	hasChildren,
+	isCollapsed,
+	childCount,
+	onToggle,
+	onSelect,
+}: RoadmapNodeCardProps) {
+	const tokens = STATUS_TOKEN_MAP[status] ?? STATUS_TOKEN_MAP["not-started"];
 
 	return (
+		// biome-ignore lint/a11y/useSemanticElements: node card has internal buttons; cannot be a <button> element
 		<div
-			className="node relative min-w-[180px] max-w-[220px] rounded-[var(--node-radius,8px)] border-[length:var(--rv-border-width,1px)] border-[color:var(--rv-border)] bg-[var(--rv-bg-node)] pl-4 pr-3 py-[10px] select-none transition-[box-shadow,border-color,background] duration-150 hover:bg-[var(--rv-bg-node-hover)] group"
+			className={`node relative min-w-[180px] max-w-[220px] rounded-[var(--node-radius,8px)] border-[length:var(--rv-border-width,1px)] border-[color:var(--rv-border)] bg-[var(--rv-bg-node)] pl-4 pr-3 py-[10px] select-none transition-[box-shadow,border-color,background] duration-150 hover:bg-[var(--rv-bg-node-hover)] group ${isSelected ? "outline outline-2 -outline-offset-1 outline-[var(--rv-accent)]" : ""}`}
 			style={
 				{
 					boxShadow: "var(--rv-shadow-node)",
@@ -40,6 +57,16 @@ export function RoadmapNodeCard({
 					"--badge-bg": `var(${tokens.bg})`,
 				} as React.CSSProperties
 			}
+			role="button"
+			tabIndex={0}
+			aria-label={nodeId ? `${title} (${nodeId})` : title}
+			onClick={onSelect}
+			onKeyDown={(e) => {
+				if (e.key === "Enter" || e.key === " ") {
+					e.preventDefault();
+					onSelect?.();
+				}
+			}}
 		>
 			{/* Title */}
 			<span className="block text-[13px] font-semibold leading-[1.3] text-[var(--rv-text-primary)] mb-[6px]">
@@ -51,6 +78,45 @@ export function RoadmapNodeCard({
 				<span className="w-1.5 h-1.5 rounded-full bg-[var(--badge-color)]" />
 				{formatStatus(status)}
 			</span>
+
+			{/* Collapse/expand chevron */}
+			{hasChildren && (
+				<button
+					className="absolute bottom-1.5 right-1.5 flex items-center gap-1 px-2 py-[3px] rounded-[6px] border transition-colors duration-150"
+					type="button"
+					aria-label={isCollapsed ? "Expand subtree" : "Collapse subtree"}
+					style={{
+						backgroundColor: `var(${tokens.bg})`,
+						borderColor: `var(${tokens.color})`,
+						color: `var(${tokens.color})`,
+					}}
+					onClick={(e) => {
+						e.stopPropagation();
+						onToggle?.();
+					}}
+				>
+					<svg
+						aria-hidden="true"
+						width="12"
+						height="12"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						strokeWidth="2.5"
+						strokeLinecap="round"
+						strokeLinejoin="round"
+					>
+						{isCollapsed ? (
+							<polyline points="9 18 15 12 9 6" />
+						) : (
+							<polyline points="6 9 12 15 18 9" />
+						)}
+					</svg>
+					{childCount !== undefined && childCount > 0 && (
+						<span className="text-[11px] font-bold">{childCount}</span>
+					)}
+				</button>
+			)}
 		</div>
 	);
 }

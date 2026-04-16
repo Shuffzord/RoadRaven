@@ -19,26 +19,23 @@ export type ThemePreference = "dark" | "light" | "high-contrast" | "system";
  */
 export interface AppSettings {
 	theme?: ThemePreference;
-	// Phase 2 adds: layout?: 'TB' | 'LR';
-	// Phase 2 adds: recentFiles?: string[];
+	recentFiles?: string[];
+	fileSettings?: Record<string, { layout?: "TB" | "LR" }>;
 }
 
-// -- Placeholder types (filled in Phase 2 with Zod schemas) ----------------
+// -- Zod-inferred types from @roadraven/core --------------------------------
 
-/** Placeholder -- full Zod-validated schema defined in @roadraven/core Phase 2 */
-export interface RoadmapSchema {
-	version: string;
-	title: string;
-	nodes: RoadmapNode[];
-}
+import type {
+	NodeStatus as _NodeStatus,
+	RoadmapNode as _RoadmapNode,
+	RoadmapSchema as _RoadmapSchema,
+	StatusConfig as _StatusConfig,
+} from "../packages/core/src/schema.ts";
 
-/** Placeholder -- full node type defined in @roadraven/core Phase 2 */
-export interface RoadmapNode {
-	id: string;
-	title: string;
-	status: string;
-	children?: RoadmapNode[];
-}
+export type NodeStatus = _NodeStatus;
+export type RoadmapNode = _RoadmapNode;
+export type RoadmapSchema = _RoadmapSchema;
+export type StatusConfig = _StatusConfig;
 
 // -- RPC Contract -----------------------------------------------------------
 
@@ -50,13 +47,19 @@ export interface RoadmapNode {
 export type RoadmapRPCType = {
 	bun: RPCSchema<{
 		requests: {
-			loadFile: { params: { path: string }; response: RoadmapSchema };
+			loadFile: {
+				params: { path: string };
+				response: {
+					data: RoadmapSchema | null;
+					errors?: Array<{ path: string; message: string; code: string }>;
+				};
+			};
 			saveFile: { params: { schema: RoadmapSchema }; response: undefined };
 			exportHtml: { params: { path: string }; response: undefined };
 			exportPng: { params: { path: string }; response: undefined };
 			openFilePicker: {
 				params: Record<string, never>;
-				response: string | null;
+				response: string;
 			};
 			resolveRef: { params: { refPath: string }; response: RoadmapNode[] };
 			saveSettings: {

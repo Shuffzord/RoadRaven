@@ -1,0 +1,1197 @@
+{
+  "version": "1.0",
+  "title": "RoadRaven v1.1 — Development Roadmap",
+  "statusConfig": [
+    { "id": "not-started", "label": "Not Started", "color": "#6b6b6b" },
+    { "id": "in-progress", "label": "In Progress", "color": "#4a9eff" },
+    { "id": "completed", "label": "Completed", "color": "#4ade80" },
+    { "id": "blocked", "label": "Blocked", "color": "#ef4444" }
+  ],
+  "typeConfig": [
+    { "id": "project", "label": "Project" },
+    { "id": "milestone", "label": "Milestone" },
+    { "id": "phase", "label": "Phase" },
+    { "id": "plan", "label": "Plan" },
+    { "id": "task", "label": "Task" },
+    { "id": "gate", "label": "Gate" },
+    { "id": "research", "label": "Research" }
+  ],
+  "themeConfig": {
+    "statusColors": {
+      "not-started": "#6b6b6b",
+      "in-progress": "#4a9eff",
+      "completed": "#4ade80",
+      "blocked": "#ef4444"
+    },
+    "nodeRadius": 5
+  },
+  "nodes": [
+    {
+      "id": "a0000000-0000-4000-8000-000000000000",
+      "title": "RoadRaven v1.1",
+      "status": "in-progress",
+      "type": "project",
+      "notes": "# RoadRaven v1.1 Development Roadmap\n\nElectrobun desktop app for creating, editing, and live-monitoring visual roadmap trees.\n\n**Core Value:** Nodes in the tree reflect real-time state of external systems through a pluggable integration layer — turning any JSON roadmap into a live progress dashboard.\n\n**Stack:** Electrobun, Bun, React, TypeScript, Vitest, Playwright, react-d3-tree, CodeMirror 6, Zod, Zustand\n\n**Progress:** 7 of 22 plans completed across 6 phases.",
+      "metadata": {
+        "milestone": "v1.1",
+        "created": "2026-04-12",
+        "granularity": "standard",
+        "branchingStrategy": "phase-based (gsd/phase-{phase}-{slug})"
+      },
+      "createdAt": "2026-04-12T00:00:00Z",
+      "updatedAt": "2026-04-15T00:00:00Z",
+      "children": [
+        {
+          "id": "a0000000-1000-4000-8000-000000000000",
+          "title": "Phase 00 — App Scaffold (Prerequisite)",
+          "status": "completed",
+          "type": "phase",
+          "notes": "# Prerequisite: App Scaffold\n\nElectrobun shell boots to a blank window with monorepo structure, typed RPC skeleton, and TDD pipeline fully operational on CI.\n\n**Branch:** `gsd/phase-00-app-scaffold`\n**Plans:** 3/3 complete\n\n## Requirements\n- SCAF-01: Monorepo with `packages/core`, `packages/react`, `packages/desktop`, `plugins/`\n- SCAF-02: Workspace scripts resolve from root\n- SCAF-03: Typed RPC boundary between Bun and webview\n- SCAF-04: Stub packages exist\n- SCAF-05: Biome linting configured\n- SCAF-06: Vitest + Playwright configured\n- SCAF-07: GitHub Actions CI pipeline\n- SCAF-08: Plugin placeholder directory\n- SCAF-09: Updater channel fallback",
+          "metadata": {
+            "phase": "00",
+            "slug": "app-scaffold",
+            "branch": "gsd/phase-00-app-scaffold",
+            "plansTotal": 3,
+            "plansComplete": 3
+          },
+          "createdAt": "2026-04-12T00:00:00Z",
+          "updatedAt": "2026-04-13T00:00:00Z",
+          "children": [
+            {
+              "id": "a0000000-1100-4000-8000-000000000000",
+              "title": "Plan 00-01: Monorepo Bootstrap",
+              "status": "completed",
+              "type": "plan",
+              "notes": "# Monorepo Bootstrap\n\nEstablish the workspace-based monorepo structure with all required packages.\n\n**Requirements:** SCAF-01, SCAF-02, SCAF-04, SCAF-08\n\n**Acceptance Criteria:**\n- `bun install` resolves all workspace dependencies\n- `bun run dev` boots the app\n- `bun run build:canary` produces a build\n- All workspaces discoverable",
+              "metadata": {
+                "requirements": ["SCAF-01", "SCAF-02", "SCAF-04", "SCAF-08"],
+                "dependencies": []
+              },
+              "createdAt": "2026-04-12T00:00:00Z",
+              "updatedAt": "2026-04-12T12:00:00Z",
+              "children": [
+                {
+                  "id": "a0000000-1101-4000-8000-000000000000",
+                  "title": "Create monorepo structure",
+                  "status": "completed",
+                  "type": "task",
+                  "notes": "Create `packages/core`, `packages/react`, `packages/desktop`, `plugins/` directory layout."
+                },
+                {
+                  "id": "a0000000-1102-4000-8000-000000000000",
+                  "title": "Migrate existing code to packages/desktop",
+                  "status": "completed",
+                  "type": "task",
+                  "notes": "Move all existing source code into the `packages/desktop` workspace."
+                },
+                {
+                  "id": "a0000000-1103-4000-8000-000000000000",
+                  "title": "Rewrite root package.json as workspace",
+                  "status": "completed",
+                  "type": "task",
+                  "notes": "Configure Bun workspaces in root `package.json` pointing to all packages."
+                },
+                {
+                  "id": "a0000000-1104-4000-8000-000000000000",
+                  "title": "Create stub packages and plugin placeholder",
+                  "status": "completed",
+                  "type": "task",
+                  "notes": "Stub `@roadraven/core` and `@roadraven/react` packages with package.json and entry points. Create `plugins/` directory with README placeholder."
+                }
+              ]
+            },
+            {
+              "id": "a0000000-1200-4000-8000-000000000000",
+              "title": "Plan 00-02: RPC Contract + Updater Fix",
+              "status": "completed",
+              "type": "plan",
+              "notes": "# RPC Contract + Updater Fix\n\nEstablish the typed RPC boundary and fix Updater crash.\n\n**Requirements:** SCAF-03, SCAF-09\n**Depends on:** 00-01\n\n**Acceptance Criteria:**\n- TypeScript compiles with typed RPC contract\n- `Updater.localInfo.channel()` defaults to `\"dev\"` when `version.json` absent\n- RPC types importable from both Bun and webview sides",
+              "metadata": {
+                "requirements": ["SCAF-03", "SCAF-09"],
+                "dependencies": ["00-01"]
+              },
+              "createdAt": "2026-04-12T12:00:00Z",
+              "updatedAt": "2026-04-12T18:00:00Z",
+              "children": [
+                {
+                  "id": "a0000000-1201-4000-8000-000000000000",
+                  "title": "Create shared/types.ts with RoadmapRPCType",
+                  "status": "completed",
+                  "type": "task",
+                  "notes": "Define the typed RPC contract in `shared/types.ts` with `RoadmapRPCType` covering all cross-process calls."
+                },
+                {
+                  "id": "a0000000-1202-4000-8000-000000000000",
+                  "title": "Fix Updater.localInfo.channel() wrapper",
+                  "status": "completed",
+                  "type": "task",
+                  "notes": "Wrap `Updater.localInfo.channel()` in try/catch. Default to `\"dev\"` when `version.json` is absent to prevent crash on fresh installs."
+                },
+                {
+                  "id": "a0000000-1203-4000-8000-000000000000",
+                  "title": "Establish typed RPC boundary",
+                  "status": "completed",
+                  "type": "task",
+                  "notes": "Ensure RPC types are importable from both Bun main process and webview renderer. Single source of truth in `shared/types.ts`."
+                }
+              ]
+            },
+            {
+              "id": "a0000000-1300-4000-8000-000000000000",
+              "title": "Plan 00-03: TDD Pipeline",
+              "status": "completed",
+              "type": "plan",
+              "notes": "# TDD Pipeline\n\nConfigure the complete testing and CI infrastructure.\n\n**Requirements:** SCAF-05, SCAF-06, SCAF-07\n**Depends on:** 00-01, 00-02\n\n**Acceptance Criteria:**\n- `bunx vitest run` passes all tests\n- `bunx biome check` passes lint\n- Playwright both tiers (UI + process) pass\n- GitHub Actions CI workflow passes on test PR",
+              "metadata": {
+                "requirements": ["SCAF-05", "SCAF-06", "SCAF-07"],
+                "dependencies": ["00-01", "00-02"]
+              },
+              "createdAt": "2026-04-12T18:00:00Z",
+              "updatedAt": "2026-04-13T00:00:00Z",
+              "children": [
+                {
+                  "id": "a0000000-1301-4000-8000-000000000000",
+                  "title": "Configure Biome linting (workspace-level)",
+                  "status": "completed",
+                  "type": "task",
+                  "notes": "Set up Biome at workspace root with rules covering all packages. Verify `bunx @biomejs/biome lint` runs clean."
+                },
+                {
+                  "id": "a0000000-1302-4000-8000-000000000000",
+                  "title": "Configure Vitest with first passing suite",
+                  "status": "completed",
+                  "type": "task",
+                  "notes": "Set up Vitest configuration. Write first passing test suites covering SCAF-01, SCAF-03, SCAF-04, SCAF-08, SCAF-09 requirements."
+                },
+                {
+                  "id": "a0000000-1303-4000-8000-000000000000",
+                  "title": "Configure Playwright two-tier tests",
+                  "status": "completed",
+                  "type": "task",
+                  "notes": "Set up Playwright with two tiers: UI tests (webview interactions) and process tests (Bun main process lifecycle)."
+                },
+                {
+                  "id": "a0000000-1304-4000-8000-000000000000",
+                  "title": "Create GitHub Actions CI workflow",
+                  "status": "completed",
+                  "type": "task",
+                  "notes": "CI pipeline: lint → typecheck → unit test → e2e. All steps must pass on test PR before merging."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "a0000000-2000-4000-8000-000000000000",
+          "title": "Phase 01 — Visual Foundation & Themes",
+          "status": "in-progress",
+          "type": "phase",
+          "notes": "# Phase 01: Visual Foundation & Themes\n\nApp shell renders the intended design with all three built-in themes switchable, using only `--rv-*` CSS custom property tokens.\n\n**Branch:** `gsd/phase-01-visual-foundation-themes`\n**Depends on:** Phase 00 (App Scaffold)\n**Plans:** 0/3 complete\n\n## Requirements\n- THEME-01: Three built-in themes (dark, light, high-contrast)\n- THEME-02: `--rv-*` CSS custom property token system\n- THEME-03: ThemeProvider + Zustand store + OS preference detection\n- THEME-04: All app shell components use theme tokens\n- THEME-05: Per-schema themeConfig overrides",
+          "metadata": {
+            "phase": "01",
+            "slug": "visual-foundation-themes",
+            "branch": "gsd/phase-01-visual-foundation-themes",
+            "plansTotal": 3,
+            "plansComplete": 0,
+            "dependsOn": ["Phase 00"]
+          },
+          "createdAt": "2026-04-12T00:00:00Z",
+          "updatedAt": "2026-04-15T00:00:00Z",
+          "children": [
+            {
+              "id": "a0000000-2100-4000-8000-000000000000",
+              "title": "Plan 01-01: Tailwind v4 + Token System + ThemeProvider",
+              "status": "in-progress",
+              "type": "plan",
+              "notes": "# Tailwind v4 Migration + Token System + ThemeProvider\n\nMigrate to Tailwind CSS v4, define the complete `--rv-*` token system, and implement ThemeProvider.\n\n**Requirements:** THEME-01, THEME-02, THEME-03\n\n**Deliverables:**\n- `ThemeProvider.tsx` — React context provider\n- `themeStore.ts` — Zustand store for theme state\n- `useTheme` hook — consumer API\n- `index.css` with `@theme` directive and all token definitions\n- `rpc.ts` — Electroview initialization + settings persistence\n\n**Done When:**\n- App visually matches design reference\n- All three themes switch without page reload\n- System preference reflects `prefers-color-scheme`\n- Per-schema `themeConfig` overrides work\n- Zero hardcoded colour values in component CSS",
+              "metadata": {
+                "requirements": ["THEME-01", "THEME-02", "THEME-03"],
+                "dependencies": []
+              },
+              "createdAt": "2026-04-13T00:00:00Z",
+              "updatedAt": "2026-04-15T00:00:00Z",
+              "children": [
+                {
+                  "id": "a0000000-2101-4000-8000-000000000000",
+                  "title": "Migrate to Tailwind CSS v4",
+                  "status": "in-progress",
+                  "type": "task",
+                  "notes": "Upgrade from Tailwind v3 to v4. Update config, PostCSS setup, and migrate any existing utility classes."
+                },
+                {
+                  "id": "a0000000-2102-4000-8000-000000000000",
+                  "title": "Define --rv-* token system",
+                  "status": "in-progress",
+                  "type": "task",
+                  "notes": "Create complete `--rv-*` CSS custom property token set for dark, light, and high-contrast themes. Covers surfaces, text, borders, accents, status colors, and semantic tokens."
+                },
+                {
+                  "id": "a0000000-2103-4000-8000-000000000000",
+                  "title": "Implement ThemeProvider + Zustand store",
+                  "status": "not-started",
+                  "type": "task",
+                  "notes": "Create `ThemeProvider.tsx` with React context, `themeStore.ts` with Zustand, and `useTheme` hook. Detect OS `prefers-color-scheme` and persist selection."
+                },
+                {
+                  "id": "a0000000-2104-4000-8000-000000000000",
+                  "title": "Settings persistence via Electrobun RPC",
+                  "status": "not-started",
+                  "type": "task",
+                  "notes": "Create `rpc.ts` with Electroview initialization. Persist theme selection across sessions via Electrobun RPC calls."
+                },
+                {
+                  "id": "a0000000-2105-4000-8000-000000000000",
+                  "title": "Per-schema themeConfig overrides",
+                  "status": "not-started",
+                  "type": "task",
+                  "notes": "When a roadmap schema contains a `themeConfig` block, override the active theme's tokens for that file only."
+                }
+              ]
+            },
+            {
+              "id": "a0000000-2200-4000-8000-000000000000",
+              "title": "Plan 01-02: App Shell Components",
+              "status": "not-started",
+              "type": "plan",
+              "notes": "# App Shell Components\n\nBuild all core UI components with theme token integration.\n\n**Requirements:** THEME-04\n**Depends on:** 01-01\n\n**Deliverables:**\n- TopBar, Sidebar, Canvas, Node, SidePanel, StatusBar, ConfigPanel components\n- All wired to `--rv-*` theme tokens\n- Component tests passing\n\n**Done When:**\n- Visual design matches reference\n- All components render with correct token application\n- Component tests pass",
+              "metadata": {
+                "requirements": ["THEME-04"],
+                "dependencies": ["01-01"]
+              },
+              "createdAt": "2026-04-12T00:00:00Z",
+              "updatedAt": "2026-04-12T00:00:00Z",
+              "children": [
+                {
+                  "id": "a0000000-2201-4000-8000-000000000000",
+                  "title": "Build TopBar component",
+                  "status": "not-started",
+                  "type": "task",
+                  "notes": "App header with title, menu triggers, and theme switcher. Uses `--rv-*` tokens exclusively."
+                },
+                {
+                  "id": "a0000000-2202-4000-8000-000000000000",
+                  "title": "Build Sidebar component",
+                  "status": "not-started",
+                  "type": "task",
+                  "notes": "Collapsible sidebar for tree navigation, file list, and settings access."
+                },
+                {
+                  "id": "a0000000-2203-4000-8000-000000000000",
+                  "title": "Build Canvas component",
+                  "status": "not-started",
+                  "type": "task",
+                  "notes": "Main viewport for the react-d3-tree renderer. Handles pan/zoom and node selection."
+                },
+                {
+                  "id": "a0000000-2204-4000-8000-000000000000",
+                  "title": "Build RoadmapNode component",
+                  "status": "not-started",
+                  "type": "task",
+                  "notes": "Custom foreignObject node renderer for react-d3-tree. Shows title, status badge, type indicator."
+                },
+                {
+                  "id": "a0000000-2205-4000-8000-000000000000",
+                  "title": "Build SidePanel component",
+                  "status": "not-started",
+                  "type": "task",
+                  "notes": "Resizable detail panel showing selected node info, markdown notes, and metadata."
+                },
+                {
+                  "id": "a0000000-2206-4000-8000-000000000000",
+                  "title": "Build StatusBar component",
+                  "status": "not-started",
+                  "type": "task",
+                  "notes": "Bottom bar showing file path, node count, save status, and current theme."
+                },
+                {
+                  "id": "a0000000-2207-4000-8000-000000000000",
+                  "title": "Build ConfigPanel component",
+                  "status": "not-started",
+                  "type": "task",
+                  "notes": "Settings panel for theme selection, layout preferences, and app configuration."
+                },
+                {
+                  "id": "a0000000-2208-4000-8000-000000000000",
+                  "title": "Wire theme tokens to all components",
+                  "status": "not-started",
+                  "type": "task",
+                  "notes": "Ensure every component references `--rv-*` tokens. Zero hardcoded colour values."
+                },
+                {
+                  "id": "a0000000-2209-4000-8000-000000000000",
+                  "title": "Write component tests",
+                  "status": "not-started",
+                  "type": "task",
+                  "notes": "Unit tests for each component verifying render, theme token application, and interactions."
+                }
+              ]
+            },
+            {
+              "id": "a0000000-2300-4000-8000-000000000000",
+              "title": "Plan 01-03: Per-Schema themeConfig + LogTape",
+              "status": "not-started",
+              "type": "plan",
+              "notes": "# Per-Schema themeConfig Overrides + LogTape\n\nImplement per-schema theme overrides and structured logging.\n\n**Requirements:** THEME-05\n**Depends on:** 01-01, 01-02\n\n**Done When:**\n- Loading schema with `themeConfig` block overrides tokens for that file\n- LogTape structured logging foundation in place",
+              "metadata": {
+                "requirements": ["THEME-05"],
+                "dependencies": ["01-01", "01-02"]
+              },
+              "createdAt": "2026-04-12T00:00:00Z",
+              "updatedAt": "2026-04-12T00:00:00Z",
+              "children": [
+                {
+                  "id": "a0000000-2301-4000-8000-000000000000",
+                  "title": "Implement per-schema themeConfig parsing",
+                  "status": "not-started",
+                  "type": "task",
+                  "notes": "Parse `themeConfig` block from loaded schema JSON. Map `statusColors` and `nodeRadius` to runtime token overrides."
+                },
+                {
+                  "id": "a0000000-2302-4000-8000-000000000000",
+                  "title": "Override active theme tokens on file load",
+                  "status": "not-started",
+                  "type": "task",
+                  "notes": "When a file with `themeConfig` is opened, apply those overrides to the active theme's CSS custom properties. Restore defaults when file is closed."
+                },
+                {
+                  "id": "a0000000-2303-4000-8000-000000000000",
+                  "title": "LogTape structured logging foundation",
+                  "status": "not-started",
+                  "type": "task",
+                  "notes": "Set up LogTape for structured logging across both Bun main process and webview. Configurable log levels, JSON output for production."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "a0000000-3000-4000-8000-000000000000",
+          "title": "Phase 02 — Read-Only Viewer",
+          "status": "completed",
+          "type": "phase",
+          "notes": "# Phase 02: Read-Only Viewer\n\nAny valid JSON schema renders as a fully interactive, read-only tree with correct status badges, file watching, and side panel — with 30 fps performance gate validated.\n\n**Branch:** `gsd/phase-02-read-only-viewer`\n**Depends on:** Phase 01\n**Plans:** 4/4 complete\n\n## Requirements\n- VIEW-01: Zod-validated schema loading\n- VIEW-02: Zustand store with `dataKey` pattern\n- VIEW-03: Sample schemas\n- VIEW-04: react-d3-tree integration with Fit View\n- VIEW-05: Custom `RoadmapNode` foreignObject renderer\n- VIEW-06: File watcher with debounce\n- VIEW-07: `$ref` resolution at load time\n- VIEW-08: `.bak.json` backup on file open\n- VIEW-09: Data-driven side panel (read-only)\n- VIEW-10: Markdown rendering (remark/rehype)\n- VIEW-11: 30 fps performance gate (300+ nodes)\n- VIEW-12: TB/LR layout toggle\n- VIEW-13: Welcome screen\n- VIEW-14: Recent files persistence\n\n## Critical Design Decision\n`dataKey` only increments on structural mutations (add/delete/move); status-only updates bypass `dataKey` to maintain 30 fps with react-d3-tree.",
+          "metadata": {
+            "phase": "02",
+            "slug": "read-only-viewer",
+            "branch": "gsd/phase-02-read-only-viewer",
+            "plansTotal": 4,
+            "plansComplete": 4,
+            "dependsOn": ["Phase 01"],
+            "performanceGate": "30 fps with 300+ nodes"
+          },
+          "createdAt": "2026-04-13T00:00:00Z",
+          "updatedAt": "2026-04-15T00:00:00Z",
+          "children": [
+            {
+              "id": "a0000000-3100-4000-8000-000000000000",
+              "title": "Plan 02-01: Schema + Zustand Store Foundation",
+              "status": "completed",
+              "type": "plan",
+              "notes": "# Schema + Zustand Store Foundation\n\nDefine Zod schemas, create Zustand store with `dataKey` pattern, and create sample schemas.\n\n**Requirements:** VIEW-01, VIEW-02, VIEW-03\n\n**Deliverables:**\n- `packages/core/src/schema.ts` — Zod schemas\n- `packages/desktop/src/mainview/store/roadmapStore.ts` — Zustand store\n- Sample schemas in `samples/`\n\n**Acceptance:**\n- Zod schemas validate well-formed JSON, reject malformed with detailed errors\n- `roadmapStore` produces react-d3-tree-compatible `treeData`\n- `dataKey` stable pattern verified by tests",
+              "metadata": {
+                "requirements": ["VIEW-01", "VIEW-02", "VIEW-03"],
+                "dependencies": []
+              },
+              "createdAt": "2026-04-13T00:00:00Z",
+              "updatedAt": "2026-04-14T00:00:00Z",
+              "children": [
+                {
+                  "id": "a0000000-3101-4000-8000-000000000000",
+                  "title": "Define Zod schemas in @roadraven/core",
+                  "status": "completed",
+                  "type": "task",
+                  "notes": "Create `RoadmapSchemaSchema`, `RoadmapNodeSchema`, `NodeStatusSchema` with recursive children support via Zod getter pattern."
+                },
+                {
+                  "id": "a0000000-3102-4000-8000-000000000000",
+                  "title": "Create Zustand roadmapStore with dataKey pattern",
+                  "status": "completed",
+                  "type": "task",
+                  "notes": "Implement `roadmapStore` with `loadSchema()`, `updateNodeStatus()`, `selectNode()`. Critical: `dataKey` increments on `loadSchema`, NOT on `updateNodeStatus`."
+                },
+                {
+                  "id": "a0000000-3103-4000-8000-000000000000",
+                  "title": "Create sample schemas",
+                  "status": "completed",
+                  "type": "task",
+                  "notes": "Create `hello-world.json` (minimal) and `getting-started.json` (comprehensive) sample schemas in `samples/`."
+                },
+                {
+                  "id": "a0000000-3104-4000-8000-000000000000",
+                  "title": "Wire type re-exports through shared/types.ts",
+                  "status": "completed",
+                  "type": "task",
+                  "notes": "Export `NodeStatus`, `RoadmapNode`, `RoadmapSchema`, `StatusConfig` from `shared/types.ts` for cross-process use."
+                },
+                {
+                  "id": "a0000000-3105-4000-8000-000000000000",
+                  "title": "Write schema validation tests",
+                  "status": "completed",
+                  "type": "task",
+                  "notes": "Vitest tests: valid JSON passes, malformed JSON rejected with Zod errors, edge cases (empty nodes, deep nesting, missing fields)."
+                }
+              ]
+            },
+            {
+              "id": "a0000000-3200-4000-8000-000000000000",
+              "title": "Plan 02-02: Tree Renderer + File Watcher + Layout",
+              "status": "completed",
+              "type": "plan",
+              "notes": "# Tree Renderer + File Watcher + Layout Toggle\n\nIntegrate react-d3-tree, add file watching, `$ref` resolution, backups, and layout toggle.\n\n**Requirements:** VIEW-04, VIEW-05, VIEW-06, VIEW-07, VIEW-08, VIEW-12\n\n**Deliverables:**\n- `Canvas.tsx` — react-d3-tree integration\n- `RoadmapNode.tsx` — custom foreignObject renderer\n- `SchemaErrorPanel.tsx` — Zod validation error display\n- `fileWatcher.ts` — Bun-side file watching\n\n**Acceptance:**\n- Valid schema renders as interactive tree\n- TB/LR toggle works and persists per file\n- File watcher detects external changes and re-renders\n- Error panel shows Zod validation failures",
+              "metadata": {
+                "requirements": ["VIEW-04", "VIEW-05", "VIEW-06", "VIEW-07", "VIEW-08", "VIEW-12"],
+                "dependencies": ["02-01"]
+              },
+              "createdAt": "2026-04-14T00:00:00Z",
+              "updatedAt": "2026-04-14T12:00:00Z",
+              "children": [
+                {
+                  "id": "a0000000-3201-4000-8000-000000000000",
+                  "title": "Integrate react-d3-tree with dataKey and Fit View",
+                  "status": "completed",
+                  "type": "task",
+                  "notes": "Wire `roadmapStore.treeData` into react-d3-tree's `<Tree>` component. Use `dataKey` for controlled re-renders. Implement Fit View reset on schema load."
+                },
+                {
+                  "id": "a0000000-3202-4000-8000-000000000000",
+                  "title": "Custom RoadmapNode foreignObject renderer",
+                  "status": "completed",
+                  "type": "task",
+                  "notes": "Custom `renderCustomNodeElement` using `foreignObject` for rich HTML node rendering. Shows title, status badge with color, and type indicator."
+                },
+                {
+                  "id": "a0000000-3203-4000-8000-000000000000",
+                  "title": "File watcher with debounce (Bun side)",
+                  "status": "completed",
+                  "type": "task",
+                  "notes": "Bun-side file watcher using `Bun.file.watch()`. Debounced to prevent rapid re-reads. Sends updated schema to webview via RPC on change."
+                },
+                {
+                  "id": "a0000000-3204-4000-8000-000000000000",
+                  "title": "$ref resolution at load time",
+                  "status": "completed",
+                  "type": "task",
+                  "notes": "Resolve `$ref` pointers when loading schema. External file references resolved relative to schema file path."
+                },
+                {
+                  "id": "a0000000-3205-4000-8000-000000000000",
+                  "title": ".bak.json backup on every file open",
+                  "status": "completed",
+                  "type": "task",
+                  "notes": "Create `.bak.json` alongside opened schema file. Safety net for undo (undo/redo deferred to v1.1)."
+                },
+                {
+                  "id": "a0000000-3206-4000-8000-000000000000",
+                  "title": "TB/LR layout toggle with persistence",
+                  "status": "completed",
+                  "type": "task",
+                  "notes": "Top-to-bottom / Left-to-right orientation toggle. Persists preference per file across sessions."
+                },
+                {
+                  "id": "a0000000-3207-4000-8000-000000000000",
+                  "title": "Schema validation error panel",
+                  "status": "completed",
+                  "type": "task",
+                  "notes": "Display Zod validation errors inline when schema is malformed. `SchemaErrorPanel.tsx` shows error paths and messages."
+                }
+              ]
+            },
+            {
+              "id": "a0000000-3300-4000-8000-000000000000",
+              "title": "Plan 02-03: Side Panel + Welcome Screen + Recent Files",
+              "status": "completed",
+              "type": "plan",
+              "notes": "# Side Panel + Welcome Screen + Recent Files\n\nData-driven side panel, markdown rendering, welcome screen, and recent files.\n\n**Requirements:** VIEW-09, VIEW-10, VIEW-13, VIEW-14\n\n**Deliverables:**\n- `SidePanel.tsx` — data-driven, resizable, pinnable\n- `MarkdownRenderer.tsx` — remark + rehype pipeline\n- `WelcomeScreen.tsx` — hero, actions, recent files, samples\n- `ResizeHandle.tsx` — drag handle\n\n**Acceptance:**\n- Side panel shows title, status, type, timestamps, markdown notes\n- Resizable 320px–50% viewport width\n- Pins on screens >1400px wide\n- Recent files list persists (last 10) and opens files on click\n- Sample links work",
+              "metadata": {
+                "requirements": ["VIEW-09", "VIEW-10", "VIEW-13", "VIEW-14"],
+                "dependencies": ["02-01", "02-02"]
+              },
+              "createdAt": "2026-04-14T12:00:00Z",
+              "updatedAt": "2026-04-14T18:00:00Z",
+              "children": [
+                {
+                  "id": "a0000000-3301-4000-8000-000000000000",
+                  "title": "Build data-driven SidePanel",
+                  "status": "completed",
+                  "type": "task",
+                  "notes": "Read-only side panel showing selected node's title, status, type, `createdAt`, `updatedAt`, and markdown notes. Resizable with drag handle, 320px min to 50% viewport max."
+                },
+                {
+                  "id": "a0000000-3302-4000-8000-000000000000",
+                  "title": "Implement markdown renderer (remark/rehype)",
+                  "status": "completed",
+                  "type": "task",
+                  "notes": "Markdown rendering pipeline using remark (parse) + rehype (HTML). Supports headings, code blocks, links, lists, inline formatting."
+                },
+                {
+                  "id": "a0000000-3303-4000-8000-000000000000",
+                  "title": "Build WelcomeScreen",
+                  "status": "completed",
+                  "type": "task",
+                  "notes": "Welcome screen with hero section, action buttons (Open File, New Roadmap), recent files list, and sample roadmap links."
+                },
+                {
+                  "id": "a0000000-3304-4000-8000-000000000000",
+                  "title": "Build ResizeHandle component",
+                  "status": "completed",
+                  "type": "task",
+                  "notes": "Drag handle for resizing the side panel. Visual feedback on hover/drag. Constrains between min/max widths."
+                },
+                {
+                  "id": "a0000000-3305-4000-8000-000000000000",
+                  "title": "Implement auto-pin on wide screens",
+                  "status": "completed",
+                  "type": "task",
+                  "notes": "Side panel auto-pins (stays open) on screens wider than 1400px. Toggleable on narrower screens."
+                },
+                {
+                  "id": "a0000000-3306-4000-8000-000000000000",
+                  "title": "Implement recent files persistence",
+                  "status": "completed",
+                  "type": "task",
+                  "notes": "Persist last 10 opened files across sessions. Display in welcome screen and File menu. Click to open."
+                }
+              ]
+            },
+            {
+              "id": "a0000000-3400-4000-8000-000000000000",
+              "title": "Plan 02-04: Performance Gate (30 fps)",
+              "status": "completed",
+              "type": "gate",
+              "notes": "# Performance Gate — 30 fps Benchmark\n\n300+ visible nodes with 10 simulated `updateNodeStatus()` calls/sec must maintain ≥30 fps.\n\n**Requirements:** VIEW-11\n\n**Deliverables:**\n- `packages/desktop/tests/bench/perf.bench.ts` — Vitest benchmark\n- `packages/desktop/tests/bench/generateSchema.ts` — 300+ node generator\n- `packages/desktop/tests/unit/ui/viewer-smoke.test.tsx` — smoke test\n\n**Acceptance:**\n- 300+ node schema loads without crash\n- `dataKey` does NOT change during `updateNodeStatus` calls\n- Benchmark green and repeatable in CI\n- Manual checkpoint confirms 30 fps (D-09 — human verified ✓)",
+              "metadata": {
+                "requirements": ["VIEW-11"],
+                "dependencies": ["02-01", "02-02", "02-03"],
+                "checkpoint": "D-09",
+                "humanVerified": true,
+                "performanceTarget": "30 fps with 300+ nodes and 10 updateNodeStatus/sec"
+              },
+              "createdAt": "2026-04-14T18:00:00Z",
+              "updatedAt": "2026-04-15T00:00:00Z",
+              "children": [
+                {
+                  "id": "a0000000-3401-4000-8000-000000000000",
+                  "title": "Build schema generator (300+ nodes)",
+                  "status": "completed",
+                  "type": "task",
+                  "notes": "`generateLargeSchema()` function that produces a valid roadmap JSON with 300+ nodes for benchmarking. Configurable depth and breadth."
+                },
+                {
+                  "id": "a0000000-3402-4000-8000-000000000000",
+                  "title": "Vitest benchmark: dataKey stability",
+                  "status": "completed",
+                  "type": "task",
+                  "notes": "Benchmark measuring `dataKey` stability under sustained `updateNodeStatus()` calls. Verifies `dataKey` does NOT increment on status-only updates."
+                },
+                {
+                  "id": "a0000000-3403-4000-8000-000000000000",
+                  "title": "UI smoke test with node count assertion",
+                  "status": "completed",
+                  "type": "task",
+                  "notes": "Smoke test loading 300+ node schema and asserting all nodes render. Catches rendering crashes and memory issues."
+                },
+                {
+                  "id": "a0000000-3404-4000-8000-000000000000",
+                  "title": "Manual Playwright fps checkpoint (D-09)",
+                  "status": "completed",
+                  "type": "gate",
+                  "notes": "Human-verified performance checkpoint. Manual Playwright test confirming 30 fps on rendered 300+ node tree.\n\n**Decision D-09:** fps gate approved by human reviewer on 2026-04-15.",
+                  "metadata": {
+                    "decision": "D-09",
+                    "verifiedBy": "human",
+                    "verifiedDate": "2026-04-15",
+                    "result": "PASS"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "a0000000-4000-4000-8000-000000000000",
+          "title": "Phase 03 — Full Editor",
+          "status": "not-started",
+          "type": "phase",
+          "notes": "# Phase 03: Full Editor\n\nA complete roadmap can be created, edited, and saved without touching JSON directly — with full keyboard control, autosave, atomic writes, and correct `$ref` write-back.\n\n**Depends on:** Phase 02\n**Plans:** 0/4\n\n## Requirements\nEDIT-01 through EDIT-18\n\n## Key Design Decisions\n- Inline rename, add/delete/duplicate/move via keyboard and context menu\n- Non-leaf delete shows confirmation dialog with child count\n- Copy/paste preserves full subtree\n- CodeMirror 6 for markdown editing\n- Atomic writes: `.tmp` → rename on all platforms; Windows retry loop (3 attempts, 50ms)\n- Debounced 2s write, 30s periodic autosave, flush on `before-quit`\n- Undo/Redo deferred to v1.1",
+          "metadata": {
+            "phase": "03",
+            "slug": "full-editor",
+            "plansTotal": 4,
+            "plansComplete": 0,
+            "dependsOn": ["Phase 02"],
+            "requirements": "EDIT-01 through EDIT-18"
+          },
+          "createdAt": "2026-04-12T00:00:00Z",
+          "updatedAt": "2026-04-12T00:00:00Z",
+          "children": [
+            {
+              "id": "a0000000-4100-4000-8000-000000000000",
+              "title": "Plan 03-01: Node Mutation Operations",
+              "status": "not-started",
+              "type": "plan",
+              "notes": "# Node Mutation Operations\n\nAll CRUD operations on nodes: rename, add, delete, duplicate, copy/paste, move, status change, tree navigation.\n\n**Key Behaviors:**\n- Inline rename with Enter/Escape\n- Add child/sibling nodes\n- Delete with confirmation for non-leaf nodes (shows child count)\n- Duplicate node (deep copy with new UUIDs)\n- Copy/paste preserves full subtree\n- Move node (drag-and-drop or keyboard)\n- Status cycling via keyboard shortcut\n- Arrow-key tree navigation",
+              "metadata": {
+                "dependencies": []
+              },
+              "children": [
+                {
+                  "id": "a0000000-4101-4000-8000-000000000000",
+                  "title": "Inline rename (Enter/Escape)",
+                  "status": "not-started",
+                  "type": "task"
+                },
+                {
+                  "id": "a0000000-4102-4000-8000-000000000000",
+                  "title": "Add child/sibling node",
+                  "status": "not-started",
+                  "type": "task"
+                },
+                {
+                  "id": "a0000000-4103-4000-8000-000000000000",
+                  "title": "Delete node with confirmation dialog",
+                  "status": "not-started",
+                  "type": "task",
+                  "notes": "Non-leaf delete shows confirmation dialog with child count. Leaf nodes delete immediately."
+                },
+                {
+                  "id": "a0000000-4104-4000-8000-000000000000",
+                  "title": "Duplicate node (deep copy, new UUIDs)",
+                  "status": "not-started",
+                  "type": "task"
+                },
+                {
+                  "id": "a0000000-4105-4000-8000-000000000000",
+                  "title": "Copy/paste full subtree",
+                  "status": "not-started",
+                  "type": "task"
+                },
+                {
+                  "id": "a0000000-4106-4000-8000-000000000000",
+                  "title": "Move node (drag-and-drop + keyboard)",
+                  "status": "not-started",
+                  "type": "task"
+                },
+                {
+                  "id": "a0000000-4107-4000-8000-000000000000",
+                  "title": "Status cycling via keyboard shortcut",
+                  "status": "not-started",
+                  "type": "task"
+                },
+                {
+                  "id": "a0000000-4108-4000-8000-000000000000",
+                  "title": "Arrow-key tree navigation",
+                  "status": "not-started",
+                  "type": "task"
+                }
+              ]
+            },
+            {
+              "id": "a0000000-4200-4000-8000-000000000000",
+              "title": "Plan 03-02: Context Menu + Linux Fallback",
+              "status": "not-started",
+              "type": "plan",
+              "notes": "# Context Menu + Linux Fallback\n\nRight-click context menu for all node operations. Custom fallback for Linux where `ContextMenu.showContextMenu()` is a no-op.\n\n**Requirements:**\n- Appears within 50ms of right-click\n- Fully keyboard-navigable\n- ARIA-compliant\n- Linux fallback using HTML/CSS menu",
+              "metadata": {
+                "dependencies": ["03-01"]
+              },
+              "children": [
+                {
+                  "id": "a0000000-4201-4000-8000-000000000000",
+                  "title": "Native context menu implementation",
+                  "status": "not-started",
+                  "type": "task",
+                  "notes": "Right-click triggers native context menu via Electrobun `ContextMenu.showContextMenu()`. Must appear within 50ms."
+                },
+                {
+                  "id": "a0000000-4202-4000-8000-000000000000",
+                  "title": "Keyboard-navigable menu (ARIA-compliant)",
+                  "status": "not-started",
+                  "type": "task",
+                  "notes": "Full keyboard navigation: arrow keys, Enter to select, Escape to dismiss. ARIA roles and labels for accessibility."
+                },
+                {
+                  "id": "a0000000-4203-4000-8000-000000000000",
+                  "title": "Linux HTML/CSS fallback menu",
+                  "status": "not-started",
+                  "type": "task",
+                  "notes": "Custom HTML/CSS context menu for Linux where native `ContextMenu.showContextMenu()` is a no-op. Matches native styling."
+                }
+              ]
+            },
+            {
+              "id": "a0000000-4300-4000-8000-000000000000",
+              "title": "Plan 03-03: Side Panel Editor (CodeMirror 6)",
+              "status": "not-started",
+              "type": "plan",
+              "notes": "# Side Panel Editor\n\nReplace read-only side panel with editable view. CodeMirror 6 for markdown notes editing, metadata table for structured fields.\n\n**Key Features:**\n- CodeMirror 6 markdown editor\n- Autosave debounced 1s\n- Metadata table (key-value editor)\n- Type and status dropdowns",
+              "metadata": {
+                "dependencies": ["03-01"]
+              },
+              "children": [
+                {
+                  "id": "a0000000-4301-4000-8000-000000000000",
+                  "title": "Integrate CodeMirror 6 markdown editor",
+                  "status": "not-started",
+                  "type": "task",
+                  "notes": "Replace markdown viewer with CodeMirror 6 editor. Support markdown syntax highlighting, keyboard shortcuts, and basic formatting toolbar."
+                },
+                {
+                  "id": "a0000000-4302-4000-8000-000000000000",
+                  "title": "Implement 1s debounced autosave for notes",
+                  "status": "not-started",
+                  "type": "task"
+                },
+                {
+                  "id": "a0000000-4303-4000-8000-000000000000",
+                  "title": "Build metadata key-value editor",
+                  "status": "not-started",
+                  "type": "task",
+                  "notes": "Editable metadata table. Add/remove key-value pairs. Values support string, number, boolean types."
+                },
+                {
+                  "id": "a0000000-4304-4000-8000-000000000000",
+                  "title": "Type and status dropdown selectors",
+                  "status": "not-started",
+                  "type": "task",
+                  "notes": "Dropdown selectors populated from schema's `statusConfig` and `typeConfig` arrays."
+                }
+              ]
+            },
+            {
+              "id": "a0000000-4400-4000-8000-000000000000",
+              "title": "Plan 03-04: Autosave + Atomic Writes + $ref",
+              "status": "not-started",
+              "type": "plan",
+              "notes": "# Autosave + Atomic Writes + $ref Write-Back\n\nPersistence layer with atomic writes, autosave, and `$ref` mutation routing.\n\n**Key Design:**\n- 2s debounced write after any mutation\n- 30s periodic autosave\n- Flush on `before-quit`\n- `.tmp` → rename atomic write (Windows: 3 attempts, 50ms apart)\n- Status bar shows: Saved ✓ / Saving... / Error saving\n- `$ref` mutations write to correct originating file\n- Cross-boundary moves blocked with error",
+              "metadata": {
+                "dependencies": ["03-01", "03-03"]
+              },
+              "children": [
+                {
+                  "id": "a0000000-4401-4000-8000-000000000000",
+                  "title": "Implement 2s debounced autosave",
+                  "status": "not-started",
+                  "type": "task",
+                  "notes": "Debounced 2s write after any mutation. Resets timer on each change."
+                },
+                {
+                  "id": "a0000000-4402-4000-8000-000000000000",
+                  "title": "Implement 30s periodic autosave",
+                  "status": "not-started",
+                  "type": "task"
+                },
+                {
+                  "id": "a0000000-4403-4000-8000-000000000000",
+                  "title": "Flush on before-quit",
+                  "status": "not-started",
+                  "type": "task",
+                  "notes": "Register `before-quit` handler to flush any pending writes before app closes. No unsaved-changes confirmation dialog (by design)."
+                },
+                {
+                  "id": "a0000000-4404-4000-8000-000000000000",
+                  "title": "Atomic write (.tmp → rename)",
+                  "status": "not-started",
+                  "type": "task",
+                  "notes": "Write to `.tmp` file first, then atomic rename. Windows retry loop: 3 attempts, 50ms apart, to handle file locking."
+                },
+                {
+                  "id": "a0000000-4405-4000-8000-000000000000",
+                  "title": "Status bar save indicator",
+                  "status": "not-started",
+                  "type": "task",
+                  "notes": "Status bar shows: `Saved ✓` / `Saving...` / `Error saving` with appropriate visual feedback."
+                },
+                {
+                  "id": "a0000000-4406-4000-8000-000000000000",
+                  "title": "$ref write-back to originating files",
+                  "status": "not-started",
+                  "type": "task",
+                  "notes": "When editing nodes loaded via `$ref`, mutations write back to the correct originating file, not the parent schema."
+                },
+                {
+                  "id": "a0000000-4407-4000-8000-000000000000",
+                  "title": "Block cross-boundary $ref moves",
+                  "status": "not-started",
+                  "type": "task",
+                  "notes": "Moving a node across `$ref` boundaries is blocked with an error message. Nodes stay within their originating file."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "a0000000-5000-4000-8000-000000000000",
+          "title": "Phase 04 — Event API",
+          "status": "not-started",
+          "type": "phase",
+          "notes": "# Phase 04: Event API\n\nApp receives live node status updates from external producers via WebSocket and routes them within 100ms — with Claude Code MCP wrapper as reference producer.\n\n**Depends on:** Phase 03\n**Plans:** 0/4\n\n## Requirements\nPLUG-01 through PLUG-09\n\n## Event Contract\n```json\n{\n  \"nodeId\": \"uuid\",\n  \"status\": \"in-progress\",\n  \"meta\": { \"key\": \"value\" },\n  \"source\": \"claude-code\"\n}\n```\n\n## Key Design Decisions\n- WebSocket server on `ws://127.0.0.1:<port>`\n- 100ms debounce buffer on Bun side\n- `plugin` and `subscribe` schema fields parsed but not acted on (deferred to v1.1)\n- Animated pulse on nodes receiving events\n- Non-blocking toasts for errors\n- In-app event log accessible from View menu",
+          "metadata": {
+            "phase": "04",
+            "slug": "event-api",
+            "plansTotal": 4,
+            "plansComplete": 0,
+            "dependsOn": ["Phase 03"],
+            "requirements": "PLUG-01 through PLUG-09",
+            "performanceTarget": "100ms event routing"
+          },
+          "createdAt": "2026-04-12T00:00:00Z",
+          "updatedAt": "2026-04-12T00:00:00Z",
+          "children": [
+            {
+              "id": "a0000000-5100-4000-8000-000000000000",
+              "title": "Plan 04-01: Research Gate (Design Document)",
+              "status": "not-started",
+              "type": "research",
+              "notes": "# Research Gate\n\nDesign document covering all Event API internals. **No implementation until approved.**\n\n**Topics:**\n- WebSocket lifecycle (connect, heartbeat, reconnect, close)\n- Event contract specification\n- 100ms debounce buffer design\n- Connection-drop handling\n- Malformed-event handling\n- Event log storage format",
+              "metadata": {
+                "dependencies": [],
+                "gate": true
+              },
+              "children": [
+                {
+                  "id": "a0000000-5101-4000-8000-000000000000",
+                  "title": "WebSocket lifecycle design",
+                  "status": "not-started",
+                  "type": "research",
+                  "notes": "Define connect, heartbeat, reconnect, and graceful close behavior."
+                },
+                {
+                  "id": "a0000000-5102-4000-8000-000000000000",
+                  "title": "Event contract specification",
+                  "status": "not-started",
+                  "type": "research",
+                  "notes": "Finalize `{ nodeId, status, meta?, source?, timestamp? }` contract with validation rules."
+                },
+                {
+                  "id": "a0000000-5103-4000-8000-000000000000",
+                  "title": "100ms debounce buffer design",
+                  "status": "not-started",
+                  "type": "research",
+                  "notes": "Design buffer that batches rapid events per-node within 100ms window. Last-write-wins within window."
+                },
+                {
+                  "id": "a0000000-5104-4000-8000-000000000000",
+                  "title": "Error handling strategy",
+                  "status": "not-started",
+                  "type": "research",
+                  "notes": "Define behavior for: connection drops, malformed events, unknown nodeIds, server restart."
+                },
+                {
+                  "id": "a0000000-5105-4000-8000-000000000000",
+                  "title": "Event log storage format",
+                  "status": "not-started",
+                  "type": "research",
+                  "notes": "Define in-memory event log structure. Rotation policy, max entries, export format."
+                }
+              ]
+            },
+            {
+              "id": "a0000000-5200-4000-8000-000000000000",
+              "title": "Plan 04-02: WebSocket Server + Event Routing",
+              "status": "not-started",
+              "type": "plan",
+              "notes": "# WebSocket Server + Event Routing\n\nBun-side WebSocket server receiving events and routing to node store.\n\n**Key Details:**\n- `ws://127.0.0.1:<port>` — port visible to user\n- Event contract validation (Zod)\n- 100ms debounce buffer on Bun side\n- `plugin` and `subscribe` fields parsed but not acted on\n- Route validated events to `roadmapStore.updateNodeStatus()`",
+              "metadata": {
+                "dependencies": ["04-01"]
+              },
+              "children": [
+                {
+                  "id": "a0000000-5201-4000-8000-000000000000",
+                  "title": "Bun WebSocket server setup",
+                  "status": "not-started",
+                  "type": "task",
+                  "notes": "Start WebSocket server alongside app on `ws://127.0.0.1:<port>`. Display port in status bar."
+                },
+                {
+                  "id": "a0000000-5202-4000-8000-000000000000",
+                  "title": "Event contract validation (Zod)",
+                  "status": "not-started",
+                  "type": "task",
+                  "notes": "Validate incoming events against Zod schema. Reject malformed events with descriptive errors."
+                },
+                {
+                  "id": "a0000000-5203-4000-8000-000000000000",
+                  "title": "100ms debounce buffer implementation",
+                  "status": "not-started",
+                  "type": "task",
+                  "notes": "Buffer rapid events per-node within 100ms window. Flush last value to store after window expires."
+                },
+                {
+                  "id": "a0000000-5204-4000-8000-000000000000",
+                  "title": "Parse plugin and subscribe schema fields",
+                  "status": "not-started",
+                  "type": "task",
+                  "notes": "Parse `plugin` and `subscribe` blocks from schema without acting on them. Validate structure but defer behavior to v1.1."
+                },
+                {
+                  "id": "a0000000-5205-4000-8000-000000000000",
+                  "title": "Route events to roadmapStore",
+                  "status": "not-started",
+                  "type": "task",
+                  "notes": "Valid events routed to `roadmapStore.updateNodeStatus()` via RPC. Unknown `nodeId` events produce non-blocking toast."
+                }
+              ]
+            },
+            {
+              "id": "a0000000-5300-4000-8000-000000000000",
+              "title": "Plan 04-03: Event API UI",
+              "status": "not-started",
+              "type": "plan",
+              "notes": "# Event API UI\n\nVisual feedback for live events: animated pulse, integration zone in side panel, toasts, event log.\n\n**Deliverables:**\n- Animated pulse on nodes receiving events\n- Side panel Integration zone (connection status, last event, last meta)\n- Non-blocking error toasts\n- Event log in View menu",
+              "metadata": {
+                "dependencies": ["04-02"]
+              },
+              "children": [
+                {
+                  "id": "a0000000-5301-4000-8000-000000000000",
+                  "title": "Animated pulse on event-receiving nodes",
+                  "status": "not-started",
+                  "type": "task",
+                  "notes": "CSS animation pulse on nodes that have an active event producer. Visual indicator of live connection."
+                },
+                {
+                  "id": "a0000000-5302-4000-8000-000000000000",
+                  "title": "Side panel Integration zone",
+                  "status": "not-started",
+                  "type": "task",
+                  "notes": "New section in side panel showing: connection status (connected/disconnected), last event timestamp, last meta as key-value table."
+                },
+                {
+                  "id": "a0000000-5303-4000-8000-000000000000",
+                  "title": "Non-blocking error toasts",
+                  "status": "not-started",
+                  "type": "task",
+                  "notes": "Toast notifications for: malformed events, unknown nodeIds, connection drops. Auto-dismiss after 5s. Non-blocking."
+                },
+                {
+                  "id": "a0000000-5304-4000-8000-000000000000",
+                  "title": "Event log viewer (View menu)",
+                  "status": "not-started",
+                  "type": "task",
+                  "notes": "In-app event log showing all received events with timestamp, nodeId, status, source. Accessible from View menu."
+                }
+              ]
+            },
+            {
+              "id": "a0000000-5400-4000-8000-000000000000",
+              "title": "Plan 04-04: Claude Code MCP Wrapper",
+              "status": "not-started",
+              "type": "plan",
+              "notes": "# Claude Code MCP Wrapper\n\nReference Event Producer in `plugins/claude-code/`. Wraps event contract as MCP tools for Claude Code integration.\n\n**Deliverables:**\n- MCP tool definitions for status updates\n- WebSocket client connecting to RoadRaven\n- End-to-end test: Claude Code → MCP → WebSocket → node badge update",
+              "metadata": {
+                "dependencies": ["04-02", "04-03"]
+              },
+              "children": [
+                {
+                  "id": "a0000000-5401-4000-8000-000000000000",
+                  "title": "MCP tool definitions for event contract",
+                  "status": "not-started",
+                  "type": "task",
+                  "notes": "Define MCP tools: `update_node_status`, `get_roadmap_nodes`, `subscribe_to_node`. Maps to WebSocket event contract."
+                },
+                {
+                  "id": "a0000000-5402-4000-8000-000000000000",
+                  "title": "WebSocket client for MCP wrapper",
+                  "status": "not-started",
+                  "type": "task",
+                  "notes": "WebSocket client in `plugins/claude-code/` connecting to `ws://127.0.0.1:<port>`. Handles reconnection and connection status."
+                },
+                {
+                  "id": "a0000000-5403-4000-8000-000000000000",
+                  "title": "End-to-end integration test",
+                  "status": "not-started",
+                  "type": "task",
+                  "notes": "Full pipeline test: Claude Code invokes MCP tool → MCP sends WebSocket event → RoadRaven updates node badge. Verify within 100ms."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "a0000000-6000-4000-8000-000000000000",
+          "title": "Phase 05 — Export & Packaging",
+          "status": "not-started",
+          "type": "phase",
+          "notes": "# Phase 05: Export & Packaging\n\nSelf-contained HTML and 2x PNG exports work reliably, native installers build on all three platforms, and npm packages are published.\n\n**Depends on:** Phase 04\n**Plans:** 0/4\n\n## Requirements\n- EXPO-01 through EXPO-03: Export functionality\n- PACK-01 through PACK-06: Packaging and distribution\n\n## Key Deliverables\n- HTML export: self-contained single-file with interactive tree\n- PNG export: full tree at 2x resolution\n- Native installers: macOS `.dmg`, Windows `.exe`, Ubuntu `.deb`\n- Auto-updater: canary + stable channels\n- npm packages: `@roadmap-viewer/core` and `@roadmap-viewer/react`\n- Accessibility audit\n- Documentation and plugin guide",
+          "metadata": {
+            "phase": "05",
+            "slug": "export-packaging",
+            "plansTotal": 4,
+            "plansComplete": 0,
+            "dependsOn": ["Phase 04"],
+            "requirements": "EXPO-01 through EXPO-03, PACK-01 through PACK-06"
+          },
+          "createdAt": "2026-04-12T00:00:00Z",
+          "updatedAt": "2026-04-12T00:00:00Z",
+          "children": [
+            {
+              "id": "a0000000-6100-4000-8000-000000000000",
+              "title": "Plan 05-01: PNG Export Spike",
+              "status": "not-started",
+              "type": "research",
+              "notes": "# PNG Export Spike\n\nSpike both export candidates before committing to implementation.\n\n**Candidates:**\n1. Direct SVG serialization\n2. `modern-screenshot` library\n\n**Evaluation Criteria:**\n- Quality on 300-node tree\n- File size at 2x resolution\n- Performance (raise `maxRequestTime` to 15s)\n- Cross-platform compatibility\n\nChoose one candidate based on spike results.",
+              "metadata": {
+                "dependencies": [],
+                "gate": true
+              },
+              "children": [
+                {
+                  "id": "a0000000-6101-4000-8000-000000000000",
+                  "title": "Spike: Direct SVG serialization",
+                  "status": "not-started",
+                  "type": "research",
+                  "notes": "Test SVG serialization approach. Evaluate quality, file size, and rendering accuracy on 300-node tree."
+                },
+                {
+                  "id": "a0000000-6102-4000-8000-000000000000",
+                  "title": "Spike: modern-screenshot library",
+                  "status": "not-started",
+                  "type": "research",
+                  "notes": "Test `modern-screenshot` library. Evaluate quality, file size, and rendering accuracy on 300-node tree."
+                },
+                {
+                  "id": "a0000000-6103-4000-8000-000000000000",
+                  "title": "Compare and select approach",
+                  "status": "not-started",
+                  "type": "gate",
+                  "notes": "Compare both candidates. Select winner based on quality, performance, and cross-platform compatibility."
+                }
+              ]
+            },
+            {
+              "id": "a0000000-6200-4000-8000-000000000000",
+              "title": "Plan 05-02: Export Implementation",
+              "status": "not-started",
+              "type": "plan",
+              "notes": "# Export Implementation\n\nHTML and PNG export via `Ctrl+Shift+E` and `File > Export`.\n\n**HTML Export:**\n- Self-contained single-file\n- Interactive tree with theme tokens embedded\n- Opens in any modern browser\n\n**PNG Export:**\n- Full tree at 2x resolution\n- No corrupted SVG artifacts\n\nE2E tests for both export types.",
+              "metadata": {
+                "dependencies": ["05-01"]
+              },
+              "children": [
+                {
+                  "id": "a0000000-6201-4000-8000-000000000000",
+                  "title": "HTML export (self-contained single-file)",
+                  "status": "not-started",
+                  "type": "task",
+                  "notes": "Generate self-contained HTML file with embedded CSS, JS, and data. Interactive tree with theme tokens. Opens in any browser."
+                },
+                {
+                  "id": "a0000000-6202-4000-8000-000000000000",
+                  "title": "PNG export (2x resolution)",
+                  "status": "not-started",
+                  "type": "task",
+                  "notes": "Render full tree to PNG at 2x resolution. Handle large trees without corrupted SVG. Use selected spike approach."
+                },
+                {
+                  "id": "a0000000-6203-4000-8000-000000000000",
+                  "title": "Export UI (Ctrl+Shift+E, File menu)",
+                  "status": "not-started",
+                  "type": "task",
+                  "notes": "Wire export to `Ctrl+Shift+E` shortcut and `File > Export` menu. Format selection dialog (HTML/PNG)."
+                },
+                {
+                  "id": "a0000000-6204-4000-8000-000000000000",
+                  "title": "E2E export tests",
+                  "status": "not-started",
+                  "type": "task",
+                  "notes": "Playwright tests verifying both HTML and PNG exports produce valid output files."
+                }
+              ]
+            },
+            {
+              "id": "a0000000-6300-4000-8000-000000000000",
+              "title": "Plan 05-03: Packaging + Auto-Updater",
+              "status": "not-started",
+              "type": "plan",
+              "notes": "# Packaging + Auto-Updater\n\nNative installers for all three platforms and Electrobun auto-updater.\n\n**Installers:**\n- macOS: `.dmg`\n- Windows: `.exe`\n- Ubuntu: `.deb`\n\n**Auto-Updater:**\n- Canary + stable channels\n- `bundleCEF: true` on all platforms (confirmed from Phase 00)\n\n**Other:**\n- All actions reachable via keyboard + toolbar\n- SIGTERM handler for graceful shutdown",
+              "metadata": {
+                "dependencies": ["05-02"]
+              },
+              "children": [
+                {
+                  "id": "a0000000-6301-4000-8000-000000000000",
+                  "title": "macOS .dmg installer",
+                  "status": "not-started",
+                  "type": "task"
+                },
+                {
+                  "id": "a0000000-6302-4000-8000-000000000000",
+                  "title": "Windows .exe installer",
+                  "status": "not-started",
+                  "type": "task"
+                },
+                {
+                  "id": "a0000000-6303-4000-8000-000000000000",
+                  "title": "Ubuntu .deb installer",
+                  "status": "not-started",
+                  "type": "task",
+                  "notes": "Confirm `bundleCEF: true` works on Linux builds."
+                },
+                {
+                  "id": "a0000000-6304-4000-8000-000000000000",
+                  "title": "Electrobun auto-updater (canary + stable)",
+                  "status": "not-started",
+                  "type": "task",
+                  "notes": "Configure Electrobun auto-updater with canary and stable channel resolution."
+                },
+                {
+                  "id": "a0000000-6305-4000-8000-000000000000",
+                  "title": "SIGTERM graceful shutdown handler",
+                  "status": "not-started",
+                  "type": "task"
+                }
+              ]
+            },
+            {
+              "id": "a0000000-6400-4000-8000-000000000000",
+              "title": "Plan 05-04: npm Packages + Accessibility + Docs",
+              "status": "not-started",
+              "type": "plan",
+              "notes": "# npm Packages + Accessibility + Docs\n\nPublish npm packages, accessibility audit, and documentation.\n\n**npm Packages:**\n- `@roadmap-viewer/core` — zero desktop dependencies (CI enforces)\n- `@roadmap-viewer/react` — peerDependencies on React\n\n**Accessibility:**\n- Full accessibility audit\n- Keyboard-navigable tree and menus\n- Screen reader support\n\n**Documentation:**\n- README with getting started guide\n- Plugin development guide\n- API reference",
+              "metadata": {
+                "dependencies": ["05-02", "05-03"]
+              },
+              "children": [
+                {
+                  "id": "a0000000-6401-4000-8000-000000000000",
+                  "title": "Publish @roadmap-viewer/core",
+                  "status": "not-started",
+                  "type": "task",
+                  "notes": "Publish `@roadmap-viewer/core` to npm. Zero desktop dependencies enforced by CI check. Contains schema types and validation."
+                },
+                {
+                  "id": "a0000000-6402-4000-8000-000000000000",
+                  "title": "Publish @roadmap-viewer/react",
+                  "status": "not-started",
+                  "type": "task",
+                  "notes": "Publish `@roadmap-viewer/react` with React as peerDependency. Contains tree renderer and UI components."
+                },
+                {
+                  "id": "a0000000-6403-4000-8000-000000000000",
+                  "title": "Accessibility audit",
+                  "status": "not-started",
+                  "type": "task",
+                  "notes": "Full accessibility audit: keyboard navigation, screen reader labels, focus management, color contrast (all themes), ARIA roles."
+                },
+                {
+                  "id": "a0000000-6404-4000-8000-000000000000",
+                  "title": "Write README and documentation",
+                  "status": "not-started",
+                  "type": "task",
+                  "notes": "Getting started guide, feature overview, keyboard shortcuts reference."
+                },
+                {
+                  "id": "a0000000-6405-4000-8000-000000000000",
+                  "title": "Write plugin development guide",
+                  "status": "not-started",
+                  "type": "task",
+                  "notes": "Guide for creating Event API producers. WebSocket contract, MCP wrapper pattern, example plugin."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

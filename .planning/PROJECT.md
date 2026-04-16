@@ -12,7 +12,10 @@ Nodes in the tree reflect real-time state of external systems through a pluggabl
 
 ### Validated
 
-(None yet — ship to validate)
+- [x] App scaffold: Electrobun shell boots, monorepo structure, TDD pipeline operational — Validated in Phase 0
+- [x] Theme system: built-in themes, `--rv-*` tokens, per-schema overrides, OS preference — Validated in Phase 1
+- [x] Read-only tree viewer: react-d3-tree rendering, layouts, collapse/expand, status badges, file watcher, schema validation, performance gate — Validated in Phase 2
+- [x] Side panel (read-only): node details, markdown notes, resizable — Validated in Phase 2 (pin mode deferred)
 
 ### Active
 
@@ -101,4 +104,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-12 after architecture discussion — Event API/Plugin split defined, plugin system deferred to v1.1, Claude Code = MCP wrapper + Event API (no in-app plugin), two integration tiers documented*
+*Last updated: 2026-04-16 after Phase 2 completion — read-only viewer, side panel, and performance gate validated*

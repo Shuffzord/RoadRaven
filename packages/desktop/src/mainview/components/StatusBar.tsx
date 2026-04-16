@@ -1,4 +1,11 @@
+import { useRoadmapStore } from "../store/roadmapStore";
+
 export function StatusBar() {
+	const filePath = useRoadmapStore((s) => s.filePath);
+	const nodeCount = useRoadmapStore((s) => s.getNodeCount());
+
+	const fileName = filePath ? filePath.split(/[\\/]/).pop() : "No file loaded";
+
 	return (
 		<footer className="[grid-area:status] flex items-center h-[32px] bg-rv-bg-statusbar border-t border-rv-border px-3.5 text-[11px] text-rv-text-tertiary z-[100] select-none">
 			{/* Left section */}
@@ -12,7 +19,7 @@ export function StatusBar() {
 
 			{/* Center section */}
 			<div className="flex items-center gap-2.5">
-				<span>sample-roadmap.json</span>
+				<span>{fileName}</span>
 			</div>
 
 			{/* Spacer */}
@@ -20,7 +27,7 @@ export function StatusBar() {
 
 			{/* Right section */}
 			<div className="flex items-center gap-2.5">
-				<span>42 nodes</span>
+				<span>{nodeCount} nodes</span>
 				<svg
 					aria-hidden="true"
 					width="12"

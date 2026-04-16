@@ -1,6 +1,6 @@
 # Development Guide
 
-> Last updated: 2026-04-14 | Phase: 01-visual-foundation-themes
+> Last updated: 2026-04-15 | Phase: 02-read-only-viewer
 
 ## Prerequisites
 
@@ -67,7 +67,27 @@ test: {
 
 - **Unit tests** (`tests/unit/`) run in the `node` environment by default.
 - **UI tests** (`tests/unit/ui/`) run in `jsdom` for DOM access.
+- **Benchmarks** (`tests/bench/`) run in the `node` environment via `bunx vitest bench`.
 - `@testing-library/react` and `@testing-library/jest-dom` are available for component testing.
+
+### Benchmarks
+
+Performance benchmarks validate the dataKey invariant (status updates must not trigger tree re-layout):
+
+```bash
+bunx vitest bench                     # Run benchmarks
+```
+
+The benchmark suite in `tests/bench/perf.bench.ts` uses a schema generator (`generateLargeSchema(300)`) to create deterministic test trees with 300+ nodes. It asserts that `updateNodeStatus` never changes the `dataKey` value.
+
+### Sample Schemas
+
+Two sample schemas are available for development and testing:
+
+- `samples/hello-world.json` -- Minimal schema (4 nodes, all 4 statuses)
+- `samples/getting-started.json` -- Rich schema (15 nodes, 4 depth levels, markdown notes, metadata)
+
+In the Vite dev server (HMR mode without Electrobun), the Open button loads `getting-started.json` as a fallback. The WelcomeScreen offers links to load both samples directly.
 
 ### The electrobun/view Unavailability Issue
 
@@ -180,6 +200,16 @@ export const myFeatureLogger = getLogger(["bun", "my-feature"]);
 ```
 
 No additional configuration needed -- loggers inherit from their parent category. See [Logging](./logging.md) for details.
+
+## Keyboard Shortcuts
+
+| Shortcut | Action | Context |
+|----------|--------|---------|
+| `Escape` | Deselect current node | Canvas focused |
+| `Enter` / `Space` | Select focused node | Node card focused |
+| `Ctrl+F` | Focus search input | Global (placeholder, not yet wired) |
+
+Node cards are keyboard-accessible: `role="button"` with `tabIndex={0}` and `onKeyDown` handlers for Enter/Space.
 
 ## Project Conventions
 

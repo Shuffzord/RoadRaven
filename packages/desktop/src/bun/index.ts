@@ -1,8 +1,10 @@
+import { dirname, resolve as pathResolve, sep } from "node:path";
 import { getLogger } from "@logtape/logtape";
 import { BrowserView, BrowserWindow, Updater, Utils } from "electrobun/bun";
-import type { RoadmapRPCType } from "../../../../shared/types.ts";
+import type { RoadmapNode, RoadmapRPCType } from "../../../../shared/types.ts";
+import { stopAllWatchers, watchFile } from "./fileWatcher";
 import { bunLogger, setupBunLogging } from "./logging";
-import { loadSettings, saveSettings } from "./settings";
+import { addRecentFile, loadSettings, saveSettings } from "./settings";
 
 // Re-export the RPC type so downstream modules can import from the app entry
 export type { RoadmapRPCType };
@@ -43,8 +45,66 @@ async function getMainViewUrl(): Promise<string> {
 	return "views://mainview/index.html";
 }
 
+/**
+ * Resolve $ref nodes in a roadmap schema tree.
+ * Each $ref node is replaced with the contents of the referenced file.
+ * Referenced files get their own file watchers.
+ */
+async function resolveRefs(
+	nodes: RoadmapNode[],
+	basePath: string,
+	watchCallback: (path: string) => void,
+	visited: Set<string> = new Set(),
+): Promise<RoadmapNode[]> {
+	const baseDir = dirname(basePath);
+	const resolved: RoadmapNode[] = [];
+	for (const node of nodes) {
+		if (node.$ref) {
+			const refAbsPath = pathResolve(baseDir, node.$ref);
+			// Guard: reject $ref paths that escape the base directory
+			if (!refAbsPath.startsWith(baseDir + sep)) {
+				bunLogger.error`$ref escapes base directory: ${node.$ref}`;
+				resolved.push(node);
+				continue;
+			}
+			// Guard: detect circular $ref chains
+			if (visited.has(refAbsPath)) {
+				bunLogger.warn`Circular $ref detected, skipping: ${node.$ref}`;
+				resolved.push(node);
+				continue;
+			}
+			visited.add(refAbsPath);
+			try {
+				const raw = await Bun.file(refAbsPath).text();
+				const parsed = JSON.parse(raw);
+				const refNodes: RoadmapNode[] = Array.isArray(parsed)
+					? parsed
+					: (parsed.nodes ?? [parsed]);
+				watchFile(refAbsPath, watchCallback);
+				resolved.push(...refNodes);
+			} catch (err) {
+				bunLogger.error`Failed to resolve $ref ${node.$ref}: ${String(err)}`;
+				resolved.push(node);
+			}
+		} else {
+			const nodeWithResolvedChildren = { ...node };
+			if (node.children) {
+				nodeWithResolvedChildren.children = await resolveRefs(
+					node.children,
+					basePath,
+					watchCallback,
+					visited,
+				);
+			}
+			resolved.push(nodeWithResolvedChildren);
+		}
+	}
+	return resolved;
+}
+
 // Define RPC handlers before creating the window (Electrobun pattern)
 const rpc = BrowserView.defineRPC<RoadmapRPCType>({
+	maxRequestTime: 120_000, // 2 min — native file dialogs block until user picks a file
 	handlers: {
 		requests: {
 			// logMessage handler -- receives forwarded webview logs (per D-22)
@@ -52,6 +112,148 @@ const rpc = BrowserView.defineRPC<RoadmapRPCType>({
 				const logger = getLogger(category);
 				logger[level](message, data ? { ...data } : undefined);
 			},
+
+			// loadFile handler with Zod validation + error propagation + .bak.json backup
+			loadFile: async ({ path: filePath }) => {
+				const { RoadmapSchemaSchema } = await import(
+					"../../../../packages/core/src/schema"
+				);
+
+				let raw: string;
+				try {
+					raw = await Bun.file(filePath).text();
+				} catch (err) {
+					bunLogger.error`Failed to read file ${filePath}: ${String(err)}`;
+					return {
+						data: null,
+						errors: [
+							{
+								path: "",
+								message: `Failed to read file: ${String(err)}`,
+								code: "file_read_error",
+							},
+						],
+					};
+				}
+
+				// Write .bak.json backup (VIEW-12)
+				const bakPath = filePath.replace(/\.json$/, ".bak.json");
+				try {
+					await Bun.write(bakPath, raw);
+					bunLogger.info`Backup written to ${bakPath}`;
+				} catch (err) {
+					bunLogger.error`Failed to write backup: ${String(err)}`;
+				}
+
+				// Parse JSON
+				let parsed: unknown;
+				try {
+					parsed = JSON.parse(raw);
+				} catch (err) {
+					return {
+						data: null,
+						errors: [
+							{
+								path: "",
+								message: `Invalid JSON: ${String(err)}`,
+								code: "json_parse_error",
+							},
+						],
+					};
+				}
+
+				// Validate with Zod
+				const result = RoadmapSchemaSchema.safeParse(parsed);
+
+				let schemaData: unknown;
+				let errors: Array<{ path: string; message: string; code: string }> = [];
+
+				if (!result.success) {
+					errors = result.error.issues.map((issue) => ({
+						path: issue.path.map(String).join("/"),
+						message: issue.message,
+						code: String(issue.code),
+					}));
+					// Return raw parsed data for partial rendering + errors for error panel
+					schemaData = parsed;
+				} else {
+					schemaData = result.data;
+				}
+
+				// Resolve $ref nodes
+				const fileChangeCallback = (changedPath: string) => {
+					if (changedPath.endsWith(".bak.json")) return;
+					bunLogger.info`File changed: ${changedPath}`;
+					mainWindow.webview.rpc?.send.pushFileChanged({
+						path: changedPath,
+					});
+				};
+
+				// Stop existing watchers before resolveRefs sets up new $ref watchers
+				stopAllWatchers();
+
+				try {
+					if (
+						schemaData &&
+						typeof schemaData === "object" &&
+						"nodes" in schemaData &&
+						Array.isArray(schemaData.nodes)
+					) {
+						schemaData.nodes = await resolveRefs(
+							schemaData.nodes as RoadmapNode[],
+							filePath,
+							fileChangeCallback,
+						);
+					}
+				} catch (err) {
+					bunLogger.error`Failed to resolve $ref nodes: ${String(err)}`;
+				}
+
+				// Start file watcher for the main file
+				watchFile(filePath, fileChangeCallback);
+
+				// Track recent file
+				addRecentFile(filePath);
+
+				return {
+					data: schemaData as RoadmapRPCType["bun"]["requests"]["loadFile"]["response"]["data"],
+					errors,
+				};
+			},
+
+			// openFilePicker handler (Electrobun native dialog)
+			openFilePicker: async () => {
+				try {
+					const { homedir } = await import("node:os");
+					const paths = await Utils.openFileDialog({
+						startingFolder: homedir(),
+						allowedFileTypes: "json",
+						canChooseFiles: true,
+						canChooseDirectory: false,
+						allowsMultipleSelection: false,
+					});
+					return paths?.[0] ?? "";
+				} catch (err) {
+					bunLogger.error`openFileDialog failed: ${String(err)}`;
+					return "";
+				}
+			},
+
+			// resolveRef handler
+			resolveRef: async ({ refPath }) => {
+				try {
+					const raw = await Bun.file(refPath).text();
+					const parsed = JSON.parse(raw);
+					const nodes: RoadmapNode[] = Array.isArray(parsed)
+						? parsed
+						: (parsed.nodes ?? [parsed]);
+					return nodes;
+				} catch (err) {
+					bunLogger.error`Failed to resolve ref ${refPath}: ${String(err)}`;
+					return [];
+				}
+			},
+
 			// saveSettings handler
 			saveSettings: ({ settings }) => {
 				saveSettings(settings);

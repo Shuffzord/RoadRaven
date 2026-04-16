@@ -29,18 +29,18 @@
 
 ### Read-Only Viewer (VIEW)
 
-- [ ] **VIEW-01**: JSON schema loads and validates via Zod; blocking validation errors shown in an inline error panel identifying type, severity, and location
-- [ ] **VIEW-02**: Tree renders from JSON using react-d3-tree with `dataKey` pattern — `dataKey` increments only on structural changes (add/delete/move), never on status-only updates
-- [ ] **VIEW-03**: TB and LR layout toggle; layout preference persisted per file in `.roadmap-settings.json`
-- [ ] **VIEW-04**: Collapse/expand subtrees; nodes beyond depth 3 collapse by default
-- [ ] **VIEW-05**: Zoom and pan (scroll wheel, pinch, click-drag) in both layouts
-- [ ] **VIEW-06**: Status badges on nodes: left border stripe (4px) + pill label with correct theme colors
-- [ ] **VIEW-07**: File watcher reloads tree on external file change without restarting the app
-- [ ] **VIEW-08**: `$ref` resolution at load time; each referenced file watched independently
+- [x] **VIEW-01**: JSON schema loads and validates via Zod; blocking validation errors shown in an inline error panel identifying type, severity, and location
+- [x] **VIEW-02**: Tree renders from JSON using react-d3-tree with `dataKey` pattern — `dataKey` increments only on structural changes (add/delete/move), never on status-only updates
+- [x] **VIEW-03**: TB and LR layout toggle; layout preference persisted per file in `.roadmap-settings.json`
+- [x] **VIEW-04**: Collapse/expand subtrees; nodes beyond depth 3 collapse by default
+- [x] **VIEW-05**: Zoom and pan (scroll wheel, pinch, click-drag) in both layouts
+- [x] **VIEW-06**: Status badges on nodes: left border stripe (4px) + pill label with correct theme colors
+- [x] **VIEW-07**: File watcher reloads tree on external file change without restarting the app
+- [x] **VIEW-08**: `$ref` resolution at load time; each referenced file watched independently
 - [ ] **VIEW-09**: Side panel opens in read-only mode (title, status, type, timestamps, markdown notes rendered)
 - [ ] **VIEW-10**: Side panel resizable (min 320px, max 50% viewport); pin mode on screens wider than 1400px
 - [ ] **VIEW-11**: Performance gate validated before phase ships: 300+ visible nodes + 10 simulated `store.updateNode()` calls/sec ≥ 30 fps on a mid-range machine
-- [ ] **VIEW-12**: `.bak.json` written alongside source file on every file open (safety net in absence of undo/redo)
+- [x] **VIEW-12**: `.bak.json` written alongside source file on every file open (safety net in absence of undo/redo)
 - [ ] **VIEW-13**: Welcome screen shown when no recent files: "Open file" + "New roadmap" + links to sample schemas (`hello-world.json`, `getting-started.json`)
 - [ ] **VIEW-14**: Recent files list (last 10) persisted in `.roadmap-settings.json`; shown in File menu
 
