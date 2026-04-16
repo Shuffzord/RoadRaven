@@ -12,8 +12,8 @@ export default {
 			"dist/assets": "views/mainview/assets",
 		},
 		watchIgnore: ["dist/**"],
-		mac: { bundleCEF: true },
-		linux: { bundleCEF: true },
-		win: { bundleCEF: true },
+		mac: { bundleCEF: false },
+		linux: { bundleCEF: false },
+		win: { bundleCEF: false },
 	},
 } satisfies ElectrobunConfig;
