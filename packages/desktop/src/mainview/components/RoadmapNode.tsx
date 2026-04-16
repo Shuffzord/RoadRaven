@@ -25,11 +25,13 @@ interface RoadmapNodeCardProps {
 	status: NodeStatus;
 	nodeId?: string;
 	isSelected?: boolean;
+	isFocused?: boolean;
 	hasChildren?: boolean;
 	isCollapsed?: boolean;
 	childCount?: number;
 	onToggle?: () => void;
 	onSelect?: () => void;
+	onDoubleClick?: () => void;
 }
 
 export function RoadmapNodeCard({
@@ -37,11 +39,13 @@ export function RoadmapNodeCard({
 	status,
 	nodeId,
 	isSelected,
+	isFocused,
 	hasChildren,
 	isCollapsed,
 	childCount,
 	onToggle,
 	onSelect,
+	onDoubleClick,
 }: RoadmapNodeCardProps) {
 	const tokens = STATUS_TOKEN_MAP[status] ?? STATUS_TOKEN_MAP["not-started"];
 
@@ -49,6 +53,8 @@ export function RoadmapNodeCard({
 		// biome-ignore lint/a11y/useSemanticElements: node card has internal buttons; cannot be a <button> element
 		<div
 			className={`node relative min-w-[180px] max-w-[220px] rounded-[var(--node-radius,8px)] border-[length:var(--rv-border-width,1px)] border-[color:var(--rv-border)] bg-[var(--rv-bg-node)] pl-4 pr-3 py-[10px] select-none transition-[box-shadow,border-color,background] duration-150 hover:bg-[var(--rv-bg-node-hover)] group ${isSelected ? "outline outline-2 -outline-offset-1 outline-[var(--rv-accent)]" : ""}`}
+			data-selected={isSelected ? "true" : undefined}
+			data-focused={isFocused ? "true" : undefined}
 			style={
 				{
 					boxShadow: "var(--rv-shadow-node)",
@@ -61,6 +67,7 @@ export function RoadmapNodeCard({
 			tabIndex={0}
 			aria-label={nodeId ? `${title} (${nodeId})` : title}
 			onClick={onSelect}
+			onDoubleClick={onDoubleClick}
 			onKeyDown={(e) => {
 				if (e.key === "Enter" || e.key === " ") {
 					e.preventDefault();

@@ -328,3 +328,22 @@ body {
 	margin: 0;
 	padding: 0;
 }
+
+/* ============================================================
+   Focus ring (keyboard navigation) — coexists with selection ring per D-06
+   Only shown while the user is in keyboard mode (body.keyboard-nav-active).
+   Mouse interaction removes the class, hiding the dashed ring.
+   ============================================================ */
+.keyboard-nav-active .node[data-focused="true"] {
+	outline: 2px dashed var(--rv-accent);
+	outline-offset: 2px;
+}
+/* When BOTH focused and selected, push the dashed ring outside the solid selection outline */
+.keyboard-nav-active .node[data-focused="true"][data-selected="true"] {
+	outline: 2px solid var(--rv-accent);
+	outline-offset: 1px;
+	box-shadow:
+		var(--rv-shadow-node),
+		0 0 0 4px var(--rv-accent-muted),
+		0 0 0 5px var(--rv-accent);
+}

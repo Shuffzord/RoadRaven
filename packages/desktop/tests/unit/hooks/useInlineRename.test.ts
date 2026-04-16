@@ -18,6 +18,8 @@ function loadSchema(): void {
 }
 
 beforeEach(() => {
+	vi.restoreAllMocks();
+	vi.clearAllMocks();
 	loadSchema();
 });
 

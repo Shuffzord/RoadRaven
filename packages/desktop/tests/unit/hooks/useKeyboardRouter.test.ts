@@ -162,12 +162,14 @@ describe("useKeyboardRouter", () => {
 		fireEvent.keyDown(document, { key: "c", ctrlKey: true });
 		expect(copySpy).toHaveBeenCalledWith(CHILD_A_ID);
 
-		// Now put focus in an input element
+		// Now put focus in an input element — keyboard event dispatches on input
+		// which bubbles up to document, but our router checks document.activeElement.
 		copySpy.mockClear();
 		const input = document.createElement("input");
 		document.body.appendChild(input);
 		input.focus();
-		fireEvent.keyDown(document, { key: "c", ctrlKey: true, target: input });
+		// Fire event on the focused input — its target is input, handler reads activeElement
+		fireEvent.keyDown(input, { key: "c", ctrlKey: true });
 		expect(copySpy).not.toHaveBeenCalled();
 	});
 
@@ -185,7 +187,7 @@ describe("useKeyboardRouter", () => {
 		const input = document.createElement("input");
 		document.body.appendChild(input);
 		input.focus();
-		fireEvent.keyDown(document, { key: "v", ctrlKey: true, target: input });
+		fireEvent.keyDown(input, { key: "v", ctrlKey: true });
 		expect(pasteSpy).not.toHaveBeenCalled();
 	});
 
