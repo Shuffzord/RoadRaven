@@ -30,6 +30,10 @@ created: 2026-04-16
 
 Source: 01-CONTEXT.md D-01 through D-03; index.css body declaration.
 
+### Visual Hierarchy
+
+Primary visual anchor: the selected node's canvas card with its solid accent selection ring; all other elements recede visually to draw attention to the active node.
+
 ---
 
 ## Spacing Scale
@@ -47,7 +51,7 @@ Declared values (multiples of 4 only):
 | 3xl | 64px | Page-level spacing (not used in this phase) |
 
 Exceptions:
-- Context menu item height: 28px (7px padding-y × 2 + content) — nearest 4px boundary for touch ergonomics
+- Context menu item height: 28px (7px padding-y × 2 + content) — nearest 4px boundary for touch ergonomics; checker-accepted ergonomics exception
 - Inline rename input: height matches node title line (approximately 20px computed); positioned exactly over node via inverse D3 zoom transform — height driven by content, not spacing scale
 - Status bar height: 32px (established in Phase 02 StatusBar.tsx — do not change)
 - Panel header: min-h-[52px] (established in Phase 02 SidePanel.tsx — do not change)
@@ -62,12 +66,12 @@ Source: index.css, SidePanel.tsx, StatusBar.tsx measured values; 03-CONTEXT.md D
 | Role | Size | Weight | Line Height | Usage |
 |------|------|--------|-------------|-------|
 | Body | 13px | 400 (regular) | 1.5 | Panel body text, context menu item labels, metadata values, CodeMirror editor |
-| Label | 11px | 600 (semibold) | 1.3 | Field labels (UPPERCASE + tracking-[0.05em]), status bar text, badge text, shortcut hints in context menu |
+| Label | 11px | 600 (semibold) | 1.3 | Field labels (UPPERCASE + tracking-[0.05em]), status bar text, badge text, shortcut hints in context menu, ExternalEditToast action buttons, metadata [+] Add row button |
 | Heading | 14px | 600 (semibold) | 1.3 | Panel section headings, panel title, node title in panel edit field |
 | Node title | 13px | 600 (semibold) | 1.3 | Node card title (canvas); inline rename input must match this exactly |
 
 Two weights only: 400 (regular) and 600 (semibold).
-Four sizes: 11px / 13px / 14px / (inline rename matches node 13px).
+Three declared sizes in use: 11px / 13px / 14px. The inline rename matches node title (13px). No 12px size is used in this phase — ExternalEditToast action buttons and metadata [+] Add row button both use 11px (Label scale).
 
 Source: SidePanel.tsx and RoadmapNode.tsx measured values; body declaration in index.css.
 
@@ -219,7 +223,7 @@ Source: 03-CONTEXT.md Claude's Discretion ("Confirmation dialog design for non-l
     [Heading] "Delete node and {N} children?"
     [Body] "This will permanently remove "{node title}" and all {N} nodes in its subtree. This cannot be undone."
     [Button row]
-      [Cancel button]  [Delete button — destructive]
+      [Keep Node button]  [Delete button — destructive]
 ```
 
 **Visual spec:**
@@ -231,20 +235,20 @@ Source: 03-CONTEXT.md Claude's Discretion ("Confirmation dialog design for non-l
 - Body: 13px / 400 / `var(--rv-text-secondary)`; line-height 1.5; margin-top 8px
 - Button row: margin-top 20px; `display: flex; justify-content: flex-end; gap: 8px`
 
-**Cancel button:**
+**Keep Node button:**
 - Background: `var(--rv-bg-hover)`, border: `1px solid var(--rv-border)`, border-radius: 6px
-- Padding: 6px 14px; 13px / 400 / `var(--rv-text-primary)`
+- Padding: 8px 16px; 13px / 400 / `var(--rv-text-primary)`
 - Hover: `background: var(--rv-bg-active)`
 
 **Delete button (destructive):**
 - Background: `var(--rv-status-blocked)` (#ef4444), border: none, border-radius: 6px
-- Padding: 6px 14px; 13px / 600 / `#ffffff`
+- Padding: 8px 16px; 13px / 600 / `#ffffff`
 - Hover: background slightly darker (`rgba(239,68,68,0.85)`)
 
 **ARIA / keyboard:**
 - `role="dialog"`, `aria-modal="true"`, `aria-labelledby` pointing to heading ID
-- Focus trap: Tab cycles between Cancel and Delete only; Escape = Cancel
-- Initial focus: Cancel button (safer default — prevents accidental delete on Enter)
+- Focus trap: Tab cycles between Keep Node and Delete only; Escape = Keep Node
+- Initial focus: Keep Node button (safer default — prevents accidental delete on Enter)
 
 ---
 
@@ -294,7 +298,7 @@ Source: 03-CONTEXT.md D-15.
     [File path] monospace, 11px, --rv-text-secondary, truncated with ellipsis at start
     [Error message] 13px / 400 / --rv-text-secondary
     [Button row]
-      [Retry]   [Save As…]   [Dismiss]
+      [Retry Save]   [Save As…]   [Dismiss]
 ```
 
 - Surface width: 440px
@@ -302,11 +306,11 @@ Source: 03-CONTEXT.md D-15.
 - File path: `font-family: monospace; font-size: 11px; color: var(--rv-text-secondary); overflow: hidden; text-overflow: ellipsis; direction: rtl; white-space: nowrap` — rtl direction shows end of path
 - Error message: 13px / 400 / `var(--rv-text-secondary)`, margin-top 8px
 
-**Retry button:** Primary — `background: var(--rv-accent)`, border-radius 6px, 13px / 600 / `var(--rv-text-on-accent)`, padding 6px 14px
-**Save As button:** Secondary — same as Cancel button from ConfirmationDialog
-**Dismiss button:** Ghost — no background, no border, `color: var(--rv-text-tertiary)`, padding 6px 8px; hover color `var(--rv-text-secondary)`
+**Retry Save button:** Primary — `background: var(--rv-accent)`, border-radius 6px, 13px / 600 / `var(--rv-text-on-accent)`, padding 8px 16px
+**Save As button:** Secondary — same as Keep Node button from ConfirmationDialog; padding 8px 16px
+**Dismiss button:** Ghost — no background, no border, `color: var(--rv-text-tertiary)`, padding 8px 8px; hover color `var(--rv-text-secondary)`
 
-**ARIA / keyboard:** Same focus trap pattern as ConfirmationDialog. Initial focus: Retry button.
+**ARIA / keyboard:** Same focus trap pattern as ConfirmationDialog. Initial focus: Retry Save button.
 
 ---
 
@@ -316,7 +320,7 @@ Source: 03-CONTEXT.md D-14.
 
 **Trigger:** File watcher detects external change while in-memory edits exist.
 
-**Copy:** "File changed externally." with two action buttons: [Reload] and [Keep mine]
+**Copy:** "File changed externally." with two action buttons: [Reload File] and [Keep mine]
 
 **Visual spec:**
 - Position: `fixed; bottom: 48px; left: 50%; transform: translateX(-50%)` — centered above status bar
@@ -328,13 +332,13 @@ Source: 03-CONTEXT.md D-14.
 - Duration: persistent — does NOT auto-dismiss. Autosave pauses until resolved.
 - z-index: 9000 (below modal overlay at 9999)
 
-**[Reload] button:**
+**[Reload File] button:**
 - Background: `var(--rv-bg-hover)`, border: `1px solid var(--rv-border)`, border-radius: 6px
-- Padding: 4px 10px; 12px / 600 / `var(--rv-text-primary)`
+- Padding: 4px 8px; 11px / 600 / `var(--rv-text-primary)`
 - Hover: `background: var(--rv-bg-active)`
 
 **[Keep mine] button:**
-- Same styling as Reload button
+- Same styling as Reload File button
 - Action: dismisses toast, resumes autosave, next autosave overwrites external change
 
 **ARIA:**
@@ -359,7 +363,7 @@ outline-offset: 2px;
 - Node is **focused only** (arrow-key navigation, not yet selected): dashed accent outline
 - Node is **selected only** (Space pressed, panel open, no keyboard focus): solid accent outline
 - Node is **both focused and selected**: both rings applied — dashed ring at `outline-offset: 4px`, solid ring at `outline-offset: 1px`. Implemented via `box-shadow` for the second ring to avoid CSS outline stacking limitation.
-  - Exact: `outline: 2px solid var(--rv-accent); outline-offset: 1px; box-shadow: 0 0 0 4px var(--rv-accent-muted), 0 0 0 5px var(--rv-accent)`
+  - Exact: `outline: 2px solid var(--rv-accent); outline-offset: 1px; box-shadow: 0 0 0 4px var(--rv-accent-muted), 0 0 0 4px var(--rv-accent)`
 - Focus ring disappears on mouse click (`:focus-visible` semantics — applied via JS class `keyboard-nav-active` on `<body>`, set on `keydown`, cleared on `mousedown`)
 
 **Implementation note for executor:** Do not rely on CSS-only `:focus-visible` — react-d3-tree's `foreignObject` may not propagate focus-visible state correctly. Use the `keyboard-nav-active` body class approach.
@@ -379,7 +383,7 @@ Source: 03-CONTEXT.md D-13; EDIT-01.
 - Background: `var(--rv-bg-input)` (#1a1a1c dark)
 - Border: `1px solid var(--rv-border-focus)` (`var(--rv-accent)` value, #4a9eff)
 - Border-radius: 4px
-- Padding: 2px 4px (tight — overlays the node title area)
+- Padding: 4px 4px (tight — overlays the node title area; aligned to 4px grid)
 - Font: 13px / 600 / `var(--rv-text-primary)` — exact match to node title
 - Box-shadow: `0 0 0 3px var(--rv-accent-muted)` — glow effect to communicate edit state
 - z-index: 1000 (above tree SVG, below context menu at 9000)
@@ -418,7 +422,7 @@ Source: 03-CONTEXT.md D-10, D-11, D-12, D-13.
 - Three segments: [Edit] [Preview] [Split]
 - Default: Preview
 - Layout: `display: inline-flex; border: 1px solid var(--rv-border); border-radius: 6px; overflow: hidden`
-- Each segment: padding 3px 10px; 11px / 600
+- Each segment: padding 4px 8px; 11px / 600
 - Active segment: `background: var(--rv-accent-muted); color: var(--rv-accent)`
 - Inactive segment: `background: transparent; color: var(--rv-text-secondary)`, hover `color: var(--rv-text-primary)`
 - No border between segments — rely on the outer border and background contrast
@@ -444,7 +448,7 @@ Source: 03-CONTEXT.md D-10, D-11, D-12, D-13.
 - Key input: 13px / 400 / `var(--rv-text-primary)`; background `var(--rv-bg-input)`; border `1px solid var(--rv-border)`; border-radius 4px; padding 4px 8px
 - Value input: same spec as key input
 - [x] delete button: 20×20; inline SVG X icon (10×10); color `var(--rv-text-tertiary)`; hover color `var(--rv-status-blocked)`; border-radius 4px; hover background `var(--rv-bg-hover)`
-- [+] add row button: below table; `display: inline-flex; align-items: center; gap: 4px`; 12px / 400 / `var(--rv-text-secondary)`; hover color `var(--rv-text-primary)`; "+" prefix character, no icon library needed
+- [+] add row button: below table; `display: inline-flex; align-items: center; gap: 4px`; 11px / 400 / `var(--rv-text-secondary)`; hover color `var(--rv-text-primary)`; "+" prefix character, no icon library needed
 - Empty metadata state: "No metadata. Click + to add a key-value pair." (13px / `var(--rv-text-tertiary)`)
 
 ---
@@ -479,9 +483,9 @@ Source: 03-CONTEXT.md D-04 through D-09.
 | Escape | Panel (edit mode) | Return focus to canvas |
 | Enter | InlineRenameInput | Commit rename |
 | Escape | InlineRenameInput | Cancel rename |
-| Enter | ConfirmationDialog | Activates focused button (initial focus = Cancel) |
-| Tab | ConfirmationDialog | Cycle between Cancel and Delete |
-| Escape | ConfirmationDialog | Cancel = dismiss dialog |
+| Enter | ConfirmationDialog | Activates focused button (initial focus = Keep Node) |
+| Tab | ConfirmationDialog | Cycle between Keep Node and Delete |
+| Escape | ConfirmationDialog | Keep Node = dismiss dialog |
 
 Context-aware Ctrl+C / Ctrl+V (D-08): Detection via `document.activeElement`. If a text input, textarea, or CodeMirror editor is focused, OS/browser default text copy/paste is used. If canvas `role="application"` is focused, node JSON copy/paste is used.
 
@@ -508,7 +512,7 @@ Source: 03-CONTEXT.md D-14, D-15; EDIT-03, EDIT-15, EDIT-17; inferred from requi
 | Panel edit mode label | "Editing" |
 | Non-leaf delete dialog heading | "Delete node and {N} children?" |
 | Non-leaf delete dialog body | "This will permanently remove \"{node title}\" and all {N} nodes in its subtree. This cannot be undone." |
-| Non-leaf delete — Cancel button | "Cancel" |
+| Non-leaf delete — Keep Node button | "Keep Node" |
 | Non-leaf delete — Delete button | "Delete" |
 | Save state — saved | "Saved" |
 | Save state — saving | "Saving…" |
@@ -516,11 +520,11 @@ Source: 03-CONTEXT.md D-14, D-15; EDIT-03, EDIT-15, EDIT-17; inferred from requi
 | Save state — 2nd error | "Error saving — click to retry" |
 | Save failure modal heading | "Unable to save" |
 | Save failure modal body | "RoadRaven could not write changes to disk. The file may be locked, moved, or the disk is full." |
-| Save failure — Retry button | "Retry" |
+| Save failure — Retry Save button | "Retry Save" |
 | Save failure — Save As button | "Save As…" |
 | Save failure — Dismiss button | "Dismiss" |
 | External edit toast message | "File changed externally." |
-| External edit — Reload button | "Reload" |
+| External edit — Reload File button | "Reload File" |
 | External edit — Keep button | "Keep mine" |
 | Cross-boundary move error (inline, status bar or toast) | "Cannot move this node across file boundaries. Move it within the same file." |
 | File > New in-memory schema — first edit save prompt | (native file dialog — no custom copy required) |
@@ -589,7 +593,7 @@ New npm dependency for this phase: `@codemirror/state`, `@codemirror/view`, `@co
 | Notes [Edit\|Preview\|Split] toggle, CodeMirror 6, 1s debounce | 03-CONTEXT.md D-11 | PanelEditMode |
 | Metadata add/edit/delete rows | 03-CONTEXT.md D-12 | PanelEditMode |
 | Inline rename floating input, canvas+panel sync | 03-CONTEXT.md D-13 | InlineRenameInput |
-| External edit toast, [Reload] [Keep mine], pauses autosave | 03-CONTEXT.md D-14 | ExternalEditToast |
+| External edit toast, [Reload File] [Keep mine], pauses autosave | 03-CONTEXT.md D-14 | ExternalEditToast |
 | Escalating save failure: auto-retry → manual retry → modal | 03-CONTEXT.md D-15 | SaveIndicator + SaveFailureModal |
 | --rv-* tokens, Tailwind v4, no new colors | 01-CONTEXT.md D-01/03 | Color, all components |
 | Solid selection ring outline-[var(--rv-accent)] | 02 RoadmapNode.tsx | FocusRing |
