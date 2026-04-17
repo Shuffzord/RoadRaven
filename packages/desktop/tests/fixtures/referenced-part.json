@@ -1,0 +1,16 @@
+{
+	"nodes": [
+		{
+			"id": "bbbbbbbb-cccc-4ddd-8eee-000000000001",
+			"title": "Ref Root",
+			"status": "not-started",
+			"children": [
+				{
+					"id": "bbbbbbbb-cccc-4ddd-8eee-000000000002",
+					"title": "Ref Child",
+					"status": "not-started"
+				}
+			]
+		}
+	]
+}

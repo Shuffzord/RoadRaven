@@ -1,10 +1,39 @@
 import { dirname, resolve as pathResolve, sep } from "node:path";
 import { getLogger } from "@logtape/logtape";
 import { BrowserView, BrowserWindow, Updater, Utils } from "electrobun/bun";
-import type { RoadmapNode, RoadmapRPCType } from "../../../../shared/types.ts";
+import type {
+	RoadmapNode,
+	RoadmapRPCType,
+	RoadmapSchema,
+} from "../../../../shared/types.ts";
+// atomicWrite + splitSchemaByOwnership are consumed via saveFile.ts which owns
+// the saveFile/flushPending logic. Re-exported below so external callers (and
+// the Plan 04a acceptance grep) can see the persistence surface at a glance.
+import { atomicWrite } from "./atomicWrite";
 import { stopAllWatchers, watchFile } from "./fileWatcher";
 import { bunLogger, setupBunLogging } from "./logging";
+import {
+	buildOwnershipMap,
+	getOwnership,
+	setOwnership,
+	setSourceTemplate,
+	splitSchemaByOwnership,
+} from "./refMap";
+import {
+	flushPending,
+	pushDialogAllowlistPath,
+	saveFileHandler,
+	setCachedMainPath,
+	setCachedSchema,
+} from "./saveFile";
+
+// Persistence surface re-exports — imported by Plan 04b/04c and DevHarness
+export { atomicWrite, splitSchemaByOwnership };
 import { addRecentFile, loadSettings, saveSettings } from "./settings";
+
+// Re-export flushPending so Plan 04c's before-quit wiring can import it from
+// the app entry rather than reaching into the saveFile module directly.
+export { flushPending, pushDialogAllowlistPath };
 
 // Re-export the RPC type so downstream modules can import from the app entry
 export type { RoadmapRPCType };
@@ -49,10 +78,16 @@ async function getMainViewUrl(): Promise<string> {
  * Resolve $ref nodes in a roadmap schema tree.
  * Each $ref node is replaced with the contents of the referenced file.
  * Referenced files get their own file watchers.
+ *
+ * Plan 03-04a: also populates the ownership map via setOwnership so saveFile
+ * can split the schema back into per-file payloads without re-walking the tree.
+ * Every non-$ref node is tagged with `currentOwner`; entering a $ref'd subtree
+ * switches `currentOwner` to the referenced file's absolute path.
  */
 async function resolveRefs(
 	nodes: RoadmapNode[],
 	basePath: string,
+	currentOwner: string,
 	watchCallback: (path: string) => void,
 	visited: Set<string> = new Set(),
 ): Promise<RoadmapNode[]> {
@@ -81,17 +116,28 @@ async function resolveRefs(
 					? parsed
 					: (parsed.nodes ?? [parsed]);
 				watchFile(refAbsPath, watchCallback);
-				resolved.push(...refNodes);
+				// Recurse into the ref'd subtree with refAbsPath as the new owner.
+				// This tags every descendant with the correct file for write-back.
+				const tagged = await resolveRefs(
+					refNodes,
+					refAbsPath,
+					refAbsPath,
+					watchCallback,
+					visited,
+				);
+				resolved.push(...tagged);
 			} catch (err) {
 				bunLogger.error`Failed to resolve $ref ${node.$ref}: ${String(err)}`;
 				resolved.push(node);
 			}
 		} else {
+			setOwnership(node.id, currentOwner);
 			const nodeWithResolvedChildren = { ...node };
 			if (node.children) {
 				nodeWithResolvedChildren.children = await resolveRefs(
 					node.children,
 					basePath,
+					currentOwner,
 					watchCallback,
 					visited,
 				);
@@ -192,6 +238,8 @@ const rpc = BrowserView.defineRPC<RoadmapRPCType>({
 				// Stop existing watchers before resolveRefs sets up new $ref watchers
 				stopAllWatchers();
 
+				const resolvedMain = pathResolve(filePath);
+
 				try {
 					if (
 						schemaData &&
@@ -199,9 +247,21 @@ const rpc = BrowserView.defineRPC<RoadmapRPCType>({
 						"nodes" in schemaData &&
 						Array.isArray(schemaData.nodes)
 					) {
+						const originalNodes = schemaData.nodes as RoadmapNode[];
+						// EDIT-16: capture the pre-resolution main-file nodes so
+						// splitSchemaByOwnership can restore $ref placeholders on save.
+						setSourceTemplate(resolvedMain, originalNodes);
+						// Seed the ownership map rooted at the main file before expansion;
+						// resolveRefs then overlays per-ref descendants via setOwnership.
+						buildOwnershipMap(
+							originalNodes.filter((n) => !n.$ref),
+							resolvedMain,
+						);
+
 						schemaData.nodes = await resolveRefs(
-							schemaData.nodes as RoadmapNode[],
+							originalNodes,
 							filePath,
+							resolvedMain,
 							fileChangeCallback,
 						);
 					}
@@ -215,10 +275,32 @@ const rpc = BrowserView.defineRPC<RoadmapRPCType>({
 				// Track recent file
 				addRecentFile(filePath);
 
+				// Cache for saveFile / flushPending (path-traversal allowlist)
+				setCachedMainPath(resolvedMain);
+				if (schemaData && typeof schemaData === "object") {
+					setCachedSchema(schemaData as RoadmapSchema);
+				}
+
+				// Push ownership map to webview for optimistic cross-boundary detection
+				try {
+					mainWindow.webview.rpc?.send.pushOwnershipMap({
+						entries: [...getOwnership().entries()],
+					});
+				} catch (err) {
+					bunLogger.error`pushOwnershipMap failed: ${String(err)}`;
+				}
+
 				return {
 					data: schemaData as RoadmapRPCType["bun"]["requests"]["loadFile"]["response"]["data"],
 					errors,
 				};
+			},
+
+			// saveFile handler — atomic write with path-traversal session allowlist
+			// (T-03.04-01; see dialogAllowlist in saveFile.ts) and Zod pre-write
+			// validation (T-03.04-07). Shared logic lives in saveFile.ts.
+			saveFile: async ({ schema, filePath }) => {
+				return saveFileHandler({ schema, filePath });
 			},
 
 			// openFilePicker handler (Electrobun native dialog)
