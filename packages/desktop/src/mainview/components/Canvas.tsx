@@ -201,6 +201,7 @@ export function Canvas() {
 			ref={containerRef}
 			className="[grid-area:canvas] bg-rv-bg-canvas relative overflow-hidden"
 			role="application"
+			// biome-ignore lint/a11y/noNoninteractiveTabindex: role="application" is an interactive ARIA widget — must be focusable so Escape/onKeyDown reaches the canvas.
 			tabIndex={0}
 			style={{
 				backgroundImage:
