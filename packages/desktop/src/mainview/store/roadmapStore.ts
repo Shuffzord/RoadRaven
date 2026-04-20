@@ -382,20 +382,31 @@ export const useRoadmapStore = create<RoadmapState>((set, get) => {
 			}
 			const deletedCount = countSubtree(target);
 			const parentId = found.parent ? found.parent.id : null;
+			// Resolve the focus/selection successor BEFORE mutation. Without
+			// this, deleting the focused node leaves focusedNodeId null and
+			// the user is stranded — no keyboard target to navigate from.
+			// Preference: previous sibling > next sibling > parent.
+			const prevSibling =
+				found.index > 0 ? found.parentArray[found.index - 1] : null;
+			const nextSibling =
+				found.index < found.parentArray.length - 1
+					? found.parentArray[found.index + 1]
+					: null;
+			const successorId =
+				prevSibling?.id ?? nextSibling?.id ?? found.parent?.id ?? null;
 			const nextNodes = immutablyReplaceArray(nodes, parentId, (arr) => {
 				const copy = [...arr];
 				copy.splice(found.index, 1);
 				return copy;
 			});
-			// Track selection/focus clearing — evaluated BEFORE bumpStructural mutates state
 			const prev = get();
-			const clearSel = prev.selectedNodeId === nodeId;
-			const clearFocus = prev.focusedNodeId === nodeId;
+			const reassignSel = prev.selectedNodeId === nodeId;
+			const reassignFocus = prev.focusedNodeId === nodeId;
 			bumpStructural(nextNodes);
-			if (clearSel || clearFocus) {
+			if (reassignSel || reassignFocus) {
 				set({
-					selectedNodeId: clearSel ? null : prev.selectedNodeId,
-					focusedNodeId: clearFocus ? null : prev.focusedNodeId,
+					selectedNodeId: reassignSel ? successorId : prev.selectedNodeId,
+					focusedNodeId: reassignFocus ? successorId : prev.focusedNodeId,
 				});
 			}
 			return { deletedCount };

@@ -244,13 +244,34 @@ describe("deleteNode", () => {
 		expect(useRoadmapStore.getState().schema?.nodes.length).toBe(1);
 	});
 
-	it("clears selectedNodeId and focusedNodeId if they pointed at deleted node", () => {
+	it("reassigns selection/focus to the next sibling when deleting the first sibling (no previous)", () => {
+		// [A, B] — delete A → focus/sel move to B (next sibling)
 		useRoadmapStore.getState().setSelectedNode(CHILD_A_ID);
 		useRoadmapStore.getState().setFocusedNode(CHILD_A_ID);
 		useRoadmapStore.getState().deleteNode(CHILD_A_ID);
 		const state = useRoadmapStore.getState();
-		expect(state.selectedNodeId).toBeNull();
-		expect(state.focusedNodeId).toBeNull();
+		expect(state.selectedNodeId).toBe(CHILD_B_ID);
+		expect(state.focusedNodeId).toBe(CHILD_B_ID);
+	});
+
+	it("reassigns selection/focus to the previous sibling when available (preferred over next)", () => {
+		// [A, B] — delete B → focus/sel move to A (previous sibling)
+		useRoadmapStore.getState().setSelectedNode(CHILD_B_ID);
+		useRoadmapStore.getState().setFocusedNode(CHILD_B_ID);
+		useRoadmapStore.getState().deleteNode(CHILD_B_ID);
+		const state = useRoadmapStore.getState();
+		expect(state.selectedNodeId).toBe(CHILD_A_ID);
+		expect(state.focusedNodeId).toBe(CHILD_A_ID);
+	});
+
+	it("reassigns selection/focus to the parent when the deleted node is an only child", () => {
+		// GREAT_GRAND_ID has no siblings, parent GRANDCHILD_ID.
+		useRoadmapStore.getState().setSelectedNode(GREAT_GRAND_ID);
+		useRoadmapStore.getState().setFocusedNode(GREAT_GRAND_ID);
+		useRoadmapStore.getState().deleteNode(GREAT_GRAND_ID);
+		const state = useRoadmapStore.getState();
+		expect(state.selectedNodeId).toBe(GRANDCHILD_ID);
+		expect(state.focusedNodeId).toBe(GRANDCHILD_ID);
 	});
 });
 

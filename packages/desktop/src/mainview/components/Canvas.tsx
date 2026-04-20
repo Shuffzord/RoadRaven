@@ -85,11 +85,55 @@ export function Canvas() {
 		return () => observer.disconnect();
 	}, []);
 
+	// Pan-animation state. `centeringTransitionDuration` on <Tree> only runs
+	// for the initial mount — runtime `translate` prop changes are applied
+	// instantly. So we interpolate translate ourselves via requestAnimationFrame
+	// with a cubic-ease so the camera-follow feels smooth.
+	const panAnimRef = useRef<number | null>(null);
+	const animatePanTo = useCallback(
+		(target: { x: number; y: number }, duration = 500) => {
+			if (panAnimRef.current !== null) {
+				cancelAnimationFrame(panAnimRef.current);
+				panAnimRef.current = null;
+			}
+			const start = {
+				x: transformRef.current.x,
+				y: transformRef.current.y,
+			};
+			const startTime = performance.now();
+			// Cubic ease-out — matches Material "standard" feel, fast start,
+			// gentle settle. Easy to swap for cubic-bezier or spring later.
+			const ease = (t: number): number => 1 - (1 - t) ** 3;
+			const step = (now: number): void => {
+				const elapsed = now - startTime;
+				const t = Math.min(1, elapsed / duration);
+				const e = ease(t);
+				setTranslate({
+					x: start.x + (target.x - start.x) * e,
+					y: start.y + (target.y - start.y) * e,
+				});
+				if (t < 1) {
+					panAnimRef.current = requestAnimationFrame(step);
+				} else {
+					panAnimRef.current = null;
+				}
+			};
+			panAnimRef.current = requestAnimationFrame(step);
+		},
+		[setTranslate],
+	);
+	useEffect(() => {
+		return () => {
+			if (panAnimRef.current !== null) {
+				cancelAnimationFrame(panAnimRef.current);
+			}
+		};
+	}, []);
+
 	// Camera-follow: when the focused (arrow-nav) or selected (click/space)
-	// node is outside the viewport, pan so it comes into view. react-d3-tree
-	// animates `translate` prop changes via centeringTransitionDuration, so the
-	// pan is smooth. We only pan when genuinely off-screen to avoid fighting
-	// the user's manual panning during in-view interactions.
+	// node is outside the viewport, pan so it comes into view. Uses the
+	// rAF-animated panner above so the motion feels smooth; only triggers
+	// when genuinely off-screen so manual panning isn't fought.
 	const targetNodeId = focusedNodeId ?? selectedNodeId;
 	useEffect(() => {
 		if (!targetNodeId) return;
@@ -105,11 +149,11 @@ export function Canvas() {
 			screenY > margin &&
 			screenY < dimensions.height - margin;
 		if (inView) return;
-		setTranslate({
+		animatePanTo({
 			x: dimensions.width / 2 - pos.x * t.k,
 			y: dimensions.height / 2 - pos.y * t.k,
 		});
-	}, [targetNodeId, dimensions, setTranslate]);
+	}, [targetNodeId, dimensions, animatePanTo]);
 
 	// Wire the keyboard router
 	useKeyboardRouter({
@@ -281,7 +325,7 @@ export function Canvas() {
 					renderCustomNodeElement={renderNode}
 					zoom={zoomLevel}
 					enableLegacyTransitions={false}
-					centeringTransitionDuration={800}
+					centeringTransitionDuration={50800}
 					collapsible={true}
 					zoomable={true}
 					draggable={true}

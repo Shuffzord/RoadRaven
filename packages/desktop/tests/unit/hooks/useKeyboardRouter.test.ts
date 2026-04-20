@@ -191,10 +191,27 @@ describe("useKeyboardRouter", () => {
 		expect(pasteSpy).not.toHaveBeenCalled();
 	});
 
-	it("ArrowDown on focused sibling moves focus to next sibling", () => {
+	// Arrow mapping matches the TB (top-to-bottom) tree layout:
+	//   ArrowRight → next sibling    ArrowLeft  → previous sibling
+	//   ArrowDown  → enter child     ArrowUp    → return to parent
+	it("ArrowRight on focused sibling moves focus to next sibling", () => {
 		useRoadmapStore.getState().setFocusedNode(CHILD_A_ID);
 		renderRouter();
+		fireEvent.keyDown(document, { key: "ArrowRight" });
+		expect(useRoadmapStore.getState().focusedNodeId).toBe(CHILD_B_ID);
+	});
+
+	it("ArrowDown on a focused parent moves focus into its first child", () => {
+		useRoadmapStore.getState().setFocusedNode(CHILD_B_ID);
+		renderRouter();
 		fireEvent.keyDown(document, { key: "ArrowDown" });
+		expect(useRoadmapStore.getState().focusedNodeId).toBe(CHILD_B1_ID);
+	});
+
+	it("ArrowUp on a focused child returns focus to its parent", () => {
+		useRoadmapStore.getState().setFocusedNode(CHILD_B1_ID);
+		renderRouter();
+		fireEvent.keyDown(document, { key: "ArrowUp" });
 		expect(useRoadmapStore.getState().focusedNodeId).toBe(CHILD_B_ID);
 	});
 });

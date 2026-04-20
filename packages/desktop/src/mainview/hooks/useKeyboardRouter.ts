@@ -179,22 +179,22 @@ export function useKeyboardRouter(deps: RouterDeps): void {
 			}
 
 			// Arrow navigation (sibling up/down, enter child, return to parent)
-			if (e.key === "ArrowUp" && focusedId) {
+			if (e.key === "ArrowLeft" && focusedId) {
 				e.preventDefault();
 				navigateSibling(focusedId, -1);
 				return;
 			}
-			if (e.key === "ArrowDown" && focusedId) {
+			if (e.key === "ArrowRight" && focusedId) {
 				e.preventDefault();
 				navigateSibling(focusedId, 1);
 				return;
 			}
-			if (e.key === "ArrowRight" && focusedId) {
+			if (e.key === "ArrowDown" && focusedId) {
 				e.preventDefault();
 				enterChild(focusedId);
 				return;
 			}
-			if (e.key === "ArrowLeft" && focusedId) {
+			if (e.key === "ArrowUp" && focusedId) {
 				e.preventDefault();
 				returnToParent(focusedId);
 				return;
