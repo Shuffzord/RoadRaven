@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: milestone
 status: executing
-stopped_at: Phase 03 Wave 1 UAT iteration (rounds 1–4 complete, awaiting user approval)
-last_updated: "2026-04-20T16:15:00.000Z"
-last_activity: 2026-04-20 -- Phase 03 Wave 1 recovered from abandoned worktrees, UAT round 4 shipped
+stopped_at: Phase 03 Wave 1 approved (03-01 + 03-04a); ready for Wave 2 in next session
+last_updated: "2026-04-20T16:30:00.000Z"
+last_activity: 2026-04-20 -- Phase 03 Wave 1 UAT approved; paused for fresh-session Wave 2 execution
 progress:
   total_phases: 5
   completed_phases: 2
   total_plans: 14
-  completed_plans: 8
-  percent: 57
+  completed_plans: 10
+  percent: 71
 ---
 
 # Project State
@@ -25,13 +25,13 @@ See: .planning/PROJECT.md (updated 2026-04-12)
 
 ## Current Position
 
-Phase: 03 (full-editor) — EXECUTING, Wave 1 of 3
-Plans complete (automated + SUMMARY): 03-01, 03-04a
+Phase: 03 (full-editor) — Wave 1 of 3 complete and APPROVED
+Plans complete: 03-01 ✓, 03-04a ✓ (UAT approved 2026-04-20)
 Plans pending: 03-02, 03-03, 03-04b (Wave 2), 03-04c (Wave 3)
-Status: Wave 1 UAT iteration — automated code done, human checkpoints in progress
-Last activity: 2026-04-20 -- UAT round 4 shipped (delete focus recovery, smooth pan, TB arrow swap, test scripts)
+Status: Paused — ready for Wave 2 execution in next session
+Last activity: 2026-04-20 -- Wave 1 UAT approved; session paused for handoff
 
-Progress: [####      ] ~33% of Phase 03
+Progress: [######    ] ~33% of Phase 03 (2/6 plans)
 
 ## Performance Metrics
 
@@ -76,21 +76,19 @@ Recent decisions affecting current work:
 
 ### Pending Todos
 
-- Wave 1 UAT approval from user (pending); retest needed after round 4 fixes
 - Wave 2 execution: 03-02 ContextMenu, 03-03 SidePanel editor, 03-04b autosave wiring
 - Wave 3 execution: 03-04c shell features (quit flush, File>New, external-edit toast)
 - Phase 03 verification (gsd-verifier) after all waves land
 
 ### Blockers/Concerns
 
-- User UAT feedback has driven 4 rounds of fixes on 03-01/03-04a; expect iteration to continue
-- Arrow key mapping is TB-appropriate (user swapped manually in useKeyboardRouter.ts — preserved)
-- Item #1 deferred: orientation-aware arrow mapping (TB vs LR flip) — user can do themselves, or defer to Wave 2
+- Arrow key mapping was TB-swapped by user in useKeyboardRouter.ts — preserved; Wave 2 plans should not assume original mapping
+- Orientation-aware arrow mapping (TB vs LR) deferred; revisit if user asks in Wave 2
 
 ## Session Continuity
 
-Last session: 2026-04-20 (worktree recovery + UAT rounds 1–4)
-Stopped at: Phase 03 Wave 1 UAT iteration, awaiting user approval to proceed to Wave 2
+Last session: 2026-04-20 (worktree recovery + UAT rounds 1–4 + approval)
+Stopped at: Phase 03 Wave 1 approved; paused intentionally for fresh-session Wave 2
 
 ### Wave 1 recovery context (READ FIRST on resume)
 
@@ -113,23 +111,28 @@ Post-merge fixes committed on top (recent commits, branch `gsd/phase-03-full-edi
 - `bun run verify` → 223/223 tests, tsc clean, vite build clean, biome 0 errors
 - Artifacts: `.planning/phases/03-full-editor/03-01-SUMMARY.md`, `03-04a-SUMMARY.md`
 
-### Wave 1 human checkpoints (pending UAT)
+### Wave 1 human checkpoints (APPROVED)
 
-Four blocking user-verify tasks:
-- 03-01 Task 6 (Mutations DevHarness click-through)
-- 03-01 Task 7 (full Plan 01 checkpoint)
-- 03-04a Task 4 (Persistence DevHarness click-through)
-- 03-04a Task 5 (atomic write mid-save interruption)
-
-User was iterating UAT feedback; round 4 just shipped. Next prompt should ask user to retest or say `approved`.
+All four blocking user-verify tasks approved 2026-04-20:
+- 03-01 Task 6 (Mutations DevHarness click-through) ✓
+- 03-01 Task 7 (full Plan 01 checkpoint) ✓
+- 03-04a Task 4 (Persistence DevHarness click-through) ✓
+- 03-04a Task 5 (atomic write mid-save interruption) ✓
 
 ### Resume instructions
 
-**If UAT approved** → proceed to Wave 2: `/gsd:execute-phase 3 --wave 2` (runs 03-02, 03-03, 03-04b in parallel worktrees).
-**If more UAT feedback** → address individually, commit, retest.
-**Resume files to read:**
-- `.planning/phases/03-full-editor/03-01-SUMMARY.md` — what 01 built
-- `.planning/phases/03-full-editor/03-04a-SUMMARY.md` — what 04a built
-- `.planning/phases/03-full-editor/03-02-PLAN.md` — next plan (Wave 2)
-- `.planning/phases/03-full-editor/03-03-PLAN.md` — next plan (Wave 2)
-- `.planning/phases/03-full-editor/03-04b-PLAN.md` — next plan (Wave 2)
+**Next action:** `/gsd:execute-phase 3 --wave 2` — runs Plans 03-02, 03-03, 03-04b in parallel worktrees.
+
+**Wave 2 plan scope (read before execution):**
+- `.planning/phases/03-full-editor/03-02-PLAN.md` — Radix ContextMenu + 50ms render budget (depends on 03-01's keyboard router + Canvas)
+- `.planning/phases/03-full-editor/03-03-PLAN.md` — SidePanel editor with CodeMirror 6 + metadata + editable fields (depends on 03-01's store mutations)
+- `.planning/phases/03-full-editor/03-04b-PLAN.md` — Autosave wiring + SaveIndicator + SaveFailureModal (depends on 03-04a's saveFile RPC + 03-01's mutations)
+
+**Wave 1 reference (for context):**
+- `.planning/phases/03-full-editor/03-01-SUMMARY.md` — editor foundation details, patterns established
+- `.planning/phases/03-full-editor/03-04a-SUMMARY.md` — persistence foundation details
+
+**Known manual edits in Wave 1 code:**
+- `useKeyboardRouter.ts` — arrow mapping was user-swapped for TB (←/→ siblings, ↓ enter child, ↑ parent). Wave 2 plans referring to arrow behavior should match this, not the original plan doc.
+
+**Gate state at handoff:** `bun run verify` → 223/223 tests, tsc/vite/biome clean.

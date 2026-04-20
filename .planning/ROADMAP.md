@@ -131,10 +131,10 @@ Wave structure:
 - **Wave 3**: 03-04c
 
 Plans:
-- [ ] 03-01-PLAN.md — Node mutation operations + inline rename + confirmation dialog + clipboard + keyboard router (EDIT-01..EDIT-08)
+- [x] 03-01-PLAN.md — Node mutation operations + inline rename + confirmation dialog + clipboard + keyboard router (EDIT-01..EDIT-08) — UAT approved 2026-04-20
 - [ ] 03-02-PLAN.md — Context menu via Radix ContextMenu, satisfies Linux fallback via same custom-div (EDIT-09, EDIT-18)
 - [ ] 03-03-PLAN.md — Side panel editor with CodeMirror 6 Edit/Preview/Split + metadata + editable title/status/type (EDIT-10..EDIT-12)
-- [ ] 03-04a-PLAN.md — Persistence infrastructure: atomic write + ref ownership + saveFile RPC with path-traversal allowlist + Zod pre-write (EDIT-14, EDIT-16, EDIT-17 saveFile, EDIT-18 cross-boundary) — Wave 1
+- [x] 03-04a-PLAN.md — Persistence infrastructure: atomic write + ref ownership + saveFile RPC with path-traversal allowlist + Zod pre-write (EDIT-14, EDIT-16, EDIT-17 saveFile, EDIT-18 cross-boundary) — Wave 1 — UAT approved 2026-04-20
 - [ ] 03-04b-PLAN.md — Autosave wiring + save-state UI: triple-timer debounce + SaveIndicator + SaveFailureModal + Warning-8 snapshots (EDIT-13 debounce, EDIT-15) — Wave 2
 - [ ] 03-04c-PLAN.md — Shell features: before-quit + SIGTERM flush + File > New + external-edit toast (EDIT-13 flush-on-quit, EDIT-17 File>New, EDIT-18 Linux SIGTERM, D-14) — Wave 3
 
