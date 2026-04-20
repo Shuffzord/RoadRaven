@@ -102,12 +102,22 @@ export function useInlineRename() {
 		) => {
 			const current = stateRef.current;
 			if (!current.nodeId) return;
+			const x = localX * t.k + t.x + rect.left;
+			const y = localY * t.k + t.y + rect.top;
+			// No-op guard: react-d3-tree's onUpdate can fire on every render. If
+			// we always call setState here, we re-render → Canvas re-runs
+			// useCallback → Tree sees a new onUpdate → Tree fires onUpdate → loop.
+			// Breaking the loop on unchanged position keeps the overlay cheap.
+			if (
+				current.screenPos &&
+				current.screenPos.x === x &&
+				current.screenPos.y === y
+			) {
+				return;
+			}
 			const next: InlineRenameState = {
 				...current,
-				screenPos: {
-					x: localX * t.k + t.x + rect.left,
-					y: localY * t.k + t.y + rect.top,
-				},
+				screenPos: { x, y },
 			};
 			stateRef.current = next;
 			setState(next);

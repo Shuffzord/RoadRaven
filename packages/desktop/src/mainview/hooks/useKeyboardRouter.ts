@@ -27,6 +27,14 @@ function isInTextInput(active: Element | null): boolean {
 	);
 }
 
+function isModalOpen(): boolean {
+	// Radix renders dialogs with role="dialog" + data-state="open" to a Portal
+	// outside the canvas. When a modal is open, the canvas router must stand
+	// down so Enter/Space/Escape reach the dialog's own handlers (delete
+	// confirmation, etc.) instead of firing mutation shortcuts.
+	return !!document.querySelector('[role="dialog"][data-state="open"]');
+}
+
 function navigateSibling(nodeId: string, delta: number): void {
 	const schema = useRoadmapStore.getState().schema;
 	if (!schema) return;
@@ -58,6 +66,11 @@ export function useKeyboardRouter(deps: RouterDeps): void {
 	// Main shortcut handler
 	useEffect(() => {
 		const handler = (e: KeyboardEvent): void => {
+			// Modal dialogs own their own keyboard handling. If one is open,
+			// the router must not intercept — otherwise Enter confirms delete
+			// but also addChild fires underneath, Space selects behind the
+			// overlay, etc.
+			if (isModalOpen()) return;
 			const active = document.activeElement;
 			const inTextInput = isInTextInput(active);
 			const store = useRoadmapStore.getState();
@@ -153,9 +166,14 @@ export function useKeyboardRouter(deps: RouterDeps): void {
 				return;
 			}
 
-			// Space — promote focused to selected
+			// Space — promote focused to selected.
+			// stopPropagation so a DOM-focused node button (from an earlier
+			// click) doesn't also receive the keypress and fire its onClick,
+			// which would snap selection back to the click-focused node rather
+			// than the arrow-navigated focusedId.
 			if (e.key === " " && focusedId) {
 				e.preventDefault();
+				e.stopPropagation();
 				store.setSelectedNode(focusedId);
 				return;
 			}
@@ -193,8 +211,18 @@ export function useKeyboardRouter(deps: RouterDeps): void {
 			}
 		};
 
-		document.addEventListener("keydown", handler);
-		return () => document.removeEventListener("keydown", handler);
+		// Capture phase so the router wins before RoadmapNodeCard's own
+		// onKeyDown (which would re-fire onSelect on the DOM-focused card and
+		// override arrow-navigation targeting). The wrapper forwards to the
+		// handler and then stops propagation for any key the handler claimed
+		// (claimed === preventDefault was called), so the card's bubble-phase
+		// onKeyDown never sees Space/Enter/etc.
+		const capturingHandler = (e: KeyboardEvent): void => {
+			handler(e);
+			if (e.defaultPrevented) e.stopPropagation();
+		};
+		document.addEventListener("keydown", capturingHandler, true);
+		return () => document.removeEventListener("keydown", capturingHandler, true);
 	}, [deps]);
 
 	// Keyboard/mouse mode toggle for focus-ring visibility

@@ -248,7 +248,6 @@ export function Canvas() {
 					data={treeData}
 					dataKey={dataKey}
 					orientation={layoutOrientation === "TB" ? "vertical" : "horizontal"}
-					initialDepth={3}
 					pathFunc="step"
 					separation={{ siblings: 1.5, nonSiblings: 2.0 }}
 					nodeSize={{ x: 240, y: 100 }}
