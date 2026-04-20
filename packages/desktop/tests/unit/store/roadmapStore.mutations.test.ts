@@ -126,6 +126,55 @@ describe("addSiblingAbove", () => {
 	});
 });
 
+describe("addSiblingAbove vs addSiblingBelow", () => {
+	beforeEach(() => loadTestSchema());
+
+	it("produce distinct array positions when targeting the same middle sibling", () => {
+		// Build a 3-sibling array [A, B, C] under ROOT so a middle target
+		// (B) has both a left and right neighbor — this exposes the
+		// 'above = index, below = index+1' difference most clearly.
+		const SIB_C_ID = "55555555-6666-4777-8888-999999999999";
+		const schema: RoadmapSchema = {
+			version: "1.0",
+			title: "Three Siblings",
+			nodes: [
+				{
+					id: ROOT_ID,
+					title: "Root",
+					status: "not-started",
+					children: [
+						{ id: CHILD_A_ID, title: "A", status: "not-started" },
+						{ id: CHILD_B_ID, title: "B", status: "not-started" },
+						{ id: SIB_C_ID, title: "C", status: "not-started" },
+					],
+				},
+			],
+		};
+
+		// addSiblingAbove(B) → [A, new, B, C]
+		useRoadmapStore.getState().loadSchema(schema, "/tmp/above.json");
+		const aboveId = useRoadmapStore.getState().addSiblingAbove(CHILD_B_ID);
+		const aboveOrder = useRoadmapStore
+			.getState()
+			.nodeIndex.get(ROOT_ID)
+			?.children?.map((c) => c.id);
+		expect(aboveOrder).toEqual([CHILD_A_ID, aboveId, CHILD_B_ID, SIB_C_ID]);
+
+		// Reload and addSiblingBelow(B) → [A, B, new, C]
+		useRoadmapStore.getState().loadSchema(schema, "/tmp/below.json");
+		const belowId = useRoadmapStore.getState().addSiblingBelow(CHILD_B_ID);
+		const belowOrder = useRoadmapStore
+			.getState()
+			.nodeIndex.get(ROOT_ID)
+			?.children?.map((c) => c.id);
+		expect(belowOrder).toEqual([CHILD_A_ID, CHILD_B_ID, belowId, SIB_C_ID]);
+
+		// Guard against regression to the same slot
+		expect(aboveOrder?.indexOf(aboveId as string)).toBe(1);
+		expect(belowOrder?.indexOf(belowId as string)).toBe(2);
+	});
+});
+
 describe("addSiblingBelow", () => {
 	beforeEach(() => loadTestSchema());
 
