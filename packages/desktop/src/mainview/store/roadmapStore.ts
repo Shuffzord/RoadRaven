@@ -409,11 +409,15 @@ export const useRoadmapStore = create<RoadmapState>((set, get) => {
 				get().deleteNode(nodeId);
 				return;
 			}
+			// pendingConfirmation.deletedCount = descendants only (countSubtree
+			// includes the root itself). The dialog renders "Delete node and N
+			// child(ren)?" — user's mental model of N is descendants, not
+			// "subtree size including the node they clicked".
 			set({
 				pendingConfirmation: {
 					nodeId,
 					nodeTitle: node.title,
-					deletedCount: countSubtree(node),
+					deletedCount: countSubtree(node) - 1,
 				},
 			});
 		},

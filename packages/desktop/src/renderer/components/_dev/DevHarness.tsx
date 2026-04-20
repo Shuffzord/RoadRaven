@@ -1,4 +1,4 @@
-import { type ReactNode, useMemo, useState } from "react";
+import { type ComponentType, useMemo, useState } from "react";
 
 // Auto-discover every *Panel.tsx sibling via Vite import.meta.glob.
 // This eliminates manual registry edits — each plan just drops its *Panel.tsx
@@ -6,12 +6,12 @@ import { type ReactNode, useMemo, useState } from "react";
 // synchronously when building the panel registry.
 const panelModules = import.meta.glob("./*Panel.tsx", {
 	eager: true,
-}) as Record<string, Record<string, () => ReactNode>>;
+}) as Record<string, Record<string, ComponentType>>;
 
 interface PanelRegistryEntry {
 	id: string;
 	label: string;
-	render: () => ReactNode;
+	Component: ComponentType;
 }
 
 function buildPanels(): PanelRegistryEntry[] {
@@ -21,12 +21,12 @@ function buildPanels(): PanelRegistryEntry[] {
 		const match = path.match(/\.\/(\w+)Panel\.tsx$/);
 		if (!match) continue;
 		const baseName = match[1];
-		const Component = mod[`${baseName}Panel`] as (() => ReactNode) | undefined;
+		const Component = mod[`${baseName}Panel`];
 		if (!Component) continue;
 		entries.push({
 			id: baseName.toLowerCase(),
 			label: baseName,
-			render: () => Component(),
+			Component,
 		});
 	}
 	// Stable alphabetical order so tabs don't reshuffle between HMR reloads
@@ -99,7 +99,7 @@ export function DevHarness() {
 				))}
 			</div>
 			{active ? (
-				active.render()
+				<active.Component />
 			) : (
 				<div>No panels discovered. Create a *Panel.tsx sibling file.</div>
 			)}

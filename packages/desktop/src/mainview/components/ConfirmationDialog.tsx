@@ -76,7 +76,7 @@ export function ConfirmationDialog() {
 						}}
 					>
 						{pending
-							? `Delete node and ${pending.deletedCount} children?`
+							? `Delete node and ${pending.deletedCount} ${pending.deletedCount === 1 ? "child" : "children"}?`
 							: ""}
 					</Dialog.Title>
 					<Dialog.Description

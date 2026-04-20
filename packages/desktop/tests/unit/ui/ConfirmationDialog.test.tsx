@@ -30,6 +30,14 @@ describe("ConfirmationDialog", () => {
 		expect(dialog.textContent).toContain("Delete node and 3 children?");
 	});
 
+	it("renders singular 'child' when deletedCount === 1", () => {
+		setPending("My Node", 1);
+		render(<ConfirmationDialog />);
+		const dialog = screen.getByRole("dialog");
+		expect(dialog.textContent).toContain("Delete node and 1 child?");
+		expect(dialog.textContent).not.toContain("1 children");
+	});
+
 	it("Escape key closes dialog without calling deleteNode (onOpenChange -> cancelDelete)", () => {
 		setPending("Foo", 3);
 		const deleteSpy = vi.spyOn(useRoadmapStore.getState(), "deleteNode");
