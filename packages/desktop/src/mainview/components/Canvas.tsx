@@ -35,6 +35,7 @@ export function Canvas() {
 	const setSchemaErrors = useRoadmapStore((s) => s.setSchemaErrors);
 	const setSelectedNode = useRoadmapStore((s) => s.setSelectedNode);
 	const setFocusedNode = useRoadmapStore((s) => s.setFocusedNode);
+	const setTranslate = useRoadmapStore((s) => s.setTranslate);
 	const selectedNodeId = useRoadmapStore((s) => s.selectedNodeId);
 	const focusedNodeId = useRoadmapStore((s) => s.focusedNodeId);
 
@@ -83,6 +84,32 @@ export function Canvas() {
 		observer.observe(containerRef.current);
 		return () => observer.disconnect();
 	}, []);
+
+	// Camera-follow: when the focused (arrow-nav) or selected (click/space)
+	// node is outside the viewport, pan so it comes into view. react-d3-tree
+	// animates `translate` prop changes via centeringTransitionDuration, so the
+	// pan is smooth. We only pan when genuinely off-screen to avoid fighting
+	// the user's manual panning during in-view interactions.
+	const targetNodeId = focusedNodeId ?? selectedNodeId;
+	useEffect(() => {
+		if (!targetNodeId) return;
+		const pos = nodePositionsRef.current.get(targetNodeId);
+		if (!pos) return;
+		const t = transformRef.current;
+		const screenX = pos.x * t.k + t.x;
+		const screenY = pos.y * t.k + t.y;
+		const margin = 100;
+		const inView =
+			screenX > margin &&
+			screenX < dimensions.width - margin &&
+			screenY > margin &&
+			screenY < dimensions.height - margin;
+		if (inView) return;
+		setTranslate({
+			x: dimensions.width / 2 - pos.x * t.k,
+			y: dimensions.height / 2 - pos.y * t.k,
+		});
+	}, [targetNodeId, dimensions, setTranslate]);
 
 	// Wire the keyboard router
 	useKeyboardRouter({

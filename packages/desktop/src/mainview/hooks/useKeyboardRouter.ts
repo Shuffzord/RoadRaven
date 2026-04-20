@@ -225,7 +225,12 @@ export function useKeyboardRouter(deps: RouterDeps): void {
 		return () => document.removeEventListener("keydown", capturingHandler, true);
 	}, [deps]);
 
-	// Keyboard/mouse mode toggle for focus-ring visibility
+	// Keyboard/mouse mode toggle for focus-ring visibility.
+	// onKey MUST use capture phase: the main router above also uses capture +
+	// stopPropagation on claimed keys. If this listener ran in bubble phase,
+	// the router's stopPropagation would prevent it from ever adding the
+	// keyboard-nav-active class, and the dashed focus ring would never appear
+	// during arrow navigation.
 	useEffect(() => {
 		const onKey = (): void => {
 			document.body.classList.add("keyboard-nav-active");
@@ -233,10 +238,10 @@ export function useKeyboardRouter(deps: RouterDeps): void {
 		const onMouse = (): void => {
 			document.body.classList.remove("keyboard-nav-active");
 		};
-		document.addEventListener("keydown", onKey);
+		document.addEventListener("keydown", onKey, true);
 		document.addEventListener("mousedown", onMouse);
 		return () => {
-			document.removeEventListener("keydown", onKey);
+			document.removeEventListener("keydown", onKey, true);
 			document.removeEventListener("mousedown", onMouse);
 		};
 	}, []);
