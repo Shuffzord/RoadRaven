@@ -1,3 +1,5 @@
+import { useRoadmapStore } from "../store/roadmapStore";
+
 export const STATUS_TOKEN_MAP = {
 	"not-started": {
 		color: "--rv-status-not-started",
@@ -36,7 +38,7 @@ interface RoadmapNodeCardProps {
 
 export function RoadmapNodeCard({
 	title,
-	status,
+	status: propStatus,
 	nodeId,
 	isSelected,
 	isFocused,
@@ -47,6 +49,29 @@ export function RoadmapNodeCard({
 	onSelect,
 	onDoubleClick,
 }: RoadmapNodeCardProps) {
+	// Live-status subscription (read-side of the in-place fast-path).
+	//
+	// `updateNodeStatus` / `updateNodeType` / `updateNodeMetadata` /
+	// `updateNodeNotes` mutate `schema.nodes` in place and bump `statusTick`
+	// without touching `treeData` — that's the D-02 performance contract so
+	// status flips don't trigger react-d3-tree's deep-clone on every change.
+	// The side-effect is that `propStatus` (sourced from the treeData snapshot
+	// react-d3-tree passes to renderCustomNodeElement) goes stale. Subscribe
+	// to the tick here so every in-place write re-runs this selector and the
+	// card re-reads the live value from `nodeIndex`. Only the card whose node
+	// actually changed returns a new string, so zustand re-renders it alone —
+	// other cards' selectors return the same string and skip the update.
+	//
+	// Future phases (03-03 SidePanel editor, 04 Event API, v1.1 plugins) can
+	// extend this by reading additional in-place fields (title, notes, type,
+	// metadata) from the live node rather than introducing new dataKey bumps.
+	const liveStatus = useRoadmapStore((s) => {
+		void s.statusTick;
+		return nodeId
+			? (s.nodeIndex.get(nodeId)?.status ?? propStatus)
+			: propStatus;
+	});
+	const status = liveStatus as NodeStatus;
 	const tokens = STATUS_TOKEN_MAP[status] ?? STATUS_TOKEN_MAP["not-started"];
 
 	return (
