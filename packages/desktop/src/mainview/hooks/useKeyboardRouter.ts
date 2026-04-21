@@ -32,6 +32,13 @@ function isModalOpen(): boolean {
 	return !!document.querySelector('[role="dialog"][data-state="open"]');
 }
 
+function isMenuOpen(): boolean {
+	// Radix ContextMenu mounts Content (role="menu") via portal only while open.
+	// Pitfall 7: if the router processed Enter while the menu was open, both the
+	// menu's onSelect AND the router's addChild would fire on the focused node.
+	return !!document.querySelector('[role="menu"]');
+}
+
 function navigateSibling(nodeId: string, delta: number): void {
 	const schema = useRoadmapStore.getState().schema;
 	if (!schema) return;
@@ -68,6 +75,7 @@ export function useKeyboardRouter(deps: RouterDeps): void {
 			// but also addChild fires underneath, Space selects behind the
 			// overlay, etc.
 			if (isModalOpen()) return;
+			if (isMenuOpen()) return;
 			const active = document.activeElement;
 			const inTextInput = isInTextInput(active);
 			const store = useRoadmapStore.getState();
