@@ -22,7 +22,7 @@ export function setSourceTemplate(
 ): void {
 	sourceTemplate = {
 		mainPath,
-		nodes: JSON.parse(JSON.stringify(nodes)) as RoadmapNode[],
+		nodes: structuredClone(nodes),
 	};
 }
 

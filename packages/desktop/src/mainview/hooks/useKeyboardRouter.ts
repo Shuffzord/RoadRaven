@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import type { RoadmapNode } from "../../../../../packages/core/src/schema";
 import { findParentAndIndex, useRoadmapStore } from "../store/roadmapStore";
-import type { useInlineRename } from "./useInlineRename";
+import { dispatchOpenRename, type useInlineRename } from "./useInlineRename";
 
 interface RouterDeps {
 	inlineRename: ReturnType<typeof useInlineRename>;
@@ -37,14 +37,6 @@ function isMenuOpen(): boolean {
 	// Pitfall 7: if the router processed Enter while the menu was open, both the
 	// menu's onSelect AND the router's addChild would fire on the focused node.
 	return !!document.querySelector('[role="menu"]');
-}
-
-/** Fire the rename bridge so Canvas opens inline rename on a newly-created node. */
-function dispatchAutoRename(newId: string | null | undefined): void {
-	if (!newId) return;
-	window.dispatchEvent(
-		new CustomEvent("roadraven:open-rename", { detail: { nodeId: newId } }),
-	);
 }
 
 function navigateSibling(nodeId: string, delta: number): void {
@@ -119,7 +111,7 @@ export function useKeyboardRouter(deps: RouterDeps): void {
 			if ((e.ctrlKey || e.metaKey) && e.key === "d") {
 				if (focusedId) {
 					e.preventDefault();
-					dispatchAutoRename(store.duplicateNode(focusedId));
+					dispatchOpenRename(store.duplicateNode(focusedId));
 				}
 				return;
 			}
@@ -161,17 +153,17 @@ export function useKeyboardRouter(deps: RouterDeps): void {
 			// focused immediately (create-then-rename UX).
 			if (e.key === "Enter" && !e.shiftKey && focusedId) {
 				e.preventDefault();
-				dispatchAutoRename(store.addChild(focusedId));
+				dispatchOpenRename(store.addChild(focusedId));
 				return;
 			}
 			if (e.key === "Enter" && e.shiftKey && focusedId) {
 				e.preventDefault();
-				dispatchAutoRename(store.addSiblingAbove(focusedId));
+				dispatchOpenRename(store.addSiblingAbove(focusedId));
 				return;
 			}
 			if (e.key === "Tab" && focusedId) {
 				e.preventDefault();
-				dispatchAutoRename(store.addSiblingBelow(focusedId));
+				dispatchOpenRename(store.addSiblingBelow(focusedId));
 				return;
 			}
 

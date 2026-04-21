@@ -525,6 +525,7 @@ export const useRoadmapStore = create<RoadmapState>((set, get) => {
 		updateNodeType: (nodeId, type) => {
 			const node = get().nodeIndex.get(nodeId);
 			if (!node) return;
+			if (node.type === type) return;
 			node.type = type;
 			node.updatedAt = new Date().toISOString();
 			set({ statusTick: get().statusTick + 1 });
@@ -533,6 +534,7 @@ export const useRoadmapStore = create<RoadmapState>((set, get) => {
 		updateNodeMetadata: (nodeId, metadata) => {
 			const node = get().nodeIndex.get(nodeId);
 			if (!node) return;
+			if (node.metadata === metadata) return;
 			node.metadata = metadata;
 			node.updatedAt = new Date().toISOString();
 			set({ statusTick: get().statusTick + 1 });
@@ -541,6 +543,7 @@ export const useRoadmapStore = create<RoadmapState>((set, get) => {
 		updateNodeNotes: (nodeId, notes) => {
 			const node = get().nodeIndex.get(nodeId);
 			if (!node) return;
+			if (node.notes === notes) return;
 			node.notes = notes;
 			node.updatedAt = new Date().toISOString();
 			set({ statusTick: get().statusTick + 1 });
@@ -573,8 +576,8 @@ export const useRoadmapStore = create<RoadmapState>((set, get) => {
 			const node = get().nodeIndex.get(nodeId);
 			if (!node) return;
 			const serialized = serializeSubtree(node);
-			// Always store in-memory (A2 fallback)
-			set({ lastCopiedSubtree: node });
+			// Clone so later in-place edits to the source don't contaminate the buffer.
+			set({ lastCopiedSubtree: structuredClone(node) });
 			// Best-effort clipboard write
 			try {
 				await navigator.clipboard.writeText(serialized);

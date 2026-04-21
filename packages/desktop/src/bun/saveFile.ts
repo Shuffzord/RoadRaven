@@ -125,9 +125,11 @@ export async function saveFileHandler(params: {
 	try {
 		const ownership = getOwnership();
 		const perFile = splitSchemaByOwnership(schema, resolved, ownership);
-		for (const [p, payload] of perFile) {
-			await atomicWrite(p, JSON.stringify(payload, null, 2));
-		}
+		await Promise.all(
+			[...perFile].map(([p, payload]) =>
+				atomicWrite(p, JSON.stringify(payload, null, 2)),
+			),
+		);
 		cachedSchema = schema;
 		cachedMainPath = resolved;
 		bunLogger.info`saveFile wrote ${perFile.size} file(s) for main=${resolved}`;
@@ -161,9 +163,11 @@ export async function flushPending(): Promise<void> {
 			cachedMainPath,
 			ownership,
 		);
-		for (const [p, payload] of perFile) {
-			await atomicWrite(p, JSON.stringify(payload, null, 2));
-		}
+		await Promise.all(
+			[...perFile].map(([p, payload]) =>
+				atomicWrite(p, JSON.stringify(payload, null, 2)),
+			),
+		);
 		bunLogger.info`flushPending wrote ${perFile.size} file(s)`;
 	} catch (err) {
 		bunLogger.error`flushPending failed: ${String(err)}`;

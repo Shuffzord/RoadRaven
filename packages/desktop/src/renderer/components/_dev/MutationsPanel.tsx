@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { dispatchOpenRename } from "../../../mainview/hooks/useInlineRename";
 import { useRoadmapStore } from "../../../mainview/store/roadmapStore";
 
 /**
@@ -36,13 +37,7 @@ export function MutationsPanel() {
 		fn();
 		setLastAction(label);
 	};
-	/** Dispatch the rename bridge so new nodes get an inline rename input focused. */
-	const autoRename = (newId: string | null | undefined) => {
-		if (!newId) return;
-		window.dispatchEvent(
-			new CustomEvent("roadraven:open-rename", { detail: { nodeId: newId } }),
-		);
-	};
+	const autoRename = dispatchOpenRename;
 	const store = useRoadmapStore.getState();
 
 	return (

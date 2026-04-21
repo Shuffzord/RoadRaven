@@ -1,5 +1,7 @@
 import * as ContextMenuPrimitive from "@radix-ui/react-context-menu";
 import type { ReactNode } from "react";
+import { useShallow } from "zustand/react/shallow";
+import { dispatchOpenRename } from "../hooks/useInlineRename";
 import { useRoadmapStore } from "../store/roadmapStore";
 
 const DEFAULT_STATUSES: ReadonlyArray<{ id: string; label: string }> = [
@@ -84,17 +86,29 @@ export function NodeMenuItems({ nodeId }: { nodeId: string }) {
 		moveNodeDown,
 		requestDelete,
 		updateNodeStatus,
-		lastCopiedSubtree,
-		schema,
-	} = useRoadmapStore();
+	} = useRoadmapStore(
+		useShallow((s) => ({
+			addChild: s.addChild,
+			addSiblingAbove: s.addSiblingAbove,
+			addSiblingBelow: s.addSiblingBelow,
+			duplicateNode: s.duplicateNode,
+			copySubtreeToClipboard: s.copySubtreeToClipboard,
+			pasteFromClipboard: s.pasteFromClipboard,
+			moveNodeUp: s.moveNodeUp,
+			moveNodeDown: s.moveNodeDown,
+			requestDelete: s.requestDelete,
+			updateNodeStatus: s.updateNodeStatus,
+		})),
+	);
+	const canPaste = useRoadmapStore((s) => s.lastCopiedSubtree !== null);
+	const schema = useRoadmapStore((s) => s.schema);
 
+	// Paste enabled when the in-memory buffer has content. System clipboard
+	// is tried inside pasteFromClipboard (try/catch) — Pitfall 6.
 	const statuses =
 		schema?.statusConfig && schema.statusConfig.length > 0
 			? schema.statusConfig
 			: DEFAULT_STATUSES;
-	// Paste is enabled when the in-memory buffer has content. System clipboard
-	// is tried inside pasteFromClipboard (try/catch) — Pitfall 6.
-	const canPaste = lastCopiedSubtree !== null;
 
 	return (
 		<>
@@ -223,17 +237,18 @@ export function NodeMenuItems({ nodeId }: { nodeId: string }) {
 }
 
 export function CanvasMenuItems() {
-	const {
-		pasteFromClipboard,
-		setLayout,
-		layoutOrientation,
-		resetView,
-		addChild,
-		lastCopiedSubtree,
-		schema,
-	} = useRoadmapStore();
-	const canPaste = lastCopiedSubtree !== null;
-	const rootId = schema?.nodes?.[0]?.id ?? null;
+	const { pasteFromClipboard, setLayout, resetView, addChild } =
+		useRoadmapStore(
+			useShallow((s) => ({
+				pasteFromClipboard: s.pasteFromClipboard,
+				setLayout: s.setLayout,
+				resetView: s.resetView,
+				addChild: s.addChild,
+			})),
+		);
+	const layoutOrientation = useRoadmapStore((s) => s.layoutOrientation);
+	const canPaste = useRoadmapStore((s) => s.lastCopiedSubtree !== null);
+	const rootId = useRoadmapStore((s) => s.schema?.nodes?.[0]?.id ?? null);
 
 	return (
 		<>
@@ -274,22 +289,12 @@ export function CanvasMenuItems() {
 	);
 }
 
-/**
- * Bridge to Canvas: dispatch a window CustomEvent that Canvas subscribes to,
- * so the menu does not need Canvas-local state (transform, container rect).
- *
- * Also called after Add Child / Add Sibling / Duplicate to trigger the
- * create-then-rename flow: new nodes appear with their default title
- * pre-selected so the user can type straight in.
- */
 function openRename(nodeId: string) {
 	useRoadmapStore.getState().setFocusedNode(nodeId);
-	window.dispatchEvent(
-		new CustomEvent("roadraven:open-rename", { detail: { nodeId } }),
-	);
+	dispatchOpenRename(nodeId);
 }
 
-/** After a create-mutation that returned a new node id, open rename on it. */
 function autoRename(newId: string | null | undefined) {
-	if (newId) openRename(newId);
+	if (!newId) return;
+	openRename(newId);
 }

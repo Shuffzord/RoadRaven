@@ -4,7 +4,7 @@ import Tree from "react-d3-tree";
 import { useShallow } from "zustand/react/shallow";
 import ravenLogo from "../assets/raven-logo.svg";
 import { useFileActions } from "../hooks/useFileActions";
-import { useInlineRename } from "../hooks/useInlineRename";
+import { OPEN_RENAME_EVENT, useInlineRename } from "../hooks/useInlineRename";
 import { useKeyboardRouter } from "../hooks/useKeyboardRouter";
 import { electroview } from "../rpc";
 import { useRoadmapStore } from "../store/roadmapStore";
@@ -189,8 +189,8 @@ export function Canvas() {
 				);
 			});
 		};
-		window.addEventListener("roadraven:open-rename", handler);
-		return () => window.removeEventListener("roadraven:open-rename", handler);
+		window.addEventListener(OPEN_RENAME_EVENT, handler);
+		return () => window.removeEventListener(OPEN_RENAME_EVENT, handler);
 	}, [inlineRename]);
 
 	// Wire the keyboard router
@@ -372,7 +372,7 @@ export function Canvas() {
 						renderCustomNodeElement={renderNode}
 						zoom={zoomLevel}
 						enableLegacyTransitions={false}
-						centeringTransitionDuration={50800}
+						centeringTransitionDuration={800}
 						collapsible={true}
 						zoomable={true}
 						draggable={true}

@@ -1,6 +1,22 @@
 import { useCallback, useRef, useState } from "react";
 import { useRoadmapStore } from "../store/roadmapStore";
 
+export const OPEN_RENAME_EVENT = "roadraven:open-rename";
+
+export interface OpenRenameEventDetail {
+	nodeId: string;
+}
+
+/** Dispatch the cross-component bridge so Canvas opens inline rename on a node. */
+export function dispatchOpenRename(nodeId: string | null | undefined): void {
+	if (!nodeId) return;
+	window.dispatchEvent(
+		new CustomEvent<OpenRenameEventDetail>(OPEN_RENAME_EVENT, {
+			detail: { nodeId },
+		}),
+	);
+}
+
 export interface InlineRenameState {
 	nodeId: string | null;
 	screenPos: { x: number; y: number } | null;
