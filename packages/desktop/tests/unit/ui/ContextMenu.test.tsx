@@ -267,3 +267,44 @@ describe("Canvas menu — Add Root Child disabled when no schema", () => {
 		expect(addRoot?.getAttribute("aria-disabled")).toBe("true");
 	});
 });
+
+describe("Canvas menu — Paste inserts under root, not as a second root", () => {
+	it("paste from canvas background inserts under the existing root and keeps schema.nodes.length = 1", async () => {
+		seedSchema();
+		useRoadmapStore.setState({
+			lastCopiedSubtree: {
+				id: "copied-id",
+				title: "Pasted",
+				status: "not-started",
+			},
+		});
+		const spy = vi.spyOn(useRoadmapStore.getState(), "pasteFromClipboard");
+		render(<CanvasHarness />);
+		openMenu(screen.getByTestId("trigger"));
+		const menu = screen.getByRole("menu", { name: /canvas actions/i });
+		const pasteItem = Array.from(
+			menu.querySelectorAll<HTMLElement>('[role="menuitem"]'),
+		).find((el) => el.textContent?.includes("Paste"));
+		fireEvent.click(pasteItem as HTMLElement);
+		// Must be rootId, not null — null appends a second root that is
+		// silently dropped from treeData (only nodes[0] renders).
+		expect(spy).toHaveBeenCalledWith("root-id");
+	});
+
+	it("disables Paste when there is no schema, even with a buffered subtree", () => {
+		useRoadmapStore.setState({
+			lastCopiedSubtree: {
+				id: "copied-id",
+				title: "P",
+				status: "not-started",
+			},
+		});
+		render(<CanvasHarness />);
+		openMenu(screen.getByTestId("trigger"));
+		const menu = screen.getByRole("menu", { name: /canvas actions/i });
+		const pasteItem = Array.from(
+			menu.querySelectorAll<HTMLElement>('[role="menuitem"]'),
+		).find((el) => el.textContent?.includes("Paste"));
+		expect(pasteItem?.getAttribute("aria-disabled")).toBe("true");
+	});
+});

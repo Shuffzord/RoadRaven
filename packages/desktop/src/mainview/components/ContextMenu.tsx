@@ -254,9 +254,9 @@ export function CanvasMenuItems() {
 		<>
 			<ContextMenuPrimitive.Item
 				className={ITEM_CLASS}
-				disabled={!canPaste}
+				disabled={!canPaste || !rootId}
 				onSelect={() => {
-					void pasteFromClipboard(null);
+					if (rootId) void pasteFromClipboard(rootId);
 				}}
 			>
 				<span>Paste</span>

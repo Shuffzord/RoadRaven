@@ -211,4 +211,41 @@ describe("useKeyboardRouter", () => {
 		fireEvent.keyDown(document, { key: "ArrowUp" });
 		expect(useRoadmapStore.getState().focusedNodeId).toBe(CHILD_B_ID);
 	});
+
+	// LR layout: tree flows left→right, so the hierarchy/sibling axes rotate 90°.
+	//   ArrowRight → enter child    ArrowLeft  → return to parent
+	//   ArrowDown  → next sibling   ArrowUp    → previous sibling
+	describe("Arrow navigation respects LR layout orientation", () => {
+		beforeEach(() => {
+			useRoadmapStore.getState().setLayout("LR");
+		});
+
+		it("LR: ArrowRight on a focused parent moves focus into its first child", () => {
+			useRoadmapStore.getState().setFocusedNode(CHILD_B_ID);
+			renderRouter();
+			fireEvent.keyDown(document, { key: "ArrowRight" });
+			expect(useRoadmapStore.getState().focusedNodeId).toBe(CHILD_B1_ID);
+		});
+
+		it("LR: ArrowLeft on a focused child returns focus to its parent", () => {
+			useRoadmapStore.getState().setFocusedNode(CHILD_B1_ID);
+			renderRouter();
+			fireEvent.keyDown(document, { key: "ArrowLeft" });
+			expect(useRoadmapStore.getState().focusedNodeId).toBe(CHILD_B_ID);
+		});
+
+		it("LR: ArrowDown moves to the next sibling", () => {
+			useRoadmapStore.getState().setFocusedNode(CHILD_A_ID);
+			renderRouter();
+			fireEvent.keyDown(document, { key: "ArrowDown" });
+			expect(useRoadmapStore.getState().focusedNodeId).toBe(CHILD_B_ID);
+		});
+
+		it("LR: ArrowUp moves to the previous sibling", () => {
+			useRoadmapStore.getState().setFocusedNode(CHILD_B_ID);
+			renderRouter();
+			fireEvent.keyDown(document, { key: "ArrowUp" });
+			expect(useRoadmapStore.getState().focusedNodeId).toBe(CHILD_A_ID);
+		});
+	});
 });

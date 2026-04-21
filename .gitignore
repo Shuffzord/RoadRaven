@@ -40,3 +40,6 @@ settings.local.json
 # Test artifacts
 playwright-report/
 test-results/
+
+# Roadmap auto-generated backups
+*.bak.json

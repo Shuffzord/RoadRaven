@@ -60,6 +60,23 @@ export function setCachedMainPath(absolutePath: string): void {
 	cachedMainPath = resolve(absolutePath);
 }
 
+export function getCachedMainPath(): string | null {
+	return cachedMainPath;
+}
+
+/**
+ * True when `absolutePath` resolves inside the directory of the currently
+ * loaded main file. Used by the resolveRef RPC to block traversal outside
+ * the roadmap's own directory tree (mirrors the guard already inside
+ * resolveRefsWithOwnership).
+ */
+export function isPathWithinMainDir(absolutePath: string): boolean {
+	if (!cachedMainPath) return false;
+	const baseDir = dirname(cachedMainPath);
+	const resolved = resolve(absolutePath);
+	return resolved === baseDir || resolved.startsWith(baseDir + sep);
+}
+
 /**
  * Called by the RPC loadFile handler after a successful load so shutdown
  * flushPending has the latest in-memory schema to persist.

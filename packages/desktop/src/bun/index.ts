@@ -21,6 +21,7 @@ import {
 } from "./refMap";
 import {
 	flushPending,
+	isPathWithinMainDir,
 	pushDialogAllowlistPath,
 	saveFileHandler,
 	setCachedMainPath,
@@ -321,10 +322,18 @@ const rpc = BrowserView.defineRPC<RoadmapRPCType>({
 				}
 			},
 
-			// resolveRef handler
+			// resolveRef handler — allowlisted to the currently-loaded main
+			// file's directory. A crafted roadmap JSON with a $ref pointing
+			// outside baseDir is a data-exfiltration primitive; same guard
+			// lives in resolveRefs for the load path.
 			resolveRef: async ({ refPath }) => {
+				const absPath = pathResolve(refPath);
+				if (!isPathWithinMainDir(absPath)) {
+					bunLogger.error`resolveRef rejected: ${refPath} escapes main-file directory`;
+					return [];
+				}
 				try {
-					const raw = await Bun.file(refPath).text();
+					const raw = await Bun.file(absPath).text();
 					const parsed = JSON.parse(raw);
 					const nodes: RoadmapNode[] = Array.isArray(parsed)
 						? parsed

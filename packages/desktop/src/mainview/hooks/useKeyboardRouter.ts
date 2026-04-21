@@ -186,26 +186,37 @@ export function useKeyboardRouter(deps: RouterDeps): void {
 				return;
 			}
 
-			// Arrow navigation (sibling up/down, enter child, return to parent)
-			if (e.key === "ArrowLeft" && focusedId) {
-				e.preventDefault();
-				navigateSibling(focusedId, -1);
-				return;
-			}
-			if (e.key === "ArrowRight" && focusedId) {
-				e.preventDefault();
-				navigateSibling(focusedId, 1);
-				return;
-			}
-			if (e.key === "ArrowDown" && focusedId) {
-				e.preventDefault();
-				enterChild(focusedId);
-				return;
-			}
-			if (e.key === "ArrowUp" && focusedId) {
-				e.preventDefault();
-				returnToParent(focusedId);
-				return;
+			// Arrow navigation — axis depends on layout orientation.
+			// TB: children flow downward, siblings are horizontal neighbors.
+			// LR: children flow rightward, siblings are vertical neighbors.
+			if (focusedId && e.key.startsWith("Arrow")) {
+				const isLR = store.layoutOrientation === "LR";
+				const siblingKeys = isLR
+					? { prev: "ArrowUp", next: "ArrowDown" }
+					: { prev: "ArrowLeft", next: "ArrowRight" };
+				const hierarchyKeys = isLR
+					? { child: "ArrowRight", parent: "ArrowLeft" }
+					: { child: "ArrowDown", parent: "ArrowUp" };
+				if (e.key === siblingKeys.prev) {
+					e.preventDefault();
+					navigateSibling(focusedId, -1);
+					return;
+				}
+				if (e.key === siblingKeys.next) {
+					e.preventDefault();
+					navigateSibling(focusedId, 1);
+					return;
+				}
+				if (e.key === hierarchyKeys.child) {
+					e.preventDefault();
+					enterChild(focusedId);
+					return;
+				}
+				if (e.key === hierarchyKeys.parent) {
+					e.preventDefault();
+					returnToParent(focusedId);
+					return;
+				}
 			}
 
 			// Escape — close rename or deselect

@@ -112,7 +112,7 @@ export function RoadmapNodeCard({
 			}
 			role="button"
 			tabIndex={0}
-			aria-label={nodeId ? `${title} (${nodeId})` : title}
+			aria-label={title}
 			onClick={onSelect}
 			onDoubleClick={onDoubleClick}
 			onKeyDown={(e) => {
