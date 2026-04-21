@@ -36,6 +36,13 @@ export function MutationsPanel() {
 		fn();
 		setLastAction(label);
 	};
+	/** Dispatch the rename bridge so new nodes get an inline rename input focused. */
+	const autoRename = (newId: string | null | undefined) => {
+		if (!newId) return;
+		window.dispatchEvent(
+			new CustomEvent("roadraven:open-rename", { detail: { nodeId: newId } }),
+		);
+	};
 	const store = useRoadmapStore.getState();
 
 	return (
@@ -50,14 +57,18 @@ export function MutationsPanel() {
 			</div>
 			<button
 				type="button"
-				onClick={() => run("addChild", () => void store.addChild(targetId))}
+				onClick={() =>
+					run("addChild", () => autoRename(store.addChild(targetId)))
+				}
 			>
 				addChild
 			</button>
 			<button
 				type="button"
 				onClick={() =>
-					run("addSiblingAbove", () => void store.addSiblingAbove(targetId))
+					run("addSiblingAbove", () =>
+						autoRename(store.addSiblingAbove(targetId)),
+					)
 				}
 			>
 				addSiblingAbove
@@ -65,7 +76,9 @@ export function MutationsPanel() {
 			<button
 				type="button"
 				onClick={() =>
-					run("addSiblingBelow", () => void store.addSiblingBelow(targetId))
+					run("addSiblingBelow", () =>
+						autoRename(store.addSiblingBelow(targetId)),
+					)
 				}
 			>
 				addSiblingBelow
@@ -73,7 +86,7 @@ export function MutationsPanel() {
 			<button
 				type="button"
 				onClick={() =>
-					run("duplicateNode", () => void store.duplicateNode(targetId))
+					run("duplicateNode", () => autoRename(store.duplicateNode(targetId)))
 				}
 			>
 				duplicateNode

@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { useRoadmapStore } from "../store/roadmapStore";
 
 export const STATUS_TOKEN_MAP = {
@@ -34,6 +35,14 @@ interface RoadmapNodeCardProps {
 	onToggle?: () => void;
 	onSelect?: () => void;
 	onDoubleClick?: () => void;
+	// Inline rename: when isRenaming is true, the title slot renders an input
+	// instead of the span. Card-matched UX (option A from Plan 03-02 UAT) —
+	// replaces the previous InlineRenameInput portal overlay.
+	isRenaming?: boolean;
+	renameValue?: string;
+	onRenameChange?: (v: string) => void;
+	onRenameCommit?: () => void;
+	onRenameCancel?: () => void;
 }
 
 export function RoadmapNodeCard({
@@ -48,7 +57,19 @@ export function RoadmapNodeCard({
 	onToggle,
 	onSelect,
 	onDoubleClick,
+	isRenaming = false,
+	renameValue = "",
+	onRenameChange,
+	onRenameCommit,
+	onRenameCancel,
 }: RoadmapNodeCardProps) {
+	const renameInputRef = useRef<HTMLInputElement>(null);
+	useEffect(() => {
+		if (isRenaming) {
+			renameInputRef.current?.focus();
+			renameInputRef.current?.select();
+		}
+	}, [isRenaming]);
 	// Live-status subscription (read-side of the in-place fast-path).
 	//
 	// `updateNodeStatus` / `updateNodeType` / `updateNodeMetadata` /
@@ -101,10 +122,38 @@ export function RoadmapNodeCard({
 				}
 			}}
 		>
-			{/* Title */}
-			<span className="block text-[13px] font-semibold leading-[1.3] text-[var(--rv-text-primary)] mb-[6px]">
-				{title}
-			</span>
+			{/* Title — swaps to an inline input when renaming. The input borrows
+			   the span's typography + height so the card doesn't reflow; an
+			   accent bottom border is the only visible affordance. */}
+			{isRenaming ? (
+				<input
+					ref={renameInputRef}
+					type="text"
+					value={renameValue}
+					onChange={(e) => onRenameChange?.(e.target.value)}
+					onClick={(e) => e.stopPropagation()}
+					onDoubleClick={(e) => e.stopPropagation()}
+					onMouseDown={(e) => e.stopPropagation()}
+					onKeyDown={(e) => {
+						e.stopPropagation();
+						if (e.key === "Enter") {
+							e.preventDefault();
+							onRenameCommit?.();
+						} else if (e.key === "Escape") {
+							e.preventDefault();
+							onRenameCancel?.();
+						}
+					}}
+					onBlur={() => onRenameCommit?.()}
+					placeholder="Enter title…"
+					aria-label="Rename node"
+					className="block w-full text-[13px] font-semibold leading-[1.3] text-[var(--rv-text-primary)] mb-[6px] bg-transparent border-0 border-b-2 border-[var(--rv-accent)] outline-none px-0 py-0"
+				/>
+			) : (
+				<span className="block text-[13px] font-semibold leading-[1.3] text-[var(--rv-text-primary)] mb-[6px]">
+					{title}
+				</span>
+			)}
 
 			{/* Badge pill */}
 			<span className="inline-flex items-center gap-[5px] px-2 py-[2px] rounded-[10px] text-[11px] font-semibold bg-[var(--badge-bg)] text-[var(--badge-color)]">

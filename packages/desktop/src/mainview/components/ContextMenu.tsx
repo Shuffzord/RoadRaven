@@ -100,21 +100,21 @@ export function NodeMenuItems({ nodeId }: { nodeId: string }) {
 			<ContextMenuPrimitive.Separator className={SEP_CLASS} />
 			<ContextMenuPrimitive.Item
 				className={ITEM_CLASS}
-				onSelect={() => addChild(nodeId)}
+				onSelect={() => autoRename(addChild(nodeId))}
 			>
 				<span>Add Child</span>
 				<span className={HINT_CLASS}>Enter</span>
 			</ContextMenuPrimitive.Item>
 			<ContextMenuPrimitive.Item
 				className={ITEM_CLASS}
-				onSelect={() => addSiblingAbove(nodeId)}
+				onSelect={() => autoRename(addSiblingAbove(nodeId))}
 			>
 				<span>Add Sibling Above</span>
 				<span className={HINT_CLASS}>Shift+Enter</span>
 			</ContextMenuPrimitive.Item>
 			<ContextMenuPrimitive.Item
 				className={ITEM_CLASS}
-				onSelect={() => addSiblingBelow(nodeId)}
+				onSelect={() => autoRename(addSiblingBelow(nodeId))}
 			>
 				<span>Add Sibling Below</span>
 				<span className={HINT_CLASS}>Tab</span>
@@ -122,7 +122,7 @@ export function NodeMenuItems({ nodeId }: { nodeId: string }) {
 			<ContextMenuPrimitive.Separator className={SEP_CLASS} />
 			<ContextMenuPrimitive.Item
 				className={ITEM_CLASS}
-				onSelect={() => duplicateNode(nodeId)}
+				onSelect={() => autoRename(duplicateNode(nodeId))}
 			>
 				<span>Duplicate</span>
 				<span className={HINT_CLASS}>Ctrl+D</span>
@@ -243,7 +243,7 @@ export function CanvasMenuItems() {
 				className={ITEM_CLASS}
 				disabled={!rootId}
 				onSelect={() => {
-					if (rootId) addChild(rootId);
+					if (rootId) autoRename(addChild(rootId));
 				}}
 			>
 				<span>Add Root Child</span>
@@ -269,10 +269,19 @@ export function CanvasMenuItems() {
 /**
  * Bridge to Canvas: dispatch a window CustomEvent that Canvas subscribes to,
  * so the menu does not need Canvas-local state (transform, container rect).
+ *
+ * Also called after Add Child / Add Sibling / Duplicate to trigger the
+ * create-then-rename flow: new nodes appear with their default title
+ * pre-selected so the user can type straight in.
  */
 function openRename(nodeId: string) {
 	useRoadmapStore.getState().setFocusedNode(nodeId);
 	window.dispatchEvent(
 		new CustomEvent("roadraven:open-rename", { detail: { nodeId } }),
 	);
+}
+
+/** After a create-mutation that returned a new node id, open rename on it. */
+function autoRename(newId: string | null | undefined) {
+	if (newId) openRename(newId);
 }

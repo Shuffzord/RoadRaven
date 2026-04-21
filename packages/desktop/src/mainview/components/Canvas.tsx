@@ -9,7 +9,6 @@ import { useKeyboardRouter } from "../hooks/useKeyboardRouter";
 import { electroview } from "../rpc";
 import { useRoadmapStore } from "../store/roadmapStore";
 import { RoadRavenContextMenu } from "./ContextMenu";
-import { InlineRenameInput } from "./InlineRenameInput";
 import type { NodeStatus } from "./RoadmapNode";
 import { RoadmapNodeCard } from "./RoadmapNode";
 import { SchemaErrorPanel } from "./SchemaErrorPanel";
@@ -160,21 +159,27 @@ export function Canvas() {
 		});
 	}, [targetNodeId, dimensions, animatePanTo]);
 
-	// Inline rename opened by ContextMenu via window CustomEvent bridge —
-	// avoids passing Canvas-local refs (transform, container rect) down through
-	// the menu component tree.
+	// Inline rename bridge: any caller that wants to enter rename mode on a
+	// node dispatches a window CustomEvent with the node's id. Sources:
+	//   - ContextMenu "Rename" item
+	//   - ContextMenu Add Child / Add Sibling / Duplicate (auto-rename after
+	//     create)
+	//   - useKeyboardRouter F2 + creation shortcuts
+	//   - MutationsPanel create buttons
+	// With card-matched rename, the position args to inlineRename.open are
+	// unused (the input renders inside the card itself), but the hook still
+	// accepts them — passing zeros avoids changing the hook's public API.
 	useEffect(() => {
 		const handler = (e: Event) => {
 			const detail = (e as CustomEvent<{ nodeId: string }>).detail;
 			if (!detail?.nodeId) return;
-			const pos = nodePositionsRef.current.get(detail.nodeId);
-			const rect = containerRef.current?.getBoundingClientRect();
-			if (pos && rect) {
-				inlineRename.open(detail.nodeId, pos.x, pos.y, transformRef.current, {
-					left: rect.left,
-					top: rect.top,
-				});
-			}
+			inlineRename.open(
+				detail.nodeId,
+				0,
+				0,
+				{ x: 0, y: 0, k: 1 },
+				{ left: 0, top: 0 },
+			);
 		};
 		window.addEventListener("roadraven:open-rename", handler);
 		return () => window.removeEventListener("roadraven:open-rename", handler);
@@ -279,6 +284,11 @@ export function Canvas() {
 								});
 							}
 						}}
+						isRenaming={inlineRename.state.nodeId === nodeId}
+						renameValue={inlineRename.state.title}
+						onRenameChange={inlineRename.setTitle}
+						onRenameCommit={inlineRename.commit}
+						onRenameCancel={inlineRename.cancel}
 					/>
 				</foreignObject>
 			);
@@ -365,15 +375,9 @@ export function Canvas() {
 					/>
 				)}
 
-				{inlineRename.state.nodeId && inlineRename.state.screenPos && (
-					<InlineRenameInput
-						screenPos={inlineRename.state.screenPos}
-						value={inlineRename.state.title}
-						onChange={inlineRename.setTitle}
-						onCommit={inlineRename.commit}
-						onCancel={inlineRename.cancel}
-					/>
-				)}
+				{/* Inline rename renders inside RoadmapNodeCard (card-matched UX).
+				    useInlineRename still owns open/commit/cancel state; the
+				    card reads it via props. */}
 
 				{schemaErrors.length > 0 && (
 					<SchemaErrorPanel

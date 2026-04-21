@@ -39,6 +39,14 @@ function isMenuOpen(): boolean {
 	return !!document.querySelector('[role="menu"]');
 }
 
+/** Fire the rename bridge so Canvas opens inline rename on a newly-created node. */
+function dispatchAutoRename(newId: string | null | undefined): void {
+	if (!newId) return;
+	window.dispatchEvent(
+		new CustomEvent("roadraven:open-rename", { detail: { nodeId: newId } }),
+	);
+}
+
 function navigateSibling(nodeId: string, delta: number): void {
 	const schema = useRoadmapStore.getState().schema;
 	if (!schema) return;
@@ -106,11 +114,12 @@ export function useKeyboardRouter(deps: RouterDeps): void {
 				return;
 			}
 
-			// Ctrl+D — duplicate focused
+			// Ctrl+D — duplicate focused; auto-rename the copy so the user can
+			// retitle it without a second keystroke.
 			if ((e.ctrlKey || e.metaKey) && e.key === "d") {
 				if (focusedId) {
 					e.preventDefault();
-					store.duplicateNode(focusedId);
+					dispatchAutoRename(store.duplicateNode(focusedId));
 				}
 				return;
 			}
@@ -147,20 +156,22 @@ export function useKeyboardRouter(deps: RouterDeps): void {
 				return;
 			}
 
-			// Enter / Shift+Enter / Tab — creation shortcuts
+			// Enter / Shift+Enter / Tab — creation shortcuts. Each dispatches
+			// the rename bridge so the new node gets an inline rename input
+			// focused immediately (create-then-rename UX).
 			if (e.key === "Enter" && !e.shiftKey && focusedId) {
 				e.preventDefault();
-				store.addChild(focusedId);
+				dispatchAutoRename(store.addChild(focusedId));
 				return;
 			}
 			if (e.key === "Enter" && e.shiftKey && focusedId) {
 				e.preventDefault();
-				store.addSiblingAbove(focusedId);
+				dispatchAutoRename(store.addSiblingAbove(focusedId));
 				return;
 			}
 			if (e.key === "Tab" && focusedId) {
 				e.preventDefault();
-				store.addSiblingBelow(focusedId);
+				dispatchAutoRename(store.addSiblingBelow(focusedId));
 				return;
 			}
 
