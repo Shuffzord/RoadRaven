@@ -8,6 +8,7 @@ import { useInlineRename } from "../hooks/useInlineRename";
 import { useKeyboardRouter } from "../hooks/useKeyboardRouter";
 import { electroview } from "../rpc";
 import { useRoadmapStore } from "../store/roadmapStore";
+import { RoadRavenContextMenu } from "./ContextMenu";
 import { InlineRenameInput } from "./InlineRenameInput";
 import type { NodeStatus } from "./RoadmapNode";
 import { RoadmapNodeCard } from "./RoadmapNode";
@@ -60,6 +61,10 @@ export function Canvas() {
 
 	// Inline rename state
 	const inlineRename = useInlineRename();
+
+	// Target of the most recent right-click — null when opened on empty canvas.
+	// Drives RoadRavenContextMenu's node-vs-canvas content switch.
+	const [contextTargetId, setContextTargetId] = useState<string | null>(null);
 
 	// Load recent files on mount
 	useEffect(() => {
@@ -154,6 +159,26 @@ export function Canvas() {
 			y: dimensions.height / 2 - pos.y * t.k,
 		});
 	}, [targetNodeId, dimensions, animatePanTo]);
+
+	// Inline rename opened by ContextMenu via window CustomEvent bridge —
+	// avoids passing Canvas-local refs (transform, container rect) down through
+	// the menu component tree.
+	useEffect(() => {
+		const handler = (e: Event) => {
+			const detail = (e as CustomEvent<{ nodeId: string }>).detail;
+			if (!detail?.nodeId) return;
+			const pos = nodePositionsRef.current.get(detail.nodeId);
+			const rect = containerRef.current?.getBoundingClientRect();
+			if (pos && rect) {
+				inlineRename.open(detail.nodeId, pos.x, pos.y, transformRef.current, {
+					left: rect.left,
+					top: rect.top,
+				});
+			}
+		};
+		window.addEventListener("roadraven:open-rename", handler);
+		return () => window.removeEventListener("roadraven:open-rename", handler);
+	}, [inlineRename]);
 
 	// Wire the keyboard router
 	useKeyboardRouter({
@@ -268,90 +293,95 @@ export function Canvas() {
 	);
 
 	return (
-		<div
-			ref={containerRef}
-			className="[grid-area:canvas] bg-rv-bg-canvas relative overflow-hidden"
-			role="application"
-			// biome-ignore lint/a11y/noNoninteractiveTabindex: role="application" is an interactive ARIA widget — must be focusable so Escape/onKeyDown reaches the canvas.
-			tabIndex={0}
-			style={{
-				backgroundImage:
-					"radial-gradient(circle, var(--rv-dot-grid) 1px, transparent 1px)",
-				backgroundSize: "40px 40px",
-			}}
-			onClick={(e) => {
-				// Deselect node when clicking empty canvas
-				if (e.target === e.currentTarget) {
-					setSelectedNode(null);
-				}
-			}}
-			onKeyDown={(e) => {
-				if (e.key === "Escape") {
-					setSelectedNode(null);
-				}
-			}}
+		<RoadRavenContextMenu
+			onOpen={setContextTargetId}
+			targetNodeId={contextTargetId}
 		>
-			{/* Watermark logo -- uses CSS mask so color follows theme */}
 			<div
-				aria-hidden="true"
-				className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] opacity-[0.04] pointer-events-none select-none bg-rv-text-primary"
+				ref={containerRef}
+				className="[grid-area:canvas] bg-rv-bg-canvas relative overflow-hidden"
+				role="application"
+				// biome-ignore lint/a11y/noNoninteractiveTabindex: role="application" is an interactive ARIA widget — must be focusable so Escape/onKeyDown reaches the canvas.
+				tabIndex={0}
 				style={{
-					maskImage: `url(${ravenLogo})`,
-					maskSize: "contain",
-					maskRepeat: "no-repeat",
-					maskPosition: "center",
-					WebkitMaskImage: `url(${ravenLogo})`,
-					WebkitMaskSize: "contain",
-					WebkitMaskRepeat: "no-repeat",
-					WebkitMaskPosition: "center",
+					backgroundImage:
+						"radial-gradient(circle, var(--rv-dot-grid) 1px, transparent 1px)",
+					backgroundSize: "40px 40px",
 				}}
-			/>
+				onClick={(e) => {
+					// Deselect node when clicking empty canvas
+					if (e.target === e.currentTarget) {
+						setSelectedNode(null);
+					}
+				}}
+				onKeyDown={(e) => {
+					if (e.key === "Escape") {
+						setSelectedNode(null);
+					}
+				}}
+			>
+				{/* Watermark logo -- uses CSS mask so color follows theme */}
+				<div
+					aria-hidden="true"
+					className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] opacity-[0.04] pointer-events-none select-none bg-rv-text-primary"
+					style={{
+						maskImage: `url(${ravenLogo})`,
+						maskSize: "contain",
+						maskRepeat: "no-repeat",
+						maskPosition: "center",
+						WebkitMaskImage: `url(${ravenLogo})`,
+						WebkitMaskSize: "contain",
+						WebkitMaskRepeat: "no-repeat",
+						WebkitMaskPosition: "center",
+					}}
+				/>
 
-			{treeData === null ? (
-				<WelcomeScreen
-					recentFiles={recentFiles}
-					onOpenFile={openFile}
-					onOpenRecent={openRecent}
-					onOpenSample={openSample}
-				/>
-			) : (
-				<Tree
-					data={treeData}
-					dataKey={dataKey}
-					orientation={layoutOrientation === "TB" ? "vertical" : "horizontal"}
-					pathFunc="step"
-					separation={{ siblings: 1.5, nonSiblings: 2.0 }}
-					nodeSize={{ x: 240, y: 100 }}
-					renderCustomNodeElement={renderNode}
-					zoom={zoomLevel}
-					enableLegacyTransitions={false}
-					centeringTransitionDuration={50800}
-					collapsible={true}
-					zoomable={true}
-					draggable={true}
-					translate={translate}
-					dimensions={dimensions}
-					hasInteractiveNodes={true}
-					onUpdate={handleTreeUpdate}
-				/>
-			)}
+				{treeData === null ? (
+					<WelcomeScreen
+						recentFiles={recentFiles}
+						onOpenFile={openFile}
+						onOpenRecent={openRecent}
+						onOpenSample={openSample}
+					/>
+				) : (
+					<Tree
+						data={treeData}
+						dataKey={dataKey}
+						orientation={layoutOrientation === "TB" ? "vertical" : "horizontal"}
+						pathFunc="step"
+						separation={{ siblings: 1.5, nonSiblings: 2.0 }}
+						nodeSize={{ x: 240, y: 100 }}
+						renderCustomNodeElement={renderNode}
+						zoom={zoomLevel}
+						enableLegacyTransitions={false}
+						centeringTransitionDuration={50800}
+						collapsible={true}
+						zoomable={true}
+						draggable={true}
+						translate={translate}
+						dimensions={dimensions}
+						hasInteractiveNodes={true}
+						onUpdate={handleTreeUpdate}
+					/>
+				)}
 
-			{inlineRename.state.nodeId && inlineRename.state.screenPos && (
-				<InlineRenameInput
-					screenPos={inlineRename.state.screenPos}
-					value={inlineRename.state.title}
-					onChange={inlineRename.setTitle}
-					onCommit={inlineRename.commit}
-					onCancel={inlineRename.cancel}
-				/>
-			)}
+				{inlineRename.state.nodeId && inlineRename.state.screenPos && (
+					<InlineRenameInput
+						screenPos={inlineRename.state.screenPos}
+						value={inlineRename.state.title}
+						onChange={inlineRename.setTitle}
+						onCommit={inlineRename.commit}
+						onCancel={inlineRename.cancel}
+					/>
+				)}
 
-			{schemaErrors.length > 0 && (
-				<SchemaErrorPanel
-					errors={schemaErrors}
-					onDismiss={() => setSchemaErrors([])}
-				/>
-			)}
-		</div>
+				{schemaErrors.length > 0 && (
+					<SchemaErrorPanel
+						errors={schemaErrors}
+						onDismiss={() => setSchemaErrors([])}
+					/>
+				)}
+			</div>
+		</RoadRavenContextMenu>
 	);
 }
