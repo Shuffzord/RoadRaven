@@ -173,13 +173,21 @@ export function Canvas() {
 		const handler = (e: Event) => {
 			const detail = (e as CustomEvent<{ nodeId: string }>).detail;
 			if (!detail?.nodeId) return;
-			inlineRename.open(
-				detail.nodeId,
-				0,
-				0,
-				{ x: 0, y: 0, k: 1 },
-				{ left: 0, top: 0 },
-			);
+			// Defer by one frame so Radix ContextMenu's onCloseAutoFocus can
+			// finish returning focus to the trigger BEFORE we focus the input.
+			// Without this, menu-sourced create-then-rename races: Radix's
+			// focus restore fires blur on the input, the blur handler commits
+			// and closes rename. Keyboard-sourced creates have no menu to
+			// close and therefore no race; the defer is a no-op for them.
+			requestAnimationFrame(() => {
+				inlineRename.open(
+					detail.nodeId,
+					0,
+					0,
+					{ x: 0, y: 0, k: 1 },
+					{ left: 0, top: 0 },
+				);
+			});
 		};
 		window.addEventListener("roadraven:open-rename", handler);
 		return () => window.removeEventListener("roadraven:open-rename", handler);
