@@ -10,7 +10,13 @@
     "build:canary": "bun run --cwd packages/desktop build:canary",
     "start": "bun run --cwd packages/desktop start",
     "dev": "bun run --cwd packages/desktop dev",
-    "test": "bun run --cwd packages/desktop test",
+    "test": "bun run --filter '*' test",
+    "test:desktop": "bun run --cwd packages/desktop test",
+    "test:file": "bun run --cwd packages/desktop test:file",
+    "test:typecheck": "bun run --cwd packages/desktop typecheck",
+    "test:build": "bun run --cwd packages/desktop build",
+    "test:lint": "bunx @biomejs/biome lint packages/desktop/src/ shared/",
+    "verify": "bun run test && bun run test:typecheck && bun run test:build && bun run test:lint",
     "prepare": "husky"
   },
   "devDependencies": {

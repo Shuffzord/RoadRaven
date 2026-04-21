@@ -4,6 +4,7 @@ import type {
 	RoadmapNode,
 	RoadmapSchema,
 } from "../../../../../packages/core/src/schema";
+import { parseSubtree, refreshNodeIds, serializeSubtree } from "./clipboard";
 
 /**
  * Convert a RoadmapNode to a react-d3-tree RawNodeDatum.
@@ -44,6 +45,116 @@ export function buildNodeIndex(nodes: RoadmapNode[]): Map<string, RoadmapNode> {
 	return index;
 }
 
+// ----------------------------------------------------------------------------
+// Internal helpers -- tree walking + node construction
+// ----------------------------------------------------------------------------
+
+function makeNewNode(title = "Untitled"): RoadmapNode {
+	const now = new Date().toISOString();
+	return {
+		id: crypto.randomUUID(),
+		title,
+		status: "not-started",
+		createdAt: now,
+		updatedAt: now,
+	};
+}
+
+type ParentLookup = {
+	parent: RoadmapNode | null;
+	parentArray: RoadmapNode[];
+	index: number;
+};
+
+/**
+ * Locate a node's parent-array + index (or `null` if not found).
+ * For root-level targets returns { parent: null, parentArray: nodes, index }.
+ */
+export function findParentAndIndex(
+	nodes: RoadmapNode[],
+	nodeId: string,
+): ParentLookup | null {
+	// Check root level first
+	for (let i = 0; i < nodes.length; i++) {
+		if (nodes[i].id === nodeId) {
+			return { parent: null, parentArray: nodes, index: i };
+		}
+	}
+	// Recurse into children
+	function walk(list: RoadmapNode[]): ParentLookup | null {
+		for (const node of list) {
+			if (node.children) {
+				for (let i = 0; i < node.children.length; i++) {
+					if (node.children[i].id === nodeId) {
+						return { parent: node, parentArray: node.children, index: i };
+					}
+				}
+				const deeper = walk(node.children);
+				if (deeper) return deeper;
+			}
+		}
+		return null;
+	}
+	return walk(nodes);
+}
+
+function countSubtree(node: RoadmapNode): number {
+	let count = 1;
+	if (node.children) {
+		for (const c of node.children) count += countSubtree(c);
+	}
+	return count;
+}
+
+/**
+ * Immutably replace the children array under a specific parent (or root-level
+ * if parentId is null). Returns a new root array sharing sibling references
+ * outside the mutated path.
+ */
+function immutablyReplaceArray(
+	nodes: RoadmapNode[],
+	parentId: string | null,
+	mutator: (arr: RoadmapNode[]) => RoadmapNode[],
+): RoadmapNode[] {
+	if (parentId === null) {
+		return mutator(nodes);
+	}
+	return nodes.map((node) => {
+		if (node.id === parentId) {
+			return { ...node, children: mutator(node.children ?? []) };
+		}
+		if (node.children) {
+			const replaced = immutablyReplaceArray(node.children, parentId, mutator);
+			if (replaced !== node.children) {
+				return { ...node, children: replaced };
+			}
+		}
+		return node;
+	});
+}
+
+/**
+ * Immutably update a specific node in the tree via updater (for renameNode).
+ */
+function immutablyUpdateNode(
+	nodes: RoadmapNode[],
+	nodeId: string,
+	updater: (n: RoadmapNode) => RoadmapNode,
+): RoadmapNode[] {
+	return nodes.map((node) => {
+		if (node.id === nodeId) {
+			return updater(node);
+		}
+		if (node.children) {
+			const replaced = immutablyUpdateNode(node.children, nodeId, updater);
+			if (replaced !== node.children) {
+				return { ...node, children: replaced };
+			}
+		}
+		return node;
+	});
+}
+
 interface RoadmapState {
 	// Document data
 	schema: RoadmapSchema | null;
@@ -54,6 +165,7 @@ interface RoadmapState {
 
 	// UI state
 	selectedNodeId: string | null;
+	focusedNodeId: string | null;
 	layoutOrientation: "TB" | "LR";
 	isPanelPinned: boolean;
 
@@ -67,16 +179,48 @@ interface RoadmapState {
 	// Status change counter — incremented on updateNodeStatus to trigger re-renders
 	statusTick: number;
 
+	// Pending delete confirmation (non-leaf delete)
+	pendingConfirmation: {
+		nodeId: string;
+		nodeTitle: string;
+		deletedCount: number;
+	} | null;
+
+	// In-memory clipboard buffer fallback (A2)
+	lastCopiedSubtree: RoadmapNode | null;
+
 	// Actions -- structural (increment dataKey)
 	loadSchema: (schema: RoadmapSchema, filePath: string) => void;
 	reloadSchema: (schema: RoadmapSchema) => void;
+	addChild: (parentId: string, title?: string) => string | null;
+	addSiblingAbove: (nodeId: string) => string | null;
+	addSiblingBelow: (nodeId: string) => string | null;
+	deleteNode: (nodeId: string) => { deletedCount: number };
+	requestDelete: (nodeId: string) => void;
+	confirmDelete: () => void;
+	cancelDelete: () => void;
+	duplicateNode: (nodeId: string) => string | null;
+	moveNodeUp: (nodeId: string) => void;
+	moveNodeDown: (nodeId: string) => void;
+	renameNode: (nodeId: string, title: string) => void;
 
 	// Actions -- in-place (no dataKey change)
 	updateNodeStatus: (nodeId: string, status: string) => void;
+	updateNodeType: (nodeId: string, type: string) => void;
+	updateNodeMetadata: (
+		nodeId: string,
+		metadata: Record<string, unknown>,
+	) => void;
+	updateNodeNotes: (nodeId: string, notes: string) => void;
 	setSelectedNode: (id: string | null) => void;
+	setFocusedNode: (id: string | null) => void;
 	setLayout: (orientation: "TB" | "LR") => void;
 	getSelectedNode: () => RoadmapNode | undefined;
 	getNodeCount: () => number;
+
+	// Clipboard actions
+	copySubtreeToClipboard: (nodeId: string) => Promise<void>;
+	pasteFromClipboard: (parentId: string | null) => Promise<string | null>;
 
 	// Viewport actions
 	resetView: () => void;
@@ -96,90 +240,404 @@ export const INITIAL_STATE = {
 	dataKey: "0",
 	nodeIndex: new Map<string, RoadmapNode>(),
 	selectedNodeId: null as string | null,
+	focusedNodeId: null as string | null,
 	layoutOrientation: "TB" as const,
 	isPanelPinned: false,
 	translate: { x: 400, y: 50 },
 	zoomLevel: 0.8,
 	schemaErrors: [] as Array<{ path: string; message: string; code: string }>,
 	statusTick: 0,
+	pendingConfirmation: null as {
+		nodeId: string;
+		nodeTitle: string;
+		deletedCount: number;
+	} | null,
+	lastCopiedSubtree: null as RoadmapNode | null,
 };
 
-export const useRoadmapStore = create<RoadmapState>((set, get) => ({
-	...INITIAL_STATE,
-
-	loadSchema: (schema, filePath) => {
-		const treeData = schema.nodes[0] ? toTreeDatum(schema.nodes[0]) : null;
-		const nodeIndex = buildNodeIndex(schema.nodes);
+export const useRoadmapStore = create<RoadmapState>((set, get) => {
+	/**
+	 * Apply a structural mutation to schema.nodes: rebuild nodeIndex + treeData,
+	 * bump dataKey. All mutations that change tree structure call this.
+	 */
+	function bumpStructural(
+		nextNodes: RoadmapNode[],
+		options?: { preserveNodeIndex?: boolean },
+	): void {
+		const currentSchema = get().schema;
+		if (!currentSchema) return;
+		const treeData = nextNodes[0] ? toTreeDatum(nextNodes[0]) : null;
 		const nextKey = String(Number(get().dataKey) + 1);
-		set({
-			schema,
-			filePath,
-			treeData,
-			nodeIndex,
-			dataKey: nextKey,
-			statusTick: 0,
-		});
-	},
+		if (options?.preserveNodeIndex) {
+			set({
+				schema: { ...currentSchema, nodes: nextNodes },
+				treeData,
+				dataKey: nextKey,
+			});
+		} else {
+			set({
+				schema: { ...currentSchema, nodes: nextNodes },
+				treeData,
+				dataKey: nextKey,
+				nodeIndex: buildNodeIndex(nextNodes),
+			});
+		}
+	}
 
-	reloadSchema: (schema) => {
-		const treeData = schema.nodes[0] ? toTreeDatum(schema.nodes[0]) : null;
-		const nodeIndex = buildNodeIndex(schema.nodes);
-		const nextKey = String(Number(get().dataKey) + 1);
-		set({
-			schema,
-			treeData,
-			nodeIndex,
-			dataKey: nextKey,
-			statusTick: 0,
-		});
-	},
+	return {
+		...INITIAL_STATE,
 
-	updateNodeStatus: (nodeId, status) => {
-		const node = get().nodeIndex.get(nodeId);
-		if (!node) return;
-		if (node.status === status) return;
-		// Mutate in-place -- do NOT increment dataKey or create new treeData ref.
-		// This is the critical performance path per D-02: status-only updates
-		// bypass react-d3-tree's deep-clone by keeping the same data reference.
-		// NOTE: Canvas.tsx currently reads status from treeData.attributes (stale copy).
-		// Phase 3 must update renderCustomNode to read from nodeIndex + statusTick.
-		node.status = status as RoadmapNode["status"];
-		set({ statusTick: get().statusTick + 1 });
-	},
+		loadSchema: (schema, filePath) => {
+			const treeData = schema.nodes[0] ? toTreeDatum(schema.nodes[0]) : null;
+			const nodeIndex = buildNodeIndex(schema.nodes);
+			const nextKey = String(Number(get().dataKey) + 1);
+			set({
+				schema,
+				filePath,
+				treeData,
+				nodeIndex,
+				dataKey: nextKey,
+				statusTick: 0,
+				focusedNodeId: null,
+				pendingConfirmation: null,
+			});
+		},
 
-	setSelectedNode: (id) => {
-		set({ selectedNodeId: id });
-	},
+		reloadSchema: (schema) => {
+			const treeData = schema.nodes[0] ? toTreeDatum(schema.nodes[0]) : null;
+			const nodeIndex = buildNodeIndex(schema.nodes);
+			const nextKey = String(Number(get().dataKey) + 1);
+			set({
+				schema,
+				treeData,
+				nodeIndex,
+				dataKey: nextKey,
+				statusTick: 0,
+				focusedNodeId: null,
+				pendingConfirmation: null,
+			});
+		},
 
-	setLayout: (orientation) => {
-		set({ layoutOrientation: orientation });
-	},
+		// --- Structural mutations ------------------------------------------------
 
-	getSelectedNode: () => {
-		const { nodeIndex, selectedNodeId } = get();
-		return nodeIndex.get(selectedNodeId ?? "");
-	},
+		addChild: (parentId, title) => {
+			const schema = get().schema;
+			if (!schema) return null;
+			const nodes = schema.nodes;
+			const found = findParentAndIndex(nodes, parentId);
+			if (!found) return null;
+			const newNode = makeNewNode(title);
+			const nextNodes = immutablyReplaceArray(nodes, parentId, (children) => [
+				...children,
+				newNode,
+			]);
+			bumpStructural(nextNodes);
+			return newNode.id;
+		},
 
-	getNodeCount: () => {
-		return get().nodeIndex.size;
-	},
+		addSiblingAbove: (nodeId) => {
+			const schema = get().schema;
+			if (!schema) return null;
+			const nodes = schema.nodes;
+			const found = findParentAndIndex(nodes, nodeId);
+			if (!found) return null;
+			const newNode = makeNewNode();
+			const parentId = found.parent ? found.parent.id : null;
+			const nextNodes = immutablyReplaceArray(nodes, parentId, (arr) => {
+				const copy = [...arr];
+				copy.splice(found.index, 0, newNode);
+				return copy;
+			});
+			bumpStructural(nextNodes);
+			return newNode.id;
+		},
 
-	resetView: () => {
-		// Center the root node in the canvas area.
-		// Canvas occupies the area after the sidebar (~40px) and below the topbar (~50px).
-		const canvasWidth =
-			typeof window !== "undefined" ? window.innerWidth - 40 : 800;
-		const canvasHeight =
-			typeof window !== "undefined" ? window.innerHeight - 50 - 26 : 600;
-		set({
-			translate: { x: canvasWidth / 2, y: canvasHeight / 3 },
-			zoomLevel: 0.8,
-		});
-	},
+		addSiblingBelow: (nodeId) => {
+			const schema = get().schema;
+			if (!schema) return null;
+			const nodes = schema.nodes;
+			const found = findParentAndIndex(nodes, nodeId);
+			if (!found) return null;
+			const newNode = makeNewNode();
+			const parentId = found.parent ? found.parent.id : null;
+			const nextNodes = immutablyReplaceArray(nodes, parentId, (arr) => {
+				const copy = [...arr];
+				copy.splice(found.index + 1, 0, newNode);
+				return copy;
+			});
+			bumpStructural(nextNodes);
+			return newNode.id;
+		},
 
-	setTranslate: (translate) => set({ translate }),
+		deleteNode: (nodeId) => {
+			const schema = get().schema;
+			if (!schema) return { deletedCount: 0 };
+			const nodes = schema.nodes;
+			const found = findParentAndIndex(nodes, nodeId);
+			if (!found) return { deletedCount: 0 };
+			const target = found.parentArray[found.index];
+			// No-op when deleting the last remaining root node
+			if (!found.parent && nodes.length === 1) {
+				return { deletedCount: 0 };
+			}
+			const deletedCount = countSubtree(target);
+			const parentId = found.parent ? found.parent.id : null;
+			// Resolve the focus/selection successor BEFORE mutation. Without
+			// this, deleting the focused node leaves focusedNodeId null and
+			// the user is stranded — no keyboard target to navigate from.
+			// Preference: previous sibling > next sibling > parent.
+			const prevSibling =
+				found.index > 0 ? found.parentArray[found.index - 1] : null;
+			const nextSibling =
+				found.index < found.parentArray.length - 1
+					? found.parentArray[found.index + 1]
+					: null;
+			const successorId =
+				prevSibling?.id ?? nextSibling?.id ?? found.parent?.id ?? null;
+			const nextNodes = immutablyReplaceArray(nodes, parentId, (arr) => {
+				const copy = [...arr];
+				copy.splice(found.index, 1);
+				return copy;
+			});
+			const prev = get();
+			const reassignSel = prev.selectedNodeId === nodeId;
+			const reassignFocus = prev.focusedNodeId === nodeId;
+			bumpStructural(nextNodes);
+			if (reassignSel || reassignFocus) {
+				set({
+					selectedNodeId: reassignSel ? successorId : prev.selectedNodeId,
+					focusedNodeId: reassignFocus ? successorId : prev.focusedNodeId,
+				});
+			}
+			return { deletedCount };
+		},
 
-	setZoomLevel: (zoom) => set({ zoomLevel: zoom }),
+		requestDelete: (nodeId) => {
+			const node = get().nodeIndex.get(nodeId);
+			if (!node) return;
+			const childCount = node.children?.length ?? 0;
+			if (childCount === 0) {
+				get().deleteNode(nodeId);
+				return;
+			}
+			// pendingConfirmation.deletedCount = descendants only (countSubtree
+			// includes the root itself). The dialog renders "Delete node and N
+			// child(ren)?" — user's mental model of N is descendants, not
+			// "subtree size including the node they clicked".
+			set({
+				pendingConfirmation: {
+					nodeId,
+					nodeTitle: node.title,
+					deletedCount: countSubtree(node) - 1,
+				},
+			});
+		},
 
-	setSchemaErrors: (errors) => set({ schemaErrors: errors }),
-}));
+		confirmDelete: () => {
+			const pending = get().pendingConfirmation;
+			if (!pending) return;
+			get().deleteNode(pending.nodeId);
+			set({ pendingConfirmation: null });
+		},
+
+		cancelDelete: () => {
+			set({ pendingConfirmation: null });
+		},
+
+		duplicateNode: (nodeId) => {
+			const schema = get().schema;
+			if (!schema) return null;
+			const nodes = schema.nodes;
+			const found = findParentAndIndex(nodes, nodeId);
+			if (!found) return null;
+			const source = found.parentArray[found.index];
+			const clone = refreshNodeIds(source);
+			const parentId = found.parent ? found.parent.id : null;
+			const nextNodes = immutablyReplaceArray(nodes, parentId, (arr) => {
+				const copy = [...arr];
+				copy.splice(found.index + 1, 0, clone);
+				return copy;
+			});
+			bumpStructural(nextNodes);
+			return clone.id;
+		},
+
+		moveNodeUp: (nodeId) => {
+			const schema = get().schema;
+			if (!schema) return;
+			const nodes = schema.nodes;
+			const found = findParentAndIndex(nodes, nodeId);
+			if (!found || found.index === 0) return;
+			const parentId = found.parent ? found.parent.id : null;
+			const idx = found.index;
+			const nextNodes = immutablyReplaceArray(nodes, parentId, (arr) => {
+				const copy = [...arr];
+				const tmp = copy[idx - 1];
+				copy[idx - 1] = copy[idx];
+				copy[idx] = tmp;
+				return copy;
+			});
+			// preserveNodeIndex: the node objects (and their IDs) are unchanged —
+			// only their position within the children array changed, so the existing
+			// nodeIndex Map entries remain valid.
+			bumpStructural(nextNodes, { preserveNodeIndex: true });
+		},
+
+		moveNodeDown: (nodeId) => {
+			const schema = get().schema;
+			if (!schema) return;
+			const nodes = schema.nodes;
+			const found = findParentAndIndex(nodes, nodeId);
+			if (!found) return;
+			const len = found.parentArray.length;
+			if (found.index >= len - 1) return;
+			const parentId = found.parent ? found.parent.id : null;
+			const idx = found.index;
+			const nextNodes = immutablyReplaceArray(nodes, parentId, (arr) => {
+				const copy = [...arr];
+				const tmp = copy[idx + 1];
+				copy[idx + 1] = copy[idx];
+				copy[idx] = tmp;
+				return copy;
+			});
+			bumpStructural(nextNodes, { preserveNodeIndex: true });
+		},
+
+		renameNode: (nodeId, title) => {
+			const trimmed = title.trim();
+			if (!trimmed) return;
+			const schema = get().schema;
+			if (!schema) return;
+			const now = new Date().toISOString();
+			const nextNodes = immutablyUpdateNode(schema.nodes, nodeId, (n) => ({
+				...n,
+				title: trimmed,
+				updatedAt: now,
+			}));
+			bumpStructural(nextNodes);
+		},
+
+		// --- In-place mutations --------------------------------------------------
+
+		updateNodeStatus: (nodeId, status) => {
+			const node = get().nodeIndex.get(nodeId);
+			if (!node) return;
+			if (node.status === status) return;
+			// Mutate in-place -- do NOT increment dataKey or create new treeData ref.
+			// This is the critical performance path per D-02: status-only updates
+			// bypass react-d3-tree's deep-clone by keeping the same data reference.
+			node.status = status as RoadmapNode["status"];
+			set({ statusTick: get().statusTick + 1 });
+		},
+
+		updateNodeType: (nodeId, type) => {
+			const node = get().nodeIndex.get(nodeId);
+			if (!node) return;
+			if (node.type === type) return;
+			node.type = type;
+			node.updatedAt = new Date().toISOString();
+			set({ statusTick: get().statusTick + 1 });
+		},
+
+		updateNodeMetadata: (nodeId, metadata) => {
+			const node = get().nodeIndex.get(nodeId);
+			if (!node) return;
+			if (node.metadata === metadata) return;
+			node.metadata = metadata;
+			node.updatedAt = new Date().toISOString();
+			set({ statusTick: get().statusTick + 1 });
+		},
+
+		updateNodeNotes: (nodeId, notes) => {
+			const node = get().nodeIndex.get(nodeId);
+			if (!node) return;
+			if (node.notes === notes) return;
+			node.notes = notes;
+			node.updatedAt = new Date().toISOString();
+			set({ statusTick: get().statusTick + 1 });
+		},
+
+		setSelectedNode: (id) => {
+			set({ selectedNodeId: id });
+		},
+
+		setFocusedNode: (id) => {
+			set({ focusedNodeId: id });
+		},
+
+		setLayout: (orientation) => {
+			set({ layoutOrientation: orientation });
+		},
+
+		getSelectedNode: () => {
+			const { nodeIndex, selectedNodeId } = get();
+			return nodeIndex.get(selectedNodeId ?? "");
+		},
+
+		getNodeCount: () => {
+			return get().nodeIndex.size;
+		},
+
+		// --- Clipboard -----------------------------------------------------------
+
+		copySubtreeToClipboard: async (nodeId) => {
+			const node = get().nodeIndex.get(nodeId);
+			if (!node) return;
+			const serialized = serializeSubtree(node);
+			// Clone so later in-place edits to the source don't contaminate the buffer.
+			set({ lastCopiedSubtree: structuredClone(node) });
+			// Best-effort clipboard write
+			try {
+				await navigator.clipboard.writeText(serialized);
+			} catch {
+				// CEF may deny writeText in some builds; in-memory buffer covers us.
+			}
+		},
+
+		pasteFromClipboard: async (parentId) => {
+			let subtree: RoadmapNode | null = null;
+			// Try clipboard.readText first
+			try {
+				const text = await navigator.clipboard.readText();
+				subtree = parseSubtree(text);
+			} catch {
+				// readText denied — fall back to in-memory buffer
+			}
+			if (!subtree) {
+				subtree = get().lastCopiedSubtree;
+			}
+			if (!subtree) return null;
+			const fresh = refreshNodeIds(subtree);
+			const schema = get().schema;
+			if (!schema) return null;
+			// Insert into parent (or as root sibling if parentId null)
+			const nextNodes = immutablyReplaceArray(
+				schema.nodes,
+				parentId,
+				(children) => [...children, fresh],
+			);
+			bumpStructural(nextNodes);
+			return fresh.id;
+		},
+
+		// --- Viewport ------------------------------------------------------------
+
+		resetView: () => {
+			// Center the root node in the canvas area.
+			const canvasWidth =
+				typeof window !== "undefined" ? window.innerWidth - 40 : 800;
+			const canvasHeight =
+				typeof window !== "undefined" ? window.innerHeight - 50 - 26 : 600;
+			set({
+				translate: { x: canvasWidth / 2, y: canvasHeight / 3 },
+				zoomLevel: 0.8,
+			});
+		},
+
+		setTranslate: (translate) => set({ translate }),
+
+		setZoomLevel: (zoom) => set({ zoomLevel: zoom }),
+
+		setSchemaErrors: (errors) => set({ schemaErrors: errors }),
+	};
+});

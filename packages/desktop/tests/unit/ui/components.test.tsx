@@ -55,6 +55,19 @@ describe("RoadmapNodeCard", () => {
 		expect(style).toContain("--rv-status-blocked");
 		expect(style).toContain("--rv-status-blocked-bg");
 	});
+
+	// Screen readers announce aria-label verbatim. UUIDs are meaningless noise
+	// to a human listener, so the label must not leak the internal node id.
+	it("aria-label contains the title only — no UUID substring", () => {
+		const nodeId = "aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee";
+		render(
+			<RoadmapNodeCard nodeId={nodeId} title="My Task" status="in-progress" />,
+		);
+		const card = screen.getByRole("button");
+		const label = card.getAttribute("aria-label") ?? "";
+		expect(label).toBe("My Task");
+		expect(label).not.toContain(nodeId);
+	});
 });
 
 describe("SidePanel", () => {
