@@ -155,6 +155,30 @@ function immutablyUpdateNode(
 	});
 }
 
+export type SaveState =
+	| "saved"
+	| "saving"
+	| "error-retrying"
+	| "error-manual"
+	| "error-modal";
+
+/**
+ * Warning 8 derived-dirty condition. Unsaved edits exist iff the current
+ * dataKey/statusTick diverges from the last values that were successfully
+ * saved to disk. Plan 04c's external-edit toast reads this.
+ */
+export function hasUnsavedEdits(state: {
+	dataKey: string;
+	lastSavedDataKey: string;
+	statusTick: number;
+	lastSavedStatusTick: number;
+}): boolean {
+	return (
+		state.dataKey !== state.lastSavedDataKey ||
+		state.statusTick !== state.lastSavedStatusTick
+	);
+}
+
 interface RoadmapState {
 	// Document data
 	schema: RoadmapSchema | null;
@@ -188,6 +212,17 @@ interface RoadmapState {
 
 	// In-memory clipboard buffer fallback (A2)
 	lastCopiedSubtree: RoadmapNode | null;
+
+	// --- Plan 03-04b: Save state machine ------------------------------------
+	saveState: SaveState;
+	lastSaveError: { message: string; attemptedAt: number } | null;
+	failureCount: number;
+	// Warning 8: snapshots of dataKey/statusTick as of the last successful save.
+	// Used by hasUnsavedEdits() — replaces rejected never-set write-flag design.
+	lastSavedDataKey: string;
+	lastSavedStatusTick: number;
+	externalEditPending: { path: string } | null;
+	autosavePaused: boolean;
 
 	// Actions -- structural (increment dataKey)
 	loadSchema: (schema: RoadmapSchema, filePath: string) => void;
@@ -231,6 +266,12 @@ interface RoadmapState {
 	setSchemaErrors: (
 		errors: Array<{ path: string; message: string; code: string }>,
 	) => void;
+
+	// --- Plan 03-04b: Save state machine actions ----------------------------
+	setSaveState: (state: SaveState, errorMsg?: string) => void;
+	setExternalEdit: (path: string | null) => void;
+	resolveExternalEdit: (action: "reload" | "keep") => void;
+	triggerSave: () => void;
 }
 
 export const INITIAL_STATE = {
@@ -253,6 +294,14 @@ export const INITIAL_STATE = {
 		deletedCount: number;
 	} | null,
 	lastCopiedSubtree: null as RoadmapNode | null,
+	// Plan 03-04b save state machine
+	saveState: "saved" as SaveState,
+	lastSaveError: null as { message: string; attemptedAt: number } | null,
+	failureCount: 0,
+	lastSavedDataKey: "0",
+	lastSavedStatusTick: 0,
+	externalEditPending: null as { path: string } | null,
+	autosavePaused: false,
 };
 
 export const useRoadmapStore = create<RoadmapState>((set, get) => {
@@ -300,6 +349,13 @@ export const useRoadmapStore = create<RoadmapState>((set, get) => {
 				statusTick: 0,
 				focusedNodeId: null,
 				pendingConfirmation: null,
+				saveState: "saved",
+				lastSaveError: null,
+				failureCount: 0,
+				externalEditPending: null,
+				autosavePaused: false,
+				lastSavedDataKey: nextKey,
+				lastSavedStatusTick: 0,
 			});
 		},
 
@@ -315,6 +371,13 @@ export const useRoadmapStore = create<RoadmapState>((set, get) => {
 				statusTick: 0,
 				focusedNodeId: null,
 				pendingConfirmation: null,
+				saveState: "saved",
+				lastSaveError: null,
+				failureCount: 0,
+				externalEditPending: null,
+				autosavePaused: false,
+				lastSavedDataKey: nextKey,
+				lastSavedStatusTick: 0,
 			});
 		},
 
@@ -639,5 +702,50 @@ export const useRoadmapStore = create<RoadmapState>((set, get) => {
 		setZoomLevel: (zoom) => set({ zoomLevel: zoom }),
 
 		setSchemaErrors: (errors) => set({ schemaErrors: errors }),
+
+		// --- Plan 03-04b: Save state machine --------------------------------
+
+		setSaveState: (state, errorMsg) =>
+			set((prev) => ({
+				saveState: state,
+				lastSaveError: errorMsg
+					? { message: errorMsg, attemptedAt: Date.now() }
+					: prev.lastSaveError,
+				failureCount:
+					state === "saved"
+						? 0
+						: state === "error-retrying"
+							? prev.failureCount + 1
+							: prev.failureCount,
+			})),
+
+		setExternalEdit: (path) =>
+			set({
+				externalEditPending: path ? { path } : null,
+				autosavePaused: path !== null,
+			}),
+
+		resolveExternalEdit: (action) => {
+			const cur = get().externalEditPending;
+			if (!cur) return;
+			set({ externalEditPending: null, autosavePaused: false });
+			// Reload wiring lives in Plan 04c. Emit a CustomEvent the later hook
+			// subscribes to. "keep" simply resumes autosave above.
+			if (action === "reload" && typeof window !== "undefined") {
+				window.dispatchEvent(
+					new CustomEvent("roadraven:reload-file", {
+						detail: { path: cur.path },
+					}),
+				);
+			}
+		},
+
+		triggerSave: () => {
+			// Manual retry entry — used by SaveIndicator and SaveFailureModal.
+			// The useAutosave hook owns the flushNow logic; this just signals.
+			if (typeof window !== "undefined") {
+				window.dispatchEvent(new CustomEvent("roadraven:trigger-save"));
+			}
+		},
 	};
 });
