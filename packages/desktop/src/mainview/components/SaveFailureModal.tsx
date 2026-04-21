@@ -38,14 +38,7 @@ export function SaveFailureModal() {
 			}}
 		>
 			<Dialog.Portal>
-				<Dialog.Overlay
-					style={{
-						position: "fixed",
-						inset: 0,
-						background: "rgba(0,0,0,0.6)",
-						zIndex: 9999,
-					}}
-				/>
+				<Dialog.Overlay className="fixed inset-0 z-[9999] bg-black/60" />
 				<Dialog.Content
 					aria-modal="true"
 					style={{
