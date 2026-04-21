@@ -52,6 +52,14 @@ export function RoadRavenContextMenu({
 					className={MENU_SURFACE_CLASS}
 					aria-label={targetNodeId ? "Node actions" : "Canvas actions"}
 					collisionPadding={8}
+					// Prevent Radix from restoring focus to the trigger (the
+					// node card) when the menu closes. For create-then-rename
+					// this would race the inline-rename input and blur it
+					// immediately, committing the placeholder. For other
+					// close paths (Escape, click outside) the user's next
+					// interaction decides focus; losing the trigger-restore
+					// is acceptable.
+					onCloseAutoFocus={(event) => event.preventDefault()}
 				>
 					{targetNodeId ? (
 						<NodeMenuItems nodeId={targetNodeId} />
