@@ -191,7 +191,9 @@ export function Canvas() {
 		};
 		window.addEventListener(OPEN_RENAME_EVENT, handler);
 		return () => window.removeEventListener(OPEN_RENAME_EVENT, handler);
-	}, [inlineRename]);
+	// inlineRename.open is stable (useCallback with empty deps), so this effect
+	// registers exactly once and is not torn down on every rename keystroke.
+	}, [inlineRename.open]);
 
 	// Wire the keyboard router
 	useKeyboardRouter({

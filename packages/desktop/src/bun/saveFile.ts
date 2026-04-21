@@ -323,6 +323,10 @@ async function readTextFile(path: string): Promise<string> {
 /**
  * Walk the node tree, expand $ref children, and tag ownership. Every visited
  * non-$ref node gets tagged with the currently-active owner file.
+ *
+ * NOTE: bun/index.ts contains a production counterpart `resolveRefs` used by
+ * the live `loadFile` RPC handler. Keep the two in sync — any bug fix here
+ * must be mirrored there, and vice versa.
  */
 async function resolveRefsWithOwnership(
 	nodes: RoadmapNode[],

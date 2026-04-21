@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import type { RoadmapNode } from "../../../../../packages/core/src/schema";
 import { findParentAndIndex, useRoadmapStore } from "../store/roadmapStore";
 import { dispatchOpenRename, type useInlineRename } from "./useInlineRename";
@@ -29,6 +29,8 @@ function isModalOpen(): boolean {
 	// outside the canvas. When a modal is open, the canvas router must stand
 	// down so Enter/Space/Escape reach the dialog's own handlers (delete
 	// confirmation, etc.) instead of firing mutation shortcuts.
+	// Verified against @radix-ui/react-dialog ^1.1 — if Radix changes these
+	// attributes in a future major, this guard silently stops working.
 	return !!document.querySelector('[role="dialog"][data-state="open"]');
 }
 
@@ -36,6 +38,8 @@ function isMenuOpen(): boolean {
 	// Radix ContextMenu mounts Content (role="menu") via portal only while open.
 	// Pitfall 7: if the router processed Enter while the menu was open, both the
 	// menu's onSelect AND the router's addChild would fire on the focused node.
+	// Verified against @radix-ui/react-context-menu ^2.2 — update this selector
+	// if upgrading past a Radix major that changes role or data-state usage.
 	return !!document.querySelector('[role="menu"]');
 }
 
@@ -67,9 +71,17 @@ function returnToParent(nodeId: string): void {
 }
 
 export function useKeyboardRouter(deps: RouterDeps): void {
+	// Mirror the latest deps in a ref so the document listener never needs to
+	// be detached/re-attached when volatile state (inlineRename.state, etc.)
+	// changes. The ref is updated on every render; the handler always reads fresh
+	// values through it, so stale-closure bugs are not possible.
+	const depsRef = useRef(deps);
+	depsRef.current = deps;
+
 	// Main shortcut handler
 	useEffect(() => {
 		const handler = (e: KeyboardEvent): void => {
+			const deps = depsRef.current;
 			// Modal dialogs own their own keyboard handling. If one is open,
 			// the router must not intercept — otherwise Enter confirms delete
 			// but also addChild fires underneath, Space selects behind the
@@ -243,7 +255,7 @@ export function useKeyboardRouter(deps: RouterDeps): void {
 		document.addEventListener("keydown", capturingHandler, true);
 		return () =>
 			document.removeEventListener("keydown", capturingHandler, true);
-	}, [deps]);
+	}, []);
 
 	// Keyboard/mouse mode toggle for focus-ring visibility.
 	// onKey MUST use capture phase: the main router above also uses capture +

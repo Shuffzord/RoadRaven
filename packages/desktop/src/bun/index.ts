@@ -84,6 +84,10 @@ async function getMainViewUrl(): Promise<string> {
  * can split the schema back into per-file payloads without re-walking the tree.
  * Every non-$ref node is tagged with `currentOwner`; entering a $ref'd subtree
  * switches `currentOwner` to the referenced file's absolute path.
+ *
+ * NOTE: saveFile.ts also contains `resolveRefsWithOwnership` used only by
+ * `loadFileHandler` (test path). Keep the two in sync or consolidate them —
+ * any bug fix here must be mirrored there, and vice versa.
  */
 async function resolveRefs(
 	nodes: RoadmapNode[],

@@ -468,16 +468,19 @@ export const useRoadmapStore = create<RoadmapState>((set, get) => {
 			const nodes = schema.nodes;
 			const found = findParentAndIndex(nodes, nodeId);
 			if (!found || found.index === 0) return;
-			// Mutate parentArray IN PLACE — preserves nodeIndex entries
-			// (they reference the same parent/child node objects) while
-			// making .children order reflect the swap.
-			const arr = found.parentArray;
-			const tmp = arr[found.index - 1];
-			arr[found.index - 1] = arr[found.index];
-			arr[found.index] = tmp;
-			// Bump dataKey + rebuild treeData so react-d3-tree re-renders,
-			// but keep the same nodeIndex Map instance.
-			bumpStructural(nodes, { preserveNodeIndex: true });
+			const parentId = found.parent ? found.parent.id : null;
+			const idx = found.index;
+			const nextNodes = immutablyReplaceArray(nodes, parentId, (arr) => {
+				const copy = [...arr];
+				const tmp = copy[idx - 1];
+				copy[idx - 1] = copy[idx];
+				copy[idx] = tmp;
+				return copy;
+			});
+			// preserveNodeIndex: the node objects (and their IDs) are unchanged —
+			// only their position within the children array changed, so the existing
+			// nodeIndex Map entries remain valid.
+			bumpStructural(nextNodes, { preserveNodeIndex: true });
 		},
 
 		moveNodeDown: (nodeId) => {
@@ -488,11 +491,16 @@ export const useRoadmapStore = create<RoadmapState>((set, get) => {
 			if (!found) return;
 			const len = found.parentArray.length;
 			if (found.index >= len - 1) return;
-			const arr = found.parentArray;
-			const tmp = arr[found.index + 1];
-			arr[found.index + 1] = arr[found.index];
-			arr[found.index] = tmp;
-			bumpStructural(nodes, { preserveNodeIndex: true });
+			const parentId = found.parent ? found.parent.id : null;
+			const idx = found.index;
+			const nextNodes = immutablyReplaceArray(nodes, parentId, (arr) => {
+				const copy = [...arr];
+				const tmp = copy[idx + 1];
+				copy[idx + 1] = copy[idx];
+				copy[idx] = tmp;
+				return copy;
+			});
+			bumpStructural(nextNodes, { preserveNodeIndex: true });
 		},
 
 		renameNode: (nodeId, title) => {
