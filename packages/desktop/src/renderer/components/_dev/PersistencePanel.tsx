@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { electroview } from "../../../mainview/rpc";
 import type { RoadmapSchema } from "../../../../../../shared/types";
+import { electroview } from "../../../mainview/rpc";
 
 /**
  * Plan 03-04a mid-plan UAT surface. Exposes every public action shipped by

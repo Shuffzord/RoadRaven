@@ -1,6 +1,5 @@
 /** @vitest-environment jsdom */
-import { fireEvent } from "@testing-library/react";
-import { renderHook } from "@testing-library/react";
+import { fireEvent, renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { RoadmapSchema } from "../../../../../packages/core/src/schema";
 import { useKeyboardRouter } from "../../../src/mainview/hooks/useKeyboardRouter";
@@ -27,9 +26,7 @@ function makeTestSchema(): RoadmapSchema {
 						id: CHILD_B_ID,
 						title: "B",
 						status: "not-started",
-						children: [
-							{ id: CHILD_B1_ID, title: "B1", status: "not-started" },
-						],
+						children: [{ id: CHILD_B1_ID, title: "B1", status: "not-started" }],
 					},
 				],
 			},

@@ -29,14 +29,14 @@ import {
 
 // Persistence surface re-exports — imported by Plan 04b/04c and DevHarness
 export { atomicWrite, splitSchemaByOwnership };
-import { addRecentFile, loadSettings, saveSettings } from "./settings";
 
-// Re-export flushPending so Plan 04c's before-quit wiring can import it from
-// the app entry rather than reaching into the saveFile module directly.
-export { flushPending, pushDialogAllowlistPath };
+import { addRecentFile, loadSettings, saveSettings } from "./settings";
 
 // Re-export the RPC type so downstream modules can import from the app entry
 export type { RoadmapRPCType };
+// Re-export flushPending so Plan 04c's before-quit wiring can import it from
+// the app entry rather than reaching into the saveFile module directly.
+export { flushPending, pushDialogAllowlistPath };
 
 // Initialize logging before anything else (D-21)
 await setupBunLogging();

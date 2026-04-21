@@ -15,24 +15,29 @@
  * bun/index.ts and flips this suite GREEN.
  */
 
-import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import {
+	mkdirSync,
+	mkdtempSync,
+	readFileSync,
+	rmSync,
+	writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-
+import type { RoadmapSchema } from "../../../../../shared/types";
+import * as atomicWriteModule from "../../../src/bun/atomicWrite";
+import { getOwnership, resetRefMap } from "../../../src/bun/refMap";
 // Test hooks exported from bun/saveFile (real implementation lives in Task 2).
 // The hooks let us exercise the handler without booting the whole Electrobun runtime.
 import {
-	saveFileHandler,
 	flushPending,
 	loadFileHandler,
-	__resetSaveFileModuleForTests as reset,
-	__setCachedMainPathForTests as setCachedMainPath,
 	__pushDialogAllowlistPathForTests as pushDialogAllowlist,
+	__resetSaveFileModuleForTests as reset,
+	saveFileHandler,
+	__setCachedMainPathForTests as setCachedMainPath,
 } from "../../../src/bun/saveFile";
-import { getOwnership, resetRefMap } from "../../../src/bun/refMap";
-import * as atomicWriteModule from "../../../src/bun/atomicWrite";
-import type { RoadmapSchema } from "../../../../../shared/types";
 
 const uuid = (seed: string): string =>
 	`${seed.padEnd(8, "0").slice(0, 8)}-bbbb-4ccc-8ddd-000000000000`;
@@ -83,7 +88,10 @@ describe("saveFile handler (T-03.04-01 + T-03.04-07)", () => {
 			filePath: join(tempDir, "..", "etc", "passwd"),
 		});
 
-		expect(result).toEqual({ ok: false, error: expect.stringMatching(/allowlist|traversal|unauthorized/i) });
+		expect(result).toEqual({
+			ok: false,
+			error: expect.stringMatching(/allowlist|traversal|unauthorized/i),
+		});
 		expect(atomicWriteSpy).not.toHaveBeenCalled();
 	});
 
@@ -113,12 +121,17 @@ describe("saveFile handler (T-03.04-01 + T-03.04-07)", () => {
 
 	it("#4 runs RoadmapSchemaSchema.safeParse BEFORE atomicWrite (Zod pre-write)", async () => {
 		setCachedMainPath(mainPath);
-		const invalid = { title: "no-version", nodes: [] } as unknown as RoadmapSchema;
+		const invalid = {
+			title: "no-version",
+			nodes: [],
+		} as unknown as RoadmapSchema;
 
 		const result = await saveFileHandler({ schema: invalid });
 
 		expect(result.ok).toBe(false);
-		expect((result as { ok: false; error: string }).error).toMatch(/invalid|schema|validation/i);
+		expect((result as { ok: false; error: string }).error).toMatch(
+			/invalid|schema|validation/i,
+		);
 		expect(atomicWriteSpy).not.toHaveBeenCalled();
 	});
 
@@ -135,7 +148,9 @@ describe("saveFile handler (T-03.04-01 + T-03.04-07)", () => {
 
 		const schema = validSchema();
 		// Expand to 2 owners: main + ref
-		schema.nodes[0].children = [{ id: uuid("b1"), title: "Ref Root", status: "not-started" }];
+		schema.nodes[0].children = [
+			{ id: uuid("b1"), title: "Ref Root", status: "not-started" },
+		];
 
 		// Seed ownership so the ref child is owned by refPath
 		getOwnership().set(uuid("a1"), mainPath);
@@ -163,7 +178,9 @@ describe("saveFile handler (T-03.04-01 + T-03.04-07)", () => {
 						id: uuid("b1"),
 						title: "Ref Root",
 						status: "not-started",
-						children: [{ id: uuid("b2"), title: "Ref Child", status: "not-started" }],
+						children: [
+							{ id: uuid("b2"), title: "Ref Child", status: "not-started" },
+						],
 					},
 				],
 			}),

@@ -33,9 +33,7 @@ export function ConfirmationDialog() {
 			}}
 		>
 			<Dialog.Portal>
-				<Dialog.Overlay
-					className="fixed inset-0 z-[9999] bg-black/60"
-				/>
+				<Dialog.Overlay className="fixed inset-0 z-[9999] bg-black/60" />
 				<Dialog.Content
 					aria-modal="true"
 					style={{

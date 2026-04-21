@@ -1,10 +1,7 @@
 import { existsSync } from "node:fs";
 import { dirname, resolve, sep } from "node:path";
 import { RoadmapSchemaSchema } from "../../../../packages/core/src/schema";
-import type {
-	RoadmapNode,
-	RoadmapSchema,
-} from "../../../../shared/types";
+import type { RoadmapNode, RoadmapSchema } from "../../../../shared/types";
 import { atomicWrite } from "./atomicWrite";
 import { bunLogger } from "./logging";
 import {
@@ -111,7 +108,8 @@ export async function saveFileHandler(params: {
 		bunLogger.warn`saveFile: filePath ${resolved} not in session allowlist; rejecting`;
 		return {
 			ok: false,
-			error: "saveFile: filePath not in session allowlist (path-traversal mitigation)",
+			error:
+				"saveFile: filePath not in session allowlist (path-traversal mitigation)",
 		};
 	}
 
@@ -289,7 +287,11 @@ export async function loadFileHandler(params: {
  * to node:fs.readFileSync under vitest (Node runtime).
  */
 async function readTextFile(path: string): Promise<string> {
-	const bunGlobal = (globalThis as { Bun?: { file: (p: string) => { text: () => Promise<string> } } }).Bun;
+	const bunGlobal = (
+		globalThis as {
+			Bun?: { file: (p: string) => { text: () => Promise<string> } };
+		}
+	).Bun;
 	if (bunGlobal?.file) {
 		return bunGlobal.file(path).text();
 	}

@@ -132,9 +132,7 @@ describe("refreshNodeIds", () => {
 					id: "old-child",
 					title: "C",
 					status: "completed",
-					children: [
-						{ id: "old-grand", title: "G", status: "blocked" },
-					],
+					children: [{ id: "old-grand", title: "G", status: "blocked" }],
 				},
 			],
 		};
@@ -177,7 +175,9 @@ describe("pasteFromClipboard", () => {
 			id: "src-id",
 			title: "Pasted",
 			status: "in-progress",
-			children: [{ id: "src-child", title: "Pasted-child", status: "completed" }],
+			children: [
+				{ id: "src-child", title: "Pasted-child", status: "completed" },
+			],
 		};
 		clipboardMock.text = serializeSubtree(subtree);
 

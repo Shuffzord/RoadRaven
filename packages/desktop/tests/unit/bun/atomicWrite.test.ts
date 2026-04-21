@@ -1,4 +1,11 @@
-import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import {
+	existsSync,
+	mkdtempSync,
+	readdirSync,
+	readFileSync,
+	rmSync,
+	writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -64,20 +71,27 @@ describe("atomicWrite (EDIT-14)", () => {
 	it("Windows retry: first rename fails with EPERM, second succeeds", async () => {
 		const target = join(tempDir, "retry-success.json");
 		const originalPlatform = process.platform;
-		Object.defineProperty(process, "platform", { value: "win32", configurable: true });
+		Object.defineProperty(process, "platform", {
+			value: "win32",
+			configurable: true,
+		});
 
 		const realRename = renameModule.renameWithRetry;
 		let calls = 0;
-		const spy = vi.spyOn(renameModule, "renameWithRetry").mockImplementation((from: string, to: string) => {
-			calls++;
-			if (calls === 1) {
-				const err = new Error("EPERM: operation not permitted") as NodeJS.ErrnoException;
-				err.code = "EPERM";
-				throw err;
-			}
-			spy.mockRestore();
-			return realRename(from, to);
-		});
+		const spy = vi
+			.spyOn(renameModule, "renameWithRetry")
+			.mockImplementation((from: string, to: string) => {
+				calls++;
+				if (calls === 1) {
+					const err = new Error(
+						"EPERM: operation not permitted",
+					) as NodeJS.ErrnoException;
+					err.code = "EPERM";
+					throw err;
+				}
+				spy.mockRestore();
+				return realRename(from, to);
+			});
 
 		try {
 			await atomicWrite(target, "retried-content");
@@ -86,14 +100,20 @@ describe("atomicWrite (EDIT-14)", () => {
 			// Mock intercepted two attempts: #1 threw EPERM, #2 delegated to real rename
 			expect(calls).toBe(2);
 		} finally {
-			Object.defineProperty(process, "platform", { value: originalPlatform, configurable: true });
+			Object.defineProperty(process, "platform", {
+				value: originalPlatform,
+				configurable: true,
+			});
 		}
 	});
 
 	it("Windows retry: gives up after 3 attempts; final error is EPERM; tmp cleaned up", async () => {
 		const target = join(tempDir, "retry-give-up.json");
 		const originalPlatform = process.platform;
-		Object.defineProperty(process, "platform", { value: "win32", configurable: true });
+		Object.defineProperty(process, "platform", {
+			value: "win32",
+			configurable: true,
+		});
 
 		let calls = 0;
 		vi.spyOn(renameModule, "renameWithRetry").mockImplementation(() => {
@@ -112,27 +132,35 @@ describe("atomicWrite (EDIT-14)", () => {
 			const leftover = readdirSync(tempDir).filter((f) => f.includes(".tmp"));
 			expect(leftover).toHaveLength(0);
 		} finally {
-			Object.defineProperty(process, "platform", { value: originalPlatform, configurable: true });
+			Object.defineProperty(process, "platform", {
+				value: originalPlatform,
+				configurable: true,
+			});
 		}
 	});
 
 	it("treats EEXIST as retriable on Windows", async () => {
 		const target = join(tempDir, "eexist.json");
 		const originalPlatform = process.platform;
-		Object.defineProperty(process, "platform", { value: "win32", configurable: true });
+		Object.defineProperty(process, "platform", {
+			value: "win32",
+			configurable: true,
+		});
 
 		const realRename = renameModule.renameWithRetry;
 		let calls = 0;
-		const spy = vi.spyOn(renameModule, "renameWithRetry").mockImplementation((from: string, to: string) => {
-			calls++;
-			if (calls === 1) {
-				const err = new Error("EEXIST") as NodeJS.ErrnoException;
-				err.code = "EEXIST";
-				throw err;
-			}
-			spy.mockRestore();
-			return realRename(from, to);
-		});
+		const spy = vi
+			.spyOn(renameModule, "renameWithRetry")
+			.mockImplementation((from: string, to: string) => {
+				calls++;
+				if (calls === 1) {
+					const err = new Error("EEXIST") as NodeJS.ErrnoException;
+					err.code = "EEXIST";
+					throw err;
+				}
+				spy.mockRestore();
+				return realRename(from, to);
+			});
 
 		try {
 			await atomicWrite(target, "eexist-handled");
@@ -140,7 +168,10 @@ describe("atomicWrite (EDIT-14)", () => {
 			// #1 threw EEXIST; #2 delegated to real rename → calls = 2
 			expect(calls).toBe(2);
 		} finally {
-			Object.defineProperty(process, "platform", { value: originalPlatform, configurable: true });
+			Object.defineProperty(process, "platform", {
+				value: originalPlatform,
+				configurable: true,
+			});
 		}
 
 		const err = new Error("x") as NodeJS.ErrnoException;

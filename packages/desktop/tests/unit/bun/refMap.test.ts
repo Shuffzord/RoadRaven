@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import type { RoadmapNode, RoadmapSchema } from "../../../../../shared/types";
 import {
 	buildOwnershipMap,
 	getOwnership,
@@ -7,12 +8,15 @@ import {
 	setSourceTemplate,
 	splitSchemaByOwnership,
 } from "../../../src/bun/refMap";
-import type { RoadmapNode, RoadmapSchema } from "../../../../../shared/types";
 
 const uuid = (seed: string): string =>
 	`${seed.padEnd(8, "0").slice(0, 8)}-bbbb-4ccc-8ddd-000000000000`;
 
-function makeNode(id: string, title: string, children?: RoadmapNode[]): RoadmapNode {
+function makeNode(
+	id: string,
+	title: string,
+	children?: RoadmapNode[],
+): RoadmapNode {
 	return {
 		id,
 		title,
@@ -53,9 +57,14 @@ describe("refMap (EDIT-16)", () => {
 	it("tags ref'd descendants to the referenced file when setOwnership overrides", () => {
 		const mainPath = "/fixtures/main.roadmap.json";
 		const refPath = "/fixtures/referenced-part.json";
-		const refRoot = makeNode(uuid("b1"), "Ref Root", [makeNode(uuid("b2"), "Ref Child")]);
+		const refRoot = makeNode(uuid("b1"), "Ref Root", [
+			makeNode(uuid("b2"), "Ref Child"),
+		]);
 		const nodes: RoadmapNode[] = [
-			makeNode(uuid("a1"), "Main Root", [makeNode(uuid("a2"), "Main Child"), refRoot]),
+			makeNode(uuid("a1"), "Main Root", [
+				makeNode(uuid("a2"), "Main Child"),
+				refRoot,
+			]),
 		];
 
 		buildOwnershipMap(nodes, mainPath);
@@ -100,7 +109,11 @@ describe("refMap (EDIT-16)", () => {
 		setOwnership(uuid("b1"), refPath);
 		setOwnership(uuid("b2"), refPath);
 
-		const split = splitSchemaByOwnership(makeSchema(live), mainPath, getOwnership());
+		const split = splitSchemaByOwnership(
+			makeSchema(live),
+			mainPath,
+			getOwnership(),
+		);
 
 		expect(split.size).toBe(2);
 		const mainOut = split.get(mainPath);
@@ -142,10 +155,17 @@ describe("refMap (EDIT-16)", () => {
 		buildOwnershipMap(live, mainPath);
 		setOwnership(uuid("b1"), refPath);
 
-		const split = splitSchemaByOwnership(makeSchema(live), mainPath, getOwnership());
+		const split = splitSchemaByOwnership(
+			makeSchema(live),
+			mainPath,
+			getOwnership(),
+		);
 		const mainKids = split.get(mainPath)!.nodes[0].children!;
 
-		expect(mainKids.map((n) => n.id).slice(0, 2)).toEqual([uuid("a2"), uuid("a3")]);
+		expect(mainKids.map((n) => n.id).slice(0, 2)).toEqual([
+			uuid("a2"),
+			uuid("a3"),
+		]);
 		// Last element is the $ref placeholder
 		expect(mainKids[2].$ref).toBe("./r.json");
 	});
@@ -207,7 +227,11 @@ describe("refMap (EDIT-16)", () => {
 		];
 		buildOwnershipMap(live, mainPath);
 
-		const split = splitSchemaByOwnership(makeSchema(live), mainPath, getOwnership());
+		const split = splitSchemaByOwnership(
+			makeSchema(live),
+			mainPath,
+			getOwnership(),
+		);
 		const mainOut = split.get(mainPath)!;
 		const kids = mainOut.nodes[0].children!;
 

@@ -113,8 +113,9 @@ export function MutationsPanel() {
 			<button
 				type="button"
 				onClick={() =>
-					run("copySubtreeToClipboard", () =>
-						void store.copySubtreeToClipboard(targetId),
+					run(
+						"copySubtreeToClipboard",
+						() => void store.copySubtreeToClipboard(targetId),
 					)
 				}
 			>
@@ -123,8 +124,9 @@ export function MutationsPanel() {
 			<button
 				type="button"
 				onClick={() =>
-					run("pasteFromClipboard", () =>
-						void store.pasteFromClipboard(targetId),
+					run(
+						"pasteFromClipboard",
+						() => void store.pasteFromClipboard(targetId),
 					)
 				}
 			>

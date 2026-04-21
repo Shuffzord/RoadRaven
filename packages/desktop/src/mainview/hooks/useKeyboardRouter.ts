@@ -1,9 +1,6 @@
 import { useEffect } from "react";
 import type { RoadmapNode } from "../../../../../packages/core/src/schema";
-import {
-	findParentAndIndex,
-	useRoadmapStore,
-} from "../store/roadmapStore";
+import { findParentAndIndex, useRoadmapStore } from "../store/roadmapStore";
 import type { useInlineRename } from "./useInlineRename";
 
 interface RouterDeps {
@@ -222,7 +219,8 @@ export function useKeyboardRouter(deps: RouterDeps): void {
 			if (e.defaultPrevented) e.stopPropagation();
 		};
 		document.addEventListener("keydown", capturingHandler, true);
-		return () => document.removeEventListener("keydown", capturingHandler, true);
+		return () =>
+			document.removeEventListener("keydown", capturingHandler, true);
 	}, [deps]);
 
 	// Keyboard/mouse mode toggle for focus-ring visibility.
