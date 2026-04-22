@@ -1,19 +1,19 @@
 import { closeBrackets } from "@codemirror/autocomplete";
 import { defaultKeymap, history, historyKeymap } from "@codemirror/commands";
+import { markdown, markdownLanguage } from "@codemirror/lang-markdown";
 import {
 	bracketMatching,
 	defaultHighlightStyle,
 	indentOnInput,
 	syntaxHighlighting,
 } from "@codemirror/language";
-import { markdown, markdownLanguage } from "@codemirror/lang-markdown";
 import { EditorState } from "@codemirror/state";
 import {
+	placeholder as cmPlaceholder,
 	drawSelection,
 	EditorView,
 	highlightActiveLine,
 	keymap,
-	placeholder as cmPlaceholder,
 } from "@codemirror/view";
 import { useEffect, useRef } from "react";
 import { codemirrorRvTheme } from "../theme/codemirrorTheme";
@@ -40,6 +40,7 @@ export function useCodeMirror({
 	const onPersistRef = useRef(onPersist);
 	onPersistRef.current = onPersist;
 
+	// biome-ignore lint/correctness/useExhaustiveDependencies: initialDoc seeds the editor on mount only — CodeMirror owns the doc after that; container is a ref.
 	useEffect(() => {
 		if (!container.current) return;
 
@@ -81,7 +82,6 @@ export function useCodeMirror({
 			view.destroy();
 			viewRef.current = null;
 		};
-		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [nodeId, debounceMs, ph]);
 
 	return viewRef;

@@ -30,7 +30,7 @@ describe("NotesEditor", () => {
 		// CodeMirror editor should NOT be mounted in preview mode
 		expect(document.querySelector(".cm-editor")).toBeNull();
 		const previewBtn = screen.getByRole("tab", { name: "Preview" });
-		expect(previewBtn.getAttribute("aria-pressed")).toBe("true");
+		expect(previewBtn.getAttribute("aria-selected")).toBe("true");
 	});
 
 	it("clicking 'Edit' segment switches to edit mode; CodeMirror container renders", () => {
@@ -47,7 +47,7 @@ describe("NotesEditor", () => {
 		act(() => {
 			fireEvent.click(editBtn);
 		});
-		expect(editBtn.getAttribute("aria-pressed")).toBe("true");
+		expect(editBtn.getAttribute("aria-selected")).toBe("true");
 		expect(document.querySelector(".cm-editor")).not.toBeNull();
 	});
 
@@ -82,9 +82,7 @@ describe("NotesEditor", () => {
 		act(() => {
 			fireEvent.click(screen.getByRole("tab", { name: "Edit" }));
 		});
-		const cmEditor = document.querySelector(".cm-editor") as
-			| HTMLElement
-			| null;
+		const cmEditor = document.querySelector(".cm-editor") as HTMLElement | null;
 		expect(cmEditor).not.toBeNull();
 		// Access the EditorView via CodeMirror's static lookup
 		const { EditorView } = await import("@codemirror/view");
@@ -104,7 +102,7 @@ describe("NotesEditor", () => {
 		expect(onPersist).toHaveBeenCalledWith(NODE_ID, "typed");
 	});
 
-	it("segmented toggle has role='tablist' and aria-label='Notes view mode'; each segment has role='tab' and aria-pressed", () => {
+	it("segmented toggle has role='tablist' and aria-label='Notes view mode'; each segment has role='tab' and aria-selected", () => {
 		const onPersist = vi.fn();
 		render(
 			<NotesEditor
@@ -119,7 +117,7 @@ describe("NotesEditor", () => {
 		const tabs = screen.getAllByRole("tab");
 		expect(tabs).toHaveLength(3);
 		for (const tab of tabs) {
-			expect(tab.getAttribute("aria-pressed")).toMatch(/^(true|false)$/);
+			expect(tab.getAttribute("aria-selected")).toMatch(/^(true|false)$/);
 		}
 	});
 
@@ -152,9 +150,7 @@ describe("NotesEditor", () => {
 			fireEvent.click(screen.getByRole("tab", { name: "Split" }));
 		});
 		// Notice text visible
-		expect(
-			screen.getByText(/Panel too narrow for split view/i),
-		).not.toBeNull();
+		expect(screen.getByText(/Panel too narrow for split view/i)).not.toBeNull();
 		// CodeMirror still mounts (collapsed to edit); markdown preview should NOT render
 		expect(document.querySelector(".cm-editor")).not.toBeNull();
 		expect(document.querySelector(".markdown-notes")).toBeNull();

@@ -41,7 +41,7 @@ afterEach(() => {
 });
 
 describe("useCodeMirror", () => {
-	it("mounting hook with initialDoc=\"hello\" creates an EditorView", () => {
+	it('mounting hook with initialDoc="hello" creates an EditorView', () => {
 		const onPersist = vi.fn();
 		const { hook } = renderCodeMirror("hello", onPersist);
 		expect(hook.result.current.current).not.toBeNull();

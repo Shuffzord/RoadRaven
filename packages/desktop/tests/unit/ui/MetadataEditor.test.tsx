@@ -17,9 +17,7 @@ describe("MetadataEditor", () => {
 	});
 
 	it("existing metadata { key1: 'v1' } renders one row with key1/v1", () => {
-		render(
-			<MetadataEditor metadata={{ key1: "v1" }} onChange={vi.fn()} />,
-		);
+		render(<MetadataEditor metadata={{ key1: "v1" }} onChange={vi.fn()} />);
 		const keyInput = screen.getByPlaceholderText("key") as HTMLInputElement;
 		const valueInput = screen.getByPlaceholderText("value") as HTMLInputElement;
 		expect(keyInput.value).toBe("key1");
@@ -28,9 +26,7 @@ describe("MetadataEditor", () => {
 
 	it("clicking '+ Add row' adds an empty row — calls onChange with prev + { '': '' }", () => {
 		const onChange = vi.fn();
-		render(
-			<MetadataEditor metadata={{ foo: "bar" }} onChange={onChange} />,
-		);
+		render(<MetadataEditor metadata={{ foo: "bar" }} onChange={onChange} />);
 		const addBtn = screen.getByRole("button", { name: "+ Add row" });
 		act(() => {
 			fireEvent.click(addBtn);
@@ -47,10 +43,7 @@ describe("MetadataEditor", () => {
 	it("editing a key input calls onChange with the renamed key", () => {
 		const onChange = vi.fn();
 		render(
-			<MetadataEditor
-				metadata={{ priority: "high" }}
-				onChange={onChange}
-			/>,
+			<MetadataEditor metadata={{ priority: "high" }} onChange={onChange} />,
 		);
 		const keyInput = screen.getByPlaceholderText("key") as HTMLInputElement;
 		act(() => {
@@ -62,10 +55,7 @@ describe("MetadataEditor", () => {
 	it("editing a value input calls onChange with same key, new value", () => {
 		const onChange = vi.fn();
 		render(
-			<MetadataEditor
-				metadata={{ priority: "low" }}
-				onChange={onChange}
-			/>,
+			<MetadataEditor metadata={{ priority: "low" }} onChange={onChange} />,
 		);
 		const valueInput = screen.getByPlaceholderText("value") as HTMLInputElement;
 		act(() => {
@@ -77,10 +67,7 @@ describe("MetadataEditor", () => {
 	it("clicking x button on a row calls onChange with that key removed", () => {
 		const onChange = vi.fn();
 		render(
-			<MetadataEditor
-				metadata={{ a: "1", b: "2" }}
-				onChange={onChange}
-			/>,
+			<MetadataEditor metadata={{ a: "1", b: "2" }} onChange={onChange} />,
 		);
 		const removeBtn = screen.getByRole("button", {
 			name: 'Delete metadata row "a"',
@@ -93,10 +80,7 @@ describe("MetadataEditor", () => {
 
 	it("delete button has aria-label='Delete metadata row \"{key}\"'", () => {
 		render(
-			<MetadataEditor
-				metadata={{ priority: "high" }}
-				onChange={vi.fn()}
-			/>,
+			<MetadataEditor metadata={{ priority: "high" }} onChange={vi.fn()} />,
 		);
 		const btn = screen.getByLabelText('Delete metadata row "priority"');
 		expect(btn).not.toBeNull();

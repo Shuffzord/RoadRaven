@@ -42,7 +42,7 @@ export function NotesEditor({
 								key={value}
 								type="button"
 								role="tab"
-								aria-pressed={active}
+								aria-selected={active}
 								onClick={() => setMode(value)}
 								className={`px-2 py-1 text-[11px] font-semibold transition-colors ${
 									active
@@ -64,11 +64,7 @@ export function NotesEditor({
 			{effectiveMode === "preview" ? (
 				<PreviewPane notes={notes} />
 			) : effectiveMode === "edit" ? (
-				<EditorPane
-					nodeId={nodeId}
-					initialDoc={notes}
-					onPersist={onPersist}
-				/>
+				<EditorPane nodeId={nodeId} initialDoc={notes} onPersist={onPersist} />
 			) : (
 				<div className="grid grid-cols-2 gap-2">
 					<EditorPane

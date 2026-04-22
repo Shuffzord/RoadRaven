@@ -6,12 +6,20 @@ interface MetadataEditorProps {
 }
 
 interface Row {
+	id: string;
 	key: string;
 	value: string;
 }
 
+let rowIdSeq = 0;
+function newRowId(): string {
+	rowIdSeq += 1;
+	return `r${rowIdSeq}`;
+}
+
 function toRows(m: Record<string, unknown>): Row[] {
 	return Object.entries(m).map(([key, value]) => ({
+		id: newRowId(),
 		key,
 		value: typeof value === "string" ? value : JSON.stringify(value),
 	}));
@@ -33,6 +41,7 @@ export function MetadataEditor({ metadata, onChange }: MetadataEditorProps) {
 	// incoming metadata's serialized form differs from our current rows — this
 	// prevents feedback loops where persist → onChange → parent re-renders with
 	// same data → useEffect fires → rows reset (losing mid-edit in-progress keys).
+	// biome-ignore lint/correctness/useExhaustiveDependencies: external-only sync; adding `rows` would feedback-loop through persist → onChange → re-enter.
 	useEffect(() => {
 		const incoming = toRows(metadata);
 		const current = toRecord(rows);
@@ -40,7 +49,6 @@ export function MetadataEditor({ metadata, onChange }: MetadataEditorProps) {
 		if (JSON.stringify(current) !== JSON.stringify(next)) {
 			setRows(incoming);
 		}
-		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [metadata]);
 
 	const persist = (next: Row[]) => {
@@ -54,7 +62,9 @@ export function MetadataEditor({ metadata, onChange }: MetadataEditorProps) {
 				<div className="text-[13px] text-rv-text-tertiary">
 					No metadata. Click + to add a key-value pair.
 				</div>
-				<AddButton onClick={() => persist([{ key: "", value: "" }])} />
+				<AddButton
+					onClick={() => persist([{ id: newRowId(), key: "", value: "" }])}
+				/>
 			</div>
 		);
 	}
@@ -62,25 +72,27 @@ export function MetadataEditor({ metadata, onChange }: MetadataEditorProps) {
 	return (
 		<div className="flex flex-col gap-2">
 			<div className="grid grid-cols-[1fr_1fr_auto] gap-x-2 gap-y-1 items-center">
-				{rows.map((row, idx) => (
+				{rows.map((row) => (
 					<RowControls
-						key={`row-${idx}`}
+						key={row.id}
 						row={row}
 						onKeyChange={(k) =>
-							persist(
-								rows.map((r, i) => (i === idx ? { ...r, key: k } : r)),
-							)
+							persist(rows.map((r) => (r.id === row.id ? { ...r, key: k } : r)))
 						}
 						onValueChange={(v) =>
 							persist(
-								rows.map((r, i) => (i === idx ? { ...r, value: v } : r)),
+								rows.map((r) => (r.id === row.id ? { ...r, value: v } : r)),
 							)
 						}
-						onRemove={() => persist(rows.filter((_, i) => i !== idx))}
+						onRemove={() => persist(rows.filter((r) => r.id !== row.id))}
 					/>
 				))}
 			</div>
-			<AddButton onClick={() => persist([...rows, { key: "", value: "" }])} />
+			<AddButton
+				onClick={() =>
+					persist([...rows, { id: newRowId(), key: "", value: "" }])
+				}
+			/>
 		</div>
 	);
 }
