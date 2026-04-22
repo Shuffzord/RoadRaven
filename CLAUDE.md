@@ -23,12 +23,17 @@ bun run dev:hmr       # Dev with HMR — runs Vite dev server + electrobun concu
 bun run hmr           # Vite dev server only (port 5173) — used internally by dev:hmr
 bun run build:canary  # Production build (canary channel)
 
-# Tests (vitest)
-bunx vitest           # Run all tests in watch mode
-bunx vitest run       # Run once (CI)
-bunx vitest run path/to/file.test.ts  # Run single test file
+# Tests (vitest) — ALWAYS via `bun run`, never `bunx vitest` directly.
+# `bunx vitest` from workspace root pulls a different version from bun's
+# global cache than the workspace-pinned one — silent version drift.
+bun run test                          # Full suite across all workspaces
+bun run test:desktop                  # Desktop package only (faster)
+bun run test:file path/to/file.test.ts  # Single file
+bun run test:typecheck                # tsc --noEmit
+bun run test:lint                     # biome lint (matches CI)
+bun run verify                        # test + typecheck + build + lint (PR-readiness)
 
-# Linting (biome)
+# Linting (biome) — bunx is fine for biome (root devDep)
 bunx @biomejs/biome lint packages/desktop/src/ shared/  # Lint source
 bunx @biomejs/biome check --write .                      # Auto-fix
 ```
