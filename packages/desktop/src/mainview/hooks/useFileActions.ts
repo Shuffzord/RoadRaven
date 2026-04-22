@@ -2,6 +2,14 @@ import { useCallback, useEffect } from "react";
 import { electroview } from "../rpc";
 import { hasUnsavedEdits, useRoadmapStore } from "../store/roadmapStore";
 
+// WR-01 (Wave 3 review): module-level dedupe for the roadraven:request-save-as
+// CustomEvent handler. A fast double-click on SaveFailureModal's "Save As…"
+// button (or two CustomEvent re-dispatches in flight) would otherwise stack two
+// native save dialogs and race two atomic writes to the chosen path. Sharing
+// this promise across renders / Canvas+App duplicate registrations means the
+// second caller awaits the first instead of opening a second dialog.
+let inFlightSaveAs: Promise<{ filePath: string | null }> | null = null;
+
 async function loadAndApply(path: string): Promise<void> {
 	try {
 		const response = await electroview?.rpc?.request.loadFile({ path });
@@ -154,18 +162,31 @@ export function useFileActions() {
 			const schema = useRoadmapStore.getState().schema;
 			if (!schema) return;
 			if (!electroview?.rpc) return;
-			const result = await electroview.rpc.request.saveFileAs({ schema });
-			if (result?.filePath) {
-				const cur = useRoadmapStore.getState();
-				useRoadmapStore.setState({
-					filePath: result.filePath,
-					isUntitled: false,
-					saveState: "saved",
-					failureCount: 0,
-					lastSaveError: null,
-					lastSavedDataKey: cur.dataKey,
-					lastSavedStatusTick: cur.statusTick,
-				});
+			// WR-01 (Wave 3 review): dedupe re-entrant CustomEvent dispatches.
+			// If a saveFileAs RPC is already in flight (e.g. SaveFailureModal
+			// double-click, Canvas+App both registered the listener), await the
+			// existing promise instead of stacking a second native dialog.
+			if (inFlightSaveAs) {
+				await inFlightSaveAs;
+				return;
+			}
+			inFlightSaveAs = electroview.rpc.request.saveFileAs({ schema });
+			try {
+				const result = await inFlightSaveAs;
+				if (result?.filePath) {
+					const cur = useRoadmapStore.getState();
+					useRoadmapStore.setState({
+						filePath: result.filePath,
+						isUntitled: false,
+						saveState: "saved",
+						failureCount: 0,
+						lastSaveError: null,
+						lastSavedDataKey: cur.dataKey,
+						lastSavedStatusTick: cur.statusTick,
+					});
+				}
+			} finally {
+				inFlightSaveAs = null;
 			}
 		};
 		window.addEventListener("roadraven:reload-file", reloadHandler);

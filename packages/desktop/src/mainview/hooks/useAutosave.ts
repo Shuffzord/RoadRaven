@@ -89,6 +89,13 @@ async function flushNow(): Promise<void> {
 	// Utils.saveFileDialog via the saveFileAs RPC. User cancels → stay
 	// "saved" in-memory; next mutation will re-prompt after the debounce.
 	if (state.isUntitled || !state.filePath) {
+		// WR-01 (Wave 3 review): mark saveState="saving" BEFORE the dialog opens
+		// so the early-return guard at the top blocks a re-entrant flushNow
+		// while the user is still picking a filename. Without this guard, a
+		// debounce that fires during the dialog (structural mutation lands while
+		// the picker is open) would dispatch a second saveFileAs RPC, stack two
+		// native dialogs, and race two atomic writes to the chosen path.
+		state.setSaveState("saving");
 		try {
 			const result = await electroview.rpc.request.saveFileAs({
 				schema: state.schema,
@@ -103,6 +110,12 @@ async function flushNow(): Promise<void> {
 					lastSavedDataKey: savingDataKey,
 					lastSavedStatusTick: savingStatusTick,
 				});
+			} else {
+				// User cancelled the dialog (or RPC returned no path) — release
+				// the guard so the next mutation can re-prompt.
+				if (useRoadmapStore.getState().saveState === "saving") {
+					useRoadmapStore.getState().setSaveState("saved");
+				}
 			}
 			return;
 		} catch (err) {
