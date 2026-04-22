@@ -73,6 +73,14 @@ export type RoadmapRPCType = {
 				params: Record<string, never>;
 				response: { settings: AppSettings };
 			};
+			newFile: {
+				params: Record<string, never>;
+				response: { data: RoadmapSchema; filePath: null };
+			};
+			saveFileAs: {
+				params: { schema: RoadmapSchema };
+				response: { filePath: string | null };
+			};
 			logMessage: {
 				params: {
 					level: "debug" | "info" | "warning" | "error" | "fatal";

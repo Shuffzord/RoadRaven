@@ -59,6 +59,15 @@ export function setCachedMainPath(absolutePath: string): void {
 	cachedMainPath = resolve(absolutePath);
 }
 
+/**
+ * Plan 03-04c: clear the cached main path. Used by the `newFile` RPC handler so
+ * a freshly created in-memory schema does not silently overwrite the previously
+ * loaded file when the next saveFile fires before saveFileAs picks a path.
+ */
+export function clearCachedMainPath(): void {
+	cachedMainPath = null;
+}
+
 export function getCachedMainPath(): string | null {
 	return cachedMainPath;
 }
