@@ -1,12 +1,14 @@
 import { lazy, Suspense, useEffect } from "react";
 import { Canvas } from "./components/Canvas";
 import { ConfirmationDialog } from "./components/ConfirmationDialog";
+import { ExternalEditToast } from "./components/ExternalEditToast";
 import { SaveFailureModal } from "./components/SaveFailureModal";
 import { Sidebar } from "./components/Sidebar";
 import { SidePanel } from "./components/SidePanel";
 import { StatusBar } from "./components/StatusBar";
 import { TopBar } from "./components/TopBar";
 import { useAutosave } from "./hooks/useAutosave";
+import { useFileActions } from "./hooks/useFileActions";
 import { useRoadmapStore } from "./store/roadmapStore";
 
 // Dev-only harness for previewing panels (auto-discovered). Vite treeshakes this
@@ -25,6 +27,11 @@ export default function App() {
 	const isOpen = selectedNodeId !== null;
 
 	useAutosave();
+	// Plan 03-04c: registers app-level CustomEvent bridges
+	// (roadraven:reload-file, roadraven:request-save-as). Canvas.tsx also calls
+	// useFileActions but its lifecycle is tied to the WelcomeScreen vs Tree
+	// branch; mounting at App scope ensures the listeners survive every state.
+	useFileActions();
 
 	// Dev-only test hook for deterministic UI tests (Playwright render-budget
 	// checks). Stripped from production builds by Vite's dead-code elimination.
@@ -49,6 +56,7 @@ export default function App() {
 			<StatusBar />
 			<ConfirmationDialog />
 			<SaveFailureModal />
+			<ExternalEditToast />
 			{import.meta.env.DEV && DevHarnessLazy && (
 				<Suspense fallback={null}>
 					<DevHarnessLazy />

@@ -217,7 +217,7 @@ export function Canvas() {
 		},
 	});
 
-	const { openFile, openRecent, openSample } = useFileActions();
+	const { openFile, openRecent, openSample, newRoadmap } = useFileActions();
 
 	const handleTreeUpdate = useCallback(
 		(target: {
@@ -362,6 +362,7 @@ export function Canvas() {
 						onOpenFile={openFile}
 						onOpenRecent={openRecent}
 						onOpenSample={openSample}
+						onNewRoadmap={newRoadmap}
 					/>
 				) : (
 					<Tree

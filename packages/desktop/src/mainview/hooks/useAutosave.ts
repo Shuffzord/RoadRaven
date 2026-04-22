@@ -76,8 +76,6 @@ async function flushNow(): Promise<void> {
 	if (state.autosavePaused) return;
 	if (!state.schema) return;
 	if (state.saveState === "saving") return;
-	// File > New prompt path is Plan 04c territory; abort when no path is set.
-	if (!state.filePath) return;
 	if (!electroview?.rpc) return;
 
 	// Warning 8: capture the keys we are about to persist NOW — on success we
@@ -85,6 +83,33 @@ async function flushNow(): Promise<void> {
 	// mutation that lands mid-save still marks the doc as dirty.
 	const savingDataKey = state.dataKey;
 	const savingStatusTick = state.statusTick;
+
+	// EDIT-17 — File > New prompt path. When the schema has no disk path yet
+	// (isUntitled, or HMR-loaded sample), the first autosave fire pops
+	// Utils.saveFileDialog via the saveFileAs RPC. User cancels → stay
+	// "saved" in-memory; next mutation will re-prompt after the debounce.
+	if (state.isUntitled || !state.filePath) {
+		try {
+			const result = await electroview.rpc.request.saveFileAs({
+				schema: state.schema,
+			});
+			if (result?.filePath) {
+				useRoadmapStore.setState({
+					filePath: result.filePath,
+					isUntitled: false,
+					saveState: "saved",
+					failureCount: 0,
+					lastSaveError: null,
+					lastSavedDataKey: savingDataKey,
+					lastSavedStatusTick: savingStatusTick,
+				});
+			}
+			return;
+		} catch (err) {
+			handleFailure(err instanceof Error ? err.message : String(err));
+			return;
+		}
+	}
 
 	state.setSaveState("saving");
 	try {
