@@ -18,6 +18,20 @@ export function ExternalEditToast() {
 
 	if (!pending) return null;
 
+	// WR-04 (Wave 3 review): Reload is destructive (overwrites all unsaved
+	// local edits with the on-disk schema, irreversibly). The toast appears at
+	// the bottom-center where users frequently click — a single misclick on
+	// the Reload button would silently destroy work. Add a one-step
+	// window.confirm before resolving "reload" so an accidental click is
+	// recoverable. Keep mine remains a single click (it is reversible — the
+	// next save overwrites the disk copy with local edits).
+	const handleReload = () => {
+		const ok = window.confirm(
+			"Reload from disk and discard your unsaved changes?",
+		);
+		if (ok) resolve("reload");
+	};
+
 	return (
 		<div
 			role="alert"
@@ -58,7 +72,7 @@ export function ExternalEditToast() {
 			</span>
 			<button
 				type="button"
-				onClick={() => resolve("reload")}
+				onClick={handleReload}
 				aria-label="Reload file, discarding your unsaved changes"
 				style={{
 					background: "var(--rv-bg-hover)",
