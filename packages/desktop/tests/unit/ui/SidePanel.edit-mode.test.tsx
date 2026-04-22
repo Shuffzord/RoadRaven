@@ -257,6 +257,45 @@ describe("SidePanel — edit mode", () => {
 		expect(screen.getByText("saved")).toBeTruthy();
 	});
 
+	it("switching to a different node with the SAME title still resets edit mode", () => {
+		// Reproduces the PR-feedback bug: useEffect dep was selectedNode.title,
+		// so two same-titled nodes wouldn't trigger a reset. Now keyed on id.
+		const A_ID = "11111111-2222-4333-8444-555555555555";
+		const B_ID = "22222222-3333-4444-8555-666666666666";
+		useRoadmapStore.getState().loadSchema(
+			{
+				version: "1.0",
+				title: "Same-Title Test",
+				statusConfig: [
+					{ id: "not-started", label: "Not Started" },
+					{ id: "in-progress", label: "In Progress" },
+					{ id: "completed", label: "Completed" },
+					{ id: "blocked", label: "Blocked" },
+				],
+				nodes: [
+					{
+						id: ROOT_ID,
+						title: "Root",
+						status: "not-started",
+						children: [
+							{ id: A_ID, title: "Foo", status: "not-started" },
+							{ id: B_ID, title: "Foo", status: "not-started" },
+						],
+					},
+				],
+			},
+			"/tmp/test.json",
+		);
+		useRoadmapStore.getState().setSelectedNode(A_ID);
+		render(<SidePanel isOpen onClose={vi.fn()} />);
+		fireEvent.click(screen.getByLabelText("Edit node"));
+		expect(screen.getByLabelText("Title")).toBeTruthy();
+		act(() => {
+			useRoadmapStore.getState().setSelectedNode(B_ID);
+		});
+		expect(screen.queryByLabelText("Title")).toBeNull();
+	});
+
 	it("copy-ID button still works in preview mode (Phase 2 regression check)", () => {
 		seedStore();
 		const mockWrite = vi.fn().mockResolvedValue(undefined);

@@ -124,10 +124,16 @@ export function SidePanel({ isOpen, onClose }: SidePanelProps) {
 	const maxWidth =
 		typeof window !== "undefined" ? Math.floor(window.innerWidth * 0.5) : 480;
 
+	// Reset edit mode + draft when the selected node changes. Watching the id
+	// (not the title) means switching to a different node always resets, even
+	// if the new node happens to share the previous title. We intentionally
+	// don't depend on selectedNode.title — re-seeding the draft on every title
+	// mutation would clobber the user's in-progress typing.
+	// biome-ignore lint/correctness/useExhaustiveDependencies: see comment above.
 	useEffect(() => {
 		setIsEditing(false);
 		setTitleDraft(selectedNode?.title ?? "");
-	}, [selectedNode?.title]);
+	}, [selectedNodeId]);
 
 	useEffect(() => {
 		if (!isEditing) return;
