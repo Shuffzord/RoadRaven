@@ -243,8 +243,14 @@ describe("RoadmapSchemaSchema", () => {
 });
 
 // -- Sample schema validation tests ------------------------------------------
+//
+// `samples/*.json` is user-facing and gets mutated during manual UAT — never
+// assert on its content. The two tests here only verify that the schema still
+// parses; content-shape assertions (depth, status coverage) moved to
+// `../fixtures/` so they stay stable across UAT sessions.
 
 const SAMPLES_DIR = resolve(__dirname, "../../../../samples");
+const FIXTURES_DIR = resolve(__dirname, "../fixtures");
 
 function getMaxDepth(nodes: RoadmapNode[], currentDepth = 1): number {
 	let max = currentDepth;
@@ -285,41 +291,32 @@ describe("Sample schemas", () => {
 		const result = RoadmapSchemaSchema.safeParse(raw);
 		expect(result.success).toBe(true);
 	});
+});
 
-	it("getting-started.json has nodes at depth >= 3", () => {
-		const raw = JSON.parse(readFileSync(gettingStartedPath, "utf-8"));
-		const result = RoadmapSchemaSchema.safeParse(raw);
+describe("Rich-tree fixture (depth + status coverage)", () => {
+	// Fixture lives under tests/fixtures/ so UAT mutations to samples/*.json
+	// can't break these contracts. If you need a new shape, extend the fixture
+	// (or add a new one next to it) — don't point back at samples/.
+	const fixturePath = resolve(FIXTURES_DIR, "rich-tree.json");
+	const raw = JSON.parse(readFileSync(fixturePath, "utf-8"));
+	const result = RoadmapSchemaSchema.safeParse(raw);
+
+	it("validates against RoadmapSchemaSchema", () => {
 		expect(result.success).toBe(true);
-		if (result.success) {
-			const depth = getMaxDepth(result.data.nodes);
-			expect(depth).toBeGreaterThanOrEqual(3);
-		}
 	});
 
-	it("hello-world.json contains at least one node of each status", () => {
-		const raw = JSON.parse(readFileSync(helloWorldPath, "utf-8"));
-		const result = RoadmapSchemaSchema.safeParse(raw);
-		expect(result.success).toBe(true);
-		if (result.success) {
-			const statuses = collectStatuses(result.data.nodes);
-			expect(statuses.has("not-started")).toBe(true);
-			expect(statuses.has("in-progress")).toBe(true);
-			expect(statuses.has("completed")).toBe(true);
-			expect(statuses.has("blocked")).toBe(true);
-		}
+	it("has nodes at depth >= 3", () => {
+		if (!result.success) throw new Error("fixture failed to parse");
+		expect(getMaxDepth(result.data.nodes)).toBeGreaterThanOrEqual(3);
 	});
 
-	it("getting-started.json contains at least one node of each status", () => {
-		const raw = JSON.parse(readFileSync(gettingStartedPath, "utf-8"));
-		const result = RoadmapSchemaSchema.safeParse(raw);
-		expect(result.success).toBe(true);
-		if (result.success) {
-			const statuses = collectStatuses(result.data.nodes);
-			expect(statuses.has("not-started")).toBe(true);
-			expect(statuses.has("in-progress")).toBe(true);
-			expect(statuses.has("completed")).toBe(true);
-			expect(statuses.has("blocked")).toBe(true);
-		}
+	it("contains at least one node of each status", () => {
+		if (!result.success) throw new Error("fixture failed to parse");
+		const statuses = collectStatuses(result.data.nodes);
+		expect(statuses.has("not-started")).toBe(true);
+		expect(statuses.has("in-progress")).toBe(true);
+		expect(statuses.has("completed")).toBe(true);
+		expect(statuses.has("blocked")).toBe(true);
 	});
 });
 

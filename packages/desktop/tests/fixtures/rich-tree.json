@@ -1,0 +1,48 @@
+{
+	"version": "1.0",
+	"title": "Rich Tree Test Fixture",
+	"statusConfig": [
+		{ "id": "not-started", "label": "Not Started" },
+		{ "id": "in-progress", "label": "In Progress" },
+		{ "id": "completed", "label": "Completed" },
+		{ "id": "blocked", "label": "Blocked" }
+	],
+	"nodes": [
+		{
+			"id": "e7f4a1b0-1111-4aaa-8bbb-ccccccccccc1",
+			"title": "Root",
+			"status": "in-progress",
+			"children": [
+				{
+					"id": "e7f4a1b0-2222-4aaa-8bbb-ccccccccccc2",
+					"title": "Phase A",
+					"status": "completed",
+					"children": [
+						{
+							"id": "e7f4a1b0-3333-4aaa-8bbb-ccccccccccc3",
+							"title": "Task A1",
+							"status": "completed"
+						},
+						{
+							"id": "e7f4a1b0-3333-4aaa-8bbb-ccccccccccc4",
+							"title": "Task A2",
+							"status": "not-started"
+						}
+					]
+				},
+				{
+					"id": "e7f4a1b0-2222-4aaa-8bbb-ccccccccccc5",
+					"title": "Phase B",
+					"status": "blocked",
+					"children": [
+						{
+							"id": "e7f4a1b0-3333-4aaa-8bbb-ccccccccccc6",
+							"title": "Task B1",
+							"status": "not-started"
+						}
+					]
+				}
+			]
+		}
+	]
+}
