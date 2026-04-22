@@ -1,5 +1,5 @@
 /** @vitest-environment jsdom */
-import { fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { RoadmapSchema } from "../../../../../packages/core/src/schema";
 import { SidePanel } from "../../../src/mainview/components/SidePanel";
@@ -212,10 +212,49 @@ describe("SidePanel — edit mode", () => {
 		expect(screen.queryByLabelText("Title")).toBeNull();
 	});
 
-	it("SaveIndicator renders in panel header when a node is selected", () => {
+	it("does NOT render the always-on Saved pill (per UAT feedback)", () => {
 		seedStore();
 		render(<SidePanel isOpen onClose={vi.fn()} />);
-		expect(screen.getByText("Saved")).toBeTruthy();
+		expect(screen.queryByText("Saved")).toBeNull();
+		expect(screen.queryByText("saved")).toBeNull();
+	});
+
+	it("flashes 'saved' next to TITLE label after Enter commit", () => {
+		seedStore({}, { title: "Old" });
+		render(<SidePanel isOpen onClose={vi.fn()} />);
+		fireEvent.click(screen.getByLabelText("Edit node"));
+		const input = screen.getByLabelText("Title") as HTMLInputElement;
+		fireEvent.change(input, { target: { value: "New" } });
+		fireEvent.keyDown(input, { key: "Enter" });
+		expect(screen.getByText("saved")).toBeTruthy();
+	});
+
+	it("flash disappears after FLASH_MS (2000ms)", () => {
+		vi.useFakeTimers();
+		try {
+			seedStore({}, { title: "Old" });
+			render(<SidePanel isOpen onClose={vi.fn()} />);
+			fireEvent.click(screen.getByLabelText("Edit node"));
+			const input = screen.getByLabelText("Title") as HTMLInputElement;
+			fireEvent.change(input, { target: { value: "New" } });
+			fireEvent.keyDown(input, { key: "Enter" });
+			expect(screen.getByText("saved")).toBeTruthy();
+			act(() => {
+				vi.advanceTimersByTime(2100);
+			});
+			expect(screen.queryByText("saved")).toBeNull();
+		} finally {
+			vi.useRealTimers();
+		}
+	});
+
+	it("flashes 'saved' next to STATUS label after dropdown change", () => {
+		seedStore();
+		render(<SidePanel isOpen onClose={vi.fn()} />);
+		fireEvent.click(screen.getByLabelText("Edit node"));
+		const select = screen.getByLabelText("Status") as HTMLSelectElement;
+		fireEvent.change(select, { target: { value: "in-progress" } });
+		expect(screen.getByText("saved")).toBeTruthy();
 	});
 
 	it("copy-ID button still works in preview mode (Phase 2 regression check)", () => {

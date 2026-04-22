@@ -5,7 +5,10 @@ import { MetadataEditor } from "./MetadataEditor";
 import { NotesEditor } from "./NotesEditor";
 import { ResizeHandle } from "./ResizeHandle";
 import { formatStatus, STATUS_TOKEN_MAP } from "./RoadmapNode";
-import { SaveIndicator } from "./SaveIndicator";
+
+const FLASH_MS = 2000;
+
+type EditableField = "title" | "status" | "type" | "metadata" | "notes";
 
 function isTextInputFocused(): boolean {
 	const el = document.activeElement;
@@ -13,6 +16,32 @@ function isTextInputFocused(): boolean {
 	if (el.isContentEditable) return true;
 	const tag = el.tagName;
 	return tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT";
+}
+
+function SavedFlash({ visible }: { visible: boolean }) {
+	if (!visible) return null;
+	return (
+		<span
+			role="status"
+			aria-live="polite"
+			className="inline-flex items-center text-rv-status-completed text-[11px] motion-safe:animate-[fadeIn_150ms_ease-out]"
+		>
+			<svg
+				width="10"
+				height="10"
+				viewBox="0 0 24 24"
+				fill="none"
+				stroke="currentColor"
+				strokeWidth="3"
+				strokeLinecap="round"
+				strokeLinejoin="round"
+				aria-hidden="true"
+			>
+				<polyline points="20 6 9 17 4 12" />
+			</svg>
+			<span className="ml-1">saved</span>
+		</span>
+	);
 }
 
 interface SidePanelProps {
@@ -57,6 +86,40 @@ export function SidePanel({ isOpen, onClose }: SidePanelProps) {
 	const [isEditing, setIsEditing] = useState(false);
 	const [titleDraft, setTitleDraft] = useState("");
 	const cancellingRef = useRef(false);
+	const [flashedFields, setFlashedFields] = useState<Set<EditableField>>(
+		() => new Set(),
+	);
+	const flashTimersRef = useRef<
+		Map<EditableField, ReturnType<typeof setTimeout>>
+	>(new Map());
+
+	const flash = useCallback((field: EditableField) => {
+		const existing = flashTimersRef.current.get(field);
+		if (existing) clearTimeout(existing);
+		setFlashedFields((prev) => {
+			if (prev.has(field)) return prev;
+			const next = new Set(prev);
+			next.add(field);
+			return next;
+		});
+		const timer = setTimeout(() => {
+			flashTimersRef.current.delete(field);
+			setFlashedFields((prev) => {
+				if (!prev.has(field)) return prev;
+				const next = new Set(prev);
+				next.delete(field);
+				return next;
+			});
+		}, FLASH_MS);
+		flashTimersRef.current.set(field, timer);
+	}, []);
+
+	useEffect(() => {
+		return () => {
+			for (const t of flashTimersRef.current.values()) clearTimeout(t);
+			flashTimersRef.current.clear();
+		};
+	}, []);
 
 	const maxWidth =
 		typeof window !== "undefined" ? Math.floor(window.innerWidth * 0.5) : 480;
@@ -110,36 +173,44 @@ export function SidePanel({ isOpen, onClose }: SidePanelProps) {
 		const trimmed = titleDraft.trim();
 		if (trimmed && trimmed !== selectedNode.title) {
 			useRoadmapStore.getState().renameNode(selectedNode.id, trimmed);
+			flash("title");
 		}
-	}, [titleDraft, selectedNode]);
+	}, [titleDraft, selectedNode, flash]);
 
 	const handleStatusChange = useCallback(
 		(next: string) => {
 			if (!selectedNode) return;
 			useRoadmapStore.getState().updateNodeStatus(selectedNode.id, next);
+			flash("status");
 		},
-		[selectedNode],
+		[selectedNode, flash],
 	);
 
 	const handleTypeChange = useCallback(
 		(next: string) => {
 			if (!selectedNode) return;
 			useRoadmapStore.getState().updateNodeType(selectedNode.id, next);
+			flash("type");
 		},
-		[selectedNode],
+		[selectedNode, flash],
 	);
 
 	const handleMetadataChange = useCallback(
 		(next: Record<string, unknown>) => {
 			if (!selectedNode) return;
 			useRoadmapStore.getState().updateNodeMetadata(selectedNode.id, next);
+			flash("metadata");
 		},
-		[selectedNode],
+		[selectedNode, flash],
 	);
 
-	const handleNotesPersist = useCallback((id: string, content: string) => {
-		useRoadmapStore.getState().updateNodeNotes(id, content);
-	}, []);
+	const handleNotesPersist = useCallback(
+		(id: string, content: string) => {
+			useRoadmapStore.getState().updateNodeNotes(id, content);
+			flash("notes");
+		},
+		[flash],
+	);
 
 	const status = selectedNode?.status ?? "not-started";
 	const tokens =
@@ -184,7 +255,6 @@ export function SidePanel({ isOpen, onClose }: SidePanelProps) {
 							Editing
 						</span>
 					)}
-					{selectedNode && <SaveIndicator />}
 				</div>
 				<div className="flex items-center gap-1 shrink-0">
 					{selectedNode && !isEditing && (
@@ -238,7 +308,7 @@ export function SidePanel({ isOpen, onClose }: SidePanelProps) {
 			<div className="flex-1 p-4 overflow-y-auto">
 				{selectedNode ? (
 					<>
-						<FieldLabel>TITLE</FieldLabel>
+						<FieldLabel flashing={flashedFields.has("title")}>TITLE</FieldLabel>
 						{isEditing ? (
 							<input
 								type="text"
@@ -264,7 +334,9 @@ export function SidePanel({ isOpen, onClose }: SidePanelProps) {
 							</h2>
 						)}
 
-						<FieldLabel>STATUS</FieldLabel>
+						<FieldLabel flashing={flashedFields.has("status")}>
+							STATUS
+						</FieldLabel>
 						{isEditing ? (
 							<select
 								value={status}
@@ -290,7 +362,7 @@ export function SidePanel({ isOpen, onClose }: SidePanelProps) {
 							</div>
 						)}
 
-						<FieldLabel>TYPE</FieldLabel>
+						<FieldLabel flashing={flashedFields.has("type")}>TYPE</FieldLabel>
 						{isEditing ? (
 							types.length > 0 ? (
 								<select
@@ -374,7 +446,9 @@ export function SidePanel({ isOpen, onClose }: SidePanelProps) {
 							</button>
 						</div>
 
-						<FieldLabel>METADATA</FieldLabel>
+						<FieldLabel flashing={flashedFields.has("metadata")}>
+							METADATA
+						</FieldLabel>
 						{isEditing ? (
 							<div className="mb-4">
 								<MetadataEditor
@@ -409,7 +483,9 @@ export function SidePanel({ isOpen, onClose }: SidePanelProps) {
 							/>
 						) : (
 							<>
-								<FieldLabel>NOTES</FieldLabel>
+								<FieldLabel flashing={flashedFields.has("notes")}>
+									NOTES
+								</FieldLabel>
 								{selectedNode.notes ? (
 									<MarkdownRenderer content={selectedNode.notes} />
 								) : (
@@ -430,10 +506,19 @@ export function SidePanel({ isOpen, onClose }: SidePanelProps) {
 	);
 }
 
-function FieldLabel({ children }: { children: React.ReactNode }) {
+function FieldLabel({
+	children,
+	flashing = false,
+}: {
+	children: React.ReactNode;
+	flashing?: boolean;
+}) {
 	return (
-		<div className="text-[11px] font-semibold uppercase tracking-[0.05em] text-rv-text-tertiary mb-1.5">
-			{children}
+		<div className="flex items-center gap-2 mb-1.5">
+			<span className="text-[11px] font-semibold uppercase tracking-[0.05em] text-rv-text-tertiary">
+				{children}
+			</span>
+			<SavedFlash visible={flashing} />
 		</div>
 	);
 }
