@@ -136,7 +136,7 @@ Plans:
 - [x] 03-03-PLAN.md — Side panel editor with CodeMirror 6 Edit/Preview/Split + metadata + editable title/status/type (EDIT-10..EDIT-12) — Wave 2 — UAT approved 2026-04-22
 - [x] 03-04a-PLAN.md — Persistence infrastructure: atomic write + ref ownership + saveFile RPC with path-traversal allowlist + Zod pre-write (EDIT-14, EDIT-16, EDIT-17 saveFile, EDIT-18 cross-boundary) — Wave 1 — UAT approved 2026-04-20
 - [x] 03-04b-PLAN.md — Autosave wiring + save-state UI: triple-timer debounce + SaveIndicator + SaveFailureModal + Warning-8 snapshots (EDIT-13 debounce, EDIT-15) — Wave 2 — UAT approved 2026-04-22
-- [ ] 03-04c-PLAN.md — Shell features: before-quit + SIGTERM flush + File > New + external-edit toast (EDIT-13 flush-on-quit, EDIT-17 File>New, EDIT-18 Linux SIGTERM, D-14) — Wave 3
+- [x] 03-04c-PLAN.md — Shell features: before-quit + SIGTERM flush + File > New + external-edit toast (EDIT-13 flush-on-quit, EDIT-17 File>New, EDIT-18 Linux SIGTERM, D-14) — Wave 3
 
 **Plans:**
 1. Node mutation operations — inline rename (double-click / F2) using floating `<input>` with inverse D3 zoom transform; add child / add sibling above and below via keyboard shortcuts and context menu; delete (immediate for leaf, confirmation dialog for non-leaf showing count); duplicate node + subtree (`Ctrl+D`); copy/paste node + subtree (`Ctrl+C` / `Ctrl+V`) with JSON clipboard format; move node up/down within siblings (`Ctrl+↑` / `Ctrl+↓`); change node status via context menu sub-menu; arrow-key tree focus navigation (Up/Down siblings, Right expand/enter, Left collapse/return)
