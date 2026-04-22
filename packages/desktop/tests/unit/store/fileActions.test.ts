@@ -45,6 +45,12 @@ describe("newUntitledSchema (EDIT-17)", () => {
 			"/tmp/loaded.json",
 		);
 		expect(useRoadmapStore.getState().isUntitled).toBe(false);
+		// WR-05 (Wave 3 review): assert filePath round-trips from null to the
+		// loaded path. useAutosave branches on `isUntitled || !filePath` —
+		// without this assertion, a regression where loadSchema forgets to
+		// update filePath would silently keep autosave on the saveFileAs
+		// prompt path even after a real file is opened.
+		expect(useRoadmapStore.getState().filePath).toBe("/tmp/loaded.json");
 	});
 
 	it("3. filePath is null after newUntitledSchema", () => {
@@ -71,5 +77,28 @@ describe("newUntitledSchema (EDIT-17)", () => {
 		expect(root?.createdAt).toBeTypeOf("string");
 		expect(root?.updatedAt).toBeTypeOf("string");
 		expect(root?.createdAt).toBe(root?.updatedAt);
+	});
+
+	it("7. newUntitledSchema clears pendingConfirmation, externalEditPending, and autosavePaused", () => {
+		// WR-05 (Wave 3 review): newUntitledSchema currently delegates to
+		// loadSchema which resets these fields. Lock that behavior in via a
+		// direct test so a future refactor that breaks the delegation
+		// (or reorders the set() calls) can't silently leave stale modal /
+		// toast state visible after creating a fresh roadmap.
+		useRoadmapStore.setState({
+			pendingConfirmation: {
+				nodeId: "11111111-2222-4333-8444-555555555555",
+				nodeTitle: "Doomed",
+				deletedCount: 3,
+			},
+			externalEditPending: { path: "/tmp/elsewhere.json" },
+			autosavePaused: true,
+		});
+
+		useRoadmapStore.getState().newUntitledSchema();
+
+		expect(useRoadmapStore.getState().pendingConfirmation).toBeNull();
+		expect(useRoadmapStore.getState().externalEditPending).toBeNull();
+		expect(useRoadmapStore.getState().autosavePaused).toBe(false);
 	});
 });
