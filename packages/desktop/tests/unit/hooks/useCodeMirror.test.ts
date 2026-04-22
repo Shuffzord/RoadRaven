@@ -114,7 +114,9 @@ describe("useCodeMirror", () => {
 		expect(onPersist).toHaveBeenLastCalledWith(NODE_ID, "abc");
 	});
 
-	it("unmounting the hook destroys the EditorView and clears any pending debounce timer", () => {
+	it("unmounting with a pending debounce flushes the in-flight content before destroying the view", () => {
+		// Regression: previously the cleanup canceled the timer without flushing,
+		// silently dropping the user's last <debounceMs> of typing on node switch.
 		const onPersist = vi.fn();
 		const { hook } = renderCodeMirror("hello", onPersist);
 		const view = hook.result.current.current;
@@ -128,10 +130,20 @@ describe("useCodeMirror", () => {
 			vi.advanceTimersByTime(500);
 		});
 		hook.unmount();
+		expect(onPersist).toHaveBeenCalledTimes(1);
+		expect(onPersist).toHaveBeenCalledWith(NODE_ID, "changed");
 		expect(hook.result.current.current).toBeNull();
+		// And no spurious second call once the cancelled timer would have fired.
 		act(() => {
 			vi.advanceTimersByTime(2000);
 		});
+		expect(onPersist).toHaveBeenCalledTimes(1);
+	});
+
+	it("unmounting with no pending debounce does NOT call onPersist", () => {
+		const onPersist = vi.fn();
+		const { hook } = renderCodeMirror("hello", onPersist);
+		hook.unmount();
 		expect(onPersist).not.toHaveBeenCalled();
 	});
 });

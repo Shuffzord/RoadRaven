@@ -75,9 +75,13 @@ export function useCodeMirror({
 		viewRef.current = view;
 
 		return () => {
+			// Flush any in-flight edit before tearing the view down. Without this,
+			// the user's last <debounceMs> of typing is silently discarded when the
+			// hook re-mounts on nodeId change (or when SidePanel exits edit mode).
 			if (timerRef.current) {
 				clearTimeout(timerRef.current);
 				timerRef.current = null;
+				onPersistRef.current(nodeId, view.state.doc.toString());
 			}
 			view.destroy();
 			viewRef.current = null;
