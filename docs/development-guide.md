@@ -1,6 +1,6 @@
 # Development Guide
 
-> Last updated: 2026-04-15 | Phase: 02-read-only-viewer
+> Last updated: 2026-04-22 | Phase: 03-full-editor (Waves 1 + 2)
 
 ## Prerequisites
 
@@ -203,13 +203,44 @@ No additional configuration needed -- loggers inherit from their parent category
 
 ## Keyboard Shortcuts
 
+The canvas keyboard layer is implemented in [`hooks/useKeyboardRouter.ts`](../packages/desktop/src/mainview/hooks/useKeyboardRouter.ts). The router runs in capture phase and stands down when a Radix dialog or context menu is open, or when a text input / CodeMirror editor is focused.
+
+### Canvas (focused node)
+
+| Shortcut | Action |
+|----------|--------|
+| `Arrow ←` / `Arrow →` (TB) | Move focus between siblings |
+| `Arrow ↑` / `Arrow ↓` (LR) | Move focus between siblings |
+| `Arrow ↓` (TB) / `Arrow →` (LR) | Enter first child (descend) |
+| `Arrow ↑` (TB) / `Arrow ←` (LR) | Return to parent |
+| `Space` | Select focused node (open / refresh side panel) |
+| `Enter` | Add child + open inline rename on the new node |
+| `Tab` | Add sibling below + open inline rename |
+| `Shift+Enter` | Add sibling above + open inline rename |
+| `F2` | Inline rename on focused node |
+| `Del` / `Backspace` | Delete focused node (confirmation dialog if it has children) |
+| `Ctrl+D` | Duplicate focused node + subtree, then open rename on the copy |
+| `Ctrl+C` | Copy node + subtree to clipboard as JSON |
+| `Ctrl+V` | Paste clipboard subtree under focused node |
+| `Ctrl+Arrow ↑` | Move focused node up among its siblings |
+| `Ctrl+Arrow ↓` | Move focused node down among its siblings |
+| `Escape` | Cancel inline rename, or deselect node |
+| `F6` | Toggle focus between canvas and side panel |
+
+Arrow-key axes follow the layout orientation: in TB (top-bottom) layout siblings are horizontal neighbours and children flow downward; in LR (left-right) layout siblings are vertical neighbours and children flow rightward. The same focus-then-act mental model applies to both.
+
+`Ctrl+C` / `Ctrl+V` are context-aware: when `document.activeElement` is a text input, `<textarea>`, `contentEditable` element, or inside a `.cm-editor` (CodeMirror), the shortcuts fall through to the browser's native text copy/paste instead of the node clipboard.
+
+### Side panel
+
 | Shortcut | Action | Context |
 |----------|--------|---------|
-| `Escape` | Deselect current node | Canvas focused |
-| `Enter` / `Space` | Select focused node | Node card focused |
-| `Ctrl+F` | Focus search input | Global (placeholder, not yet wired) |
+| `e` | Enter edit mode | Side panel open, no text input focused, not already editing |
+| `Escape` | Cancel title edit / exit edit mode | Side panel in edit mode |
 
-Node cards are keyboard-accessible: `role="button"` with `tabIndex={0}` and `onKeyDown` handlers for Enter/Space.
+Edit mode can also be entered by clicking the title field or the `[E]` pencil button in the panel header.
+
+Node cards are keyboard-accessible (`role="button"`, `tabIndex={0}`, Enter / Space handlers). The dashed focus ring uses a `keyboard-nav-active` class on `<body>` so it only shows during keyboard navigation, not after a mouse click.
 
 ## Project Conventions
 

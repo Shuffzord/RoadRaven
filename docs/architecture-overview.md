@@ -1,6 +1,6 @@
 # Architecture Overview
 
-> Last updated: 2026-04-15 | Phase: 02-read-only-viewer
+> Last updated: 2026-04-22 | Phase: 03-full-editor (Waves 1 + 2)
 
 ## What is RoadRaven?
 
@@ -67,10 +67,14 @@ RoadRaven/
 |   +-- desktop/              # Electrobun desktop app (@roadraven/desktop)
 |       +-- src/
 |       |   +-- bun/          # Bun main process
-|       |   |   +-- index.ts      # App bootstrap, BrowserWindow, RPC handlers
-|       |   |   +-- fileWatcher.ts # File watching with 500ms debounce
-|       |   |   +-- logging.ts    # LogTape setup, file sink, category loggers
-|       |   |   +-- settings.ts   # Settings read/write + addRecentFile
+|       |   |   +-- index.ts        # App bootstrap, BrowserWindow, RPC handlers
+|       |   |   +-- fileWatcher.ts  # File watching with 500ms debounce
+|       |   |   +-- logging.ts      # LogTape setup, file sink, category loggers
+|       |   |   +-- settings.ts     # Settings read/write + addRecentFile
+|       |   |   +-- saveFile.ts     # Save handler — splits subtrees by refMap, atomic writes per file
+|       |   |   +-- atomicWrite.ts  # Temp + rename pattern with Windows retry loop
+|       |   |   +-- refMap.ts       # Tracks which $ref subtrees came from which source files
+|       |   |   +-- renameSync.ts   # Thin renameSync wrapper (mockable for tests)
 |       |   |
 |       |   +-- mainview/     # Webview (React application)
 |       |       +-- main.tsx      # React entry point
@@ -82,21 +86,32 @@ RoadRaven/
 |       |       |   +-- roadmapStore.ts  # Zustand store (schema, tree, viewport)
 |       |       |   +-- themeStore.ts    # Zustand store (theme preference)
 |       |       +-- components/
-|       |       |   +-- Canvas.tsx           # react-d3-tree tree renderer
+|       |       |   +-- Canvas.tsx           # react-d3-tree renderer + inline rename overlay
 |       |       |   +-- RoadmapNode.tsx      # Custom node card (foreignObject)
-|       |       |   +-- SidePanel.tsx        # Node detail panel with markdown
-|       |       |   +-- MarkdownRenderer.tsx # remark/rehype markdown pipeline
+|       |       |   +-- SidePanel.tsx        # Detail panel + edit mode + per-field "saved" flash
+|       |       |   +-- NotesEditor.tsx      # CodeMirror 6 markdown notes (Edit | Preview | Split)
+|       |       |   +-- MetadataEditor.tsx   # Key/value metadata table editor
+|       |       |   +-- MarkdownRenderer.tsx # remark/rehype markdown pipeline (preview)
+|       |       |   +-- ContextMenu.tsx      # Radix-based right-click menu (node + canvas)
+|       |       |   +-- ConfirmationDialog.tsx # Destructive-action dialog (non-leaf delete, etc.)
+|       |       |   +-- SaveIndicator.tsx    # StatusBar widget: Saved / Saving / Error
+|       |       |   +-- SaveFailureModal.tsx # Escalated-failure dialog (Retry / Save As / Dismiss)
 |       |       |   +-- ResizeHandle.tsx     # Drag-to-resize panel handle
 |       |       |   +-- WelcomeScreen.tsx    # Landing screen with recent files
 |       |       |   +-- SchemaErrorPanel.tsx # Zod validation error display
 |       |       |   +-- TopBar.tsx           # Toolbar (open, layout, theme, fit)
-|       |       |   +-- StatusBar.tsx        # File name + node count
+|       |       |   +-- StatusBar.tsx        # File name + node count + SaveIndicator
 |       |       |   +-- Sidebar.tsx          # Left icon sidebar
 |       |       |   +-- ConfigPanel.tsx      # Settings panel (stub)
 |       |       |   +-- ThemeProvider.tsx     # Applies data-theme attribute
 |       |       |   +-- ThemeOverrideProvider.tsx # Per-schema CSS overrides
 |       |       +-- hooks/
 |       |       |   +-- useTheme.ts          # Theme hook
+|       |       |   +-- useKeyboardRouter.ts # Capture-phase canvas keyboard layer
+|       |       |   +-- useInlineRename.ts   # Floating-input rename overlay state
+|       |       |   +-- useCodeMirror.ts     # CodeMirror 6 instance lifecycle
+|       |       |   +-- useAutosave.ts       # Debounced + periodic save flush engine
+|       |       |   +-- useFileActions.ts    # Open / save-as / new file orchestration
 |       |       +-- logging/
 |       |           +-- logger.ts            # Webview LogTape + RPC forwarding
 |       |
@@ -224,6 +239,51 @@ Response flows back: Bun -> RPC -> webview -> store -> React re-render
 <!-- RETURNS: FileSystem -> BunRPCHandler -> Electrobun -> ZustandStore -> ReactComponent -> re-render -->
 
 > **Why this flow matters:** The webview is sandboxed with no filesystem access -- this is an Electrobun security boundary, not a design choice. Without RPC-mediated persistence, user data could only live in memory and would be lost on app close. The Zustand store provides an in-memory cache so the UI stays responsive while the slower disk write happens asynchronously through the Bun process. If the RPC call fails, the in-memory state is still intact, and the user does not lose their work mid-session.
+
+## Editor and Autosave Flow (Phase 03)
+
+Phase 03 turned the read-only viewer into a full editor. The persistence path differs from the read path because writes are **debounced**, **atomic**, and **may target multiple files** (the main file plus any `$ref`-loaded subtrees, written back to their source paths).
+
+### Side panel edit mode
+
+The `SidePanel` opens in **preview** mode when a node is selected. There are three ways into edit mode:
+
+1. Click the title row.
+2. Click the pencil `[E]` button in the panel header.
+3. Press `e` while the side panel is open and no text input is focused.
+
+In edit mode the title becomes an `<input>` (commits on blur or Enter), status and type render as dropdowns (type also accepts freeform values when no `typeConfig` is provided), metadata appears as an editable key/value table (`MetadataEditor`), and notes use `NotesEditor` — a CodeMirror 6 editor with an `Edit | Preview | Split` toggle in the notes header. After each field commit, a small green `✓ saved` flash appears next to the field label for 2s (`FLASH_MS` constant in `SidePanel.tsx`). The flash is purely a UX confirmation — it is local to the field that committed and is independent of the global save state shown in the StatusBar.
+
+### Inline rename on the canvas
+
+`F2` or double-click on a node card opens a floating `<input>` overlay positioned via `getBoundingClientRect()` and the inverse of the current D3 zoom transform. The `useInlineRename` hook owns this overlay's state; `useKeyboardRouter` and the `ContextMenu` "Rename" item both dispatch to it. Newly created nodes (`Enter`, `Tab`, `Shift+Enter`, `Ctrl+D`, and the matching context-menu items) auto-open rename on the new node so the user can title it without a second keystroke.
+
+### Autosave engine
+
+`useAutosave` (mounted once in `App.tsx`) subscribes to the Zustand store and reacts to two counters:
+
+| Trigger | Debounce | Source |
+|---------|----------|--------|
+| Structural mutation (`dataKey` bump) — add / delete / move / paste / rename | 2000 ms (`STRUCTURAL_DEBOUNCE_MS`) | `useAutosave.ts` |
+| In-place mutation (`statusTick` bump) — status, type, notes, metadata | 1000 ms (`NOTES_DEBOUNCE_MS`) | `useAutosave.ts` |
+| Periodic safety sweep | every 30 000 ms (`PERIODIC_MS`) | `useAutosave.ts` |
+| Manual `roadraven:trigger-save` window event | immediate | `useAutosave.ts` |
+
+A flush calls `electroview.rpc.request.saveFile({ schema })`, which routes through the Bun `saveFile.ts` handler. That handler consults `refMap` to split the in-memory schema back into one tree per source file, then writes each file atomically via `atomicWrite()` (temp file + `renameSync`, with up to three retries on Windows for transient `EPERM` / `EBUSY` / `EACCES` errors).
+
+### Save state machine and SaveIndicator
+
+The store tracks `saveState`, `failureCount`, and `lastSaveError`. The `SaveIndicator` widget in the StatusBar renders the current state:
+
+- `saved` (idle, schema matches disk) — small check
+- `saving` — animated spinner
+- `error-retrying` (1st failure) — auto-retry scheduled in 5s (`RETRY_DELAY_MS`)
+- `error-manual` (2nd consecutive failure) — clickable to retry on demand
+- `error-modal` (3rd consecutive failure) — opens `SaveFailureModal` with `Retry`, `Save As`, and `Dismiss` actions
+
+The escalation logic lives in `handleFailure()` in `useAutosave.ts`; `SaveFailureModal` opens whenever `saveState === "error-modal"`.
+
+> **Why escalation rather than failing silently:** A desktop editor that loses user data without warning is unacceptable. A single failure is usually transient (file lock, antivirus scan), so a quiet retry is fine. Two consecutive failures suggest a real problem and need a visible indicator. Three failures means the user must be told and offered a recovery path (`Save As` to a different location). This staged approach avoids modal fatigue from one-off blips while guaranteeing that persistent failures surface clearly.
 
 ## Event Flow: Theme Change Propagation
 
