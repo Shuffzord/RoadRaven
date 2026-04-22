@@ -3,9 +3,9 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: milestone
 status: executing
-stopped_at: Phase 03 Wave 2 implementation complete; paused for human UAT (03-03 Tasks 6-7, 03-04b Tasks 4-5)
-last_updated: "2026-04-22T08:30:00.000Z"
-last_activity: 2026-04-22 -- Phase 03 Wave 2 implementation complete (03-03 + 03-04b code landed; UAT pending)
+stopped_at: Phase 03 Wave 2 UAT approved (03-03 + 03-04b); ready for Wave 3 (03-04c)
+last_updated: "2026-04-22T11:30:00.000Z"
+last_activity: 2026-04-22 -- Phase 03 Wave 2 UAT approved (03-03 + 03-04b); 4 review agents running
 progress:
   total_phases: 5
   completed_phases: 2
@@ -25,12 +25,12 @@ See: .planning/PROJECT.md (updated 2026-04-12)
 
 ## Current Position
 
-Phase: 03 (full-editor) — EXECUTING (Wave 2 implementation complete; UAT pending)
+Phase: 03 (full-editor) — EXECUTING (Waves 1+2 complete; ready for Wave 3)
 Plan: 5 of 6
-Plans complete: 03-01 ✓, 03-04a ✓ (UAT approved 2026-04-20), 03-02 ✓, 03-03 (code complete, UAT pending), 03-04b (code complete, UAT pending)
-Plans pending: 03-04c (Wave 3)
-Status: Wave 2 implementation complete; awaiting UAT for 03-03 Tasks 6-7 + 03-04b Tasks 4-5
-Last activity: 2026-04-22 -- Phase 03 Wave 2 implementation complete
+Plans complete: 03-01 ✓, 03-04a ✓, 03-02 ✓, 03-03 ✓, 03-04b ✓ (all UAT approved)
+Plans pending: 03-04c (Wave 3 — before-quit flush + SIGTERM + File>New + external-edit toast)
+Status: Wave 2 fully approved; ready for Wave 3 execution
+Last activity: 2026-04-22 -- 03-03 + 03-04b UAT approved
 
 Progress: [########  ] ~83% of Phase 03 (5/6 plans, 2 pending UAT)
 
