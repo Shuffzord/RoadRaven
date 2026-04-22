@@ -63,7 +63,7 @@ describe("RoadmapNodeCard", () => {
 		render(
 			<RoadmapNodeCard nodeId={nodeId} title="My Task" status="in-progress" />,
 		);
-		const card = screen.getByRole("button");
+		const card = screen.getByRole("treeitem");
 		const label = card.getAttribute("aria-label") ?? "";
 		expect(label).toBe("My Task");
 		expect(label).not.toContain(nodeId);
