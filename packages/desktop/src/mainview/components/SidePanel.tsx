@@ -452,6 +452,7 @@ export function SidePanel({ isOpen, onClose }: SidePanelProps) {
 						{isEditing ? (
 							<div className="mb-4">
 								<MetadataEditor
+									key={selectedNode.id}
 									metadata={metadata}
 									onChange={handleMetadataChange}
 								/>

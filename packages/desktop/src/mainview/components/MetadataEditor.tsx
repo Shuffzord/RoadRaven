@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 interface MetadataEditorProps {
 	metadata: Record<string, unknown>;
@@ -11,10 +11,8 @@ interface Row {
 	value: string;
 }
 
-let rowIdSeq = 0;
 function newRowId(): string {
-	rowIdSeq += 1;
-	return `r${rowIdSeq}`;
+	return crypto.randomUUID();
 }
 
 function toRows(m: Record<string, unknown>): Row[] {
@@ -34,22 +32,12 @@ function toRecord(rows: Row[]): Record<string, unknown> {
 	return out;
 }
 
+// Component owns rows state for the lifetime of its mount. Parent (SidePanel)
+// uses key={selectedNode.id} to force remount when the selected node changes,
+// which is the only legitimate moment to re-seed from props. This avoids the
+// mid-edit-row-wipe class of bugs from external-sync useEffects.
 export function MetadataEditor({ metadata, onChange }: MetadataEditorProps) {
 	const [rows, setRows] = useState<Row[]>(() => toRows(metadata));
-
-	// Sync when the underlying metadata changes externally. Only sync when the
-	// incoming metadata's serialized form differs from our current rows — this
-	// prevents feedback loops where persist → onChange → parent re-renders with
-	// same data → useEffect fires → rows reset (losing mid-edit in-progress keys).
-	// biome-ignore lint/correctness/useExhaustiveDependencies: external-only sync; adding `rows` would feedback-loop through persist → onChange → re-enter.
-	useEffect(() => {
-		const incoming = toRows(metadata);
-		const current = toRecord(rows);
-		const next = toRecord(incoming);
-		if (JSON.stringify(current) !== JSON.stringify(next)) {
-			setRows(incoming);
-		}
-	}, [metadata]);
 
 	const persist = (next: Row[]) => {
 		setRows(next);
