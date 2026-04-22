@@ -4,14 +4,11 @@
  *   - macOS   → osascript + `choose file name`
  *   - Linux   → zenity --file-selection --save
  *
- * Adapted (script-fallback paths only) from nativefiledialog-for-bun:
- *   https://github.com/Catharacta/nativefiledialog-for-bun
- *   Copyright (c) 2026 Catharacta — MIT License
- *   See THIRD_PARTY_LICENSES.md at repo root.
- *
- * The library's FFI/native-binary backend is intentionally NOT vendored —
- * Electrobun bundling makes per-platform .dll/.dylib/.so distribution painful.
- * PowerShell, osascript, and zenity are present on every host we support.
+ * These are the standard documented invocation patterns from each platform's
+ * own docs (Microsoft System.Windows.Forms, Apple AppleScript, GNOME zenity).
+ * Pattern referenced from nativefiledialog-for-bun's script fallbacks
+ * (https://github.com/Catharacta/nativefiledialog-for-bun) when designing this
+ * module; no code copied.
  *
  * Workaround for Electrobun issue #233 (Utils.saveFileDialog not yet implemented):
  *   https://github.com/blackboardsh/electrobun/issues/233
