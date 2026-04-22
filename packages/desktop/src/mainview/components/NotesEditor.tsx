@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import { NOTES_DEBOUNCE_MS } from "../hooks/useAutosave";
 import { useCodeMirror } from "../hooks/useCodeMirror";
 import { MarkdownRenderer } from "./MarkdownRenderer";
 
@@ -105,7 +106,7 @@ function EditorPane({
 		nodeId,
 		initialDoc,
 		onPersist,
-		debounceMs: 1000,
+		debounceMs: NOTES_DEBOUNCE_MS,
 		placeholder: "Write notes in markdown…",
 	});
 	return (

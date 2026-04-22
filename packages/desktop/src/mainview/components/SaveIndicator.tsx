@@ -13,7 +13,7 @@ function ErrorIcon() {
 		>
 			<title>Save error</title>
 			<line x1="12" y1="9" x2="12" y2="13" />
-			<circle cx="12" cy="17" r="0.5" fill="currentColor" />
+			<circle cx="12" cy="17" r="1.5" fill="currentColor" />
 		</svg>
 	);
 }
