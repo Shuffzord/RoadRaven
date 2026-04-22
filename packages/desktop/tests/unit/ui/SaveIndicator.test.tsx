@@ -9,7 +9,9 @@ import {
 import { resetStore } from "../../helpers/resetStore";
 
 function setSaveState(state: SaveState): void {
-	useRoadmapStore.setState({ saveState: state });
+	// Simulate a loaded file so the indicator renders the saveState branch
+	// rather than the new "Untitled" guard for null filePath.
+	useRoadmapStore.setState({ saveState: state, filePath: "/tmp/test.json" });
 }
 
 afterEach(() => {

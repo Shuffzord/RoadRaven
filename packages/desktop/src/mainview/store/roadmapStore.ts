@@ -225,7 +225,7 @@ interface RoadmapState {
 	autosavePaused: boolean;
 
 	// Actions -- structural (increment dataKey)
-	loadSchema: (schema: RoadmapSchema, filePath: string) => void;
+	loadSchema: (schema: RoadmapSchema, filePath: string | null) => void;
 	reloadSchema: (schema: RoadmapSchema) => void;
 	addChild: (parentId: string, title?: string) => string | null;
 	addSiblingAbove: (nodeId: string) => string | null;

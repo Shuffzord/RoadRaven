@@ -36,9 +36,9 @@ export function useFileActions() {
 			).default;
 			const result = RoadmapSchemaSchema.safeParse(sample);
 			if (result.success) {
-				useRoadmapStore
-					.getState()
-					.loadSchema(result.data, "getting-started.json");
+				// HMR / browser-only fallback: no real disk path, autosave stays paused
+				// until the user explicitly saves via File > Save As.
+				useRoadmapStore.getState().loadSchema(result.data, null);
 			}
 		}
 	}, []);
@@ -65,7 +65,9 @@ export function useFileActions() {
 			);
 			const result = RoadmapSchemaSchema.safeParse(sampleData);
 			if (result.success) {
-				useRoadmapStore.getState().loadSchema(result.data, `${name}.json`);
+				// Sample loaded into memory only — autosave needs File > Save As
+				// to obtain a real path before writing to disk.
+				useRoadmapStore.getState().loadSchema(result.data, null);
 			}
 		} catch {
 			// Sample load failed silently

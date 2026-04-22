@@ -30,7 +30,22 @@ function ErrorIcon() {
  */
 export function SaveIndicator() {
 	const saveState = useRoadmapStore((s) => s.saveState);
+	const filePath = useRoadmapStore((s) => s.filePath);
 	const triggerSave = useRoadmapStore((s) => s.triggerSave);
+
+	// No real disk path yet (sample load, HMR fallback, File>New). Surface this
+	// explicitly instead of letting autosave silently no-op or escalate to error.
+	if (!filePath) {
+		return (
+			<div className="flex items-center gap-1.5 text-[11px] text-rv-text-tertiary">
+				<span
+					aria-hidden="true"
+					className="w-[7px] h-[7px] rounded-full border border-rv-text-tertiary"
+				/>
+				<span>Untitled — Save As to enable autosave</span>
+			</div>
+		);
+	}
 
 	if (saveState === "saved") {
 		return (

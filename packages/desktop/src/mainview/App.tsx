@@ -34,7 +34,7 @@ export default function App() {
 				window as unknown as { __ROADRAVEN_TEST__?: unknown }
 			).__ROADRAVEN_TEST__ = {
 				loadSchema: (schema: unknown) => {
-					useRoadmapStore.getState().loadSchema(schema as never, "");
+					useRoadmapStore.getState().loadSchema(schema as never, null);
 				},
 			};
 		}
