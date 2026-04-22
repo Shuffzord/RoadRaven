@@ -15,7 +15,7 @@ import type {
 // the saveFile/flushPending logic. Re-exported below so external callers (and
 // the Plan 04a acceptance grep) can see the persistence surface at a glance.
 import { atomicWrite } from "./atomicWrite";
-import { stopAllWatchers, watchFile } from "./fileWatcher";
+import { markSelfWrite, stopAllWatchers, watchFile } from "./fileWatcher";
 import { bunLogger, setupBunLogging } from "./logging";
 import {
 	buildOwnershipMap,
@@ -436,6 +436,7 @@ const rpc = BrowserView.defineRPC<RoadmapRPCType>({
 
 				try {
 					await atomicWrite(resolved, JSON.stringify(schema, null, 2));
+					markSelfWrite(resolved);
 					pushDialogAllowlistPath(resolved);
 					setCachedSchema(schema);
 					setCachedMainPath(resolved);

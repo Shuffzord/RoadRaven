@@ -2,6 +2,7 @@ import { dirname, resolve, sep } from "node:path";
 import { RoadmapSchemaSchema } from "../../../../packages/core/src/schema";
 import type { RoadmapNode, RoadmapSchema } from "../../../../shared/types";
 import { atomicWrite } from "./atomicWrite";
+import { markSelfWrite } from "./fileWatcher";
 import { bunLogger } from "./logging";
 import {
 	buildOwnershipMap,
@@ -151,9 +152,10 @@ export async function saveFileHandler(params: {
 		const ownership = getOwnership();
 		const perFile = splitSchemaByOwnership(schema, resolved, ownership);
 		await Promise.all(
-			[...perFile].map(([p, payload]) =>
-				atomicWrite(p, JSON.stringify(payload, null, 2)),
-			),
+			[...perFile].map(async ([p, payload]) => {
+				await atomicWrite(p, JSON.stringify(payload, null, 2));
+				markSelfWrite(p);
+			}),
 		);
 		cachedSchema = schema;
 		cachedMainPath = resolved;
@@ -203,9 +205,10 @@ export async function flushPending(): Promise<void> {
 					ownership,
 				);
 				await Promise.all(
-					[...perFile].map(([p, payload]) =>
-						atomicWrite(p, JSON.stringify(payload, null, 2)),
-					),
+					[...perFile].map(async ([p, payload]) => {
+						await atomicWrite(p, JSON.stringify(payload, null, 2));
+						markSelfWrite(p);
+					}),
 				);
 				bunLogger.info`flushPending wrote ${perFile.size} file(s)`;
 			} catch (err) {
