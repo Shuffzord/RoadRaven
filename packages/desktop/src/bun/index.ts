@@ -95,14 +95,23 @@ async function getMainViewUrl(): Promise<string> {
 //   electrobun@1.16.0/dist/api/bun/events/eventEmitter.ts:43         — singleton emitter
 //   electrobun@1.16.0/dist/api/bun/core/Utils.ts:122-148              — Utils.quit() emits + stopEventLoop
 //   electrobun@1.16.0/dist/api/bun/index.ts:114                       — Electrobun.events singleton
-Electrobun.events.on("before-quit", () => {
-	void flushPending();
+//
+// CR-01 (Wave 3 review): both before-quit and the SIG* signal handlers below
+// must AWAIT flushPending. Because flushPending now coalesces concurrent
+// callers onto a single in-flight promise, awaiting in both paths means
+// Ctrl+C in the owning shell (which fires SIGINT and triggers Utils.quit's
+// before-quit emit) cannot tear an atomicWrite mid-rename — the SIGINT
+// handler's process.exit(0) waits for the same promise the before-quit
+// handler is awaiting.
+Electrobun.events.on("before-quit", async () => {
+	await flushPending();
 });
 
 // PATH 2 — process signals: covers terminal `kill <pid>` (SIGTERM) and
-// Ctrl+C in terminal (SIGINT). flushPending is idempotent (Plan 04a) so it
-// is safe even if both paths fire (e.g. Ctrl+C in the same shell that owns
-// the Electrobun event loop).
+// Ctrl+C in terminal (SIGINT). flushPending coalesces concurrent callers
+// (CR-01) so it is safe even if both paths fire (e.g. Ctrl+C in the same
+// shell that owns the Electrobun event loop) — the SIG* handler awaits the
+// same in-flight promise that before-quit awaits.
 process.on("SIGTERM", async () => {
 	await flushPending();
 	process.exit(0);

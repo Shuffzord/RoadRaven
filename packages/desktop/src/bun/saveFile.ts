@@ -167,36 +167,55 @@ export async function saveFileHandler(params: {
 
 // -- flushPending (idempotent; invocation wires in Plan 04c) ---------------
 
+// CR-01 (Wave 3 review): coalesce concurrent callers. The before-quit path and
+// SIGINT/SIGTERM signal handlers can both fire when Ctrl+C is pressed in the
+// shell that owns the Electrobun event loop. Without this guard, two parallel
+// invocations would race the rename-based atomicWrite on the same path
+// (last-writer-wins on POSIX, EBUSY/EACCES on Windows when the destination
+// handle is still held). The first caller runs the body; subsequent callers
+// await the same in-flight promise and return when it settles.
+let flushInFlight: Promise<void> | null = null;
+
 /**
  * Called by the quit/before-quit path in later plans. Safe to call anytime —
- * a no-op when nothing is cached.
+ * a no-op when nothing is cached. Concurrent calls coalesce onto a single
+ * in-flight promise (CR-01) so signal handlers and before-quit cannot race
+ * each other into a torn write.
  */
 export async function flushPending(): Promise<void> {
-	if (!cachedSchema || !cachedMainPath) {
-		bunLogger.info`flushPending: no cached schema/path; no-op`;
-		return;
-	}
-	try {
-		const parsed = RoadmapSchemaSchema.safeParse(cachedSchema);
-		if (!parsed.success) {
-			bunLogger.error`flushPending: cached schema failed Zod validation; aborting`;
-			return;
+	if (flushInFlight) return flushInFlight;
+	flushInFlight = (async () => {
+		try {
+			if (!cachedSchema || !cachedMainPath) {
+				bunLogger.info`flushPending: no cached schema/path; no-op`;
+				return;
+			}
+			try {
+				const parsed = RoadmapSchemaSchema.safeParse(cachedSchema);
+				if (!parsed.success) {
+					bunLogger.error`flushPending: cached schema failed Zod validation; aborting`;
+					return;
+				}
+				const ownership = getOwnership();
+				const perFile = splitSchemaByOwnership(
+					cachedSchema,
+					cachedMainPath,
+					ownership,
+				);
+				await Promise.all(
+					[...perFile].map(([p, payload]) =>
+						atomicWrite(p, JSON.stringify(payload, null, 2)),
+					),
+				);
+				bunLogger.info`flushPending wrote ${perFile.size} file(s)`;
+			} catch (err) {
+				bunLogger.error`flushPending failed: ${String(err)}`;
+			}
+		} finally {
+			flushInFlight = null;
 		}
-		const ownership = getOwnership();
-		const perFile = splitSchemaByOwnership(
-			cachedSchema,
-			cachedMainPath,
-			ownership,
-		);
-		await Promise.all(
-			[...perFile].map(([p, payload]) =>
-				atomicWrite(p, JSON.stringify(payload, null, 2)),
-			),
-		);
-		bunLogger.info`flushPending wrote ${perFile.size} file(s)`;
-	} catch (err) {
-		bunLogger.error`flushPending failed: ${String(err)}`;
-	}
+	})();
+	return flushInFlight;
 }
 
 // -- loadFile handler -------------------------------------------------------
@@ -324,6 +343,7 @@ export function __resetSaveFileModuleForTests(): void {
 	cachedSchema = null;
 	cachedMainPath = null;
 	dialogAllowlist.clear();
+	flushInFlight = null;
 }
 
 export function __setCachedMainPathForTests(path: string): void {
