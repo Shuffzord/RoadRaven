@@ -5,6 +5,15 @@ import { MetadataEditor } from "./MetadataEditor";
 import { NotesEditor } from "./NotesEditor";
 import { ResizeHandle } from "./ResizeHandle";
 import { formatStatus, STATUS_TOKEN_MAP } from "./RoadmapNode";
+import { SaveIndicator } from "./SaveIndicator";
+
+function isTextInputFocused(): boolean {
+	const el = document.activeElement;
+	if (!el || !(el instanceof HTMLElement)) return false;
+	if (el.isContentEditable) return true;
+	const tag = el.tagName;
+	return tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT";
+}
 
 interface SidePanelProps {
 	isOpen: boolean;
@@ -69,6 +78,21 @@ export function SidePanel({ isOpen, onClose }: SidePanelProps) {
 		document.addEventListener("keydown", handler);
 		return () => document.removeEventListener("keydown", handler);
 	}, [isEditing, selectedNode?.title]);
+
+	// E shortcut to enter edit mode (D-10). Skipped when text input focused
+	// (D-08 context-aware) or already editing.
+	useEffect(() => {
+		if (!isOpen || !selectedNode || isEditing) return;
+		const handler = (e: KeyboardEvent) => {
+			if (e.key !== "e" && e.key !== "E") return;
+			if (e.ctrlKey || e.metaKey || e.altKey) return;
+			if (isTextInputFocused()) return;
+			e.preventDefault();
+			setIsEditing(true);
+		};
+		window.addEventListener("keydown", handler);
+		return () => window.removeEventListener("keydown", handler);
+	}, [isOpen, selectedNode, isEditing]);
 
 	const handleCopyId = useCallback(async () => {
 		if (!selectedNode) return;
@@ -151,7 +175,7 @@ export function SidePanel({ isOpen, onClose }: SidePanelProps) {
 			)}
 
 			<div className="flex items-center justify-between min-h-[52px] px-4 py-3.5 border-b border-rv-border shrink-0">
-				<div className="flex items-center gap-2">
+				<div className="flex items-center gap-2 min-w-0">
 					<span className="text-[14px] font-semibold text-rv-text-primary whitespace-nowrap">
 						Node Details
 					</span>
@@ -160,14 +184,16 @@ export function SidePanel({ isOpen, onClose }: SidePanelProps) {
 							Editing
 						</span>
 					)}
+					{selectedNode && <SaveIndicator />}
 				</div>
-				<div className="flex items-center gap-1">
+				<div className="flex items-center gap-1 shrink-0">
 					{selectedNode && !isEditing && (
 						<button
 							className="flex items-center justify-center w-7 h-7 rounded-[6px] text-rv-text-tertiary hover:bg-rv-bg-hover hover:text-rv-text-primary transition-colors duration-150"
 							type="button"
 							onClick={() => setIsEditing(true)}
 							aria-label="Edit node"
+							title="Edit node (E)"
 						>
 							<svg
 								aria-hidden="true"

@@ -187,6 +187,37 @@ describe("SidePanel — edit mode", () => {
 		expect(keyInput.value).toBe("priority");
 	});
 
+	it("pressing E enters edit mode when no text input is focused", () => {
+		seedStore();
+		render(<SidePanel isOpen onClose={vi.fn()} />);
+		expect(screen.queryByLabelText("Title")).toBeNull();
+		fireEvent.keyDown(window, { key: "e" });
+		expect(screen.getByLabelText("Title")).toBeTruthy();
+	});
+
+	it("pressing E does NOT enter edit mode when an input is focused", () => {
+		seedStore();
+		render(<SidePanel isOpen onClose={vi.fn()} />);
+		const textbox = document.createElement("input");
+		document.body.appendChild(textbox);
+		textbox.focus();
+		fireEvent.keyDown(window, { key: "e" });
+		expect(screen.queryByLabelText("Title")).toBeNull();
+	});
+
+	it("pressing E does NOT enter edit mode when modifier held (Ctrl+E reserved)", () => {
+		seedStore();
+		render(<SidePanel isOpen onClose={vi.fn()} />);
+		fireEvent.keyDown(window, { key: "e", ctrlKey: true });
+		expect(screen.queryByLabelText("Title")).toBeNull();
+	});
+
+	it("SaveIndicator renders in panel header when a node is selected", () => {
+		seedStore();
+		render(<SidePanel isOpen onClose={vi.fn()} />);
+		expect(screen.getByText("Saved")).toBeTruthy();
+	});
+
 	it("copy-ID button still works in preview mode (Phase 2 regression check)", () => {
 		seedStore();
 		const mockWrite = vi.fn().mockResolvedValue(undefined);
