@@ -54,14 +54,26 @@ export async function handleExternalFileChange(payload: {
 		return;
 	}
 	// Clean state — auto-reload (preserves Phase 2 behavior).
-	if (!electroview?.rpc) return;
-	const response = await electroview.rpc.request.loadFile({
-		path: payload.path,
-	});
-	if (response?.data) {
-		useRoadmapStore.getState().loadSchema(response.data, payload.path);
+	// WR-02 (Wave 3 review): if rpc is unavailable, fall back to surfacing the
+	// conflict UI instead of silently no-op'ing. Wrap loadFile in try/catch so a
+	// rejection (e.g. file unlinked between watcher fire and read) does not
+	// become an unhandled promise rejection at the rpcHandlers subscription
+	// site — instead, flag the external edit so the user sees the toast.
+	if (!electroview?.rpc) {
+		useRoadmapStore.getState().setExternalEdit(payload.path);
+		return;
 	}
-	useRoadmapStore.getState().setSchemaErrors(response?.errors ?? []);
+	try {
+		const response = await electroview.rpc.request.loadFile({
+			path: payload.path,
+		});
+		if (response?.data) {
+			useRoadmapStore.getState().loadSchema(response.data, payload.path);
+		}
+		useRoadmapStore.getState().setSchemaErrors(response?.errors ?? []);
+	} catch {
+		useRoadmapStore.getState().setExternalEdit(payload.path);
+	}
 }
 
 export function useFileActions() {
