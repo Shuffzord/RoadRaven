@@ -34,6 +34,7 @@ import {
 	setCachedMainPath,
 	setCachedSchema,
 } from "./saveFile";
+import { nativeSaveDialog } from "./saveFileDialog";
 
 // Persistence surface re-exports — imported by Plan 04b/04c and DevHarness
 export { atomicWrite, splitSchemaByOwnership };
@@ -385,11 +386,10 @@ const rpc = BrowserView.defineRPC<RoadmapRPCType>({
 			//   - ownership map seeded with the schema's nodes (no $refs yet)
 			//
 			// The installed Electrobun version (1.16.0) does not expose
-			// Utils.saveFileDialog. We probe for it and, if absent, fall back
-			// to Utils.openFileDialog (single file, returns string[]). The user
-			// types the destination filename — this is the v1 behavior; a true
-			// save-style dialog can ship in a later Electrobun release without
-			// further app changes.
+			// Utils.saveFileDialog (tracked upstream as blackboardsh/electrobun#233).
+			// We probe for it so a future Electrobun release picks up automatically;
+			// otherwise fall back to nativeSaveDialog (./saveFileDialog.ts) which
+			// shells out to PowerShell / osascript / zenity per platform.
 			saveFileAs: async ({ schema }) => {
 				const { RoadmapSchemaSchema } = await import(
 					"../../../../packages/core/src/schema"
@@ -409,16 +409,13 @@ const rpc = BrowserView.defineRPC<RoadmapRPCType>({
 							filters: [{ name: "JSON", extensions: ["json"] }],
 						});
 					} else {
-						bunLogger.warn`Utils.saveFileDialog not available on this Electrobun version; falling back to openFileDialog`;
 						const { homedir } = await import("node:os");
-						const result = await Utils.openFileDialog({
-							startingFolder: homedir(),
-							allowedFileTypes: "json",
-							canChooseFiles: true,
-							canChooseDirectory: false,
-							allowsMultipleSelection: false,
+						chosenPath = await nativeSaveDialog({
+							title: "Save Roadmap",
+							defaultPath: homedir(),
+							defaultName: "roadmap.json",
+							filters: [{ name: "JSON", extensions: ["json"] }],
 						});
-						chosenPath = result?.[0] ?? null;
 					}
 				} catch (err) {
 					bunLogger.error`saveFileAs dialog failed: ${String(err)}`;
