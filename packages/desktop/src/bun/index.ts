@@ -1,4 +1,4 @@
-import { dirname, resolve as pathResolve, sep } from "node:path";
+import { resolve as pathResolve } from "node:path";
 import { getLogger } from "@logtape/logtape";
 import { BrowserView, BrowserWindow, Updater, Utils } from "electrobun/bun";
 import type {
@@ -15,10 +15,10 @@ import { bunLogger, setupBunLogging } from "./logging";
 import {
 	buildOwnershipMap,
 	getOwnership,
-	setOwnership,
 	setSourceTemplate,
 	splitSchemaByOwnership,
 } from "./refMap";
+import { defaultReadFile, resolveRefsWithOwnership } from "./resolveRefs";
 import {
 	flushPending,
 	isPathWithinMainDir,
@@ -75,83 +75,10 @@ async function getMainViewUrl(): Promise<string> {
 	return "views://mainview/index.html";
 }
 
-/**
- * Resolve $ref nodes in a roadmap schema tree.
- * Each $ref node is replaced with the contents of the referenced file.
- * Referenced files get their own file watchers.
- *
- * Plan 03-04a: also populates the ownership map via setOwnership so saveFile
- * can split the schema back into per-file payloads without re-walking the tree.
- * Every non-$ref node is tagged with `currentOwner`; entering a $ref'd subtree
- * switches `currentOwner` to the referenced file's absolute path.
- *
- * NOTE: saveFile.ts also contains `resolveRefsWithOwnership` used only by
- * `loadFileHandler` (test path). Keep the two in sync or consolidate them —
- * any bug fix here must be mirrored there, and vice versa.
- */
-async function resolveRefs(
-	nodes: RoadmapNode[],
-	basePath: string,
-	currentOwner: string,
-	watchCallback: (path: string) => void,
-	visited: Set<string> = new Set(),
-): Promise<RoadmapNode[]> {
-	const baseDir = dirname(basePath);
-	const resolved: RoadmapNode[] = [];
-	for (const node of nodes) {
-		if (node.$ref) {
-			const refAbsPath = pathResolve(baseDir, node.$ref);
-			// Guard: reject $ref paths that escape the base directory
-			if (!refAbsPath.startsWith(baseDir + sep)) {
-				bunLogger.error`$ref escapes base directory: ${node.$ref}`;
-				resolved.push(node);
-				continue;
-			}
-			// Guard: detect circular $ref chains
-			if (visited.has(refAbsPath)) {
-				bunLogger.warn`Circular $ref detected, skipping: ${node.$ref}`;
-				resolved.push(node);
-				continue;
-			}
-			visited.add(refAbsPath);
-			try {
-				const raw = await Bun.file(refAbsPath).text();
-				const parsed = JSON.parse(raw);
-				const refNodes: RoadmapNode[] = Array.isArray(parsed)
-					? parsed
-					: (parsed.nodes ?? [parsed]);
-				watchFile(refAbsPath, watchCallback);
-				// Recurse into the ref'd subtree with refAbsPath as the new owner.
-				// This tags every descendant with the correct file for write-back.
-				const tagged = await resolveRefs(
-					refNodes,
-					refAbsPath,
-					refAbsPath,
-					watchCallback,
-					visited,
-				);
-				resolved.push(...tagged);
-			} catch (err) {
-				bunLogger.error`Failed to resolve $ref ${node.$ref}: ${String(err)}`;
-				resolved.push(node);
-			}
-		} else {
-			setOwnership(node.id, currentOwner);
-			const nodeWithResolvedChildren = { ...node };
-			if (node.children) {
-				nodeWithResolvedChildren.children = await resolveRefs(
-					node.children,
-					basePath,
-					currentOwner,
-					watchCallback,
-					visited,
-				);
-			}
-			resolved.push(nodeWithResolvedChildren);
-		}
-	}
-	return resolved;
-}
+// $ref resolution + ownership tagging lives in `./resolveRefs.ts` so the
+// production loadFile handler (this file) and the test-only loadFileHandler
+// in saveFile.ts share one implementation. Production passes a `watchFile`
+// callback; tests omit it.
 
 // Define RPC handlers before creating the window (Electrobun pattern)
 const rpc = BrowserView.defineRPC<RoadmapRPCType>({
@@ -263,11 +190,14 @@ const rpc = BrowserView.defineRPC<RoadmapRPCType>({
 							resolvedMain,
 						);
 
-						schemaData.nodes = await resolveRefs(
+						schemaData.nodes = await resolveRefsWithOwnership(
 							originalNodes,
 							filePath,
 							resolvedMain,
-							fileChangeCallback,
+							{
+								readFile: defaultReadFile,
+								onWatch: (path) => watchFile(path, fileChangeCallback),
+							},
 						);
 					}
 				} catch (err) {
