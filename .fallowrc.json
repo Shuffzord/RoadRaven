@@ -1,0 +1,55 @@
+{
+  // Fallow configuration — static analysis for unused code, duplication, complexity.
+  // Docs: https://docs.fallow.tools | Source: https://github.com/fallow-rs/fallow
+  //
+  // Without this file, fallow cannot see Electrobun's runtime entry points
+  // (Bun main process, mainview HTML bootstrap, dev harness) and reports
+  // false positives such as App.tsx being "100% dead".
+
+  // Entry points fallow can't discover on its own.
+  // - src/bun/index.ts          — Electrobun main process, loaded by electrobun runtime
+  // - src/mainview/index.html   — Vite root; boots main.tsx which renders App
+  // - src/mainview/main.tsx     — belt-and-braces (in case HTML <script> isn't followed)
+  // - *.config.ts               — Vite/Vitest/Electrobun/Playwright tool configs
+  "entry": [
+    "packages/desktop/src/bun/index.ts",
+    "packages/desktop/src/mainview/index.html",
+    "packages/desktop/src/mainview/main.tsx",
+    "packages/desktop/electrobun.config.ts",
+    "packages/desktop/vite.config.ts",
+    "packages/desktop/vitest.config.ts",
+    "packages/desktop/playwright.config.ts"
+  ],
+
+  // Paths excluded from analysis entirely.
+  "ignorePatterns": [
+    "**/dist/**",
+    "**/.planning/**",
+    "**/.fallow/**",
+    "samples/**",
+    "**/*.bak.json"
+  ],
+
+  // Files loaded dynamically at runtime — never flag as unused.
+  // _dev/* components are mounted by DevHarness under a dev-only gate,
+  // so their imports are invisible to static graph analysis.
+  "dynamicallyLoaded": [
+    "packages/desktop/src/renderer/components/_dev/**"
+  ],
+
+  // @roadraven/core is a workspace package whose exports are consumed
+  // indirectly (shared schema, plugin surface). Treat as a public library
+  // so its exports aren't flagged unused when no sibling imports them yet.
+  "publicPackages": [
+    "@roadraven/core"
+  ],
+
+  // Per-rule severity overrides.
+  // - duplicate-exports: we knowingly re-export schema types from shared/types.ts
+  //   for the time being; demote from error to warn until consolidation lands.
+  // - unused-dev-dependencies: already warn by default; kept explicit for visibility.
+  "rules": {
+    "duplicate-exports": "warn",
+    "unused-dev-dependencies": "warn"
+  }
+}

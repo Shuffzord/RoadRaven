@@ -2,3 +2,8 @@ bunx lint-staged
 bunx @biomejs/biome check --diagnostic-level=error .
 cd packages/desktop && bunx tsc --noEmit
 bunx vitest run --reporter=dot
+
+# TODO(fallow): enable once the branch is stable and the post-GSD dead-code
+# cleanup has landed. Scoped to changed files so it's fast and actionable.
+# Tracking: run `bunx fallow audit --changed-since=HEAD` locally until then.
+# bunx fallow audit --changed-since=HEAD --fail-on-issues
