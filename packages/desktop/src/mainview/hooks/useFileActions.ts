@@ -141,6 +141,11 @@ export function useFileActions() {
 				if (result?.data) {
 					useRoadmapStore.getState().loadSchema(result.data, null);
 					useRoadmapStore.setState({ isUntitled: true });
+					// Pop the save dialog right away so the user gets immediate
+					// feedback that this is a new untitled doc that needs a
+					// home on disk. Without this, the dialog only appears
+					// 2s after the first edit, which is non-obvious UX.
+					window.dispatchEvent(new CustomEvent("roadraven:trigger-save"));
 					return;
 				}
 			} catch {
@@ -148,6 +153,7 @@ export function useFileActions() {
 			}
 		}
 		useRoadmapStore.getState().newUntitledSchema();
+		window.dispatchEvent(new CustomEvent("roadraven:trigger-save"));
 	}, []);
 
 	// Plan 03-04c CustomEvent bridges:
