@@ -318,6 +318,13 @@ export const useRoadmapStore = create<RoadmapState>((set, get) => {
 		const treeData = nextNodes[0] ? toTreeDatum(nextNodes[0]) : null;
 		const nextKey = String(Number(get().dataKey) + 1);
 		if (options?.preserveNodeIndex) {
+			// Refresh entries in place so Map identity stays stable (React memo
+			// consumers) while `.get(id).children` reflects the reordered tree.
+			const existingIndex = get().nodeIndex;
+			existingIndex.clear();
+			for (const [id, node] of buildNodeIndex(nextNodes)) {
+				existingIndex.set(id, node);
+			}
 			set({
 				schema: { ...currentSchema, nodes: nextNodes },
 				treeData,
