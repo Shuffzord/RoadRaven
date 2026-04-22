@@ -1,6 +1,6 @@
 # RPC and IPC
 
-> Last updated: 2026-04-15 | Phase: 02-read-only-viewer
+> Last updated: 2026-04-22 | Phase: 03-full-editor (Waves 1 + 2)
 
 ## Overview
 
@@ -75,7 +75,7 @@ The full contract is defined in `shared/types.ts`. Here is what each endpoint do
 | Request | Parameters | Response | Purpose |
 |---------|-----------|----------|---------|
 | `loadFile` | `{ path: string }` | `{ data: RoadmapSchema \| null, errors?: Array<{ path, message, code }> }` | Load + Zod-validate a roadmap JSON file, create .bak.json backup, resolve $ref nodes, start file watchers |
-| `saveFile` | `{ schema: RoadmapSchema }` | `undefined` | Write roadmap JSON to disk |
+| `saveFile` | `{ schema: RoadmapSchema, filePath?: string }` | `{ ok: true } \| { ok: false, error: string }` | Atomically write roadmap JSON to disk. Splits the in-memory schema by `refMap` so each `$ref` subtree is written back to its source file. Path-traversal guard rejects any `filePath` not in the session allowlist. |
 | `exportHtml` | `{ path: string }` | `undefined` | Export roadmap as HTML (future) |
 | `exportPng` | `{ path: string }` | `undefined` | Export roadmap as PNG (future) |
 | `openFilePicker` | `{}` | `string` | Open native file dialog, return selected path (empty string if cancelled) |
@@ -153,6 +153,61 @@ setSchemaErrors(errors ?? [])
 ```
 
 > **Why this flow matters:** The multi-step pipeline handles several failure modes gracefully. If the file cannot be read, a `file_read_error` is returned. If JSON parsing fails, a `json_parse_error` is returned. If Zod validation fails, the raw data is still returned for partial rendering alongside the validation errors. The `.bak.json` backup protects against data loss. File watchers enable live reload when the file changes externally. The `stopAllWatchers()` call before starting new watchers prevents leaked watchers from previous file opens.
+
+## Data Flow: Autosave (Editor → Disk)
+
+When the editor commits a change, `useAutosave` debounces and then calls `saveFile`. The Bun handler may write multiple files in one call when the loaded schema includes `$ref`-resolved subtrees:
+
+```
+Webview                              Bun Process                    Disk
+-------                              -----------                    ----
+User commits a field (panel/canvas)
+       |
+       v
+roadmapStore.<mutation>()  -- bumps dataKey or statusTick
+       |
+       v
+useAutosave subscriber sees the bump
+       |
+       v
+setTimeout(flushNow, 1000ms or 2000ms)   -- per-trigger debounce
+       |
+       v (after debounce)
+electroview.rpc.request.saveFile({ schema })
+       |
+       v (RPC transport)
+                                     saveFile handler (saveFile.ts)
+                                            |
+                                            v
+                                     allowlist check on filePath  (path-traversal guard)
+                                            |
+                                            v
+                                     RoadmapSchemaSchema.safeParse  (last-line schema check)
+                                            |
+                                            v
+                                     splitByRefMap(schema)
+                                       -> Map<filePath, partialSchema>
+                                            |
+                                            v
+                                     for each (path, partial):
+                                       atomicWrite(path, JSON.stringify(partial))
+                                         1. Bun.write(<dir>/.<basename>.<pid>.<ts>.tmp)
+                                         2. renameSync(tmp, target)        ----> file
+                                         3. on Win EPERM/EBUSY/EACCES:
+                                            retry x3 with 50ms backoff
+                                            |
+                                            v
+                                     return { ok: true } or { ok: false, error }
+       |
+       v (RPC response)
+useAutosave updates store.saveState
+  - ok       -> "saved", lastSavedDataKey/StatusTick snapshot
+  - !ok      -> handleFailure() escalates: error-retrying / error-manual / error-modal
+```
+
+> **Why split by refMap rather than write a single big file:** When a `$ref` node was loaded, its subtree came from a separate JSON file. Writing the whole in-memory schema back to the main file would clobber the `$ref` link with the resolved subtree, silently denormalising the data. By tracking the source path of every node in `refMap` and re-splitting on save, edits to a `$ref`-loaded subtree get persisted to the file they came from. The main file's `$ref` pointer remains intact.
+
+> **Why atomic temp + rename:** Writing in place can corrupt the file if the process is killed mid-write. The temp + rename pattern guarantees the target file is either the old contents or the new contents — never a half-written mix. On POSIX, `rename(2)` is atomic. On Windows, the rename can transiently fail with `EPERM` / `EBUSY` / `EACCES` while antivirus or the file indexer scans the new tmp file, so the helper retries up to three times with a short backoff before giving up.
 
 ## Data Flow: Settings Persistence
 

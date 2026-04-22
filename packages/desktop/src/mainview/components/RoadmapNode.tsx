@@ -96,7 +96,6 @@ export function RoadmapNodeCard({
 	const tokens = STATUS_TOKEN_MAP[status] ?? STATUS_TOKEN_MAP["not-started"];
 
 	return (
-		// biome-ignore lint/a11y/useSemanticElements: node card has internal buttons; cannot be a <button> element
 		<div
 			className={`node relative min-w-[180px] max-w-[220px] rounded-[var(--node-radius,8px)] border-[length:var(--rv-border-width,1px)] border-[color:var(--rv-border)] bg-[var(--rv-bg-node)] pl-4 pr-3 py-[10px] select-none transition-[box-shadow,border-color,background] duration-150 hover:bg-[var(--rv-bg-node-hover)] group ${isSelected ? "outline outline-2 -outline-offset-1 outline-[var(--rv-accent)]" : ""}`}
 			data-source-id={nodeId}
@@ -110,7 +109,8 @@ export function RoadmapNodeCard({
 					"--badge-bg": `var(${tokens.bg})`,
 				} as React.CSSProperties
 			}
-			role="button"
+			role="treeitem"
+			aria-selected={isSelected}
 			tabIndex={0}
 			aria-label={title}
 			onClick={onSelect}

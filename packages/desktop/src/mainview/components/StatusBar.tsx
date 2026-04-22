@@ -1,4 +1,5 @@
 import { useRoadmapStore } from "../store/roadmapStore";
+import { SaveIndicator } from "./SaveIndicator";
 
 export function StatusBar() {
 	const filePath = useRoadmapStore((s) => s.filePath);
@@ -27,6 +28,7 @@ export function StatusBar() {
 
 			{/* Right section */}
 			<div className="flex items-center gap-2.5">
+				<SaveIndicator />
 				<span>{nodeCount} nodes</span>
 				<svg
 					aria-hidden="true"

@@ -1,6 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { RoadmapSchema } from "../../../../../packages/core/src/schema";
-import { useRoadmapStore } from "../../../src/mainview/store/roadmapStore";
+import {
+	hasUnsavedEdits,
+	useRoadmapStore,
+} from "../../../src/mainview/store/roadmapStore";
 import { resetStore } from "../../helpers/resetStore";
 
 const ROOT_ID = "aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee";
@@ -441,5 +444,77 @@ describe("setFocusedNode", () => {
 		useRoadmapStore.getState().setFocusedNode(CHILD_A_ID);
 		useRoadmapStore.getState().setFocusedNode(null);
 		expect(useRoadmapStore.getState().focusedNodeId).toBeNull();
+	});
+});
+
+describe("saveState machine (Plan 03-04b)", () => {
+	beforeEach(() => loadTestSchema());
+
+	it("setSaveState('saving') sets saveState and does NOT clear lastSaveError", () => {
+		useRoadmapStore.setState({
+			lastSaveError: { message: "prior error", attemptedAt: 1000 },
+			saveState: "error-manual",
+		});
+		useRoadmapStore.getState().setSaveState("saving");
+		const state = useRoadmapStore.getState();
+		expect(state.saveState).toBe("saving");
+		expect(state.lastSaveError?.message).toBe("prior error");
+	});
+
+	it("setSaveState('error-retrying', msg) sets state + lastSaveError + increments failureCount", () => {
+		const before = useRoadmapStore.getState().failureCount;
+		useRoadmapStore.getState().setSaveState("error-retrying", "disk full");
+		const state = useRoadmapStore.getState();
+		expect(state.saveState).toBe("error-retrying");
+		expect(state.lastSaveError?.message).toBe("disk full");
+		expect(state.lastSaveError?.attemptedAt).toBeGreaterThan(0);
+		expect(state.failureCount).toBe(before + 1);
+	});
+
+	it("multiple setSaveState('error-retrying', ...) calls keep incrementing failureCount", () => {
+		useRoadmapStore.getState().setSaveState("error-retrying", "err 1");
+		useRoadmapStore.getState().setSaveState("error-retrying", "err 2");
+		useRoadmapStore.getState().setSaveState("error-retrying", "err 3");
+		expect(useRoadmapStore.getState().failureCount).toBe(3);
+	});
+
+	it("setSaveState('saved') resets failureCount to 0", () => {
+		useRoadmapStore.getState().setSaveState("error-retrying", "err");
+		useRoadmapStore.getState().setSaveState("error-retrying", "err again");
+		expect(useRoadmapStore.getState().failureCount).toBe(2);
+		useRoadmapStore.getState().setSaveState("saved");
+		const state = useRoadmapStore.getState();
+		expect(state.saveState).toBe("saved");
+		expect(state.failureCount).toBe(0);
+	});
+
+	it("resolveExternalEdit('keep') clears externalEditPending and autosavePaused without flipping saveState", () => {
+		useRoadmapStore.getState().setExternalEdit("/tmp/external.json");
+		useRoadmapStore.setState({ saveState: "saving" });
+		expect(useRoadmapStore.getState().autosavePaused).toBe(true);
+		expect(useRoadmapStore.getState().externalEditPending).not.toBeNull();
+		useRoadmapStore.getState().resolveExternalEdit("keep");
+		const state = useRoadmapStore.getState();
+		expect(state.autosavePaused).toBe(false);
+		expect(state.externalEditPending).toBeNull();
+		expect(state.saveState).toBe("saving");
+	});
+
+	it("Warning 8: hasUnsavedEdits reflects dataKey/statusTick vs lastSavedDataKey/lastSavedStatusTick", () => {
+		const initial = useRoadmapStore.getState();
+		expect(hasUnsavedEdits(initial)).toBe(false);
+
+		useRoadmapStore.getState().addChild(CHILD_A_ID);
+		expect(hasUnsavedEdits(useRoadmapStore.getState())).toBe(true);
+
+		const after = useRoadmapStore.getState();
+		useRoadmapStore.setState({
+			lastSavedDataKey: after.dataKey,
+			lastSavedStatusTick: after.statusTick,
+		});
+		expect(hasUnsavedEdits(useRoadmapStore.getState())).toBe(false);
+
+		useRoadmapStore.getState().updateNodeNotes(CHILD_A_ID, "# some notes");
+		expect(hasUnsavedEdits(useRoadmapStore.getState())).toBe(true);
 	});
 });

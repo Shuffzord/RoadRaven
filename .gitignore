@@ -43,3 +43,5 @@ test-results/
 
 # Roadmap auto-generated backups
 *.bak.json
+# Fallow analysis cache (incremental, regenerated on every run)
+.fallow/

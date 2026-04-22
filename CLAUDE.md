@@ -45,6 +45,30 @@ Before creating a PR, ensure:
 1. `bunx vitest run` — all tests pass
 2. `bunx vite build` — production build succeeds (catches import/CSS issues that unit tests miss)
 3. `bunx @biomejs/biome lint packages/desktop/src/ shared/` — no lint errors
+4. `bunx fallow audit --changed-since=HEAD` — no new dead code / duplication / complexity regressions in your diff (see below)
+
+## Static analysis (fallow)
+
+Fallow is a Rust-based code-quality analyzer wired in as an *informational* fourth
+verification layer on top of the biome → tsc → vitest stack. Config lives at
+`.fallowrc.json` (JSONC); entry points for the Electrobun main process, the
+mainview HTML bootstrap, and the dev harness are declared there — without them
+the tool reports App.tsx and friends as dead code.
+
+```bash
+bunx fallow                                   # Full combined scan (dead code + dupes + health)
+bunx fallow audit --changed-since=HEAD        # Scoped to your uncommitted diff — fast, use during review
+bunx fallow dead-code --summary               # Counts only
+bunx fallow health --score --trend            # Complexity + delta vs. last snapshot
+bunx fallow config                            # Print resolved config + which file loaded
+```
+
+Treat fallow output as a signal, not a gate — it is not currently wired into
+`bun run verify`, pre-commit, or CI (commented-out placeholders exist in
+`.husky/pre-commit` and `.github/workflows/ci.yml`; enable after the post-GSD
+dead-code cleanup lands). When planning refactors, use it to locate complexity
+hotspots and circular dependencies rather than acting on each unused-export
+finding in isolation.
 
 ## Electrobun-specific patterns
 

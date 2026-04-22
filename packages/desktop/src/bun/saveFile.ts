@@ -1,4 +1,3 @@
-import { existsSync } from "node:fs";
 import { dirname, resolve, sep } from "node:path";
 import { RoadmapSchemaSchema } from "../../../../packages/core/src/schema";
 import type { RoadmapNode, RoadmapSchema } from "../../../../shared/types";
@@ -7,10 +6,10 @@ import { bunLogger } from "./logging";
 import {
 	buildOwnershipMap,
 	getOwnership,
-	setOwnership,
 	setSourceTemplate,
 	splitSchemaByOwnership,
 } from "./refMap";
+import { defaultReadFile, resolveRefsWithOwnership } from "./resolveRefs";
 
 // -- Module-level state -----------------------------------------------------
 //
@@ -212,7 +211,7 @@ export async function loadFileHandler(params: {
 
 	let raw: string;
 	try {
-		raw = await readTextFile(filePath);
+		raw = await defaultReadFile(filePath);
 	} catch (err) {
 		bunLogger.error`Failed to read file ${filePath}: ${String(err)}`;
 		return {
@@ -280,11 +279,14 @@ export async function loadFileHandler(params: {
 			resolvedMain,
 		);
 
-		// Expand $refs and tag ownership (per-file per-node)
+		// Expand $refs and tag ownership (per-file per-node). Test path omits
+		// the watcher callback — only the production loadFile in bun/index.ts
+		// wires file watchers.
 		const resolvedNodes = await resolveRefsWithOwnership(
 			originalNodes,
 			resolvedMain,
 			resolvedMain,
+			{ readFile: defaultReadFile },
 		);
 		(schemaData as { nodes: RoadmapNode[] }).nodes = resolvedNodes;
 	}
@@ -303,112 +305,9 @@ export async function loadFileHandler(params: {
 	};
 }
 
-/**
- * Read a UTF-8 file. Uses Bun.file when available (production) and falls back
- * to node:fs.readFileSync under vitest (Node runtime).
- */
-async function readTextFile(path: string): Promise<string> {
-	const bunGlobal = (
-		globalThis as {
-			Bun?: { file: (p: string) => { text: () => Promise<string> } };
-		}
-	).Bun;
-	if (bunGlobal?.file) {
-		return bunGlobal.file(path).text();
-	}
-	const { readFileSync } = await import("node:fs");
-	return readFileSync(path, "utf-8");
-}
-
-/**
- * Walk the node tree, expand $ref children, and tag ownership. Every visited
- * non-$ref node gets tagged with the currently-active owner file.
- *
- * NOTE: bun/index.ts contains a production counterpart `resolveRefs` used by
- * the live `loadFile` RPC handler. Keep the two in sync — any bug fix here
- * must be mirrored there, and vice versa.
- */
-async function resolveRefsWithOwnership(
-	nodes: RoadmapNode[],
-	mainPath: string,
-	currentOwner: string,
-	visited: Set<string> = new Set(),
-): Promise<RoadmapNode[]> {
-	const baseDir = dirname(currentOwner);
-	const out: RoadmapNode[] = [];
-
-	// The map was seeded at the main-path scope by the caller. This function
-	// only adds per-node overrides via setOwnership below.
-
-	for (const node of nodes) {
-		if (node.$ref) {
-			const refAbsPath = resolve(baseDir, node.$ref);
-			if (!refAbsPath.startsWith(baseDir + sep)) {
-				bunLogger.error`$ref escapes base directory: ${node.$ref}`;
-				out.push(node);
-				continue;
-			}
-			if (visited.has(refAbsPath)) {
-				bunLogger.warn`Circular $ref detected, skipping: ${node.$ref}`;
-				out.push(node);
-				continue;
-			}
-			visited.add(refAbsPath);
-
-			if (!existsSync(refAbsPath)) {
-				bunLogger.error`$ref target does not exist: ${refAbsPath}`;
-				out.push(node);
-				continue;
-			}
-
-			try {
-				const refRaw = await readTextFile(refAbsPath);
-				const refParsed = JSON.parse(refRaw);
-				const refNodes: RoadmapNode[] = Array.isArray(refParsed)
-					? (refParsed as RoadmapNode[])
-					: ((refParsed as { nodes?: RoadmapNode[] }).nodes ?? [
-							refParsed as RoadmapNode,
-						]);
-
-				// Tag every ref'd descendant with the ref file as owner
-				tagSubtree(refNodes, refAbsPath);
-
-				// Recurse into the ref'd subtree (nested $refs allowed)
-				const expanded = await resolveRefsWithOwnership(
-					refNodes,
-					mainPath,
-					refAbsPath,
-					visited,
-				);
-				out.push(...expanded);
-			} catch (err) {
-				bunLogger.error`Failed to resolve $ref ${node.$ref}: ${String(err)}`;
-				out.push(node);
-			}
-		} else {
-			setOwnership(node.id, currentOwner);
-			const next: RoadmapNode = { ...node };
-			if (node.children) {
-				next.children = await resolveRefsWithOwnership(
-					node.children,
-					mainPath,
-					currentOwner,
-					visited,
-				);
-			}
-			out.push(next);
-		}
-	}
-	return out;
-}
-
-function tagSubtree(nodes: RoadmapNode[], owner: string): void {
-	for (const node of nodes) {
-		if (node.$ref) continue;
-		setOwnership(node.id, owner);
-		if (node.children) tagSubtree(node.children, owner);
-	}
-}
+// $ref resolution + ownership tagging now lives in `./resolveRefs.ts`,
+// shared with the production loadFile handler in `./index.ts`. The handler
+// here passes only the read-file backend; production also passes a watcher.
 
 // -- Test-only hooks (underscore-prefixed so they're never part of the public API) --
 

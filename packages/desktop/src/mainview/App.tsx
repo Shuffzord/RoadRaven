@@ -1,10 +1,12 @@
 import { lazy, Suspense, useEffect } from "react";
 import { Canvas } from "./components/Canvas";
 import { ConfirmationDialog } from "./components/ConfirmationDialog";
+import { SaveFailureModal } from "./components/SaveFailureModal";
 import { Sidebar } from "./components/Sidebar";
 import { SidePanel } from "./components/SidePanel";
 import { StatusBar } from "./components/StatusBar";
 import { TopBar } from "./components/TopBar";
+import { useAutosave } from "./hooks/useAutosave";
 import { useRoadmapStore } from "./store/roadmapStore";
 
 // Dev-only harness for previewing panels (auto-discovered). Vite treeshakes this
@@ -22,6 +24,8 @@ export default function App() {
 	const setSelectedNode = useRoadmapStore((s) => s.setSelectedNode);
 	const isOpen = selectedNodeId !== null;
 
+	useAutosave();
+
 	// Dev-only test hook for deterministic UI tests (Playwright render-budget
 	// checks). Stripped from production builds by Vite's dead-code elimination.
 	useEffect(() => {
@@ -30,7 +34,7 @@ export default function App() {
 				window as unknown as { __ROADRAVEN_TEST__?: unknown }
 			).__ROADRAVEN_TEST__ = {
 				loadSchema: (schema: unknown) => {
-					useRoadmapStore.getState().loadSchema(schema as never, "");
+					useRoadmapStore.getState().loadSchema(schema as never, null);
 				},
 			};
 		}
@@ -44,6 +48,7 @@ export default function App() {
 			<SidePanel isOpen={isOpen} onClose={() => setSelectedNode(null)} />
 			<StatusBar />
 			<ConfirmationDialog />
+			<SaveFailureModal />
 			{import.meta.env.DEV && DevHarnessLazy && (
 				<Suspense fallback={null}>
 					<DevHarnessLazy />
