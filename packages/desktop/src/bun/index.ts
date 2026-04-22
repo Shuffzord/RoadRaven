@@ -19,6 +19,7 @@ import { stopAllWatchers, watchFile } from "./fileWatcher";
 import { bunLogger, setupBunLogging } from "./logging";
 import {
 	buildOwnershipMap,
+	clearOwnershipMap,
 	getOwnership,
 	setSourceTemplate,
 	splitSchemaByOwnership,
@@ -367,7 +368,11 @@ const rpc = BrowserView.defineRPC<RoadmapRPCType>({
 				};
 				setCachedSchema(schema);
 				clearCachedMainPath();
-				buildOwnershipMap([], "");
+				// WR-03 (Wave 3 review): use clearOwnershipMap() instead of
+				// buildOwnershipMap([], "") so we don't leave a "" → [] ghost
+				// entry that other code paths could later read. saveFileAs
+				// rebuilds the map with the chosen path on first write.
+				clearOwnershipMap();
 				bunLogger.info`newFile: created in-memory Untitled Roadmap`;
 				return { data: schema, filePath: null };
 			},

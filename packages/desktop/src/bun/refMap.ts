@@ -66,6 +66,18 @@ export function resetRefMap(): void {
 	sourceTemplate = null;
 }
 
+/**
+ * WR-03 (Wave 3 review): clear the ownership map without seeding a new one.
+ * Used by the `newFile` RPC handler so a freshly created in-memory schema
+ * does not record a "" → [] ghost entry from buildOwnershipMap([], "").
+ * sourceTemplate is also cleared so a stray save before saveFileAs lands a
+ * proper main path cannot match a stale template.
+ */
+export function clearOwnershipMap(): void {
+	activeOwnership = new Map();
+	sourceTemplate = null;
+}
+
 function walkAndTag(
 	nodes: RoadmapNode[],
 	owner: FilePath,
