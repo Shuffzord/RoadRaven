@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Phase 04 UI-SPEC approved
-last_updated: "2026-04-23T18:39:53.782Z"
-last_activity: 2026-04-23 -- Phase 04 execution started
+stopped_at: Completed 04-02-PLAN.md
+last_updated: "2026-04-23T19:35:32.545Z"
+last_activity: 2026-04-23
 progress:
   total_phases: 5
   completed_phases: 2
   total_plans: 20
-  completed_plans: 14
-  percent: 70
+  completed_plans: 16
+  percent: 80
 ---
 
 # Project State
@@ -26,12 +26,12 @@ See: .planning/PROJECT.md (updated 2026-04-12)
 ## Current Position
 
 Phase: 04 (event-api) — EXECUTING
-Plan: 1 of 5
+Plan: 2 of 5
 Plans complete: 03-01 ✓, 03-04a ✓, 03-02 ✓, 03-03 ✓, 03-04b ✓, 03-04c ✓ (all code complete)
 Plans pending: none
-Status: Executing Phase 04
+Status: Ready to execute
 UAT scoreboard (03-HUMAN-UAT.md): 3 pass + 1 pass-with-fix + 5 deferred to milestone-end
-Last activity: 2026-04-23 -- Phase 04 execution started
+Last activity: 2026-04-23
 
 Progress: [##########] 100% of Phase 03 plans (6/6, code complete)
 
@@ -57,6 +57,7 @@ Progress: [##########] 100% of Phase 03 plans (6/6, code complete)
 
 *Updated after each plan completion*
 | Phase 02 P02 | 11min | 2 tasks | 13 files |
+| Phase 04 P02 | 180 | 6 tasks | 20 files |
 
 ## Accumulated Context
 
@@ -75,6 +76,10 @@ Recent decisions affecting current work:
 - Phase 2: shared/types.ts re-exports use import-then-alias pattern for same-file RPC contract compatibility
 - [Phase 02]: Used role=application on Canvas and role=button on RoadmapNodeCard for a11y compliance in react-d3-tree foreignObject rendering
 - [Phase 02]: Used relative import path for @roadraven/core in bun/index.ts -- workspace alias not resolved by tsc bundler moduleResolution
+- [Phase 04]: Design C coalescer: timer anchored at first event, no re-arm — prevents timer drift under high-frequency events
+- [Phase 04]: nodeId: z.string().min(1) not .uuid() — allows non-UUID node IDs from external producers
+- [Phase 04]: appendEventLine uses O_APPEND (fs/promises.appendFile) not atomicWrite — sidecar is append-only; atomic overwrite would destroy log history
+- [Phase 04]: Bun-native tests split from vitest: vitest excludes Bun.serve-dependent files; test:bun script added using bun test
 
 ### Pending Todos
 
@@ -89,8 +94,8 @@ Recent decisions affecting current work:
 
 ## Session Continuity
 
-Last session: 2026-04-23T13:30:41.115Z
-Stopped at: Phase 04 UI-SPEC approved
+Last session: 2026-04-23T19:35:32.542Z
+Stopped at: Completed 04-02-PLAN.md
 
 ### Wave 1 recovery context (READ FIRST on resume)
 

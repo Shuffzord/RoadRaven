@@ -69,15 +69,15 @@
 
 > **Scope note:** v1 integration = Event API only (app as server, external producers push events). The Plugin system (smart adapters with own lifecycle/logic) is v1.1. See v2 Requirements for the full plugin architecture.
 
-- [ ] **PLUG-01**: App runs a WebSocket server on `ws://127.0.0.1:<port>` (port configurable, default TBD; determined in Phase 4); server starts with the app and is always available while the app is running
-- [ ] **PLUG-02**: Event contract defined and documented: `{ nodeId: string, status: string, meta?: Record<string, unknown>, source?: string }`; `status` must match a `statusConfig` id or the event is dropped with a warning in the event log
-- [ ] **PLUG-03**: Events routed to the correct node by `nodeId` within 100ms; node status updated in-memory and badge re-rendered; 100ms debounce buffer on Bun side to batch bursts before forwarding to webview
+- [x] **PLUG-01**: App runs a WebSocket server on `ws://127.0.0.1:<port>` (port configurable, default TBD; determined in Phase 4); server starts with the app and is always available while the app is running
+- [x] **PLUG-02**: Event contract defined and documented: `{ nodeId: string, status: string, meta?: Record<string, unknown>, source?: string }`; `status` must match a `statusConfig` id or the event is dropped with a warning in the event log
+- [x] **PLUG-03**: Events routed to the correct node by `nodeId` within 100ms; node status updated in-memory and badge re-rendered; 100ms debounce buffer on Bun side to batch bursts before forwarding to webview
 - [ ] **PLUG-04**: Nodes receiving live events show an animated pulse indicator while their producer is connected
 - [ ] **PLUG-05**: Side panel Integration zone shows: connection status (connected / disconnected), last event timestamp, last received `meta` as a key-value table; no custom component injection
 - [ ] **PLUG-06**: Connection drops and malformed events surface as non-blocking toasts with a retry / dismiss option
 - [ ] **PLUG-07**: All received events logged to in-app event log (View menu): `nodeId`, `status`, `source`, `meta`, timestamp
 - [ ] **PLUG-08**: Claude Code MCP wrapper ships as the reference Event Producer — wraps the event contract as MCP tools callable by Claude; connects to the app's WebSocket and pushes `{ nodeId, status, meta }` events
-- [ ] **PLUG-09**: `plugin` and `subscribe` blocks in node JSON are parsed and stored by the Zod schema validator in v1 but not acted on — fields are reserved for the v1.1 plugin system; unknown `plugin.id` values are silently accepted (no warning in v1)
+- [x] **PLUG-09**: `plugin` and `subscribe` blocks in node JSON are parsed and stored by the Zod schema validator in v1 but not acted on — fields are reserved for the v1.1 plugin system; unknown `plugin.id` values are silently accepted (no warning in v1)
 
 ### Export (EXPO)
 
