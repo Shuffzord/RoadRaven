@@ -3,6 +3,7 @@
 // Sources: D-25, D-11 in 04-CONTEXT.md.
 
 import { describe, it } from "vitest";
+
 // applyEventBatch action does not exist yet — Wave 2 adds it to roadmapStore.
 // import { useRoadmapStore } from "../../../src/mainview/store/roadmapStore";
 

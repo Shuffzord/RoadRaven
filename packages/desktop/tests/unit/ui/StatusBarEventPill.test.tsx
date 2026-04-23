@@ -3,6 +3,7 @@
 // Sources: D-06 in 04-CONTEXT.md, PLUG-01.
 
 import { describe, it } from "vitest";
+
 // import { render } from "@testing-library/react";
 // StatusBarEventPill component does not exist yet — Wave 3 creates it.
 // import { StatusBarEventPill } from "../../../src/mainview/components/StatusBarEventPill";

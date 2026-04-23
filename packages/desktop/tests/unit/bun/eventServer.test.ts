@@ -3,6 +3,7 @@
 // Sources: D-01, D-02, D-05 in 04-CONTEXT.md, §1 in 04-RESEARCH.md.
 
 import { describe, it } from "vitest";
+
 // Implementation file does not exist yet — Wave 1 creates it.
 // import type { startEventServer } from "../../../src/bun/eventServer";
 

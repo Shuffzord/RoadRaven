@@ -3,6 +3,7 @@
 // Sources: D-20 in 04-CONTEXT.md, PLUG-07.
 
 import { describe, it } from "vitest";
+
 // import { render } from "@testing-library/react";
 // EventLogFilterBar component does not exist yet — Wave 3 creates it.
 // import { EventLogFilterBar } from "../../../src/mainview/components/EventLogFilterBar";

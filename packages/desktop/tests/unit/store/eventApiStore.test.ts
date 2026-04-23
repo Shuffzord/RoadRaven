@@ -3,6 +3,7 @@
 // Sources: D-06 in 04-CONTEXT.md.
 
 import { describe, it } from "vitest";
+
 // eventApiStore does not exist yet — Wave 2 creates it.
 // import { useEventApiStore } from "../../../src/mainview/store/eventApiStore";
 

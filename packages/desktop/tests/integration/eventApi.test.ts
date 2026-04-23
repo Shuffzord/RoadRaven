@@ -3,6 +3,7 @@
 // Sources: PLUG-01, PLUG-03, PLUG-06 in 04-CONTEXT.md, §7.2 in 04-RESEARCH.md.
 
 import { describe, it } from "vitest";
+
 // Integration tests spin up an in-process WS loopback — Wave 1 provides the harness.
 // import { createTestEventServer } from "../../helpers/eventServerHelper";
 

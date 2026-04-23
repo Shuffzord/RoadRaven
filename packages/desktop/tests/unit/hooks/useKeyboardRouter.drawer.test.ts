@@ -3,6 +3,7 @@
 // Sources: D-18 in 04-CONTEXT.md, PLUG-07.
 
 import { describe, it } from "vitest";
+
 // Drawer shortcut does not exist yet — Wave 3 adds it to useKeyboardRouter.
 // import { useKeyboardRouter } from "../../../src/mainview/hooks/useKeyboardRouter";
 

@@ -3,6 +3,7 @@
 // Sources: D-09, PLUG-02 in 04-CONTEXT.md, §4.2 in 04-RESEARCH.md.
 
 import { describe, it } from "vitest";
+
 // Implementation file does not exist yet — Wave 1 creates it.
 // import { parseEventFrame, classifyEvent } from "../../../src/bun/eventSchema";
 

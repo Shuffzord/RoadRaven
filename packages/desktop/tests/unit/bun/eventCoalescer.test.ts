@@ -3,6 +3,7 @@
 // Sources: D-25 in 04-CONTEXT.md, §3 in 04-RESEARCH.md.
 
 import { describe, it } from "vitest";
+
 // Implementation file does not exist yet — Wave 1 creates it.
 // import type { EventCoalescer } from "../../../src/bun/eventCoalescer";
 

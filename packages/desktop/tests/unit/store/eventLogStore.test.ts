@@ -3,6 +3,7 @@
 // Sources: D-19, D-20 in 04-CONTEXT.md.
 
 import { describe, it } from "vitest";
+
 // eventLogStore does not exist yet — Wave 2 creates it.
 // import { useEventLogStore } from "../../../src/mainview/store/eventLogStore";
 

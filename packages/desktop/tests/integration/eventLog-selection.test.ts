@@ -3,6 +3,7 @@
 // Sources: D-21, I-11 in 04-CONTEXT.md, PLUG-07.
 
 import { describe, it } from "vitest";
+
 // Implementation components do not exist yet — Wave 3 creates them.
 // import { render } from "@testing-library/react";
 // import { EventLogDrawer } from "../../../src/mainview/components/EventLogDrawer";

@@ -3,6 +3,7 @@
 // Sources: D-18, D-19 in 04-CONTEXT.md, PLUG-07.
 
 import { describe, it } from "vitest";
+
 // import { render } from "@testing-library/react";
 // EventLogDrawer component does not exist yet — Wave 3 creates it.
 // import { EventLogDrawer } from "../../../src/mainview/components/EventLogDrawer";

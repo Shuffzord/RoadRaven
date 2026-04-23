@@ -3,6 +3,7 @@
 // Sources: D-27 in 04-CONTEXT.md, §6.6 in 04-RESEARCH.md.
 
 import { describe, it } from "vitest";
+
 // userData module does not exist yet — Wave 4 creates it.
 // import { getUserDataPath } from "../src/userData";
 

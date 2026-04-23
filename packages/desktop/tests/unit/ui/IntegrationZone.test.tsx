@@ -3,6 +3,7 @@
 // Sources: D-16 in 04-CONTEXT.md, PLUG-05.
 
 import { describe, it } from "vitest";
+
 // import { render } from "@testing-library/react";
 // IntegrationZone component does not exist yet — Wave 3 creates it.
 // import { IntegrationZone } from "../../../src/mainview/components/IntegrationZone";

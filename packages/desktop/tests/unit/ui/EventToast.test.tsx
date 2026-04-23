@@ -3,6 +3,7 @@
 // Sources: D-22, D-23, D-24 in 04-CONTEXT.md, PLUG-06.
 
 import { describe, it } from "vitest";
+
 // import { render } from "@testing-library/react";
 // EventToast component does not exist yet — Wave 3 creates it.
 // import { EventToast } from "../../../src/mainview/components/EventToast";

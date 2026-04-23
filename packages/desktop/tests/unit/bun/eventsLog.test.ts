@@ -3,6 +3,7 @@
 // Sources: D-08..D-13 in 04-CONTEXT.md, §4 in 04-RESEARCH.md.
 
 import { describe, it } from "vitest";
+
 // Implementation file does not exist yet — Wave 1 creates it.
 // import type { EventsLog } from "../../../src/bun/eventsLog";
 
