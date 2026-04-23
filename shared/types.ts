@@ -30,6 +30,10 @@ export interface AppSettings {
 	theme?: ThemePreference;
 	recentFiles?: string[];
 	fileSettings?: Record<string, { layout?: "TB" | "LR" }>;
+	eventApi?: {
+		/** User-specified WebSocket port override. When set, no auto-fallback on EADDRINUSE. */
+		port?: number;
+	};
 }
 
 // -- Zod-inferred types from @roadraven/core --------------------------------

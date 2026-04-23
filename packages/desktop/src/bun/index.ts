@@ -40,6 +40,15 @@ import { nativeSaveDialog } from "./saveFileDialog";
 export { atomicWrite, splitSchemaByOwnership };
 
 import { addRecentFile, loadSettings, saveSettings } from "./settings";
+import {
+	DEFAULT_PORT,
+	type EventServerHandle,
+	getSidecarPath as getEventSidecarPath,
+	startEventServer,
+} from "./eventServer";
+import { replayEventLog } from "./eventsLog";
+import { deleteSentinel, writeSentinel } from "./sentinel";
+import { serverLogger } from "./logging";
 
 // Re-export the RPC type so downstream modules can import from the app entry
 export type { RoadmapRPCType };
@@ -54,6 +63,55 @@ bunLogger.info("Bun process starting");
 // Load settings on startup
 const initialSettings = loadSettings();
 bunLogger.info`Loaded settings: ${JSON.stringify(initialSettings)}`;
+
+// Port precedence: env > settings > default (D-02)
+const envPort = process.env.ROADRAVEN_EVENT_PORT
+	? Number(process.env.ROADRAVEN_EVENT_PORT)
+	: null;
+const settingsPort = initialSettings.eventApi?.port ?? null;
+const requestedPort = envPort ?? settingsPort ?? DEFAULT_PORT;
+const isUserSpecified = envPort !== null || settingsPort !== null;
+
+// eventServerHandle is declared here (before startEventServer and shutdown hooks)
+// so TypeScript can see the declaration before all uses.
+let eventServerHandle: EventServerHandle | null = null;
+
+// Note: mainWindow is not yet created here. The onFlush/onEvent callbacks use
+// mainWindow which is defined later in this file. This works because the callbacks
+// are closures — they capture the `mainWindow` binding which will be assigned
+// before any WebSocket events arrive (server binds before window is shown but
+// events require a WS producer to connect after the app is visible).
+// Plan 04-03 Task 6 (I-09 fix) will restructure this to run after mainWindow
+// creation and upgrade onError/onConnectionChange to active rpc.send.pushEventApi* calls.
+const eventServerResult = await startEventServer({
+	requestedPort,
+	isUserSpecified,
+	onFlush: (updates) => {
+		mainWindow.webview.rpc?.send.pushStatusUpdate({ updates });
+	},
+	onEvent: (event) => {
+		mainWindow.webview.rpc?.send.pushEventLog({ events: [event] });
+	},
+	onError: (_err) => {
+		// Plan 04-03 Task 6 (I-09 fix): upgrade to mainWindow.webview.rpc?.send.pushEventApiError(_err)
+	},
+	onConnectionChange: (_count) => {
+		// Plan 04-03 Task 6 (I-09 fix): upgrade to mainWindow.webview.rpc?.send.pushEventApiState(...)
+	},
+});
+if (eventServerResult.ok) {
+	eventServerHandle = eventServerResult.handle;
+	await writeSentinel({
+		port: eventServerHandle.port,
+		url: `ws://127.0.0.1:${eventServerHandle.port}`,
+		startedAt: new Date().toISOString(),
+		pid: process.pid,
+	});
+	serverLogger.info`event server listening on :${eventServerHandle.port}`;
+} else {
+	serverLogger.error`event server failed to bind, attempted: ${eventServerResult.attempted.join(",")}`;
+	// Leave handle null; renderer will see pushEventApiState with error in Plan 04-03
+}
 
 const DEV_SERVER_PORT = 5173;
 const DEV_SERVER_URL = `http://localhost:${DEV_SERVER_PORT}`;
@@ -106,6 +164,8 @@ async function getMainViewUrl(): Promise<string> {
 // handler's process.exit(0) waits for the same promise the before-quit
 // handler is awaiting.
 Electrobun.events.on("before-quit", async () => {
+	if (eventServerHandle) { await eventServerHandle.stop(); }
+	await deleteSentinel();
 	await flushPending();
 });
 
@@ -115,10 +175,14 @@ Electrobun.events.on("before-quit", async () => {
 // shell that owns the Electrobun event loop) — the SIG* handler awaits the
 // same in-flight promise that before-quit awaits.
 process.on("SIGTERM", async () => {
+	if (eventServerHandle) { await eventServerHandle.stop(); }
+	await deleteSentinel();
 	await flushPending();
 	process.exit(0);
 });
 process.on("SIGINT", async () => {
+	if (eventServerHandle) { await eventServerHandle.stop(); }
+	await deleteSentinel();
 	await flushPending();
 	process.exit(0);
 });
@@ -273,6 +337,30 @@ const rpc = BrowserView.defineRPC<RoadmapRPCType>({
 					bunLogger.error`pushOwnershipMap failed: ${String(err)}`;
 				}
 
+				// Sidecar hydrate: set sidecar path + replay last-event-per-nodeId overlay
+				// I-12 fix: property-access form per Electrobun defineRPC pattern
+				const sidecarPath = getEventSidecarPath(filePath);
+				eventServerHandle?.setSidecarPath(sidecarPath);
+				try {
+					const { overlay, events } = await replayEventLog(sidecarPath);
+					if (overlay.size > 0) {
+						mainWindow.webview.rpc?.send.pushStatusUpdate({
+							updates: Array.from(overlay.values()).map((v) => ({
+								nodeId: v.nodeId,
+								status: v.status,
+								meta: v.meta,
+								source: v.source,
+								lastEventAt: v.lastEventAt,
+							})),
+						});
+					}
+					if (events.length > 0) {
+						mainWindow.webview.rpc?.send.pushEventLog({ events });
+					}
+				} catch (err) {
+					bunLogger.error`sidecar replay failed for ${filePath}: ${String(err)}`;
+				}
+
 				return {
 					data: schemaData as RoadmapRPCType["bun"]["requests"]["loadFile"]["response"]["data"],
 					errors,
@@ -327,6 +415,12 @@ const rpc = BrowserView.defineRPC<RoadmapRPCType>({
 				}
 			},
 
+			// setNodeAllowlist handler — routes to the event server's classification allowlist
+			setNodeAllowlist: ({ nodeIds, statusIds }) => {
+				eventServerHandle?.setAllowlist(nodeIds, statusIds);
+				return { ok: true as const };
+			},
+
 			// saveSettings handler
 			saveSettings: ({ settings }) => {
 				saveSettings(settings);
@@ -367,6 +461,10 @@ const rpc = BrowserView.defineRPC<RoadmapRPCType>({
 						},
 					],
 				};
+				// I-10 / D-12: no disk path means no sidecar — stop appending events to any
+				// previously-loaded file's .events.jsonl. The event server continues to receive
+				// events; they just don't get logged to a sidecar until the user picks a path.
+				eventServerHandle?.setSidecarPath(null);
 				setCachedSchema(schema);
 				clearCachedMainPath();
 				// WR-03 (Wave 3 review): use clearOwnershipMap() instead of
@@ -444,6 +542,8 @@ const rpc = BrowserView.defineRPC<RoadmapRPCType>({
 					buildOwnershipMap(schema.nodes, resolved);
 					setSourceTemplate(resolved, schema.nodes);
 					addRecentFile(resolved);
+					// I-10 / D-12: the new disk path is now the sidecar target.
+					eventServerHandle?.setSidecarPath(getEventSidecarPath(resolved));
 					bunLogger.info`saveFileAs wrote ${resolved}`;
 					return { filePath: resolved };
 				} catch (err) {
