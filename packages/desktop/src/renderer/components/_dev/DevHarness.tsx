@@ -51,14 +51,15 @@ export function DevHarness() {
 			data-testid="dev-harness"
 			style={{
 				position: "fixed",
-				bottom: 0,
+				bottom: 40,
 				right: 0,
-				width: 420,
-				maxHeight: "60vh",
+				width: 700,
+				maxHeight: "70vh",
 				overflow: "auto",
 				background: "var(--rv-bg-elevated, #1a1a1a)",
 				border: "1px solid var(--rv-border, #444)",
 				borderTopLeftRadius: 8,
+				borderBottomLeftRadius: 8,
 				boxShadow: "0 4px 16px rgba(0,0,0,0.4)",
 				fontSize: 12,
 				color: "var(--rv-text-primary, #eee)",

@@ -9,7 +9,7 @@ export function TopBar() {
 	const layoutOrientation = useRoadmapStore((s) => s.layoutOrientation);
 	const setLayout = useRoadmapStore((s) => s.setLayout);
 	const filePath = useRoadmapStore((s) => s.filePath);
-	const { openFile } = useFileActions();
+	const { openFile, newRoadmap } = useFileActions();
 
 	const handleLayoutChange = (value: "TB" | "LR") => {
 		setLayout(value);
@@ -58,6 +58,9 @@ export function TopBar() {
 			<button
 				className="flex items-center gap-1.5 px-2.5 py-[5px] rounded-[6px] text-[12px] font-semibold text-rv-text-secondary hover:bg-rv-bg-hover hover:text-rv-text-primary transition-all duration-150"
 				type="button"
+				onClick={() => {
+					void newRoadmap();
+				}}
 			>
 				<svg
 					aria-hidden="true"

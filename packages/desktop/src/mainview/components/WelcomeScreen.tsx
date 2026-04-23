@@ -10,6 +10,10 @@ interface WelcomeScreenProps {
 	onOpenFile: () => void;
 	onOpenRecent: (path: string) => void;
 	onOpenSample: (name: string) => void;
+	// Plan 03-04c (EDIT-17): File > New entry point. Async because it round-trips
+	// to the Bun newFile RPC when running under Electrobun; resolves immediately
+	// in HMR fallback mode.
+	onNewRoadmap: () => void | Promise<void>;
 }
 
 export function WelcomeScreen({
@@ -17,6 +21,7 @@ export function WelcomeScreen({
 	onOpenFile,
 	onOpenRecent,
 	onOpenSample,
+	onNewRoadmap,
 }: WelcomeScreenProps) {
 	return (
 		<div className="absolute inset-0 flex items-center justify-center z-10">
@@ -59,10 +64,11 @@ export function WelcomeScreen({
 						Open File
 					</button>
 					<button
-						className="h-8 px-4 bg-transparent border border-rv-border text-rv-text-tertiary text-[12px] font-semibold rounded-[8px] cursor-not-allowed opacity-60"
+						className="h-8 px-4 bg-transparent border border-rv-border text-rv-text-primary text-[12px] font-semibold rounded-[8px] hover:bg-rv-bg-hover transition-colors duration-150"
 						type="button"
-						disabled
-						title="Coming soon"
+						onClick={() => {
+							void onNewRoadmap();
+						}}
 					>
 						New Roadmap
 					</button>

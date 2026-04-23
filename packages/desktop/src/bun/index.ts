@@ -1,6 +1,11 @@
 import { resolve as pathResolve } from "node:path";
 import { getLogger } from "@logtape/logtape";
-import { BrowserView, BrowserWindow, Updater, Utils } from "electrobun/bun";
+import Electrobun, {
+	BrowserView,
+	BrowserWindow,
+	Updater,
+	Utils,
+} from "electrobun/bun";
 import type {
 	RoadmapNode,
 	RoadmapRPCType,
@@ -10,16 +15,18 @@ import type {
 // the saveFile/flushPending logic. Re-exported below so external callers (and
 // the Plan 04a acceptance grep) can see the persistence surface at a glance.
 import { atomicWrite } from "./atomicWrite";
-import { stopAllWatchers, watchFile } from "./fileWatcher";
+import { markSelfWrite, stopAllWatchers, watchFile } from "./fileWatcher";
 import { bunLogger, setupBunLogging } from "./logging";
 import {
 	buildOwnershipMap,
+	clearOwnershipMap,
 	getOwnership,
 	setSourceTemplate,
 	splitSchemaByOwnership,
 } from "./refMap";
 import { defaultReadFile, resolveRefsWithOwnership } from "./resolveRefs";
 import {
+	clearCachedMainPath,
 	flushPending,
 	isPathWithinMainDir,
 	pushDialogAllowlistPath,
@@ -27,6 +34,7 @@ import {
 	setCachedMainPath,
 	setCachedSchema,
 } from "./saveFile";
+import { nativeSaveDialog } from "./saveFileDialog";
 
 // Persistence surface re-exports — imported by Plan 04b/04c and DevHarness
 export { atomicWrite, splitSchemaByOwnership };
@@ -79,6 +87,46 @@ async function getMainViewUrl(): Promise<string> {
 // production loadFile handler (this file) and the test-only loadFileHandler
 // in saveFile.ts share one implementation. Production passes a `watchFile`
 // callback; tests omit it.
+
+// EDIT-13 quit-flush + EDIT-18 Linux SIGTERM-flush wiring.
+//
+// PATH 1 — Electrobun before-quit: covers macOS Cmd+Q, Windows Alt+F4,
+// Dock → Quit, Linux window-close (all routed through Utils.quit which emits
+// the before-quit event). Verified API:
+//   electrobun@1.16.0/dist/api/bun/events/ApplicationEvents.ts:20-21 — beforeQuit factory
+//   electrobun@1.16.0/dist/api/bun/events/eventEmitter.ts:43         — singleton emitter
+//   electrobun@1.16.0/dist/api/bun/core/Utils.ts:122-148              — Utils.quit() emits + stopEventLoop
+//   electrobun@1.16.0/dist/api/bun/index.ts:114                       — Electrobun.events singleton
+//
+// CR-01 (Wave 3 review): both before-quit and the SIG* signal handlers below
+// must AWAIT flushPending. Because flushPending now coalesces concurrent
+// callers onto a single in-flight promise, awaiting in both paths means
+// Ctrl+C in the owning shell (which fires SIGINT and triggers Utils.quit's
+// before-quit emit) cannot tear an atomicWrite mid-rename — the SIGINT
+// handler's process.exit(0) waits for the same promise the before-quit
+// handler is awaiting.
+Electrobun.events.on("before-quit", async () => {
+	await flushPending();
+});
+
+// PATH 2 — process signals: covers terminal `kill <pid>` (SIGTERM) and
+// Ctrl+C in terminal (SIGINT). flushPending coalesces concurrent callers
+// (CR-01) so it is safe even if both paths fire (e.g. Ctrl+C in the same
+// shell that owns the Electrobun event loop) — the SIG* handler awaits the
+// same in-flight promise that before-quit awaits.
+process.on("SIGTERM", async () => {
+	await flushPending();
+	process.exit(0);
+});
+process.on("SIGINT", async () => {
+	await flushPending();
+	process.exit(0);
+});
+
+// Synchronous-only hook — log for audit. before-quit / SIG* are the primaries.
+process.on("exit", (code) => {
+	bunLogger.info`process.exit(${code}) — flush must have run via before-quit or SIG* path`;
+});
 
 // Define RPC handlers before creating the window (Electrobun pattern)
 const rpc = BrowserView.defineRPC<RoadmapRPCType>({
@@ -287,6 +335,121 @@ const rpc = BrowserView.defineRPC<RoadmapRPCType>({
 			// loadSettings handler
 			loadSettings: () => {
 				return { settings: loadSettings() };
+			},
+
+			// newFile handler (EDIT-17): produce a fresh in-memory schema with a
+			// single root node. No disk write happens here — autosave will fire
+			// saveFileAs on the first mutation flush; the user picks a path then.
+			//
+			// Bun-side cache reset: the cached main path is cleared so a stray
+			// saveFile({schema}) (no filePath) call does NOT silently overwrite
+			// the previously loaded file. The ownership map is replaced with an
+			// empty map (no $refs in a fresh tree).
+			newFile: async () => {
+				const rootId = crypto.randomUUID();
+				const now = new Date().toISOString();
+				const schema: RoadmapSchema = {
+					version: "1.0",
+					title: "Untitled Roadmap",
+					statusConfig: [
+						{ id: "not-started", label: "Not Started" },
+						{ id: "in-progress", label: "In Progress" },
+						{ id: "completed", label: "Completed" },
+						{ id: "blocked", label: "Blocked" },
+					],
+					nodes: [
+						{
+							id: rootId,
+							title: "Untitled",
+							status: "not-started",
+							createdAt: now,
+							updatedAt: now,
+						},
+					],
+				};
+				setCachedSchema(schema);
+				clearCachedMainPath();
+				// WR-03 (Wave 3 review): use clearOwnershipMap() instead of
+				// buildOwnershipMap([], "") so we don't leave a "" → [] ghost
+				// entry that other code paths could later read. saveFileAs
+				// rebuilds the map with the chosen path on first write.
+				clearOwnershipMap();
+				bunLogger.info`newFile: created in-memory Untitled Roadmap`;
+				return { data: schema, filePath: null };
+			},
+
+			// saveFileAs handler (EDIT-17): pop a native dialog and run the
+			// initial atomic write. Side effects on success:
+			//   - dialogAllowlist gains the chosen path (so subsequent saveFile
+			//     calls without an explicit filePath are accepted)
+			//   - cachedMainPath / cachedSchema updated for flushPending
+			//   - ownership map seeded with the schema's nodes (no $refs yet)
+			//
+			// The installed Electrobun version (1.16.0) does not expose
+			// Utils.saveFileDialog (tracked upstream as blackboardsh/electrobun#233).
+			// We probe for it so a future Electrobun release picks up automatically;
+			// otherwise fall back to nativeSaveDialog (./saveFileDialog.ts) which
+			// shells out to PowerShell / osascript / zenity per platform.
+			saveFileAs: async ({ schema }) => {
+				const { RoadmapSchemaSchema } = await import(
+					"../../../../packages/core/src/schema"
+				);
+
+				let chosenPath: string | null = null;
+				try {
+					const utilsWithSave = Utils as unknown as {
+						saveFileDialog?: (opts: {
+							title: string;
+							filters: Array<{ name: string; extensions: string[] }>;
+						}) => Promise<string | null>;
+					};
+					if (typeof utilsWithSave.saveFileDialog === "function") {
+						chosenPath = await utilsWithSave.saveFileDialog({
+							title: "Save Roadmap",
+							filters: [{ name: "JSON", extensions: ["json"] }],
+						});
+					} else {
+						const { homedir } = await import("node:os");
+						chosenPath = await nativeSaveDialog({
+							title: "Save Roadmap",
+							defaultPath: homedir(),
+							defaultName: "roadmap.json",
+							filters: [{ name: "JSON", extensions: ["json"] }],
+						});
+					}
+				} catch (err) {
+					bunLogger.error`saveFileAs dialog failed: ${String(err)}`;
+					return { filePath: null };
+				}
+				if (!chosenPath) return { filePath: null }; // user cancelled
+
+				const resolved = pathResolve(chosenPath);
+
+				// Pre-write Zod validation (T-03.04-07 — same trust-boundary
+				// guard saveFile uses).
+				const parsed = RoadmapSchemaSchema.safeParse(schema);
+				if (!parsed.success) {
+					const issue = parsed.error.issues[0];
+					bunLogger.warn`saveFileAs: schema validation failed: ${issue.path.map(String).join(".")}: ${issue.message}`;
+					return { filePath: null };
+				}
+
+				try {
+					await atomicWrite(resolved, JSON.stringify(schema, null, 2));
+					markSelfWrite(resolved);
+					pushDialogAllowlistPath(resolved);
+					setCachedSchema(schema);
+					setCachedMainPath(resolved);
+					// Fresh schema → all nodes owned by the new main file.
+					buildOwnershipMap(schema.nodes, resolved);
+					setSourceTemplate(resolved, schema.nodes);
+					addRecentFile(resolved);
+					bunLogger.info`saveFileAs wrote ${resolved}`;
+					return { filePath: resolved };
+				} catch (err) {
+					bunLogger.error`saveFileAs write failed: ${String(err)}`;
+					return { filePath: null };
+				}
 			},
 		},
 		messages: {},

@@ -1,6 +1,8 @@
 import type { ElectrobunConfig } from "electrobun";
 
-const bundleCEF = process.env.CI === "true";
+// Default: CEF (Chromium) on all platforms — consistent rendering, avoids WebKitGTK bugs.
+// Override locally: set ROADRAVEN_RENDERER=webkit in .env.local to use native WebKit.
+const bundleCEF = process.env.ROADRAVEN_RENDERER !== "webkit";
 
 export default {
 	app: {

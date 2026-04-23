@@ -43,13 +43,13 @@ describe("SCAF-04: RoadmapPlugin interface", () => {
 });
 
 describe("SCAF-08: bundleCEF configuration", () => {
-	it("electrobun.config.ts uses CI env var for bundleCEF on all platforms", () => {
+	it("electrobun.config.ts derives bundleCEF from ROADRAVEN_RENDERER env var on all platforms", () => {
 		const content = readFileSync(
 			join(DESKTOP_ROOT, "electrobun.config.ts"),
 			"utf-8",
 		);
-		// Config must derive bundleCEF from CI env var
-		expect(content).toMatch(/process\.env\.CI/);
+		// Config must derive bundleCEF from ROADRAVEN_RENDERER env var (not hardcoded)
+		expect(content).toMatch(/process\.env\.ROADRAVEN_RENDERER/);
 		// All three platforms must reference the shared bundleCEF variable
 		expect(content).toContain("mac: { bundleCEF }");
 		expect(content).toContain("linux: { bundleCEF }");

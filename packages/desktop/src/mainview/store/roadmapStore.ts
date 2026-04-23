@@ -224,9 +224,13 @@ interface RoadmapState {
 	externalEditPending: { path: string } | null;
 	autosavePaused: boolean;
 
+	// --- Plan 03-04c: File > New (EDIT-17) ----------------------------------
+	isUntitled: boolean;
+
 	// Actions -- structural (increment dataKey)
 	loadSchema: (schema: RoadmapSchema, filePath: string | null) => void;
 	reloadSchema: (schema: RoadmapSchema) => void;
+	newUntitledSchema: () => void;
 	addChild: (parentId: string, title?: string) => string | null;
 	addSiblingAbove: (nodeId: string) => string | null;
 	addSiblingBelow: (nodeId: string) => string | null;
@@ -302,6 +306,8 @@ export const INITIAL_STATE = {
 	lastSavedStatusTick: 0,
 	externalEditPending: null as { path: string } | null,
 	autosavePaused: false,
+	// Plan 03-04c File > New
+	isUntitled: false,
 };
 
 export const useRoadmapStore = create<RoadmapState>((set, get) => {
@@ -363,6 +369,8 @@ export const useRoadmapStore = create<RoadmapState>((set, get) => {
 				autosavePaused: false,
 				lastSavedDataKey: nextKey,
 				lastSavedStatusTick: 0,
+				// EDIT-17: a normal disk-backed load is by definition NOT untitled
+				isUntitled: false,
 			});
 		},
 
@@ -386,6 +394,38 @@ export const useRoadmapStore = create<RoadmapState>((set, get) => {
 				lastSavedDataKey: nextKey,
 				lastSavedStatusTick: 0,
 			});
+		},
+
+		newUntitledSchema: () => {
+			// Plan 03-04c (EDIT-17): in-memory schema with no disk path. The first
+			// autosave fire after a mutation pops Utils.saveFileDialog via
+			// useAutosave's flushNow → saveFileAs RPC.
+			const rootId = crypto.randomUUID();
+			const now = new Date().toISOString();
+			const schema: RoadmapSchema = {
+				version: "1.0",
+				title: "Untitled Roadmap",
+				statusConfig: [
+					{ id: "not-started", label: "Not Started" },
+					{ id: "in-progress", label: "In Progress" },
+					{ id: "completed", label: "Completed" },
+					{ id: "blocked", label: "Blocked" },
+				],
+				nodes: [
+					{
+						id: rootId,
+						title: "Untitled",
+						status: "not-started",
+						createdAt: now,
+						updatedAt: now,
+					},
+				],
+			};
+			// Reuse loadSchema for tree/index/dataKey bookkeeping, then mark
+			// isUntitled and clear filePath in the same set() so subscribers see
+			// one consistent transition.
+			get().loadSchema(schema, null);
+			set({ isUntitled: true });
 		},
 
 		// --- Structural mutations ------------------------------------------------
