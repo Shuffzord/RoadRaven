@@ -146,10 +146,16 @@ describe("Hardcoded color check", () => {
 			__dirname,
 			"../../../src/mainview/components",
 		);
+		// ThemePicker renders swatches previewing every available theme's palette,
+		// so its hex constants are intentional data (not a theming violation).
+		const THEME_PREVIEW_COMPONENTS = new Set([
+			"ThemeOverrideProvider.tsx",
+			"ThemePicker.tsx",
+		]);
 		const files = fs
 			.readdirSync(componentsDir)
 			.filter(
-				(f: string) => f.endsWith(".tsx") && f !== "ThemeOverrideProvider.tsx",
+				(f: string) => f.endsWith(".tsx") && !THEME_PREVIEW_COMPONENTS.has(f),
 			);
 		const hexPattern = /#[0-9a-fA-F]{3,8}\b/;
 		const rgbPattern = /rgb\(|rgba\(|hsl\(/;

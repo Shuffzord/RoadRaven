@@ -101,6 +101,7 @@ export function RoadmapNodeCard({
 			data-source-id={nodeId}
 			data-selected={isSelected ? "true" : undefined}
 			data-focused={isFocused ? "true" : undefined}
+			data-rv-surface="node"
 			style={
 				{
 					boxShadow: "var(--rv-shadow-node)",

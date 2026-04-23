@@ -40,7 +40,7 @@ describe("CSS @import ordering", () => {
 		}
 	});
 
-	it("all three theme blocks (dark, light, high-contrast) exist", () => {
+	it("all theme blocks exist (dark, light, high-contrast, paper, amber, contrast, slate, moss)", () => {
 		// Guards against accidentally deleting a theme block during refactoring
 		const css = readFileSync(
 			join(__dirname, "../../../src/mainview/index.css"),
@@ -50,5 +50,10 @@ describe("CSS @import ordering", () => {
 		expect(css).toContain('[data-theme="dark"]');
 		expect(css).toContain('[data-theme="light"]');
 		expect(css).toContain('[data-theme="high-contrast"]');
+		expect(css).toContain('[data-theme="paper"]');
+		expect(css).toContain('[data-theme="amber"]');
+		expect(css).toContain('[data-theme="contrast"]');
+		expect(css).toContain('[data-theme="slate"]');
+		expect(css).toContain('[data-theme="moss"]');
 	});
 });

@@ -11,7 +11,16 @@ type RPCSchema<T> = T;
 
 // -- Theme types -------------------------------------------------------------
 
-export type ThemePreference = "dark" | "light" | "high-contrast" | "system";
+export type ThemePreference =
+	| "dark"
+	| "light"
+	| "high-contrast"
+	| "paper"
+	| "amber"
+	| "contrast"
+	| "slate"
+	| "moss"
+	| "system";
 
 /**
  * Strict settings interface — add fields here as new phases need them.
