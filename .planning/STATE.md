@@ -25,15 +25,14 @@ See: .planning/PROJECT.md (updated 2026-04-12)
 
 ## Current Position
 
-Phase: 04 (event-api) — EXECUTING
+Phase: 04 (event-api) — EXECUTING (Wave 1 complete)
 Plan: 2 of 5
-Plans complete: 03-01 ✓, 03-04a ✓, 03-02 ✓, 03-03 ✓, 03-04b ✓, 03-04c ✓ (all code complete)
-Plans pending: none
-Status: Ready to execute
-UAT scoreboard (03-HUMAN-UAT.md): 3 pass + 1 pass-with-fix + 5 deferred to milestone-end
-Last activity: 2026-04-23
+Plans complete: 04-01 ✓, 04-02 ✓
+Plans pending: 04-03 (Wave 2), 04-04 (Wave 3), 04-05 (Wave 4)
+Status: Ready to execute next wave
+Last activity: 2026-04-23 -- Phase 04 Wave 1 complete
 
-Progress: [##########] 100% of Phase 03 plans (6/6, code complete)
+Progress: [####______] 40% of Phase 04 plans (2/5)
 
 ## Performance Metrics
 
