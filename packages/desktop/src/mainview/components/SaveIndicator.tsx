@@ -1,4 +1,12 @@
+import { useEffect, useRef, useState } from "react";
 import { useRoadmapStore } from "../store/roadmapStore";
+
+// On fast disks the autosave write completes in <50ms, so the saveState
+// flickers from "saving" → "saved" too quickly for the user to perceive
+// any feedback that a save happened. Hold the displayed "saving" state for
+// a minimum of 800ms so the indicator is visible. Error states transition
+// instantly — only the saving→saved transition is held.
+const MIN_SAVING_DISPLAY_MS = 800;
 
 function ErrorIcon() {
 	return (
@@ -33,6 +41,34 @@ export function SaveIndicator() {
 	const filePath = useRoadmapStore((s) => s.filePath);
 	const triggerSave = useRoadmapStore((s) => s.triggerSave);
 
+	// Hold "saving" on screen for MIN_SAVING_DISPLAY_MS even if the underlying
+	// store flips back to "saved" sooner. Error states bypass the hold.
+	const [displayState, setDisplayState] = useState(saveState);
+	const savingShownAtRef = useRef<number | null>(null);
+	useEffect(() => {
+		if (saveState === "saving") {
+			setDisplayState("saving");
+			savingShownAtRef.current = Date.now();
+			return;
+		}
+		if (saveState !== "saved" || savingShownAtRef.current === null) {
+			setDisplayState(saveState);
+			return;
+		}
+		const elapsed = Date.now() - savingShownAtRef.current;
+		const remaining = MIN_SAVING_DISPLAY_MS - elapsed;
+		if (remaining <= 0) {
+			setDisplayState(saveState);
+			savingShownAtRef.current = null;
+			return;
+		}
+		const timer = setTimeout(() => {
+			setDisplayState(saveState);
+			savingShownAtRef.current = null;
+		}, remaining);
+		return () => clearTimeout(timer);
+	}, [saveState]);
+
 	// No real disk path yet (sample load, HMR fallback, File>New). Surface this
 	// explicitly instead of letting autosave silently no-op or escalate to error.
 	if (!filePath) {
@@ -47,7 +83,7 @@ export function SaveIndicator() {
 		);
 	}
 
-	if (saveState === "saved") {
+	if (displayState === "saved") {
 		return (
 			<div className="flex items-center gap-1.5 text-[11px] text-rv-text-tertiary">
 				<span
@@ -58,7 +94,7 @@ export function SaveIndicator() {
 			</div>
 		);
 	}
-	if (saveState === "saving") {
+	if (displayState === "saving") {
 		return (
 			<div className="flex items-center gap-1.5 text-[11px] text-rv-text-secondary">
 				<span
@@ -69,7 +105,7 @@ export function SaveIndicator() {
 			</div>
 		);
 	}
-	if (saveState === "error-retrying") {
+	if (displayState === "error-retrying") {
 		return (
 			<div className="flex items-center gap-1.5 text-[11px] text-rv-status-blocked">
 				<ErrorIcon />
@@ -77,7 +113,7 @@ export function SaveIndicator() {
 			</div>
 		);
 	}
-	if (saveState === "error-manual") {
+	if (displayState === "error-manual") {
 		return (
 			<button
 				type="button"

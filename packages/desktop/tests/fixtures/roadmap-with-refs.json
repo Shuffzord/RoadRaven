@@ -12,7 +12,9 @@
 					"title": "Main Child",
 					"status": "not-started"
 				},
-				{ "$ref": "./referenced-part.json" }
+				{
+					"$ref": "./referenced-part.json"
+				}
 			]
 		}
 	]
