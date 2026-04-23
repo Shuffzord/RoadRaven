@@ -984,7 +984,7 @@ Actionable directives the planner must honor verbatim:
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 Few — the phase is heavily pre-decided. These are the only items the planner should surface to the user during planning:
 
@@ -993,18 +993,21 @@ Few — the phase is heavily pre-decided. These are the only items the planner s
    - Request is cleaner for lifecycle (webview knows when Bun has ingested the allow-list).
    - Default recommendation: **request** (Proposal 2 in §2.3) — matches the established `loadFile` / `saveFile` pattern in `shared/types.ts`.
    - Low risk; planner can decide at Plan 4-02 without user input.
+   - **RESOLVED:** `setNodeAllowlist` implemented as an RPC request per Plan 04-01 Task 1 (bidirectional ack matches the `loadFile`/`saveFile` lifecycle pattern).
 
 2. **Standalone Bun launcher for E2E test.** (§7.3)
    - E2E needs a Bun subprocess that starts the WS server WITHOUT spawning Electrobun's BrowserWindow.
    - Options: (a) new `src/bun/eventServerStandalone.ts` entry file; (b) env var gate in the existing entry that skips BrowserWindow creation.
    - Recommend (a) — single-purpose file is cleaner and keeps the test's invocation simple.
    - Decide at Plan 4-02; no user input needed.
+   - **RESOLVED:** standalone launcher at `packages/desktop/src/bun/eventServerStandalone.ts` per Plan 04-02 Task 6.
 
 3. **Hello frame: is it worth making it required vs optional?** (§1.5)
    - Research recommends required (cleaner DX, better toast UX).
    - CONTEXT.md says "recommended but not contract-mandated."
    - If the planner agrees with required, document in Plan 4-02 and update UI-SPEC's MCP wrapper copy accordingly. If optional, plan for "source may be undefined in the toast" copy variants.
    - **Flag for user confirmation** if the planner wants to elevate it to required — it affects producer contract docs.
+   - **RESOLVED:** hello frame `{ source, version }` stays OPTIONAL. When absent, `source` stamps as `"unknown"` after a 2s grace window. Implemented by Plan 04-02 Task 5 + Task 1 `HelloFrameSchema`.
 
 ---
 

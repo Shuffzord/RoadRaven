@@ -86,6 +86,7 @@ New test files this phase (all scaffolded in a Wave 0 plan before implementation
 - [ ] `packages/desktop/tests/unit/bun/eventsLog.test.ts`
 - [ ] `packages/desktop/tests/unit/bun/sentinel.test.ts`
 - [ ] `packages/desktop/tests/unit/bun/eventServer.test.ts`
+- [ ] `packages/desktop/tests/unit/bun/eventServer.eaddrinuse.test.ts` (I-04 dedicated EADDRINUSE coverage; stub in Wave 0, body in 04-02 Task 5)
 - [ ] `packages/desktop/tests/integration/eventApi.test.ts`
 - [ ] `packages/desktop/tests/integration/eventApi-e2e.test.ts` (requires standalone Bun launcher — see RESEARCH §7.3)
 - [ ] `packages/desktop/tests/integration/eventLog-selection.test.ts`
