@@ -1,8 +1,11 @@
 ---
 phase: 03-full-editor
 verified: 2026-04-22T12:30:00Z
+uat_completed_at: 2026-04-23T10:30:00Z
 status: human_needed
-score: 10/11 must-haves verified
+status_note: Phase code complete; 5 of 9 OS-level UAT items deferred to milestone-end retest per user direction (see 03-HUMAN-UAT.md). Items 2, 3, 8 pass; item 9 pass-with-fix (SaveIndicator min-display-time hold). Items 1, 4, 5, 6, 7 await batch retest at milestone end.
+retest_at_milestone_end: true
+score: 10/11 must-haves verified (4 UAT items pass + 5 deferred)
 overrides_applied: 0
 must_haves_total: 11
 must_haves_verified: 10
