@@ -99,6 +99,10 @@ export type RoadmapRPCType = {
 				};
 				response: undefined;
 			};
+			setNodeAllowlist: {
+				params: { nodeIds: string[]; statusIds: string[] };
+				response: { ok: true };
+			};
 		};
 		messages: {
 			nodeStatusUpdate: {
@@ -113,14 +117,40 @@ export type RoadmapRPCType = {
 	webview: RPCSchema<{
 		requests: Record<string, never>;
 		messages: {
-			pushStatusUpdate: {
-				nodeId: string;
-				status: string;
-				meta?: Record<string, unknown>;
-			};
-			pushEventLog: { event: IntegrationEvent };
+			pushStatusUpdate:
+				| {
+						// Legacy single-node shape — RETAINED for Wave 0 build-green (will be
+						// removed by Plan 04-03 Task 1 once the Bun producer + renderer handler
+						// both use the batched shape). Do NOT add new senders using this form.
+						nodeId: string;
+						status: string;
+						meta?: Record<string, unknown>;
+				  }
+				| {
+						// Batched shape per D-25 — Plan 04-02 Bun producer emits this; Plan 04-03
+						// renderer handler narrows via `"updates" in msg` type guard.
+						updates: Array<{
+							nodeId: string;
+							status: string;
+							meta?: Record<string, unknown>;
+							source?: string;
+							lastEventAt: number;
+						}>;
+				  };
+			pushEventLog: { events: IntegrationEvent[] };
 			pushFileChanged: { path: string };
 			pushOwnershipMap: { entries: Array<[string, string]> };
+			pushEventApiState: {
+				status: "off" | "listening" | "error";
+				port: number | null;
+				connectedCount: number;
+				errorMessage: string | null;
+			};
+			pushEventApiError: {
+				type: "malformed" | "unknown_node" | "invalid_status" | "disconnect";
+				source: string;
+				detail?: string;
+			};
 		};
 	}>;
 };

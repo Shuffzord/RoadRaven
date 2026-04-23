@@ -27,6 +27,7 @@
 		"@radix-ui/react-dialog": "^1.1.15",
 		"@radix-ui/react-dropdown-menu": "^2.1.16",
 		"@tailwindcss/vite": "^4.2.2",
+		"@tanstack/react-virtual": "3.13.24",
 		"electrobun": "1.16.0",
 		"fuse.js": "^7.3.0",
 		"react": "^19.2.5",

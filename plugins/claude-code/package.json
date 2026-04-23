@@ -1,5 +1,22 @@
 {
 	"name": "@roadraven/plugin-claude-code",
-	"version": "0.0.1",
-	"private": true
+	"version": "0.1.0",
+	"private": true,
+	"type": "module",
+	"bin": {
+		"roadraven-mcp": "./dist/index.js"
+	},
+	"scripts": {
+		"build": "bun build src/index.ts --outdir dist --target node",
+		"test": "vitest run"
+	},
+	"dependencies": {
+		"@modelcontextprotocol/sdk": "^1.29.0",
+		"zod": "^4.3.6"
+	},
+	"devDependencies": {
+		"@types/node": "^22",
+		"typescript": "^5",
+		"vitest": "^4.1.4"
+	}
 }
