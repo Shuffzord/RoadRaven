@@ -20,6 +20,8 @@ bun install           # Install dependencies
 bun run start         # One-shot: vite build → electrobun dev (no file watching)
 bun run dev           # Dev with file watching (auto-restarts bun process on changes)
 bun run dev:hmr       # Dev with HMR — runs Vite dev server + electrobun concurrently (recommended)
+                      # Renderer: CEF (Chromium) by default. To use WebKitGTK/WKWebView instead,
+                      # create .env.local at repo root with: ROADRAVEN_RENDERER=webkit
 bun run hmr           # Vite dev server only (port 5173) — used internally by dev:hmr
 bun run build:canary  # Production build (canary channel)
 

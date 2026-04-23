@@ -45,3 +45,6 @@ test-results/
 *.bak.json
 # Fallow analysis cache (incremental, regenerated on every run)
 .fallow/
+
+# Local developer environment overrides (not committed)
+.env.local
