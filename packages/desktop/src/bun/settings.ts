@@ -4,7 +4,12 @@ import type { AppSettings } from "../../../../shared/types";
 
 const SETTINGS_FILE = "settings.json";
 
-function getSettingsDirectory(): string {
+/**
+ * Resolve the platform-specific user data directory for RoadRaven.
+ * Exported as getUserDataDir() so sentinel.ts and other modules can reuse it
+ * without duplicating the platform switch.
+ */
+export function getUserDataDir(): string {
 	const home = process.env.HOME || process.env.USERPROFILE || "";
 	if (process.platform === "win32") {
 		return join(
@@ -22,7 +27,7 @@ function getSettingsDirectory(): string {
 }
 
 export function getSettingsPath(basePath?: string): string {
-	return join(basePath ?? getSettingsDirectory(), SETTINGS_FILE);
+	return join(basePath ?? getUserDataDir(), SETTINGS_FILE);
 }
 
 export function loadSettings(basePath?: string): AppSettings {
@@ -42,7 +47,7 @@ export function saveSettings(
 	basePath?: string,
 	preloaded?: AppSettings,
 ): void {
-	const dir = basePath ?? getSettingsDirectory();
+	const dir = basePath ?? getUserDataDir();
 	const path = join(dir, SETTINGS_FILE);
 	try {
 		if (!existsSync(dir)) {
