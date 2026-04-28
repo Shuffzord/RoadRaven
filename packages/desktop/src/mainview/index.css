@@ -120,6 +120,9 @@
 	--rv-status-completed-bg: rgba(74, 222, 128, 0.1);
 	--rv-status-blocked: #ef4444;
 	--rv-status-blocked-bg: rgba(239, 68, 68, 0.1);
+
+	/* Live event pulse — saturated, distinct from selection accent */
+	--rv-pulse: #4ade80;
 }
 
 /* ============================================================
@@ -182,6 +185,9 @@
 	--rv-status-completed-bg: rgba(74, 222, 128, 0.08);
 	--rv-status-blocked: #ef4444;
 	--rv-status-blocked-bg: rgba(239, 68, 68, 0.08);
+
+	/* Live event pulse — saturated green, visible against white nodes */
+	--rv-pulse: #16a34a;
 }
 
 /* ============================================================
@@ -244,6 +250,9 @@
 	--rv-status-completed-bg: rgba(90, 238, 144, 0.15);
 	--rv-status-blocked: #ff5555;
 	--rv-status-blocked-bg: rgba(255, 85, 85, 0.15);
+
+	/* Live event pulse — already designed for max visibility */
+	--rv-pulse: #5aee90;
 }
 
 /* ============================================================
@@ -309,6 +318,9 @@
 	--rv-status-completed-bg: rgba(61, 110, 82, 0.12);
 	--rv-status-blocked: #a8412a;
 	--rv-status-blocked-bg: rgba(168, 65, 42, 0.12);
+
+	/* Live event pulse — terracotta editorial pop on cream nodes */
+	--rv-pulse: #c2410c;
 }
 
 /* Serif headings to match the editorial mood. Falls back to Georgia
@@ -384,6 +396,9 @@
 	--rv-status-completed-bg: rgba(168, 199, 117, 0.14);
 	--rv-status-blocked: #e87f4e;
 	--rv-status-blocked-bg: rgba(232, 127, 78, 0.15);
+
+	/* Live event pulse — saturated amber pop matching theme identity */
+	--rv-pulse: #ffa83d;
 }
 
 /* Monospace throughout — the point of the theme. Falls back to
@@ -454,6 +469,9 @@
 	--rv-status-completed-bg: #000000;
 	--rv-status-blocked: #ffffff;
 	--rv-status-blocked-bg: #d93025;
+
+	/* Live event pulse — electric yellow graphic pop */
+	--rv-pulse: #ffe046;
 
 	/* Radii collapsed for the graphic look */
 	--rv-radius-xs: 0;
@@ -531,6 +549,9 @@
 	--rv-status-completed-bg: rgba(156, 194, 165, 0.12);
 	--rv-status-blocked: #e48573;
 	--rv-status-blocked-bg: rgba(228, 133, 115, 0.12);
+
+	/* Live event pulse — warm tan pop on cool slate */
+	--rv-pulse: #e9b675;
 }
 
 /* Serif headings to match the editorial voice. Falls back to Georgia
@@ -606,6 +627,9 @@
 	--rv-status-completed-bg: rgba(184, 201, 163, 0.16);
 	--rv-status-blocked: #d89478;
 	--rv-status-blocked-bg: rgba(216, 148, 120, 0.18);
+
+	/* Live event pulse — rich gold pop on muted moss */
+	--rv-pulse: #d4a94e;
 }
 
 /* Node cards are cream — flip text inside them to dark ink. */
@@ -728,7 +752,7 @@ body {
 	position: absolute;
 	inset: -3px;
 	border-radius: inherit;
-	border: 0px solid var(--rv-status-completed-bg);
+	border: 0px solid var(--rv-pulse);
 	opacity: 0;
 	pointer-events: none;
 }
@@ -749,7 +773,7 @@ body {
 @media (prefers-reduced-motion: reduce) {
 	.node[data-live="true"]::after {
 		animation: none;
-		border: 2px solid var(--rv-status-completed);
+		border: 2px solid var(--rv-pulse);
 		opacity: 1;
 	}
 }

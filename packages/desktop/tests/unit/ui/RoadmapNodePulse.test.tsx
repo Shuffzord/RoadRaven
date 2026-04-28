@@ -111,7 +111,7 @@ describe("RoadmapNode pulse (D-14/D-15, UAT-1 regression — ::after pseudo-elem
 
 	it("index.css declares the reduced-motion ::after static-border fallback (CSS contract)", () => {
 		// The reduced-motion media block must target `.node[data-live="true"]::after`
-		// and apply a static 2px solid border using --rv-status-completed.
+		// and apply a static 2px solid border using --rv-pulse (per-theme token).
 		const reducedMotionBlock = INDEX_CSS.match(
 			/@media\s*\(prefers-reduced-motion:\s*reduce\)\s*\{[\s\S]*?\}\s*\}/g,
 		);
@@ -120,7 +120,7 @@ describe("RoadmapNode pulse (D-14/D-15, UAT-1 regression — ::after pseudo-elem
 		const hasAfterFallback = (reducedMotionBlock ?? []).some(
 			(block) =>
 				/\.node\[data-live="true"\]::after/.test(block) &&
-				/border:\s*2px\s+solid\s+var\(--rv-status-completed\)/.test(block),
+				/border:\s*2px\s+solid\s+var\(--rv-pulse\)/.test(block),
 		);
 		expect(hasAfterFallback).toBe(true);
 	});
