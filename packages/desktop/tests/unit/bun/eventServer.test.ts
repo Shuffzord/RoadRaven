@@ -8,10 +8,18 @@ import { DEFAULT_PORT, startEventServer } from "../../../src/bun/eventServer";
 // EADDRINUSE-specific regression lives in eventServer.eaddrinuse.test.ts.
 
 const NO_OP_OPTS = {
-	onFlush: () => {},
-	onEvent: () => {},
-	onError: () => {},
-	onConnectionChange: () => {},
+	onFlush: () => {
+		/* noop */
+	},
+	onEvent: () => {
+		/* noop */
+	},
+	onError: () => {
+		/* noop */
+	},
+	onConnectionChange: () => {
+		/* noop */
+	},
 };
 
 describe("EventServer (WebSocket lifecycle)", () => {
@@ -97,8 +105,12 @@ describe("EventServer (WebSocket lifecycle)", () => {
 		handles.push(result.handle);
 
 		const ws = new WebSocket(`ws://127.0.0.1:${result.handle.port}`);
-		await new Promise<void>((resolve) => ws.addEventListener("open", () => resolve()));
-		ws.send(JSON.stringify({ type: "hello", source: "test-agent", version: "1" }));
+		await new Promise<void>((resolve) =>
+			ws.addEventListener("open", () => resolve()),
+		);
+		ws.send(
+			JSON.stringify({ type: "hello", source: "test-agent", version: "1" }),
+		);
 		// Small delay for message to be processed
 		await new Promise((r) => setTimeout(r, 50));
 		ws.close();
@@ -121,7 +133,9 @@ describe("EventServer (WebSocket lifecycle)", () => {
 
 		// Connect and immediately close (abnormal) without sending hello
 		const ws = new WebSocket(`ws://127.0.0.1:${result.handle.port}`);
-		await new Promise<void>((resolve) => ws.addEventListener("open", () => resolve()));
+		await new Promise<void>((resolve) =>
+			ws.addEventListener("open", () => resolve()),
+		);
 		// Close without hello — should fire disconnect error with source: "unknown"
 		ws.close();
 		await new Promise((r) => setTimeout(r, 100));

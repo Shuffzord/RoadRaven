@@ -9,10 +9,18 @@ import type { CoalescedUpdate } from "../../src/bun/eventCoalescer";
 import { startEventServer } from "../../src/bun/eventServer";
 
 const NO_OP = {
-	onFlush: () => {},
-	onEvent: () => {},
-	onError: () => {},
-	onConnectionChange: () => {},
+	onFlush: () => {
+		/* noop */
+	},
+	onEvent: () => {
+		/* noop */
+	},
+	onError: () => {
+		/* noop */
+	},
+	onConnectionChange: () => {
+		/* noop */
+	},
 };
 
 describe("Event API integration", () => {

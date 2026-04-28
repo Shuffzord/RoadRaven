@@ -3,8 +3,8 @@
 
 import { describe, expect, it } from "vitest";
 import {
-	META_MAX_BYTES,
 	classifyEventFrame,
+	META_MAX_BYTES,
 	parseIncoming,
 } from "../../../src/bun/eventSchema";
 
@@ -15,7 +15,10 @@ describe("EventSchema (Zod boundary validation)", () => {
 		);
 		expect(result.ok).toBe(true);
 		if (result.ok) {
-			expect(result.frame).toMatchObject({ nodeId: "node-abc", status: "in-progress" });
+			expect(result.frame).toMatchObject({
+				nodeId: "node-abc",
+				status: "in-progress",
+			});
 		}
 	});
 
@@ -41,7 +44,10 @@ describe("EventSchema (Zod boundary validation)", () => {
 		);
 		expect(result.ok).toBe(true);
 		if (result.ok) {
-			expect(result.frame).toMatchObject({ type: "hello", source: "claude-code" });
+			expect(result.frame).toMatchObject({
+				type: "hello",
+				source: "claude-code",
+			});
 		}
 	});
 
@@ -49,7 +55,11 @@ describe("EventSchema (Zod boundary validation)", () => {
 		// Build a meta payload that exceeds META_MAX_BYTES when serialized
 		const bigValue = "x".repeat(META_MAX_BYTES + 100);
 		const result = parseIncoming(
-			JSON.stringify({ nodeId: "n1", status: "done", meta: { data: bigValue } }),
+			JSON.stringify({
+				nodeId: "n1",
+				status: "done",
+				meta: { data: bigValue },
+			}),
 		);
 		expect(result.ok).toBe(false);
 		if (!result.ok) {

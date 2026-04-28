@@ -19,13 +19,19 @@ export function getSidecarPath(sourcePath: string): string {
 	return `${sourcePath}${SIDECAR_SUFFIX}`;
 }
 
-export async function appendEventLine(sidecarPath: string, line: EventLogLine): Promise<void> {
+export async function appendEventLine(
+	sidecarPath: string,
+	line: EventLogLine,
+): Promise<void> {
 	// fs.appendFile uses O_APPEND; atomic for writes ≤ PIPE_BUF. Our lines are <512B.
 	// NOTE: Do NOT use atomicWrite.ts here — atomic rename would destroy the log.
 	await appendFile(sidecarPath, `${JSON.stringify(line)}\n`, "utf-8");
 }
 
-export function synthesizeMalformedLine(raw: string, source: string | undefined): EventLogLine {
+export function synthesizeMalformedLine(
+	raw: string,
+	source: string | undefined,
+): EventLogLine {
 	return {
 		t: new Date().toISOString(),
 		nodeId: "__malformed__",
@@ -39,7 +45,13 @@ export function synthesizeMalformedLine(raw: string, source: string | undefined)
 export async function replayEventLog(sidecarPath: string): Promise<{
 	overlay: Map<
 		string,
-		{ nodeId: string; status: string; meta?: Record<string, unknown>; source?: string; lastEventAt: number }
+		{
+			nodeId: string;
+			status: string;
+			meta?: Record<string, unknown>;
+			source?: string;
+			lastEventAt: number;
+		}
 	>;
 	events: IntegrationEvent[];
 }> {
@@ -54,7 +66,13 @@ export async function replayEventLog(sidecarPath: string): Promise<{
 
 	const overlay = new Map<
 		string,
-		{ nodeId: string; status: string; meta?: Record<string, unknown>; source?: string; lastEventAt: number }
+		{
+			nodeId: string;
+			status: string;
+			meta?: Record<string, unknown>;
+			source?: string;
+			lastEventAt: number;
+		}
 	>();
 	const events: IntegrationEvent[] = [];
 
@@ -91,6 +109,9 @@ export async function replayEventLog(sidecarPath: string): Promise<{
 	}
 
 	// Cap the drawer hydrate at the last N events
-	const capped = events.length > HYDRATE_EVENT_CAP ? events.slice(-HYDRATE_EVENT_CAP) : events;
+	const capped =
+		events.length > HYDRATE_EVENT_CAP
+			? events.slice(-HYDRATE_EVENT_CAP)
+			: events;
 	return { overlay, events: capped };
 }

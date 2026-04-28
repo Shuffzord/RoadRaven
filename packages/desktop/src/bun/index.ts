@@ -39,7 +39,6 @@ import { nativeSaveDialog } from "./saveFileDialog";
 // Persistence surface re-exports — imported by Plan 04b/04c and DevHarness
 export { atomicWrite, splitSchemaByOwnership };
 
-import { addRecentFile, loadSettings, saveSettings } from "./settings";
 import {
 	DEFAULT_PORT,
 	type EventServerHandle,
@@ -47,8 +46,9 @@ import {
 	startEventServer,
 } from "./eventServer";
 import { replayEventLog } from "./eventsLog";
-import { deleteSentinel, writeSentinel } from "./sentinel";
 import { serverLogger } from "./logging";
+import { deleteSentinel, writeSentinel } from "./sentinel";
+import { addRecentFile, loadSettings, saveSettings } from "./settings";
 
 // Re-export the RPC type so downstream modules can import from the app entry
 export type { RoadmapRPCType };
@@ -164,7 +164,9 @@ async function getMainViewUrl(): Promise<string> {
 // handler's process.exit(0) waits for the same promise the before-quit
 // handler is awaiting.
 Electrobun.events.on("before-quit", async () => {
-	if (eventServerHandle) { await eventServerHandle.stop(); }
+	if (eventServerHandle) {
+		await eventServerHandle.stop();
+	}
 	await deleteSentinel();
 	await flushPending();
 });
@@ -175,13 +177,17 @@ Electrobun.events.on("before-quit", async () => {
 // shell that owns the Electrobun event loop) — the SIG* handler awaits the
 // same in-flight promise that before-quit awaits.
 process.on("SIGTERM", async () => {
-	if (eventServerHandle) { await eventServerHandle.stop(); }
+	if (eventServerHandle) {
+		await eventServerHandle.stop();
+	}
 	await deleteSentinel();
 	await flushPending();
 	process.exit(0);
 });
 process.on("SIGINT", async () => {
-	if (eventServerHandle) { await eventServerHandle.stop(); }
+	if (eventServerHandle) {
+		await eventServerHandle.stop();
+	}
 	await deleteSentinel();
 	await flushPending();
 	process.exit(0);

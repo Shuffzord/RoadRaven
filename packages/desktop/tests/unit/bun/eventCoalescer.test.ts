@@ -10,7 +10,9 @@ describe("EventCoalescer", () => {
 
 	it("batches events within 100ms window", () => {
 		const flushes: number[] = [];
-		const c = new EventCoalescer(100, (updates) => flushes.push(updates.length));
+		const c = new EventCoalescer(100, (updates) =>
+			flushes.push(updates.length),
+		);
 		c.enqueue({ nodeId: "a", status: "done", lastEventAt: 1 });
 		c.enqueue({ nodeId: "b", status: "done", lastEventAt: 2 });
 		vi.advanceTimersByTime(100);
@@ -57,9 +59,13 @@ describe("EventCoalescer", () => {
 	});
 
 	it("timer is null when idle (no pending events)", () => {
-		const c = new EventCoalescer(100, () => {});
+		const c = new EventCoalescer(100, () => {
+			/* noop */
+		});
 		// Access private field via type assertion for verification
-		const internal = c as unknown as { timer: ReturnType<typeof setTimeout> | null };
+		const internal = c as unknown as {
+			timer: ReturnType<typeof setTimeout> | null;
+		};
 		expect(internal.timer).toBeNull();
 		c.enqueue({ nodeId: "y", status: "done", lastEventAt: 1 });
 		expect(internal.timer).not.toBeNull();

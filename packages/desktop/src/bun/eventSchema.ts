@@ -15,13 +15,19 @@ export const EventFrameSchema = z.object({
 	meta: z
 		.record(z.string(), z.unknown())
 		.optional()
-		.refine((v) => v === undefined || JSON.stringify(v).length <= META_MAX_BYTES, {
-			message: "meta exceeds 8KB",
-		}),
+		.refine(
+			(v) => v === undefined || JSON.stringify(v).length <= META_MAX_BYTES,
+			{
+				message: "meta exceeds 8KB",
+			},
+		),
 	source: z.string().max(64).optional(),
 });
 
-export const IncomingFrameSchema = z.union([HelloFrameSchema, EventFrameSchema]);
+export const IncomingFrameSchema = z.union([
+	HelloFrameSchema,
+	EventFrameSchema,
+]);
 
 export type HelloFrame = z.infer<typeof HelloFrameSchema>;
 export type EventFrame = z.infer<typeof EventFrameSchema>;
@@ -47,7 +53,9 @@ export function classifyEventFrame(
 
 export function parseIncoming(
 	raw: string,
-): { ok: true; frame: HelloFrame | EventFrame } | { ok: false; error: "malformed" } {
+):
+	| { ok: true; frame: HelloFrame | EventFrame }
+	| { ok: false; error: "malformed" } {
 	let parsed: unknown;
 	try {
 		parsed = JSON.parse(raw);

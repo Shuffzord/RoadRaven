@@ -1,13 +1,21 @@
 import type { Server, ServerWebSocket } from "bun";
 import type { IntegrationEvent } from "../../../../shared/types";
-import { EventCoalescer, FLUSH_MS_DEFAULT, type CoalescedUpdate } from "./eventCoalescer";
+import {
+	type CoalescedUpdate,
+	EventCoalescer,
+	FLUSH_MS_DEFAULT,
+} from "./eventCoalescer";
 import {
 	type Allowlist,
-	type EventFrame,
 	classifyEventFrame,
+	type EventFrame,
 	parseIncoming,
 } from "./eventSchema";
-import { appendEventLine, getSidecarPath, synthesizeMalformedLine } from "./eventsLog";
+import {
+	appendEventLine,
+	getSidecarPath,
+	synthesizeMalformedLine,
+} from "./eventsLog";
 import { serverLogger } from "./logging";
 
 export { getSidecarPath };
@@ -56,7 +64,8 @@ function isEaddrinuse(err: unknown): boolean {
 export async function startEventServer(
 	opts: StartOptions,
 ): Promise<
-	{ ok: true; handle: EventServerHandle } | { ok: false; error: "in_use"; attempted: number[] }
+	| { ok: true; handle: EventServerHandle }
+	| { ok: false; error: "in_use"; attempted: number[] }
 > {
 	const allowlist: Allowlist = { nodeIds: new Set(), statusIds: new Set() };
 	let sidecarPath: string | null = null;
@@ -65,7 +74,10 @@ export async function startEventServer(
 
 	const candidates = opts.isUserSpecified
 		? [opts.requestedPort]
-		: Array.from({ length: PORT_FALLBACK_RANGE }, (_, i) => opts.requestedPort + i);
+		: Array.from(
+				{ length: PORT_FALLBACK_RANGE },
+				(_, i) => opts.requestedPort + i,
+			);
 
 	let server: Server<WsData> | null = null;
 	let boundPort = -1;
@@ -135,7 +147,11 @@ export async function startEventServer(
 								_error: "malformed",
 								meta: line.meta,
 							});
-							opts.onError({ type: "malformed", source, detail: text.slice(0, 120) });
+							opts.onError({
+								type: "malformed",
+								source,
+								detail: text.slice(0, 120),
+							});
 							return;
 						}
 

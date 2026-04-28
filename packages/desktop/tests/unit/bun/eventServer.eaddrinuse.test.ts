@@ -4,7 +4,10 @@
 
 import type { Server } from "bun";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { PORT_FALLBACK_RANGE, startEventServer } from "../../../src/bun/eventServer";
+import {
+	PORT_FALLBACK_RANGE,
+	startEventServer,
+} from "../../../src/bun/eventServer";
 
 // TEST_PORT is far from DEFAULT_PORT 47921's +0..+9 range to avoid real-app collisions.
 const TEST_PORT = 47931;
@@ -33,10 +36,18 @@ describe("eventServer EADDRINUSE regression (I-04)", () => {
 		eventHandle = await startEventServer({
 			requestedPort: TEST_PORT,
 			isUserSpecified: false,
-			onFlush: () => {},
-			onEvent: () => {},
-			onError: () => {},
-			onConnectionChange: () => {},
+			onFlush: () => {
+				/* noop */
+			},
+			onEvent: () => {
+				/* noop */
+			},
+			onError: () => {
+				/* noop */
+			},
+			onConnectionChange: () => {
+				/* noop */
+			},
 		});
 		expect(eventHandle.ok).toBe(true);
 		if (eventHandle.ok) {
@@ -49,10 +60,18 @@ describe("eventServer EADDRINUSE regression (I-04)", () => {
 		const result = await startEventServer({
 			requestedPort: TEST_PORT,
 			isUserSpecified: true,
-			onFlush: () => {},
-			onEvent: () => {},
-			onError: () => {},
-			onConnectionChange: () => {},
+			onFlush: () => {
+				/* noop */
+			},
+			onEvent: () => {
+				/* noop */
+			},
+			onError: () => {
+				/* noop */
+			},
+			onConnectionChange: () => {
+				/* noop */
+			},
 		});
 		expect(result.ok).toBe(false);
 		if (!result.ok) {

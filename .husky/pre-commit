@@ -1,3 +1,4 @@
+#!/usr/bin/env sh
 bunx lint-staged
 bunx @biomejs/biome check --diagnostic-level=error .
 # Disabled for Phase 4 Wave 0 scaffold + per-task TDD cycles.

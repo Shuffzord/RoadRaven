@@ -39,9 +39,21 @@ describe("EventsLog (sidecar .events.jsonl)", () => {
 		const t1 = new Date(1000).toISOString();
 		const t2 = new Date(2000).toISOString();
 		const t3 = new Date(3000).toISOString();
-		await appendEventLine(sidecarPath, { t: t1, nodeId: "a", status: "not-started" });
-		await appendEventLine(sidecarPath, { t: t2, nodeId: "a", status: "in-progress" });
-		await appendEventLine(sidecarPath, { t: t3, nodeId: "b", status: "completed" });
+		await appendEventLine(sidecarPath, {
+			t: t1,
+			nodeId: "a",
+			status: "not-started",
+		});
+		await appendEventLine(sidecarPath, {
+			t: t2,
+			nodeId: "a",
+			status: "in-progress",
+		});
+		await appendEventLine(sidecarPath, {
+			t: t3,
+			nodeId: "b",
+			status: "completed",
+		});
 
 		const { overlay, events } = await replayEventLog(sidecarPath);
 		// Overlay has 2 entries (one per nodeId)

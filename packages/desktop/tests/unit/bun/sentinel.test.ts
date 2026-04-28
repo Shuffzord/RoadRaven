@@ -12,7 +12,11 @@ vi.mock("../../../src/bun/settings", () => ({
 }));
 
 // Must import AFTER the mock is set up
-import { deleteSentinel, getSentinelPath, writeSentinel } from "../../../src/bun/sentinel";
+import {
+	deleteSentinel,
+	getSentinelPath,
+	writeSentinel,
+} from "../../../src/bun/sentinel";
 import { getUserDataDir } from "../../../src/bun/settings";
 
 describe("Sentinel file lifecycle", () => {
@@ -47,7 +51,12 @@ describe("Sentinel file lifecycle", () => {
 		});
 		expect(typeof contents.startedAt).toBe("string");
 		// Shape has exactly these 4 keys
-		expect(Object.keys(contents).sort()).toEqual(["pid", "port", "startedAt", "url"]);
+		expect(Object.keys(contents).sort()).toEqual([
+			"pid",
+			"port",
+			"startedAt",
+			"url",
+		]);
 	});
 
 	it("deletes sentinel on clean shutdown", async () => {
