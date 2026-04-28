@@ -16,7 +16,7 @@ Starting from a bare Electrobun shell, we build outward through the visual stack
 - [ ] **Phase 1: Visual Foundation & Themes** — App shell renders with all three built-in themes; `--rv-*` token system in place
 - [ ] **Phase 2: Read-Only Viewer** — Any valid JSON schema renders as an interactive tree; performance gate passes
 - [ ] **Phase 3: Full Editor** — A complete roadmap can be created, edited, and saved without touching JSON directly
-- [ ] **Phase 4: Event API** — Nodes receive live status updates from external producers via WebSocket; Claude Code MCP wrapper works end-to-end
+- [x] **Phase 4: Event API** — Nodes receive live status updates from external producers via WebSocket; Claude Code MCP wrapper works end-to-end (completed 2026-04-28)
 - [ ] **Phase 5: Export & Packaging** — Self-contained HTML and 2x PNG export; native installers on all three platforms; npm packages published
 
 ---
@@ -171,7 +171,7 @@ Plans:
 
 **Requirements covered:** PLUG-01, PLUG-02, PLUG-03, PLUG-04, PLUG-05, PLUG-06, PLUG-07, PLUG-08, PLUG-09
 
-**Plans:** 4/5 plans executed
+**Plans:** 5/5 plans complete
 
 Wave structure:
 - **Wave 0**: 04-01 (test scaffolding + RPC contract + deps)
@@ -185,7 +185,7 @@ Plans:
 - [x] 04-02-PLAN.md — Wave 1: Bun.serve WebSocket lifecycle on 127.0.0.1:47921 (+fallback), Zod event boundary + classifier, EventCoalescer (100ms trailing-edge), .events.jsonl sidecar append+replay, sentinel file write/delete, eventServerStandalone entry, integrated into before-quit/SIGTERM/SIGINT chain (PLUG-01, PLUG-02, PLUG-03, PLUG-09)
 - [x] 04-03-PLAN.md — Wave 2: eventApiStore + roadmapStore.applyEventBatch + liveEventMeta + isNodeLive selector + 1Hz tick, pulse CSS (reduced-motion fallback), EventApiPill status-bar component, WelcomeScreen URL line, SidePanel IntegrationZone, EventToast + EventToastStack with 5s throttle-merge, setNodeAllowlist pushed on dataKey bump (PLUG-03 renderer, PLUG-04, PLUG-05, PLUG-06)
 - [x] 04-04-PLAN.md — Wave 2: eventLogStore with 1000-row sliding window + filter predicates, EventLogDrawer with @tanstack/react-virtual, EventLogRow + EventLogFilterBar, TopBar Events toggle button, Ctrl+Shift+L keyboard binding, row-click-selects-node + camera-follow (PLUG-06, PLUG-07)
-- [ ] 04-05-PLAN.md — Wave 3: Claude Code MCP wrapper at plugins/claude-code/ — node-only runtime, sentinel resolver + PID liveness, WS client with exponential backoff capped at 30s, hello frame, updateNodeStatus + getEventApiStatus tools via @modelcontextprotocol/sdk StdioServerTransport, README (PLUG-08)
+- [x] 04-05-PLAN.md — Wave 3: Claude Code MCP wrapper at plugins/claude-code/ — node-only runtime, sentinel resolver + PID liveness, WS client with exponential backoff capped at 30s, hello frame, updateNodeStatus + getEventApiStatus tools via @modelcontextprotocol/sdk StdioServerTransport, README (PLUG-08)
 
 **Done when:**
 - WebSocket server starts with the app; port is visible to the user (status bar or welcome screen)
@@ -242,5 +242,5 @@ Plans:
 | 1. Visual Foundation & Themes | 3/3 | Complete | - |
 | 2. Read-Only Viewer | 4/5 | UAT Gap Closure | - |
 | 3. Full Editor | 0/6 | Planned | - |
-| 4. Event API | 4/5 | In Progress|  |
+| 4. Event API | 5/5 | Complete   | 2026-04-28 |
 | 5. Export & Packaging | 0/4 | Not started | - |

@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 04-04-PLAN.md
-last_updated: "2026-04-28T10:27:47.242Z"
+stopped_at: Completed 04-05-PLAN.md
+last_updated: "2026-04-28T10:57:37.087Z"
 last_activity: 2026-04-28
 progress:
   total_phases: 5
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 20
-  completed_plans: 18
-  percent: 90
+  completed_plans: 19
+  percent: 95
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-04-12)
 ## Current Position
 
 Phase: 04 (event-api) — EXECUTING (Wave 3 complete)
-Plan: 4 of 5
+Plan: 5 of 5
 Plans complete: 04-01 ✓, 04-02 ✓, 04-03 ✓, 04-04 ✓
 Plans pending: 04-05 (Wave 4)
-Status: Ready to execute next wave
-Last activity: 2026-04-28 -- Phase 04 Wave 3 complete
+Status: Ready to execute
+Last activity: 2026-04-28
 
 Progress: [########__] 80% of Phase 04 plans (4/5)
 
@@ -58,6 +58,7 @@ Progress: [########__] 80% of Phase 04 plans (4/5)
 | Phase 02 P02 | 11min | 2 tasks | 13 files |
 | Phase 04 P02 | 180 | 6 tasks | 20 files |
 | Phase 04 P04 | 90 | 4 tasks | 16 files |
+| Phase 04 P04-05 | 45 | 4 tasks | 13 files |
 
 ## Accumulated Context
 
@@ -82,6 +83,9 @@ Recent decisions affecting current work:
 - [Phase 04]: Bun-native tests split from vitest: vitest excludes Bun.serve-dependent files; test:bun script added using bun test
 - [Phase 04]: useMemo over inline Zustand selector for derived arrays prevents getSnapshot infinite loop in jsdom
 - [Phase 04]: vi.mock(@tanstack/react-virtual) required for jsdom test isolation (ResizeObserver not available)
+- [Phase 04]: Hello frame serialized as template literal to survive biome multi-line formatting — grep acceptance criteria requires type/source/version on one line
+- [Phase 04]: userData.test.ts uses node:path join() for expected paths — Windows backslash separator breaks literal forward-slash comparisons
+- [Phase 04]: vi.advanceTimersByTimeAsync(0) replaces non-existent vi.runAllMicrotasksAsync() in vitest 4.x
 
 ### Pending Todos
 
@@ -96,8 +100,8 @@ Recent decisions affecting current work:
 
 ## Session Continuity
 
-Last session: 2026-04-28T10:27:47.239Z
-Stopped at: Completed 04-04-PLAN.md
+Last session: 2026-04-28T10:57:37.085Z
+Stopped at: Completed 04-05-PLAN.md
 
 ### Wave 1 recovery context (READ FIRST on resume)
 

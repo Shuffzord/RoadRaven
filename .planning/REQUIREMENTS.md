@@ -76,7 +76,7 @@
 - [ ] **PLUG-05**: Side panel Integration zone shows: connection status (connected / disconnected), last event timestamp, last received `meta` as a key-value table; no custom component injection
 - [x] **PLUG-06**: Connection drops and malformed events surface as non-blocking toasts with a retry / dismiss option
 - [x] **PLUG-07**: All received events logged to in-app event log (View menu): `nodeId`, `status`, `source`, `meta`, timestamp
-- [ ] **PLUG-08**: Claude Code MCP wrapper ships as the reference Event Producer — wraps the event contract as MCP tools callable by Claude; connects to the app's WebSocket and pushes `{ nodeId, status, meta }` events
+- [x] **PLUG-08**: Claude Code MCP wrapper ships as the reference Event Producer — wraps the event contract as MCP tools callable by Claude; connects to the app's WebSocket and pushes `{ nodeId, status, meta }` events
 - [x] **PLUG-09**: `plugin` and `subscribe` blocks in node JSON are parsed and stored by the Zod schema validator in v1 but not acted on — fields are reserved for the v1.1 plugin system; unknown `plugin.id` values are silently accepted (no warning in v1)
 
 ### Export (EXPO)
