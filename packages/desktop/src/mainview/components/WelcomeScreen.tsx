@@ -1,3 +1,5 @@
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useEventApiStore } from "../store/eventApiStore";
 import ravenLogo from "../assets/raven-logo.svg";
 
 /** Extract filename from a path (browser-safe, no node:path) */
@@ -23,6 +25,29 @@ export function WelcomeScreen({
 	onOpenSample,
 	onNewRoadmap,
 }: WelcomeScreenProps) {
+	const eventApiStatus = useEventApiStore((s) => s.status);
+	const eventApiPort = useEventApiStore((s) => s.port);
+	const [copied, setCopied] = useState(false);
+	const copyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+	useEffect(() => {
+		return () => {
+			if (copyTimerRef.current) clearTimeout(copyTimerRef.current);
+		};
+	}, []);
+
+	const handleCopyUrl = useCallback(async () => {
+		if (eventApiPort === null) return;
+		const url = `ws://127.0.0.1:${eventApiPort}`;
+		try {
+			await navigator.clipboard.writeText(url);
+		} catch {
+			// clipboard may be denied in some CEF builds
+		}
+		setCopied(true);
+		copyTimerRef.current = setTimeout(() => setCopied(false), 1200);
+	}, [eventApiPort]);
+
 	return (
 		<div className="absolute inset-0 flex items-center justify-center z-10">
 			<div className="bg-rv-bg-surface border border-rv-border rounded-[12px] p-8 max-w-[480px] w-full shadow-[var(--rv-shadow-config)]">
@@ -120,6 +145,50 @@ export function WelcomeScreen({
 						</button>
 					</div>
 				</div>
+
+				{/* Event API URL line - D-07, UI-SPEC welcome screen URL line.
+				    Hidden when server is off or in error state. */}
+				{eventApiStatus === 'listening' && eventApiPort !== null && (
+					<div
+						className='welcome-event-api-line'
+						style={{
+							marginTop: 16,
+							fontSize: 11,
+							color: 'var(--rv-text-tertiary)',
+							textAlign: 'right',
+							display: 'flex',
+							alignItems: 'center',
+							justifyContent: 'flex-end',
+							gap: 6,
+						}}
+					>
+						<span>Event API:</span>
+						<span
+							style={{
+								fontFamily: 'ui-monospace, monospace',
+								color: 'var(--rv-text-secondary)',
+							}}
+						>
+							ws://127.0.0.1:{eventApiPort}
+						</span>
+						<button
+							type='button'
+							onClick={() => void handleCopyUrl()}
+							style={{
+								background: 'none',
+								border: 'none',
+								cursor: 'pointer',
+								color: copied
+									? 'var(--rv-status-completed)'
+									: 'var(--rv-accent)',
+								fontSize: 11,
+								padding: '0 2px',
+							}}
+						>
+							{copied ? 'Copied ✓' : 'Copy'}
+						</button>
+					</div>
+				)}
 			</div>
 		</div>
 	);

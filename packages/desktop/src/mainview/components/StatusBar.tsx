@@ -1,4 +1,5 @@
 import { useRoadmapStore } from "../store/roadmapStore";
+import { EventApiPill } from "./EventApiPill";
 import { SaveIndicator } from "./SaveIndicator";
 
 export function StatusBar() {
@@ -9,10 +10,9 @@ export function StatusBar() {
 
 	return (
 		<footer className="[grid-area:status] flex items-center h-[32px] bg-rv-bg-statusbar border-t border-rv-border px-3.5 text-[11px] text-rv-text-tertiary z-[100] select-none">
-			{/* Left section */}
+			{/* Left section — Event API status pill (replaces static ● Connected) */}
 			<div className="flex items-center gap-2.5">
-				<span className="w-[7px] h-[7px] rounded-full bg-rv-status-completed shrink-0" />
-				<span>Connected</span>
+				<EventApiPill />
 			</div>
 
 			{/* Spacer */}
