@@ -7,12 +7,15 @@
   // such as App.tsx being "100% dead".
 
   // Entry points fallow can't discover on its own.
-  // - src/bun/index.ts          — Electrobun main process, loaded by electrobun runtime
-  // - src/mainview/index.html   — Vite root; boots main.tsx which renders App
-  // - src/mainview/main.tsx     — belt-and-braces (in case HTML <script> isn't followed)
-  // - *.config.ts               — Vite/Vitest/Electrobun/Playwright tool configs
+  // - src/bun/index.ts                 — Electrobun main process, loaded by electrobun runtime
+  // - src/bun/eventServerStandalone.ts — headless Bun launcher spawned by eventApi-e2e.test.ts
+  //                                      (spawn("bun", ["run", ...]) — not statically importable)
+  // - src/mainview/index.html          — Vite root; boots main.tsx which renders App
+  // - src/mainview/main.tsx            — belt-and-braces (in case HTML <script> isn't followed)
+  // - *.config.ts                      — Vite/Vitest/Electrobun/Playwright tool configs
   "entry": [
     "packages/desktop/src/bun/index.ts",
+    "packages/desktop/src/bun/eventServerStandalone.ts",
     "packages/desktop/src/mainview/index.html",
     "packages/desktop/src/mainview/main.tsx",
     "packages/desktop/electrobun.config.ts",
