@@ -1,6 +1,7 @@
 import ravenLogo from "../assets/raven-logo.svg";
 import { useFileActions } from "../hooks/useFileActions";
 import { electroview } from "../rpc";
+import { useEventLogStore } from "../store/eventLogStore";
 import { useRoadmapStore } from "../store/roadmapStore";
 import { ThemePicker } from "./ThemePicker";
 
@@ -9,6 +10,7 @@ export function TopBar() {
 	const setLayout = useRoadmapStore((s) => s.setLayout);
 	const filePath = useRoadmapStore((s) => s.filePath);
 	const { openFile, newRoadmap } = useFileActions();
+	const isDrawerOpen = useEventLogStore((s) => s.isOpen);
 
 	const handleLayoutChange = (value: "TB" | "LR") => {
 		setLayout(value);
@@ -118,6 +120,36 @@ export function TopBar() {
 
 			{/* Spacer */}
 			<div className="flex-1" />
+
+			{/* Events toggle button (D-18) */}
+			<button
+				type="button"
+				aria-label="Toggle event log drawer"
+				title="Toggle event log drawer (Ctrl+Shift+L)"
+				onClick={() => useEventLogStore.getState().toggleOpen()}
+				style={{
+					color: isDrawerOpen ? "var(--rv-accent)" : undefined,
+					borderBottom: isDrawerOpen
+						? "1px solid var(--rv-accent)"
+						: "1px solid transparent",
+				}}
+				className="flex items-center gap-1.5 px-2.5 py-[5px] rounded-[6px] text-[12px] font-semibold text-rv-text-secondary hover:bg-rv-bg-hover hover:text-rv-text-primary transition-all duration-150"
+			>
+				<svg
+					aria-hidden="true"
+					width="16"
+					height="16"
+					viewBox="0 0 16 16"
+					fill="none"
+					stroke="currentColor"
+					strokeWidth="2"
+				>
+					<line x1="4" y1="12" x2="4" y2="8" />
+					<line x1="8" y1="12" x2="8" y2="5" />
+					<line x1="12" y1="12" x2="12" y2="9" />
+				</svg>
+				Events
+			</button>
 
 			{/* Fit button */}
 			<button
