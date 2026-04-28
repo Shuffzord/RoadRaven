@@ -1,15 +1,14 @@
 import { z } from "zod";
 
-export const HELLO_GRACE_MS = 2000; // D-05 grace window
 export const META_MAX_BYTES = 8 * 1024; // RESEARCH §4.1 cap
 
-export const HelloFrameSchema = z.object({
+const HelloFrameSchema = z.object({
 	type: z.literal("hello"),
 	source: z.string().min(1).max(64),
 	version: z.string().optional(),
 });
 
-export const EventFrameSchema = z.object({
+const EventFrameSchema = z.object({
 	nodeId: z.string().min(1), // permissive — NOT .uuid() per RESEARCH §2.1
 	status: z.string().min(1).max(64),
 	meta: z
@@ -24,10 +23,7 @@ export const EventFrameSchema = z.object({
 	source: z.string().max(64).optional(),
 });
 
-export const IncomingFrameSchema = z.union([
-	HelloFrameSchema,
-	EventFrameSchema,
-]);
+const IncomingFrameSchema = z.union([HelloFrameSchema, EventFrameSchema]);
 
 export type HelloFrame = z.infer<typeof HelloFrameSchema>;
 export type EventFrame = z.infer<typeof EventFrameSchema>;

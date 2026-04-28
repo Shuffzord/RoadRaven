@@ -187,7 +187,7 @@ Plans:
 - [x] 04-03-PLAN.md — Wave 2: eventApiStore + roadmapStore.applyEventBatch + liveEventMeta + isNodeLive selector + 1Hz tick, pulse CSS (reduced-motion fallback), EventApiPill status-bar component, WelcomeScreen URL line, SidePanel IntegrationZone, EventToast + EventToastStack with 5s throttle-merge, setNodeAllowlist pushed on dataKey bump (PLUG-03 renderer, PLUG-04, PLUG-05, PLUG-06)
 - [x] 04-04-PLAN.md — Wave 2: eventLogStore with 1000-row sliding window + filter predicates, EventLogDrawer with @tanstack/react-virtual, EventLogRow + EventLogFilterBar, TopBar Events toggle button, Ctrl+Shift+L keyboard binding, row-click-selects-node + camera-follow (PLUG-06, PLUG-07)
 - [x] 04-05-PLAN.md — Wave 3: Claude Code MCP wrapper at plugins/claude-code/ — node-only runtime, sentinel resolver + PID liveness, WS client with exponential backoff capped at 30s, hello frame, updateNodeStatus + getEventApiStatus tools via @modelcontextprotocol/sdk StdioServerTransport, README (PLUG-08)
-- [ ] 04-06-PLAN.md — Wave 5 (gap closure): UAT-driven fixes for pulse animation visibility (UAT-1, inline boxShadow override), connected EventApiPill click opens drawer (UAT-3, dynamic-import workaround), and drawer close affordances [×] button + Escape-while-focused (drive-by). PLUG-04, PLUG-06, PLUG-07
+- [ ] 04-06-PLAN.md — Wave 5 (gap closure): UAT-driven fixes for pulse animation visibility (UAT-1, inline boxShadow override), connected EventApiPill click opens drawer (UAT-3, dynamic-import workaround), and drawer close affordances [×] button + Escape-while-focused (drive-by). PLUG-01, PLUG-04, PLUG-07
 
 **Done when:**
 - WebSocket server starts with the app; port is visible to the user (status bar or welcome screen)

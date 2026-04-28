@@ -4,7 +4,7 @@ import { join } from "node:path";
 import { atomicWrite } from "./atomicWrite";
 import { getUserDataDir } from "./settings";
 
-export const SENTINEL_FILENAME = "event-api.json";
+const SENTINEL_FILENAME = "event-api.json";
 
 export interface SentinelShape {
 	port: number;

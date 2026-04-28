@@ -2,10 +2,10 @@ import { useEffect, useRef } from "react";
 import { electroview } from "../rpc";
 import { useRoadmapStore } from "../store/roadmapStore";
 
-export const STRUCTURAL_DEBOUNCE_MS = 2000;
+const STRUCTURAL_DEBOUNCE_MS = 2000;
 export const NOTES_DEBOUNCE_MS = 1000;
-export const PERIODIC_MS = 30_000;
-export const RETRY_DELAY_MS = 5000;
+const PERIODIC_MS = 30_000;
+const RETRY_DELAY_MS = 5000;
 
 /**
  * Core autosave engine (EDIT-13).

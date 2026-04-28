@@ -20,7 +20,6 @@ import { serverLogger } from "./logging";
 
 export { getSidecarPath };
 
-export const FLUSH_MS = FLUSH_MS_DEFAULT; // PLUG-03 / D-25
 export const DEFAULT_PORT = 47921; // D-01
 export const PORT_FALLBACK_RANGE = 10; // scan +0..+9 per D-01
 
@@ -70,7 +69,7 @@ export async function startEventServer(
 	const allowlist: Allowlist = { nodeIds: new Set(), statusIds: new Set() };
 	let sidecarPath: string | null = null;
 	const connections = new Set<ServerWebSocket<WsData>>();
-	const coalescer = new EventCoalescer(FLUSH_MS, opts.onFlush);
+	const coalescer = new EventCoalescer(FLUSH_MS_DEFAULT, opts.onFlush);
 
 	const candidates = opts.isUserSpecified
 		? [opts.requestedPort]

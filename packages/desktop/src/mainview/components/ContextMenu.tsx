@@ -74,7 +74,7 @@ export function RoadRavenContextMenu({
 	);
 }
 
-export function NodeMenuItems({ nodeId }: { nodeId: string }) {
+function NodeMenuItems({ nodeId }: { nodeId: string }) {
 	const {
 		addChild,
 		addSiblingAbove,
@@ -236,7 +236,7 @@ export function NodeMenuItems({ nodeId }: { nodeId: string }) {
 	);
 }
 
-export function CanvasMenuItems() {
+function CanvasMenuItems() {
 	const { pasteFromClipboard, setLayout, resetView, addChild } =
 		useRoadmapStore(
 			useShallow((s) => ({

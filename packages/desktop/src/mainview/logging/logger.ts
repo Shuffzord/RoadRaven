@@ -1,4 +1,4 @@
-import { configure, getConsoleSink, getLogger } from "@logtape/logtape";
+import { configure, getConsoleSink } from "@logtape/logtape";
 
 // RPC log forwarding: on failure, buffer up to 3 entries for one retry
 // on next success. After 3 consecutive failures, entries are dropped
@@ -78,8 +78,3 @@ export async function setupWebviewLogging(): Promise<void> {
 		],
 	});
 }
-
-// Hierarchical category loggers per D-24
-export const themeLogger = getLogger(["webview", "theme"]);
-export const storeLogger = getLogger(["webview", "store"]);
-export const uiLogger = getLogger(["webview", "ui"]);

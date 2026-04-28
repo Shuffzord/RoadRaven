@@ -11,9 +11,9 @@ export interface EventLogLine {
 	_error?: "malformed" | "unknown_node" | "invalid_status";
 }
 
-export const SIDECAR_SUFFIX = ".events.jsonl";
-export const HYDRATE_EVENT_CAP = 1000; // RESEARCH §4.5 — matches eventLogStore window
-export const MALFORMED_RAW_CAP = 200; // RESEARCH §4.2 — truncate for synthesized malformed lines
+const SIDECAR_SUFFIX = ".events.jsonl";
+const HYDRATE_EVENT_CAP = 1000; // RESEARCH §4.5 — matches eventLogStore window
+const MALFORMED_RAW_CAP = 200; // RESEARCH §4.2 — truncate for synthesized malformed lines
 
 export function getSidecarPath(sourcePath: string): string {
 	return `${sourcePath}${SIDECAR_SUFFIX}`;

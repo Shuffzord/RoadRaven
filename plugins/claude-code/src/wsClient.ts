@@ -1,8 +1,8 @@
 import { readSentinel } from "./sentinel";
 
 export const RECONNECT_DELAYS_MS = [500, 1000, 2000, 4000, 8000, 16000, 30000];
-export const RECONNECT_CAP_MS = 30000;
-export const JITTER_MAX_MS = 200;
+const RECONNECT_CAP_MS = 30000;
+const JITTER_MAX_MS = 200;
 
 export interface WsClientOptions {
 	source: string;

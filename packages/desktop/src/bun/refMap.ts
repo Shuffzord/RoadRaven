@@ -29,10 +29,6 @@ export function setSourceTemplate(
 	};
 }
 
-export function getSourceTemplate(): typeof sourceTemplate {
-	return sourceTemplate;
-}
-
 /**
  * Build a fresh ownership map rooted at `mainFilePath`. Every node in `rootNodes`
  * (and every descendant) is tagged as owned by `mainFilePath`. Ref-owned descendants

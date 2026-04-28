@@ -72,10 +72,6 @@ export function clearCachedMainPath(): void {
 	cachedMainPath = null;
 }
 
-export function getCachedMainPath(): string | null {
-	return cachedMainPath;
-}
-
 /**
  * True when `absolutePath` resolves inside the directory of the currently
  * loaded main file. Used by the resolveRef RPC to block traversal outside
@@ -358,8 +354,4 @@ export function __setCachedMainPathForTests(path: string): void {
 
 export function __pushDialogAllowlistPathForTests(path: string): void {
 	pushDialogAllowlistPath(path);
-}
-
-export function __getCachedMainPathForTests(): string | null {
-	return cachedMainPath;
 }
