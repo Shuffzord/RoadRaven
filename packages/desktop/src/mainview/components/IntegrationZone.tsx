@@ -244,8 +244,10 @@ export function IntegrationZone({ nodeId }: Props) {
 												padding: "2px 0",
 											}}
 										>
-											{new Date(r.timestamp).toLocaleTimeString()} {r.status}{" "}
-											{r.source ?? "—"}
+											{r.timestamp
+												? new Date(r.timestamp).toLocaleTimeString()
+												: "—"}{" "}
+											{r.status} {r.source ?? "—"}
 										</li>
 									))}
 								</ul>

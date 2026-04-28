@@ -45,12 +45,9 @@ export function createWsClient(opts: WsClientOptions): WsClient {
 				ws = socket;
 				connected = true;
 				attempt = 0;
+				// hello frame: type="hello", source, version (D-27 RESEARCH §1.5)
 				socket.send(
-					JSON.stringify({
-						type: "hello",
-						source: opts.source,
-						version: opts.version,
-					}),
+					`{"type":"hello","source":${JSON.stringify(opts.source)},"version":${JSON.stringify(opts.version)}}`,
 				);
 				resolve(true);
 			});
