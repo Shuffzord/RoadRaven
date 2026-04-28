@@ -10,6 +10,7 @@ import { StatusBar } from "./components/StatusBar";
 import { TopBar } from "./components/TopBar";
 import { useAutosave } from "./hooks/useAutosave";
 import { useFileActions } from "./hooks/useFileActions";
+import { pushAllowlistFromStore } from "./rpc";
 import { useRoadmapStore } from "./store/roadmapStore";
 
 // Dev-only harness for previewing panels (auto-discovered). Vite treeshakes this
@@ -42,6 +43,32 @@ export default function App() {
 			useRoadmapStore.getState().bumpLiveTick();
 		}, 1000);
 		return () => clearInterval(t);
+	}, []);
+
+	// Plan 04-03: push node/status allowlist to Bun on mount and on schema changes.
+	// Uses plain store.subscribe (no subscribeWithSelector — I-01) with manual
+	// prev-value tracking. dataKey changes on every structural edit; statusConfig
+	// identity changes when the user edits status entries.
+	useEffect(() => {
+		// Initial push (schema may already be loaded if HMR reloads this component)
+		if (useRoadmapStore.getState().schema) {
+			void pushAllowlistFromStore();
+		}
+
+		let prevDataKey = useRoadmapStore.getState().dataKey;
+		let prevStatusConfig = useRoadmapStore.getState().schema?.statusConfig;
+
+		const unsub = useRoadmapStore.subscribe((state) => {
+			const dataKeyChanged = state.dataKey !== prevDataKey;
+			const statusConfigChanged = state.schema?.statusConfig !== prevStatusConfig;
+			if (dataKeyChanged || statusConfigChanged) {
+				prevDataKey = state.dataKey;
+				prevStatusConfig = state.schema?.statusConfig;
+				void pushAllowlistFromStore();
+			}
+		});
+
+		return unsub;
 	}, []);
 
 	// Dev-only test hook for deterministic UI tests (Playwright render-budget

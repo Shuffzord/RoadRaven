@@ -91,6 +91,53 @@ describe("Event API integration", () => {
 		expect(disconnectErrors[0].source).toBe("producer-1");
 	}, 5000);
 
+	it("pushEventApiError fires onError for malformed event (I-09)", async () => {
+		const errors: Array<{ type: string; source: string; detail?: string }> = [];
+		const result = await startEventServer({
+			...NO_OP,
+			requestedPort: 0,
+			isUserSpecified: true,
+			onError: (err) => errors.push(err),
+		});
+		expect(result.ok).toBe(true);
+		if (!result.ok) return;
+		handles.push(result.handle);
+
+		const ws = new WebSocket(`ws://127.0.0.1:${result.handle.port}`);
+		await new Promise<void>((r) => ws.addEventListener("open", () => r()));
+		ws.send("not valid json at all");
+		await new Promise((r) => setTimeout(r, 100));
+		ws.close();
+		await new Promise((r) => setTimeout(r, 50));
+
+		const malformedErrors = errors.filter((e) => e.type === "malformed");
+		expect(malformedErrors).toHaveLength(1);
+		expect(malformedErrors[0].detail).toBeDefined();
+	}, 5000);
+
+	it("connectedCount increments on connect and decrements on disconnect (I-09)", async () => {
+		const counts: number[] = [];
+		const result = await startEventServer({
+			...NO_OP,
+			requestedPort: 0,
+			isUserSpecified: true,
+			onConnectionChange: (count) => counts.push(count),
+		});
+		expect(result.ok).toBe(true);
+		if (!result.ok) return;
+		handles.push(result.handle);
+
+		const ws = new WebSocket(`ws://127.0.0.1:${result.handle.port}`);
+		await new Promise<void>((r) => ws.addEventListener("open", () => r()));
+		await new Promise((r) => setTimeout(r, 30));
+		ws.close();
+		await new Promise((r) => setTimeout(r, 100));
+
+		// First call: count=1 (connect), second call: count=0 (disconnect)
+		expect(counts[0]).toBe(1);
+		expect(counts[counts.length - 1]).toBe(0);
+	}, 5000);
+
 	it("malformed event appears in events.jsonl with _error", async () => {
 		const tempDir = mkdtempSync(join(tmpdir(), "eventapi-test-"));
 		const sidecarPath = join(tempDir, "test.events.jsonl");

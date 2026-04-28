@@ -8,10 +8,69 @@
  * place — covered by tests/unit/store/fileActions.test.ts. The clean-state
  * branch preserves Phase 2's auto-reload behavior; the dirty branch routes
  * through setExternalEdit → ExternalEditToast.
+ *
+ * Plan 04-03: Added pushStatusUpdate, pushEventApiState, pushEventApiError,
+ * and pushEventLog (no-op stub until Plan 04-04).
  */
+import type { IntegrationEvent } from "../../../../shared/types";
+
 export async function handlePushFileChanged(msg: {
 	path: string;
 }): Promise<void> {
 	const { handleExternalFileChange } = await import("./hooks/useFileActions");
 	await handleExternalFileChange(msg);
+}
+
+/**
+ * pushStatusUpdate — applies batched node status updates in-place via
+ * applyEventBatch. Does NOT bump dataKey (PLUG-03 dataKey invariant).
+ */
+export async function handlePushStatusUpdate(msg: {
+	updates: Array<{
+		nodeId: string;
+		status: string;
+		meta?: Record<string, unknown>;
+		source?: string;
+		lastEventAt: number;
+	}>;
+}): Promise<void> {
+	const { useRoadmapStore } = await import("./store/roadmapStore");
+	useRoadmapStore.getState().applyEventBatch(msg.updates);
+}
+
+/**
+ * pushEventApiState — forwards Bun-side server state to eventApiStore.
+ * Drives the EventApiPill colour state machine (D-06, I-09 fix).
+ */
+export async function handlePushEventApiState(msg: {
+	status: "off" | "listening" | "error";
+	port: number | null;
+	connectedCount: number;
+	errorMessage: string | null;
+}): Promise<void> {
+	const { useEventApiStore } = await import("./store/eventApiStore");
+	useEventApiStore.getState().setState(msg);
+}
+
+/**
+ * pushEventApiError — pushes a toast for malformed/unknown_node/invalid_status
+ * /disconnect events received by the Bun WebSocket server (PLUG-06, D-23).
+ */
+export async function handlePushEventApiError(msg: {
+	type: "malformed" | "unknown_node" | "invalid_status" | "disconnect";
+	source: string;
+	detail?: string;
+}): Promise<void> {
+	const { useToastStore } = await import("./store/toastStore");
+	useToastStore.getState().pushToast(msg);
+}
+
+/**
+ * pushEventLog — no-op stub until Plan 04-04 wires eventLogStore.appendEvents.
+ * The handler must exist to satisfy the RPC contract so live events don't error
+ * when 04-02 ships ahead of 04-04 (I-20 intentional wave-order compromise).
+ */
+export function handlePushEventLog(_msg: { events: IntegrationEvent[] }): void {
+	// TODO: Plan 04-04 wires this into eventLogStore.appendEvents(events)
+	// For now: no-op — drawer will be empty until Plan 04-04 ships
 }

@@ -81,8 +81,14 @@ let eventServerHandle: EventServerHandle | null = null;
 // are closures — they capture the `mainWindow` binding which will be assigned
 // before any WebSocket events arrive (server binds before window is shown but
 // events require a WS producer to connect after the app is visible).
-// Plan 04-03 Task 6 (I-09 fix) will restructure this to run after mainWindow
-// creation and upgrade onError/onConnectionChange to active rpc.send.pushEventApi* calls.
+//
+// I-09 fix (Plan 04-03 Task 6): onError and onConnectionChange now send active
+// pushEventApi* RPC messages. State vars below track current server state so
+// onConnectionChange can report the correct port/status alongside the count.
+let currentStatus: "off" | "listening" | "error" = "off";
+let currentPort: number | null = null;
+let currentErrorMessage: string | null = null;
+
 const eventServerResult = await startEventServer({
 	requestedPort,
 	isUserSpecified,
@@ -92,15 +98,27 @@ const eventServerResult = await startEventServer({
 	onEvent: (event) => {
 		mainWindow.webview.rpc?.send.pushEventLog({ events: [event] });
 	},
-	onError: (_err) => {
-		// Plan 04-03 Task 6 (I-09 fix): upgrade to mainWindow.webview.rpc?.send.pushEventApiError(_err)
+	onError: (err) => {
+		mainWindow.webview.rpc?.send.pushEventApiError({
+			type: err.type,
+			source: err.source,
+			detail: err.detail,
+		});
 	},
-	onConnectionChange: (_count) => {
-		// Plan 04-03 Task 6 (I-09 fix): upgrade to mainWindow.webview.rpc?.send.pushEventApiState(...)
+	onConnectionChange: (count) => {
+		mainWindow.webview.rpc?.send.pushEventApiState({
+			status: currentStatus,
+			port: currentPort,
+			connectedCount: count,
+			errorMessage: currentErrorMessage,
+		});
 	},
 });
 if (eventServerResult.ok) {
 	eventServerHandle = eventServerResult.handle;
+	currentStatus = "listening";
+	currentPort = eventServerHandle.port;
+	currentErrorMessage = null;
 	await writeSentinel({
 		port: eventServerHandle.port,
 		url: `ws://127.0.0.1:${eventServerHandle.port}`,
@@ -109,8 +127,10 @@ if (eventServerResult.ok) {
 	});
 	serverLogger.info`event server listening on :${eventServerHandle.port}`;
 } else {
+	currentStatus = "error";
+	currentPort = null;
+	currentErrorMessage = `Failed to bind on attempted ports: ${eventServerResult.attempted.join(", ")}`;
 	serverLogger.error`event server failed to bind, attempted: ${eventServerResult.attempted.join(",")}`;
-	// Leave handle null; renderer will see pushEventApiState with error in Plan 04-03
 }
 
 const DEV_SERVER_PORT = 5173;
@@ -580,6 +600,16 @@ export const mainWindow = new BrowserWindow({
 Utils.showNotification({
 	title: "RoadRaven",
 	body: "RoadRaven is running.",
+});
+
+// I-09 fix: push initial event server state to the renderer immediately after
+// the window is created so EventApiPill reflects the correct colour on first render.
+// connectedCount is 0 at startup — no producer can have connected yet.
+mainWindow.webview.rpc?.send.pushEventApiState({
+	status: currentStatus,
+	port: currentPort,
+	connectedCount: 0,
+	errorMessage: currentErrorMessage,
 });
 
 bunLogger.info("RoadRaven main process initialized");
