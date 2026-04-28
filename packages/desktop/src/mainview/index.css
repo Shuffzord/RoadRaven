@@ -720,33 +720,36 @@ body {
 		0 0 0 5px var(--rv-accent);
 }
 
-/* --- Phase 4: Live event pulse (D-14, D-15; UI-SPEC §Pulse animation) --- */
-@keyframes rv-node-pulse {
-	0% {
-		box-shadow:
-			0 0 0 0px var(--rv-status-completed-bg),
-			var(--rv-shadow-node, 0 1px 3px rgba(0, 0, 0, 0.3));
-	}
-	50% {
-		box-shadow:
-			0 0 0 6px var(--rv-status-completed-bg),
-			var(--rv-shadow-node, 0 1px 3px rgba(0, 0, 0, 0.3));
-	}
-	100% {
-		box-shadow:
-			0 0 0 0px var(--rv-status-completed-bg),
-			var(--rv-shadow-node, 0 1px 3px rgba(0, 0, 0, 0.3));
-	}
+/* --- Phase 4 gap closure 04-06: Live event pulse via ::after pseudo-element
+   (root-cause: foreignObject in Canvas.tsx:266-270 clips outer box-shadows;
+   ::after paints inside the card stacking context, sidesteps the clip) --- */
+.node::after {
+	content: "";
+	position: absolute;
+	inset: -3px;
+	border-radius: inherit;
+	border: 0px solid var(--rv-status-completed-bg);
+	opacity: 0;
+	pointer-events: none;
 }
-
-.node[data-live="true"] {
+.node[data-live="true"]::after {
 	animation: rv-node-pulse 1600ms ease-in-out infinite;
 }
-
+@keyframes rv-node-pulse {
+	0%,
+	100% {
+		border-width: 0;
+		opacity: 0;
+	}
+	50% {
+		border-width: 3px;
+		opacity: 1;
+	}
+}
 @media (prefers-reduced-motion: reduce) {
-	.node[data-live="true"] {
+	.node[data-live="true"]::after {
 		animation: none;
-		outline: 2px solid var(--rv-status-completed);
-		outline-offset: 2px;
+		border: 2px solid var(--rv-status-completed);
+		opacity: 1;
 	}
 }
