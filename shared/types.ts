@@ -107,6 +107,19 @@ export type RoadmapRPCType = {
 				params: { nodeIds: string[]; statusIds: string[] };
 				response: { ok: true };
 			};
+			// Renderer-pulls-on-mount path so the EventApiPill / Welcome URL line do
+			// not depend on the Bun→renderer push at startup landing before the
+			// bundle's RPC handlers register (the push at index.ts initial-state
+			// site races bundle load and was dropped silently — UAT D-07 regression).
+			getEventApiState: {
+				params: Record<string, never>;
+				response: {
+					status: "off" | "listening" | "error";
+					port: number | null;
+					connectedCount: number;
+					errorMessage: string | null;
+				};
+			};
 		};
 		messages: {
 			nodeStatusUpdate: {

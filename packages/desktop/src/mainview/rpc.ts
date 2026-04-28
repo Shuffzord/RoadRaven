@@ -69,6 +69,24 @@ try {
 export const electroview = instance;
 
 /**
+ * pullEventApiStateOnMount — request the Bun process's current Event API state
+ * and seed eventApiStore. The Bun-side initial push races bundle load and is
+ * dropped silently if the renderer's RPC handlers haven't registered yet,
+ * leaving the pill and Welcome URL line stuck at "off".
+ */
+export async function pullEventApiStateOnMount(): Promise<void> {
+	if (!electroview?.rpc) return;
+	try {
+		const state = await electroview.rpc.request.getEventApiState({});
+		const { useEventApiStore } = await import("./store/eventApiStore");
+		useEventApiStore.getState().setState(state);
+	} catch {
+		// Bun may still be starting; the push from onConnectionChange / onError
+		// will fill in later if it lands after handlers register.
+	}
+}
+
+/**
  * pushAllowlistFromStore — collect all node IDs and status IDs from the current
  * schema and send setNodeAllowlist to the Bun process. Called on mount and on
  * every dataKey / statusConfig change (RESEARCH §2.3 Pitfall 3, I-01 resolution).

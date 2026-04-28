@@ -11,7 +11,7 @@ import { StatusBar } from "./components/StatusBar";
 import { TopBar } from "./components/TopBar";
 import { useAutosave } from "./hooks/useAutosave";
 import { useFileActions } from "./hooks/useFileActions";
-import { pushAllowlistFromStore } from "./rpc";
+import { pullEventApiStateOnMount, pushAllowlistFromStore } from "./rpc";
 import { useRoadmapStore } from "./store/roadmapStore";
 
 // Dev-only harness for previewing panels (auto-discovered). Vite treeshakes this
@@ -44,6 +44,14 @@ export default function App() {
 			useRoadmapStore.getState().bumpLiveTick();
 		}, 1000);
 		return () => clearInterval(t);
+	}, []);
+
+	// Phase 04 UAT fix: pull current Event API state on mount. The Bun-side
+	// initial push races bundle load and is dropped silently if the renderer's
+	// RPC handlers haven't registered yet, leaving the pill / Welcome URL line
+	// stuck at "off".
+	useEffect(() => {
+		void pullEventApiStateOnMount();
 	}, []);
 
 	// Plan 04-03: push node/status allowlist to Bun on mount and on schema changes.

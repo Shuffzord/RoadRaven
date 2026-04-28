@@ -88,6 +88,7 @@ let eventServerHandle: EventServerHandle | null = null;
 let currentStatus: "off" | "listening" | "error" = "off";
 let currentPort: number | null = null;
 let currentErrorMessage: string | null = null;
+let currentConnectedCount = 0;
 
 const eventServerResult = await startEventServer({
 	requestedPort,
@@ -106,6 +107,7 @@ const eventServerResult = await startEventServer({
 		});
 	},
 	onConnectionChange: (count) => {
+		currentConnectedCount = count;
 		mainWindow.webview.rpc?.send.pushEventApiState({
 			status: currentStatus,
 			port: currentPort,
@@ -445,6 +447,19 @@ const rpc = BrowserView.defineRPC<RoadmapRPCType>({
 			setNodeAllowlist: ({ nodeIds, statusIds }) => {
 				eventServerHandle?.setAllowlist(nodeIds, statusIds);
 				return { ok: true as const };
+			},
+
+			// getEventApiState handler — renderer pulls current state on mount.
+			// The Bun-side push at startup races bundle load and is dropped silently
+			// if the renderer's RPC handlers haven't registered yet (UAT D-07
+			// regression: pill / welcome URL line stuck at "off").
+			getEventApiState: () => {
+				return {
+					status: currentStatus,
+					port: currentPort,
+					connectedCount: currentConnectedCount,
+					errorMessage: currentErrorMessage,
+				};
 			},
 
 			// saveSettings handler
