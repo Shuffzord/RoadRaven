@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { useEventLogStore } from "../store/eventLogStore";
 import { useIsNodeLive, useRoadmapStore } from "../store/roadmapStore";
 
 interface Props {
@@ -34,9 +35,21 @@ export function IntegrationZone({ nodeId }: Props) {
 	);
 	const isLive = useIsNodeLive(nodeId ?? "");
 
-	// NOTE: recentEvents hook lands in Plan 04-04 via eventLogStore; returns []
-	// when unwired. Plan 04-04 will replace this stub with useRecentEventsForNode.
-	const recent: Array<{ t: string; status: string; source?: string }> = []; // Plan 04-04 fills this
+	// Mini-history: last 5 events for this node from eventLogStore (I-17, Plan 04-04).
+	// Select the raw rows array (stable ref — changes only on appendEvents) then
+	// derive the filtered slice via useMemo to avoid creating a new array on every
+	// selector call (which would trigger "getSnapshot should be cached" infinite loop).
+	const allRows = useEventLogStore((s) => s.rows);
+	const recent = useMemo(
+		() =>
+			nodeId
+				? allRows
+						.filter((r) => r.nodeId === nodeId)
+						.slice(-5)
+						.reverse()
+				: [],
+		[allRows, nodeId],
+	);
 
 	const [historyOpen, setHistoryOpen] = useState(false);
 
@@ -231,7 +244,7 @@ export function IntegrationZone({ nodeId }: Props) {
 												padding: "2px 0",
 											}}
 										>
-											{new Date(r.t).toLocaleTimeString()} {r.status}{" "}
+											{new Date(r.timestamp).toLocaleTimeString()} {r.status}{" "}
 											{r.source ?? "—"}
 										</li>
 									))}
@@ -252,7 +265,9 @@ export function IntegrationZone({ nodeId }: Props) {
 							padding: 0,
 						}}
 						onClick={() => {
-							/* TODO Plan 04-04: useEventLogStore.getState().setOpen(true) + setFilterSelectedNodeOnly(true) */
+							const store = useEventLogStore.getState();
+							store.setOpen(true);
+							store.setFilterSelectedNodeOnly(true);
 						}}
 					>
 						Open full log →

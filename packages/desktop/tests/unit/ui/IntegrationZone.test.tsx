@@ -1,20 +1,34 @@
 // @vitest-environment jsdom
 // Phase 4 Plan 04-03 Task 4 — IntegrationZone real tests.
-// Sources: D-16 in 04-CONTEXT.md, PLUG-05, UI-SPEC §"SidePanel Integration zone".
+// Plan 04-04 Task 4 — extended with mini-history and open-log tests.
+// Sources: D-16, I-17 in 04-CONTEXT.md, PLUG-05, UI-SPEC §"SidePanel Integration zone".
 
 import "@testing-library/jest-dom";
-import { act, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { IntegrationZone } from "../../../src/mainview/components/IntegrationZone";
+import { useEventLogStore } from "../../../src/mainview/store/eventLogStore";
 import { useRoadmapStore } from "../../../src/mainview/store/roadmapStore";
 
 beforeEach(() => {
 	vi.useFakeTimers();
 	useRoadmapStore.setState({ liveEventMeta: {}, liveTick: 0 });
+	useEventLogStore.setState({
+		rows: [],
+		filter: { source: null, selectedNodeOnly: false, status: null },
+		isOpen: false,
+		drawerHeightPx: 300,
+	});
 });
 
 afterEach(() => {
 	vi.useRealTimers();
+	useEventLogStore.setState({
+		rows: [],
+		filter: { source: null, selectedNodeOnly: false, status: null },
+		isOpen: false,
+		drawerHeightPx: 300,
+	});
 });
 
 describe("IntegrationZone (D-16)", () => {
@@ -104,5 +118,62 @@ describe("IntegrationZone (D-16)", () => {
 	it("renders null nodeId as empty state", () => {
 		render(<IntegrationZone nodeId={null} />);
 		expect(screen.getByText(/— No events received/)).toBeInTheDocument();
+	});
+
+	it("mini-history: shows recent events disclosure when events exist for node (I-17)", () => {
+		const now = Date.now();
+		vi.setSystemTime(now);
+		act(() => {
+			useRoadmapStore.setState({
+				liveEventMeta: {
+					n1: { lastEventAt: now - 5_000, source: "test-agent" },
+				},
+				liveTick: 1,
+			});
+			useEventLogStore.getState().appendEvents([
+				{
+					nodeId: "n1",
+					status: "in-progress",
+					source: "test-agent",
+					timestamp: new Date(now - 3000).toISOString(),
+				},
+				{
+					nodeId: "n1",
+					status: "done",
+					source: "test-agent",
+					timestamp: new Date(now - 1000).toISOString(),
+				},
+				{
+					nodeId: "n2",
+					status: "in-progress",
+					source: "other",
+					timestamp: new Date(now - 2000).toISOString(),
+				},
+			]);
+		});
+		render(<IntegrationZone nodeId="n1" />);
+		// Disclosure button shows count of n1 events (2), not n2
+		expect(screen.getByText(/Recent events \(2\)/)).toBeInTheDocument();
+	});
+
+	it("open full log: click sets drawer open and selectedNodeOnly filter (I-17)", () => {
+		const now = Date.now();
+		vi.setSystemTime(now);
+		act(() => {
+			useRoadmapStore.setState({
+				liveEventMeta: { n1: { lastEventAt: now - 5_000, source: "agent" } },
+				liveTick: 1,
+			});
+		});
+		render(<IntegrationZone nodeId="n1" />);
+
+		const openBtn = screen.getByText(/Open full log/);
+		act(() => {
+			fireEvent.click(openBtn);
+		});
+
+		const { isOpen, filter } = useEventLogStore.getState();
+		expect(isOpen).toBe(true);
+		expect(filter.selectedNodeOnly).toBe(true);
 	});
 });
