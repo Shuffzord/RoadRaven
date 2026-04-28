@@ -33,6 +33,16 @@ export default function App() {
 	// branch; mounting at App scope ensures the listeners survive every state.
 	useFileActions();
 
+	// Plan 04-03: 1Hz tick for live-pulse selector re-evaluation (D-14/D-15).
+	// bumpLiveTick increments liveTick in roadmapStore; useIsNodeLive selectors
+	// subscribe to liveTick so they re-evaluate every second without touching dataKey.
+	useEffect(() => {
+		const t = setInterval(() => {
+			useRoadmapStore.getState().bumpLiveTick();
+		}, 1000);
+		return () => clearInterval(t);
+	}, []);
+
 	// Dev-only test hook for deterministic UI tests (Playwright render-budget
 	// checks). Stripped from production builds by Vite's dead-code elimination.
 	useEffect(() => {

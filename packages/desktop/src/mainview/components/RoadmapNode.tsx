@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { useRoadmapStore } from "../store/roadmapStore";
+import { useIsNodeLive, useRoadmapStore } from "../store/roadmapStore";
 
 export const STATUS_TOKEN_MAP = {
 	"not-started": {
@@ -95,12 +95,17 @@ export function RoadmapNodeCard({
 	const status = liveStatus as NodeStatus;
 	const tokens = STATUS_TOKEN_MAP[status] ?? STATUS_TOKEN_MAP["not-started"];
 
+	// Live pulse: true iff this node received an event within the last 30s (D-14/D-15).
+	// Re-evaluates on every 1Hz liveTick bump from App.tsx setInterval.
+	const isLive = useIsNodeLive(nodeId ?? "");
+
 	return (
 		<div
 			className={`node relative min-w-[180px] max-w-[220px] rounded-[var(--node-radius,8px)] border-[length:var(--rv-border-width,1px)] border-[color:var(--rv-border)] bg-[var(--rv-bg-node)] pl-4 pr-3 py-[10px] select-none transition-[box-shadow,border-color,background] duration-150 hover:bg-[var(--rv-bg-node-hover)] group ${isSelected ? "outline outline-2 -outline-offset-1 outline-[var(--rv-accent)]" : ""}`}
 			data-source-id={nodeId}
 			data-selected={isSelected ? "true" : undefined}
 			data-focused={isFocused ? "true" : undefined}
+			data-live={isLive ? "true" : undefined}
 			data-rv-surface="node"
 			style={
 				{
