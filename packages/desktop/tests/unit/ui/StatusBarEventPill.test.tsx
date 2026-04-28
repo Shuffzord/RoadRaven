@@ -37,7 +37,11 @@ describe("EventApiPill (D-06)", () => {
 
 	it("listening 0 producers renders ● :47921", () => {
 		act(() =>
-			useEventApiStore.setState({ status: "listening", port: 47921, connectedCount: 0 }),
+			useEventApiStore.setState({
+				status: "listening",
+				port: 47921,
+				connectedCount: 0,
+			}),
 		);
 		render(<EventApiPill />);
 		expect(screen.getByText(/● :47921/)).toBeInTheDocument();
@@ -45,7 +49,11 @@ describe("EventApiPill (D-06)", () => {
 
 	it("listening N producers renders ● :47921 · N (count)", () => {
 		act(() =>
-			useEventApiStore.setState({ status: "listening", port: 47921, connectedCount: 2 }),
+			useEventApiStore.setState({
+				status: "listening",
+				port: 47921,
+				connectedCount: 2,
+			}),
 		);
 		render(<EventApiPill />);
 		// U+00B7 middle dot separator per UI-SPEC
@@ -67,7 +75,11 @@ describe("EventApiPill (D-06)", () => {
 
 	it("click copies ws URL when idle (listening, 0 producers)", async () => {
 		act(() =>
-			useEventApiStore.setState({ status: "listening", port: 47921, connectedCount: 0 }),
+			useEventApiStore.setState({
+				status: "listening",
+				port: 47921,
+				connectedCount: 0,
+			}),
 		);
 		render(<EventApiPill />);
 		const pill = screen.getByRole("button");
@@ -81,7 +93,11 @@ describe("EventApiPill (D-06)", () => {
 
 	it("shows Copied ✓ feedback for 1200ms after click", async () => {
 		act(() =>
-			useEventApiStore.setState({ status: "listening", port: 47921, connectedCount: 0 }),
+			useEventApiStore.setState({
+				status: "listening",
+				port: 47921,
+				connectedCount: 0,
+			}),
 		);
 		render(<EventApiPill />);
 		const pill = screen.getByRole("button");
@@ -97,7 +113,11 @@ describe("EventApiPill (D-06)", () => {
 
 	it("port in label reflects dynamic port (not hardcoded 47921)", () => {
 		act(() =>
-			useEventApiStore.setState({ status: "listening", port: 47922, connectedCount: 0 }),
+			useEventApiStore.setState({
+				status: "listening",
+				port: 47922,
+				connectedCount: 0,
+			}),
 		);
 		render(<EventApiPill />);
 		expect(screen.getByText(/● :47922/)).toBeInTheDocument();

@@ -14,7 +14,9 @@ const getEventLogStore = async (): Promise<any> => {
 		const storeDir = "../store/";
 		const moduleName = "eventLogStore";
 		// biome-ignore lint/suspicious/noExplicitAny: dynamic import guard, typed in Plan 04-04
-		eventLogStoreRef = await (import(/* @vite-ignore */ `${storeDir}${moduleName}`) as Promise<any>).catch(() => null);
+		eventLogStoreRef = await (
+			import(/* @vite-ignore */ `${storeDir}${moduleName}`) as Promise<any>
+		).catch(() => null);
 	}
 	return eventLogStoreRef;
 };
@@ -79,7 +81,9 @@ export function EventApiPill() {
 		}
 	}, [status, port, connectedCount]);
 
-	const label = copied ? "Copied ✓" : getPillLabel(status, port, connectedCount);
+	const label = copied
+		? "Copied ✓"
+		: getPillLabel(status, port, connectedCount);
 	const tooltip = getPillTooltip(status, port, connectedCount);
 
 	// Dot / glyph color

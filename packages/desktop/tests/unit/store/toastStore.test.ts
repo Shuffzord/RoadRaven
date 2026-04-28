@@ -15,18 +15,28 @@ beforeEach(() => {
 
 describe("toastStore", () => {
 	it("merges same-type same-source within 5s into a single toast with count (D-24)", () => {
-		useToastStore.getState().pushToast({ type: "malformed", source: "claude-code" });
-		useToastStore.getState().pushToast({ type: "malformed", source: "claude-code" });
-		useToastStore.getState().pushToast({ type: "malformed", source: "claude-code" });
+		useToastStore
+			.getState()
+			.pushToast({ type: "malformed", source: "claude-code" });
+		useToastStore
+			.getState()
+			.pushToast({ type: "malformed", source: "claude-code" });
+		useToastStore
+			.getState()
+			.pushToast({ type: "malformed", source: "claude-code" });
 		expect(useToastStore.getState().toasts).toHaveLength(1);
 		expect(useToastStore.getState().toasts[0].count).toBe(3);
 	});
 
 	it("does not merge when > 5s apart", () => {
 		vi.useFakeTimers();
-		useToastStore.getState().pushToast({ type: "malformed", source: "claude-code" });
+		useToastStore
+			.getState()
+			.pushToast({ type: "malformed", source: "claude-code" });
 		vi.advanceTimersByTime(THROTTLE_WINDOW_MS + 100);
-		useToastStore.getState().pushToast({ type: "malformed", source: "claude-code" });
+		useToastStore
+			.getState()
+			.pushToast({ type: "malformed", source: "claude-code" });
 		expect(useToastStore.getState().toasts).toHaveLength(2);
 		vi.useRealTimers();
 	});
@@ -46,7 +56,9 @@ describe("toastStore", () => {
 	it(`caps at ${MAX_STACKED} toasts, drops oldest`, () => {
 		for (let i = 0; i < 5; i++) {
 			// Different sources prevent merging
-			useToastStore.getState().pushToast({ type: "malformed", source: `src-${i}` });
+			useToastStore
+				.getState()
+				.pushToast({ type: "malformed", source: `src-${i}` });
 		}
 		expect(useToastStore.getState().toasts).toHaveLength(MAX_STACKED);
 		// Oldest (src-0, src-1) dropped; newest 3 remain
@@ -56,7 +68,9 @@ describe("toastStore", () => {
 	});
 
 	it("dismissToast removes by id", () => {
-		useToastStore.getState().pushToast({ type: "disconnect", source: "prod-1" });
+		useToastStore
+			.getState()
+			.pushToast({ type: "disconnect", source: "prod-1" });
 		const id = useToastStore.getState().toasts[0].id;
 		useToastStore.getState().dismissToast(id);
 		expect(useToastStore.getState().toasts).toHaveLength(0);

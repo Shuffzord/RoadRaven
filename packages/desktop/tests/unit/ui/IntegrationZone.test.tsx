@@ -28,7 +28,9 @@ describe("IntegrationZone (D-16)", () => {
 		vi.setSystemTime(now);
 		act(() =>
 			useRoadmapStore.setState({
-				liveEventMeta: { n1: { lastEventAt: now - 5_000, source: "claude-code" } },
+				liveEventMeta: {
+					n1: { lastEventAt: now - 5_000, source: "claude-code" },
+				},
 				liveTick: 1,
 			}),
 		);

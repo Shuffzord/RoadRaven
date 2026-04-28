@@ -722,19 +722,31 @@ body {
 
 /* --- Phase 4: Live event pulse (D-14, D-15; UI-SPEC §Pulse animation) --- */
 @keyframes rv-node-pulse {
-  0%   { box-shadow: 0 0 0 0px var(--rv-status-completed-bg), var(--rv-shadow-node, 0 1px 3px rgba(0, 0, 0, 0.3)); }
-  50%  { box-shadow: 0 0 0 6px var(--rv-status-completed-bg), var(--rv-shadow-node, 0 1px 3px rgba(0, 0, 0, 0.3)); }
-  100% { box-shadow: 0 0 0 0px var(--rv-status-completed-bg), var(--rv-shadow-node, 0 1px 3px rgba(0, 0, 0, 0.3)); }
+	0% {
+		box-shadow:
+			0 0 0 0px var(--rv-status-completed-bg),
+			var(--rv-shadow-node, 0 1px 3px rgba(0, 0, 0, 0.3));
+	}
+	50% {
+		box-shadow:
+			0 0 0 6px var(--rv-status-completed-bg),
+			var(--rv-shadow-node, 0 1px 3px rgba(0, 0, 0, 0.3));
+	}
+	100% {
+		box-shadow:
+			0 0 0 0px var(--rv-status-completed-bg),
+			var(--rv-shadow-node, 0 1px 3px rgba(0, 0, 0, 0.3));
+	}
 }
 
-.node[data-live='true'] {
-  animation: rv-node-pulse 1600ms ease-in-out infinite;
+.node[data-live="true"] {
+	animation: rv-node-pulse 1600ms ease-in-out infinite;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .node[data-live='true'] {
-    animation: none;
-    outline: 2px solid var(--rv-status-completed);
-    outline-offset: 2px;
-  }
+	.node[data-live="true"] {
+		animation: none;
+		outline: 2px solid var(--rv-status-completed);
+		outline-offset: 2px;
+	}
 }

@@ -21,7 +21,7 @@ function makeToast(overrides: Partial<ActiveToast> = {}): ActiveToast {
 
 describe("EventToast (D-23, D-24)", () => {
 	it("renders malformed toast copy per D-23", () => {
-		render(<EventToast toast={makeToast()} onDismiss={() => {}} />);
+		render(<EventToast toast={makeToast()} onDismiss={vi.fn()} />);
 		expect(
 			screen.getByText("Invalid event from claude-code."),
 		).toBeInTheDocument();
@@ -30,7 +30,10 @@ describe("EventToast (D-23, D-24)", () => {
 
 	it("renders unknown_node toast copy per D-23", () => {
 		render(
-			<EventToast toast={makeToast({ type: "unknown_node" })} onDismiss={() => {}} />,
+			<EventToast
+				toast={makeToast({ type: "unknown_node" })}
+				onDismiss={vi.fn()}
+			/>,
 		);
 		expect(
 			screen.getByText("Event for unknown node from claude-code."),
@@ -44,7 +47,7 @@ describe("EventToast (D-23, D-24)", () => {
 		render(
 			<EventToast
 				toast={makeToast({ type: "invalid_status", detail: "pending" })}
-				onDismiss={() => {}}
+				onDismiss={vi.fn()}
 			/>,
 		);
 		expect(
@@ -61,7 +64,7 @@ describe("EventToast (D-23, D-24)", () => {
 		render(
 			<EventToast
 				toast={makeToast({ type: "disconnect", source: "producer-1" })}
-				onDismiss={() => {}}
+				onDismiss={vi.fn()}
 			/>,
 		);
 		expect(
@@ -74,16 +77,14 @@ describe("EventToast (D-23, D-24)", () => {
 	});
 
 	it("renders merged headline when count > 1 (D-24)", () => {
-		render(
-			<EventToast toast={makeToast({ count: 3 })} onDismiss={() => {}} />,
-		);
+		render(<EventToast toast={makeToast({ count: 3 })} onDismiss={vi.fn()} />);
 		expect(
 			screen.getByText("3 invalid events from claude-code."),
 		).toBeInTheDocument();
 	});
 
 	it("no Retry button present (D-22)", () => {
-		render(<EventToast toast={makeToast()} onDismiss={() => {}} />);
+		render(<EventToast toast={makeToast()} onDismiss={vi.fn()} />);
 		expect(screen.queryByText(/Retry/i)).not.toBeInTheDocument();
 	});
 

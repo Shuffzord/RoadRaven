@@ -41,10 +41,7 @@ export function IntegrationZone({ nodeId }: Props) {
 	const [historyOpen, setHistoryOpen] = useState(false);
 
 	return (
-		<section
-			className="integration-zone"
-			style={{ marginBottom: 16 }}
-		>
+		<section className="integration-zone" style={{ marginBottom: 16 }}>
 			<div
 				style={{
 					fontSize: 11,
@@ -83,7 +80,11 @@ export function IntegrationZone({ nodeId }: Props) {
 			{meta !== undefined && !isLive && (
 				<div
 					className="integration-history"
-					style={{ fontSize: 13, color: "var(--rv-text-tertiary)", marginBottom: 8 }}
+					style={{
+						fontSize: 13,
+						color: "var(--rv-text-tertiary)",
+						marginBottom: 8,
+					}}
 				>
 					○ Last event {formatRelative(meta.lastEventAt)}
 				</div>
@@ -94,10 +95,24 @@ export function IntegrationZone({ nodeId }: Props) {
 					{/* Source row */}
 					<div
 						className="integration-source-row"
-						style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8, fontSize: 12 }}
+						style={{
+							display: "flex",
+							alignItems: "center",
+							gap: 6,
+							marginBottom: 8,
+							fontSize: 12,
+						}}
 					>
-						<span style={{ color: "var(--rv-text-tertiary)" }} className="integration-label">Source</span>
-						<span style={{ color: "var(--rv-text-secondary)" }} className="integration-value">
+						<span
+							style={{ color: "var(--rv-text-tertiary)" }}
+							className="integration-label"
+						>
+							Source
+						</span>
+						<span
+							style={{ color: "var(--rv-text-secondary)" }}
+							className="integration-value"
+						>
 							{meta.source ?? "—"}
 						</span>
 						{meta.source && (
@@ -135,7 +150,12 @@ export function IntegrationZone({ nodeId }: Props) {
 					{(!meta.meta || Object.keys(meta.meta).length === 0) && (
 						<div
 							className="integration-meta-empty"
-							style={{ fontSize: 12, fontStyle: "italic", color: "var(--rv-text-tertiary)", marginBottom: 8 }}
+							style={{
+								fontSize: 12,
+								fontStyle: "italic",
+								color: "var(--rv-text-tertiary)",
+								marginBottom: 8,
+							}}
 						>
 							No meta in last event
 						</div>
@@ -143,7 +163,12 @@ export function IntegrationZone({ nodeId }: Props) {
 					{meta.meta && Object.keys(meta.meta).length > 0 && (
 						<table
 							className="integration-meta-table"
-							style={{ width: "100%", fontSize: 11, marginBottom: 8, borderCollapse: "collapse" }}
+							style={{
+								width: "100%",
+								fontSize: 11,
+								marginBottom: 8,
+								borderCollapse: "collapse",
+							}}
 						>
 							<tbody>
 								{Object.entries(meta.meta).map(([k, v]) => (
@@ -192,14 +217,22 @@ export function IntegrationZone({ nodeId }: Props) {
 								{historyOpen ? "▾" : "▸"} Recent events ({recent.length})
 							</button>
 							{historyOpen && (
-								<ul style={{ listStyle: "none", margin: "4px 0 0 0", padding: 0 }}>
+								<ul
+									style={{ listStyle: "none", margin: "4px 0 0 0", padding: 0 }}
+								>
 									{recent.slice(0, 5).map((r, i) => (
 										<li
 											// biome-ignore lint/suspicious/noArrayIndexKey: stable ordered list
 											key={i}
-											style={{ fontFamily: "ui-monospace, monospace", fontSize: 11, color: "var(--rv-text-tertiary)", padding: "2px 0" }}
+											style={{
+												fontFamily: "ui-monospace, monospace",
+												fontSize: 11,
+												color: "var(--rv-text-tertiary)",
+												padding: "2px 0",
+											}}
 										>
-											{new Date(r.t).toLocaleTimeString()} {r.status} {r.source ?? "—"}
+											{new Date(r.t).toLocaleTimeString()} {r.status}{" "}
+											{r.source ?? "—"}
 										</li>
 									))}
 								</ul>

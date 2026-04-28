@@ -73,7 +73,9 @@ describe("roadmapStore live indicator (D-14)", () => {
 		useRoadmapStore.getState().bumpLiveTick();
 
 		expect(useRoadmapStore.getState().liveTick).toBe(2);
-		expect(useRoadmapStore.getState().liveEventMeta["n1"].lastEventAt).toBe(now);
+		expect(useRoadmapStore.getState().liveEventMeta["n1"].lastEventAt).toBe(
+			now,
+		);
 	});
 });
 

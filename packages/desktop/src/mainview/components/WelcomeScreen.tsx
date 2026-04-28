@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useEventApiStore } from "../store/eventApiStore";
 import ravenLogo from "../assets/raven-logo.svg";
+import { useEventApiStore } from "../store/eventApiStore";
 
 /** Extract filename from a path (browser-safe, no node:path) */
 function basename(filePath: string): string {
@@ -148,44 +148,44 @@ export function WelcomeScreen({
 
 				{/* Event API URL line - D-07, UI-SPEC welcome screen URL line.
 				    Hidden when server is off or in error state. */}
-				{eventApiStatus === 'listening' && eventApiPort !== null && (
+				{eventApiStatus === "listening" && eventApiPort !== null && (
 					<div
-						className='welcome-event-api-line'
+						className="welcome-event-api-line"
 						style={{
 							marginTop: 16,
 							fontSize: 11,
-							color: 'var(--rv-text-tertiary)',
-							textAlign: 'right',
-							display: 'flex',
-							alignItems: 'center',
-							justifyContent: 'flex-end',
+							color: "var(--rv-text-tertiary)",
+							textAlign: "right",
+							display: "flex",
+							alignItems: "center",
+							justifyContent: "flex-end",
 							gap: 6,
 						}}
 					>
 						<span>Event API:</span>
 						<span
 							style={{
-								fontFamily: 'ui-monospace, monospace',
-								color: 'var(--rv-text-secondary)',
+								fontFamily: "ui-monospace, monospace",
+								color: "var(--rv-text-secondary)",
 							}}
 						>
 							ws://127.0.0.1:{eventApiPort}
 						</span>
 						<button
-							type='button'
+							type="button"
 							onClick={() => void handleCopyUrl()}
 							style={{
-								background: 'none',
-								border: 'none',
-								cursor: 'pointer',
+								background: "none",
+								border: "none",
+								cursor: "pointer",
 								color: copied
-									? 'var(--rv-status-completed)'
-									: 'var(--rv-accent)',
+									? "var(--rv-status-completed)"
+									: "var(--rv-accent)",
 								fontSize: 11,
-								padding: '0 2px',
+								padding: "0 2px",
 							}}
 						>
-							{copied ? 'Copied ✓' : 'Copy'}
+							{copied ? "Copied ✓" : "Copy"}
 						</button>
 					</div>
 				)}

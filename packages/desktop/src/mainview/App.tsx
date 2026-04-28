@@ -60,7 +60,8 @@ export default function App() {
 
 		const unsub = useRoadmapStore.subscribe((state) => {
 			const dataKeyChanged = state.dataKey !== prevDataKey;
-			const statusConfigChanged = state.schema?.statusConfig !== prevStatusConfig;
+			const statusConfigChanged =
+				state.schema?.statusConfig !== prevStatusConfig;
 			if (dataKeyChanged || statusConfigChanged) {
 				prevDataKey = state.dataKey;
 				prevStatusConfig = state.schema?.statusConfig;

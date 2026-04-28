@@ -26,10 +26,9 @@ const TEST_SCHEMA: RoadmapSchema = {
 // Helper: load a fresh copy of the schema each time (prevents in-place mutation
 // from one test leaking the node.status into the next).
 function loadFresh() {
-	useRoadmapStore.getState().loadSchema(
-		JSON.parse(JSON.stringify(TEST_SCHEMA)),
-		"/test.json",
-	);
+	useRoadmapStore
+		.getState()
+		.loadSchema(JSON.parse(JSON.stringify(TEST_SCHEMA)), "/test.json");
 }
 
 afterEach(() => {
@@ -61,9 +60,11 @@ describe("roadmapStore.applyEventBatch", () => {
 		loadFresh();
 		const before = useRoadmapStore.getState().dataKey;
 
-		useRoadmapStore.getState().applyEventBatch([
-			{ nodeId: "a", status: "done", lastEventAt: Date.now() },
-		]);
+		useRoadmapStore
+			.getState()
+			.applyEventBatch([
+				{ nodeId: "a", status: "done", lastEventAt: Date.now() },
+			]);
 
 		expect(useRoadmapStore.getState().dataKey).toBe(before);
 	});
