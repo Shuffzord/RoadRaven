@@ -66,11 +66,13 @@ export async function handlePushEventApiError(msg: {
 }
 
 /**
- * pushEventLog — no-op stub until Plan 04-04 wires eventLogStore.appendEvents.
- * The handler must exist to satisfy the RPC contract so live events don't error
- * when 04-02 ships ahead of 04-04 (I-20 intentional wave-order compromise).
+ * pushEventLog — appends received events into the in-memory eventLogStore
+ * sliding window (capped at EVENT_LOG_ROW_CAP=1000). Plan 04-04 wires this
+ * (I-20 wave-order compromise: was a no-op in Plan 04-03).
  */
-export function handlePushEventLog(_msg: { events: IntegrationEvent[] }): void {
-	// TODO: Plan 04-04 wires this into eventLogStore.appendEvents(events)
-	// For now: no-op — drawer will be empty until Plan 04-04 ships
+export async function handlePushEventLog(msg: {
+	events: IntegrationEvent[];
+}): Promise<void> {
+	const { useEventLogStore } = await import("./store/eventLogStore");
+	useEventLogStore.getState().appendEvents(msg.events);
 }

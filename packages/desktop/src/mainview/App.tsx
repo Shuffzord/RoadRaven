@@ -1,6 +1,7 @@
 import { lazy, Suspense, useEffect } from "react";
 import { Canvas } from "./components/Canvas";
 import { ConfirmationDialog } from "./components/ConfirmationDialog";
+import { EventLogDrawer } from "./components/EventLogDrawer";
 import { EventToastStack } from "./components/EventToastStack";
 import { ExternalEditToast } from "./components/ExternalEditToast";
 import { SaveFailureModal } from "./components/SaveFailureModal";
@@ -97,6 +98,7 @@ export default function App() {
 			<SaveFailureModal />
 			<ExternalEditToast />
 			<EventToastStack />
+			<EventLogDrawer />
 			{import.meta.env.DEV && DevHarnessLazy && (
 				<Suspense fallback={null}>
 					<DevHarnessLazy />
