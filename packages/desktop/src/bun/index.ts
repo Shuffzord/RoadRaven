@@ -8,9 +8,9 @@ import Electrobun, {
 } from "electrobun/bun";
 import type {
 	RoadmapNode,
-	RoadmapRPCType,
 	RoadmapSchema,
-} from "../../../../shared/types.ts";
+} from "../../../../packages/core/src/schema.ts";
+import type { RoadmapRPCType } from "../../../../shared/types.ts";
 // atomicWrite + splitSchemaByOwnership are consumed via saveFile.ts which owns
 // the saveFile/flushPending logic. Re-exported below so external callers (and
 // the Plan 04a acceptance grep) can see the persistence surface at a glance.

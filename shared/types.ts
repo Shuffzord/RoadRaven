@@ -37,18 +37,15 @@ export interface AppSettings {
 }
 
 // -- Zod-inferred types from @roadraven/core --------------------------------
+// Used internally by the RPC contract below. Consumers needing these types
+// should import directly from "packages/core/src/schema" — re-exporting them
+// here created two valid import paths for the same type and was flagged as
+// duplicate by fallow.
 
 import type {
-	NodeStatus as _NodeStatus,
-	RoadmapNode as _RoadmapNode,
-	RoadmapSchema as _RoadmapSchema,
-	StatusConfig as _StatusConfig,
+	RoadmapNode,
+	RoadmapSchema,
 } from "../packages/core/src/schema.ts";
-
-export type NodeStatus = _NodeStatus;
-export type RoadmapNode = _RoadmapNode;
-export type RoadmapSchema = _RoadmapSchema;
-export type StatusConfig = _StatusConfig;
 
 // -- RPC Contract -----------------------------------------------------------
 

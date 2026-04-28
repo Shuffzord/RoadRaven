@@ -1,7 +1,14 @@
 import { useEffect, useRef } from "react";
+import type { NodeStatus } from "../../../../../packages/core/src/schema";
 import { useIsNodeLive, useRoadmapStore } from "../store/roadmapStore";
 
-export const STATUS_TOKEN_MAP = {
+// Typed as Record<NodeStatus, ...> so the schema's status enum is the single
+// source of truth — adding/removing a status in schema.ts forces this map to
+// be updated, preventing the silent drift that fallow flagged.
+export const STATUS_TOKEN_MAP: Record<
+	NodeStatus,
+	{ color: string; bg: string }
+> = {
 	"not-started": {
 		color: "--rv-status-not-started",
 		bg: "--rv-status-not-started-bg",
@@ -10,11 +17,12 @@ export const STATUS_TOKEN_MAP = {
 		color: "--rv-status-in-progress",
 		bg: "--rv-status-in-progress-bg",
 	},
-	completed: { color: "--rv-status-completed", bg: "--rv-status-completed-bg" },
+	completed: {
+		color: "--rv-status-completed",
+		bg: "--rv-status-completed-bg",
+	},
 	blocked: { color: "--rv-status-blocked", bg: "--rv-status-blocked-bg" },
-} as const;
-
-export type NodeStatus = keyof typeof STATUS_TOKEN_MAP;
+};
 
 export function formatStatus(status: string): string {
 	return status

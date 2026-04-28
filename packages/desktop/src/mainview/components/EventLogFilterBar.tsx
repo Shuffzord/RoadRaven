@@ -1,4 +1,4 @@
-import type { StatusConfig } from "../../../../../shared/types";
+import type { StatusConfig } from "../../../../../packages/core/src/schema";
 import { getDistinctSources, useEventLogStore } from "../store/eventLogStore";
 import { useRoadmapStore } from "../store/roadmapStore";
 

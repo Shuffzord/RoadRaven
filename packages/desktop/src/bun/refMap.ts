@@ -1,4 +1,7 @@
-import type { RoadmapNode, RoadmapSchema } from "../../../../shared/types";
+import type {
+	RoadmapNode,
+	RoadmapSchema,
+} from "../../../../packages/core/src/schema";
 
 export type FilePath = string;
 export type OwnershipMap = Map<string, FilePath>;

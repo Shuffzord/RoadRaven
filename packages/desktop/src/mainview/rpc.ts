@@ -1,5 +1,6 @@
 import { Electroview } from "electrobun/view";
-import type { RoadmapNode, RoadmapRPCType } from "../../../../shared/types";
+import type { RoadmapNode } from "../../../../packages/core/src/schema";
+import type { RoadmapRPCType } from "../../../../shared/types";
 import { useRoadmapStore } from "./store/roadmapStore";
 
 const rpc = Electroview.defineRPC<RoadmapRPCType>({
