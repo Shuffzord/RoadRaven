@@ -122,4 +122,33 @@ describe("EventApiPill (D-06)", () => {
 		render(<EventApiPill />);
 		expect(screen.getByText(/● :47922/)).toBeInTheDocument();
 	});
+
+	it("connected click (listening + connectedCount > 0) opens the event log drawer (UAT-3)", async () => {
+		// Reset eventLogStore + ensure drawer starts closed
+		const { useEventLogStore } = await import(
+			"../../../src/mainview/store/eventLogStore"
+		);
+		act(() =>
+			useEventLogStore.setState({
+				isOpen: false,
+				rows: [],
+				filter: { source: null, selectedNodeOnly: false, status: null },
+			}),
+		);
+		act(() =>
+			useEventApiStore.setState({
+				status: "listening",
+				port: 47921,
+				connectedCount: 1,
+			}),
+		);
+		render(<EventApiPill />);
+		const pill = screen.getByRole("button");
+		await act(async () => {
+			fireEvent.click(pill);
+		});
+		expect(useEventLogStore.getState().isOpen).toBe(true);
+		// Idle URL-copy MUST NOT have fired in the connected branch
+		expect(navigator.clipboard.writeText).not.toHaveBeenCalled();
+	});
 });

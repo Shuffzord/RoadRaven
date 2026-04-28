@@ -1,25 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useEventApiStore } from "../store/eventApiStore";
-
-// Dynamic-import guard for eventLogStore — owned entirely by Plan 04-04 (I-18).
-// The module does not exist until Plan 04-04 ships. We defeat Vite's static
-// import analysis by constructing the specifier at runtime so the bundler never
-// tries to resolve it as a static dependency. The catch ensures it's a no-op
-// when the file is absent (Wave 2 isolation window).
-let eventLogStoreRef: unknown = null;
-// biome-ignore lint/suspicious/noExplicitAny: return type is intentionally loose — typed in Plan 04-04
-const getEventLogStore = async (): Promise<any> => {
-	if (!eventLogStoreRef) {
-		// Runtime path construction defeats Vite static analysis (I-18 guard)
-		const storeDir = "../store/";
-		const moduleName = "eventLogStore";
-		// biome-ignore lint/suspicious/noExplicitAny: dynamic import guard, typed in Plan 04-04
-		eventLogStoreRef = await (
-			import(/* @vite-ignore */ `${storeDir}${moduleName}`) as Promise<any>
-		).catch(() => null);
-	}
-	return eventLogStoreRef;
-};
+import { useEventLogStore } from "../store/eventLogStore";
 
 function getPillLabel(
 	status: "off" | "listening" | "error",
@@ -62,19 +43,18 @@ export function EventApiPill() {
 	}, []);
 
 	const handleClick = useCallback(async () => {
-		if (connectedCount > 0) {
-			// Open event log drawer — dynamic import so eventLogStore stays in Plan 04-04
-			const m = await getEventLogStore();
-			m?.useEventLogStore.getState().setOpen(true);
+		if (status === "listening" && connectedCount > 0) {
+			// D-06: connected click opens event log drawer (UAT-3 fix)
+			useEventLogStore.getState().setOpen(true);
 			return;
 		}
-		// Copy ws URL to clipboard when idle (listening, 0 producers)
+		// D-06: idle click (listening, 0 producers) copies the ws URL
 		if (status === "listening" && port !== null) {
 			const url = `ws://127.0.0.1:${port}`;
 			try {
 				await navigator.clipboard.writeText(url);
 			} catch {
-				// clipboard may be denied in some CEF builds
+				// clipboard may be denied in some CEF builds — silent fallback
 			}
 			setCopied(true);
 			copyTimerRef.current = setTimeout(() => setCopied(false), 1200);

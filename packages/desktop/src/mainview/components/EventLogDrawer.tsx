@@ -35,6 +35,7 @@ function EmptyDrawer({
 				zIndex: 200,
 			}}
 		>
+			<CloseButton />
 			<div
 				style={{
 					fontSize: 13,
@@ -56,6 +57,48 @@ function EmptyDrawer({
 				{body}
 			</div>
 		</section>
+	);
+}
+
+/** [×] close button rendered in the top-right of every drawer state (UAT 04-06 drive-by). */
+function CloseButton() {
+	return (
+		<button
+			type="button"
+			aria-label="Close event log"
+			onClick={() => useEventLogStore.getState().setOpen(false)}
+			style={{
+				position: "absolute",
+				top: 4,
+				right: 8,
+				background: "none",
+				border: "none",
+				cursor: "pointer",
+				padding: "4px 6px",
+				color: "var(--rv-text-secondary)",
+				fontSize: 14,
+				lineHeight: 1,
+				borderRadius: 4,
+				zIndex: 1,
+			}}
+			className="hover:bg-[var(--rv-bg-hover)] transition-colors duration-100"
+		>
+			<svg
+				aria-hidden="true"
+				width="14"
+				height="14"
+				viewBox="0 0 24 24"
+				fill="none"
+				stroke="currentColor"
+				strokeWidth="2"
+				strokeLinecap="round"
+				strokeLinejoin="round"
+			>
+				<title>Close</title>
+				<line x1="18" y1="6" x2="6" y2="18" />
+				<line x1="6" y1="6" x2="18" y2="18" />
+			</svg>
+		</button>
 	);
 }
 
@@ -166,7 +209,8 @@ export function EventLogDrawer() {
 					style={{
 						display: "flex",
 						alignItems: "center",
-						width: "100%",
+						width: "calc(100% - 32px)",
+						paddingRight: 32,
 						background: "none",
 						border: "none",
 						cursor: "pointer",
@@ -180,6 +224,7 @@ export function EventLogDrawer() {
 					</span>
 					<span style={{ marginLeft: "auto", fontSize: 11 }}>▴</span>
 				</button>
+				<CloseButton />
 			</section>
 		);
 	}
@@ -232,6 +277,7 @@ export function EventLogDrawer() {
 					borderTop: "1px solid var(--rv-border-subtle)",
 				}}
 			>
+				<CloseButton />
 				<ResizeHandle />
 				<EventLogFilterBar />
 				<div
@@ -281,6 +327,7 @@ export function EventLogDrawer() {
 				borderTop: "1px solid var(--rv-border-subtle)",
 			}}
 		>
+			<CloseButton />
 			<ResizeHandle />
 			<EventLogFilterBar />
 

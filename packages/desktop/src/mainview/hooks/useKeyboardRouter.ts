@@ -244,8 +244,28 @@ export function useKeyboardRouter(deps: RouterDeps): void {
 				}
 			}
 
-			// Escape — close rename or deselect
+			// Escape — closes drawer when focus is inside it; otherwise falls through
+			// to rename-cancel / deselect-node (Phase 3 contract, UAT 04-06 drive-by fix).
+			// Selector matches the EventLogDrawer's <section aria-label="Event log">
+			// directly — biome flags an explicit role="region" on <section> as
+			// redundant (implicit ARIA semantic role), so we anchor on the
+			// element + accessible-name attribute instead. The drawer's region
+			// role is preserved by the section element semantic.
 			if (e.key === "Escape") {
+				const drawer = document.querySelector(
+					'section[aria-label="Event log"]',
+				);
+				const isOpen = useEventLogStore.getState().isOpen;
+				if (
+					isOpen &&
+					drawer &&
+					active instanceof Node &&
+					drawer.contains(active)
+				) {
+					e.preventDefault();
+					useEventLogStore.getState().setOpen(false);
+					return;
+				}
 				if (deps.inlineRename.state.nodeId) {
 					e.preventDefault();
 					deps.inlineRename.cancel();

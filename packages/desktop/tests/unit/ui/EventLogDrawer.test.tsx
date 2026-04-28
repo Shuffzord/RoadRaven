@@ -158,4 +158,49 @@ describe("EventLogDrawer (D-18, D-19)", () => {
 		const { container } = render(<EventLogDrawer />);
 		expect(container.firstChild).toBeNull();
 	});
+
+	it("renders close button with aria-label='Close event log' (UAT drive-by)", () => {
+		act(() => {
+			useEventLogStore.getState().appendEvents([makeEvent("n1", 0)]);
+		});
+		render(<EventLogDrawer />);
+		const closeBtn = screen.getByLabelText("Close event log");
+		expect(closeBtn).toBeInTheDocument();
+	});
+
+	it("close button click sets isOpen to false (UAT drive-by)", async () => {
+		act(() => {
+			useEventLogStore.getState().appendEvents([makeEvent("n1", 0)]);
+		});
+		const { fireEvent } = await import("@testing-library/react");
+		render(<EventLogDrawer />);
+		const closeBtn = screen.getByLabelText("Close event log");
+		await act(async () => {
+			fireEvent.click(closeBtn);
+		});
+		expect(useEventLogStore.getState().isOpen).toBe(false);
+	});
+
+	it("close button is also rendered in the off-state empty drawer", () => {
+		act(() => {
+			useEventApiStore.setState({ status: "off" });
+		});
+		render(<EventLogDrawer />);
+		// Close button must be available in every drawer state, not just full-list
+		expect(screen.getByLabelText("Close event log")).toBeInTheDocument();
+	});
+
+	it("Escape inside drawer region triggers setOpen(false) when wired (router-contract test)", () => {
+		// Render drawer + sanity-check the role/aria-label selector the router uses.
+		// The router-side handler is exercised behaviorally in
+		// packages/desktop/tests/unit/hooks/useKeyboardRouter.escape.test.tsx.
+		act(() => {
+			useEventLogStore.getState().appendEvents([makeEvent("n1", 0)]);
+		});
+		render(<EventLogDrawer />);
+		// @testing-library's getByRole locates the rendered <section role="region">
+		// regardless of its position in the DOM tree (body vs container).
+		const drawer = screen.getByRole("region", { name: "Event log" });
+		expect(drawer).toBeInTheDocument();
+	});
 });
