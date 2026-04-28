@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect } from "react";
+import { useEffect } from "react";
 import { Canvas } from "./components/Canvas";
 import { ConfirmationDialog } from "./components/ConfirmationDialog";
 import { EventLogDrawer } from "./components/EventLogDrawer";
@@ -13,16 +13,6 @@ import { useAutosave } from "./hooks/useAutosave";
 import { useFileActions } from "./hooks/useFileActions";
 import { pullEventApiStateOnMount, pushAllowlistFromStore } from "./rpc";
 import { useRoadmapStore } from "./store/roadmapStore";
-
-// Dev-only harness for previewing panels (auto-discovered). Vite treeshakes this
-// import out of production builds via the `import.meta.env.DEV` guard.
-const DevHarnessLazy = import.meta.env.DEV
-	? lazy(() =>
-			import("../renderer/components/_dev/DevHarness").then((m) => ({
-				default: m.DevHarness,
-			})),
-		)
-	: null;
 
 export default function App() {
 	const selectedNodeId = useRoadmapStore((s) => s.selectedNodeId);
@@ -107,11 +97,6 @@ export default function App() {
 			<ExternalEditToast />
 			<EventToastStack />
 			<EventLogDrawer />
-			{import.meta.env.DEV && DevHarnessLazy && (
-				<Suspense fallback={null}>
-					<DevHarnessLazy />
-				</Suspense>
-			)}
 		</div>
 	);
 }

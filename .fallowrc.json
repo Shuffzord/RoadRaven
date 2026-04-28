@@ -3,8 +3,8 @@
   // Docs: https://docs.fallow.tools | Source: https://github.com/fallow-rs/fallow
   //
   // Without this file, fallow cannot see Electrobun's runtime entry points
-  // (Bun main process, mainview HTML bootstrap, dev harness) and reports
-  // false positives such as App.tsx being "100% dead".
+  // (Bun main process, mainview HTML bootstrap) and reports false positives
+  // such as App.tsx being "100% dead".
 
   // Entry points fallow can't discover on its own.
   // - src/bun/index.ts          — Electrobun main process, loaded by electrobun runtime
@@ -28,13 +28,6 @@
     "**/.fallow/**",
     "samples/**",
     "**/*.bak.json"
-  ],
-
-  // Files loaded dynamically at runtime — never flag as unused.
-  // _dev/* components are mounted by DevHarness under a dev-only gate,
-  // so their imports are invisible to static graph analysis.
-  "dynamicallyLoaded": [
-    "packages/desktop/src/renderer/components/_dev/**"
   ],
 
   // @roadraven/core is a workspace package whose exports are consumed

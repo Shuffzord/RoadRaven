@@ -36,7 +36,7 @@ import {
 } from "./saveFile";
 import { nativeSaveDialog } from "./saveFileDialog";
 
-// Persistence surface re-exports — imported by Plan 04b/04c and DevHarness
+// Persistence surface re-exports — imported by Plan 04b/04c
 export { atomicWrite, splitSchemaByOwnership };
 
 import {
