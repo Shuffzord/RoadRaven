@@ -25,14 +25,14 @@ See: .planning/PROJECT.md (updated 2026-04-12)
 
 ## Current Position
 
-Phase: 04 (event-api) — EXECUTING (Wave 2 complete)
+Phase: 04 (event-api) — EXECUTING (Wave 3 complete)
 Plan: 4 of 5
-Plans complete: 04-01 ✓, 04-02 ✓, 04-03 ✓
-Plans pending: 04-04 (Wave 3), 04-05 (Wave 4)
-Status: Ready to execute
-Last activity: 2026-04-28
+Plans complete: 04-01 ✓, 04-02 ✓, 04-03 ✓, 04-04 ✓
+Plans pending: 04-05 (Wave 4)
+Status: Ready to execute next wave
+Last activity: 2026-04-28 -- Phase 04 Wave 3 complete
 
-Progress: [######____] 60% of Phase 04 plans (3/5)
+Progress: [########__] 80% of Phase 04 plans (4/5)
 
 ## Performance Metrics
 
