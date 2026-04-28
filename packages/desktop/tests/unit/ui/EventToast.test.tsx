@@ -1,20 +1,96 @@
-// Phase 4 Wave 0 test scaffold — failing stubs.
-// Implementation lands in Plan 04-04 (see `.planning/phases/04-event-api/04-VALIDATION.md`).
-// Sources: D-22, D-23, D-24 in 04-CONTEXT.md, PLUG-06.
+// @vitest-environment jsdom
+// Phase 4 Plan 04-03 Task 5 — EventToast real tests.
+// Sources: D-22, D-23, D-24 in 04-CONTEXT.md, PLUG-06, I-05.
 
-import { describe, it } from "vitest";
+import "@testing-library/jest-dom";
+import { fireEvent, render, screen } from "@testing-library/react";
+import { describe, expect, it, vi } from "vitest";
+import { EventToast } from "../../../src/mainview/components/EventToast";
+import type { ActiveToast } from "../../../src/mainview/store/toastStore";
 
-// import { render } from "@testing-library/react";
-// EventToast component does not exist yet — Wave 3 creates it.
-// import { EventToast } from "../../../src/mainview/components/EventToast";
+function makeToast(overrides: Partial<ActiveToast> = {}): ActiveToast {
+	return {
+		id: "t1",
+		type: "malformed",
+		source: "claude-code",
+		count: 1,
+		lastEventAt: Date.now(),
+		...overrides,
+	};
+}
 
 describe("EventToast (D-23, D-24)", () => {
-	it.todo("renders malformed-event toast copy per D-23");
-	it.todo("renders unknown-node toast copy per D-23");
-	it.todo("renders invalid-status toast copy per D-23");
-	it.todo("renders producer-disconnect info toast (grey stripe)");
-	it.todo(
-		"merges same-type same-source within 5s into single toast with count (D-24)",
-	);
-	it.todo("dismiss button removes toast");
+	it("renders malformed toast copy per D-23", () => {
+		render(<EventToast toast={makeToast()} onDismiss={() => {}} />);
+		expect(
+			screen.getByText("Invalid event from claude-code."),
+		).toBeInTheDocument();
+		expect(screen.getByText("See event log for details.")).toBeInTheDocument();
+	});
+
+	it("renders unknown_node toast copy per D-23", () => {
+		render(
+			<EventToast toast={makeToast({ type: "unknown_node" })} onDismiss={() => {}} />,
+		);
+		expect(
+			screen.getByText("Event for unknown node from claude-code."),
+		).toBeInTheDocument();
+		expect(
+			screen.getByText("Node id not found in the current roadmap."),
+		).toBeInTheDocument();
+	});
+
+	it("renders invalid_status toast copy per D-23", () => {
+		render(
+			<EventToast
+				toast={makeToast({ type: "invalid_status", detail: "pending" })}
+				onDismiss={() => {}}
+			/>,
+		);
+		expect(
+			screen.getByText("Unknown status 'pending' from claude-code."),
+		).toBeInTheDocument();
+		expect(
+			screen.getByText(
+				"Extend statusConfig in the schema to accept this status.",
+			),
+		).toBeInTheDocument();
+	});
+
+	it("renders disconnect info toast with no body per D-23", () => {
+		render(
+			<EventToast
+				toast={makeToast({ type: "disconnect", source: "producer-1" })}
+				onDismiss={() => {}}
+			/>,
+		);
+		expect(
+			screen.getByText("Producer producer-1 disconnected."),
+		).toBeInTheDocument();
+		// Disconnect has no body per D-23
+		expect(
+			screen.queryByText("See event log for details."),
+		).not.toBeInTheDocument();
+	});
+
+	it("renders merged headline when count > 1 (D-24)", () => {
+		render(
+			<EventToast toast={makeToast({ count: 3 })} onDismiss={() => {}} />,
+		);
+		expect(
+			screen.getByText("3 invalid events from claude-code."),
+		).toBeInTheDocument();
+	});
+
+	it("no Retry button present (D-22)", () => {
+		render(<EventToast toast={makeToast()} onDismiss={() => {}} />);
+		expect(screen.queryByText(/Retry/i)).not.toBeInTheDocument();
+	});
+
+	it("dismiss button calls onDismiss", () => {
+		const onDismiss = vi.fn();
+		render(<EventToast toast={makeToast()} onDismiss={onDismiss} />);
+		fireEvent.click(screen.getByText("Dismiss"));
+		expect(onDismiss).toHaveBeenCalledOnce();
+	});
 });
