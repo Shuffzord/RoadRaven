@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 04-03-PLAN.md
-last_updated: "2026-04-28T08:42:54.352Z"
-last_activity: 2026-04-28 -- Phase 04 Wave 2 complete
+stopped_at: Completed 04-04-PLAN.md
+last_updated: "2026-04-28T10:27:47.242Z"
+last_activity: 2026-04-28
 progress:
   total_phases: 5
   completed_phases: 2
   total_plans: 20
-  completed_plans: 17
-  percent: 85
+  completed_plans: 18
+  percent: 90
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-04-12)
 ## Current Position
 
 Phase: 04 (event-api) — EXECUTING (Wave 2 complete)
-Plan: 3 of 5
+Plan: 4 of 5
 Plans complete: 04-01 ✓, 04-02 ✓, 04-03 ✓
 Plans pending: 04-04 (Wave 3), 04-05 (Wave 4)
-Status: Ready to execute next wave
-Last activity: 2026-04-28 -- Phase 04 Wave 2 complete
+Status: Ready to execute
+Last activity: 2026-04-28
 
 Progress: [######____] 60% of Phase 04 plans (3/5)
 
@@ -57,6 +57,7 @@ Progress: [######____] 60% of Phase 04 plans (3/5)
 *Updated after each plan completion*
 | Phase 02 P02 | 11min | 2 tasks | 13 files |
 | Phase 04 P02 | 180 | 6 tasks | 20 files |
+| Phase 04 P04 | 90 | 4 tasks | 16 files |
 
 ## Accumulated Context
 
@@ -79,6 +80,8 @@ Recent decisions affecting current work:
 - [Phase 04]: nodeId: z.string().min(1) not .uuid() — allows non-UUID node IDs from external producers
 - [Phase 04]: appendEventLine uses O_APPEND (fs/promises.appendFile) not atomicWrite — sidecar is append-only; atomic overwrite would destroy log history
 - [Phase 04]: Bun-native tests split from vitest: vitest excludes Bun.serve-dependent files; test:bun script added using bun test
+- [Phase 04]: useMemo over inline Zustand selector for derived arrays prevents getSnapshot infinite loop in jsdom
+- [Phase 04]: vi.mock(@tanstack/react-virtual) required for jsdom test isolation (ResizeObserver not available)
 
 ### Pending Todos
 
@@ -93,8 +96,8 @@ Recent decisions affecting current work:
 
 ## Session Continuity
 
-Last session: 2026-04-23T19:35:32.542Z
-Stopped at: Completed 04-02-PLAN.md
+Last session: 2026-04-28T10:27:47.239Z
+Stopped at: Completed 04-04-PLAN.md
 
 ### Wave 1 recovery context (READ FIRST on resume)
 
