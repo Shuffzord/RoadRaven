@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 04-05-PLAN.md
-last_updated: "2026-04-28T16:13:15.149Z"
-last_activity: 2026-04-28 -- Phase 04 planning complete
+stopped_at: Completed Phase 04 (event-api) — all 6 plans done, UAT passed, ready for Phase 05
+last_updated: "2026-04-29T00:00:00.000Z"
+last_activity: 2026-04-29 -- Phase 04 closed (Plan 04-06 gap closure verified, UAT PASS)
 progress:
   total_phases: 5
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 21
-  completed_plans: 19
-  percent: 90
+  completed_plans: 21
+  percent: 100
 ---
 
 # Project State
@@ -21,18 +21,20 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-12)
 
 **Core value:** Nodes in the tree reflect real-time state of external systems through a pluggable integration layer — turning any JSON roadmap into a live progress dashboard without locking users into a workflow.
-**Current focus:** Phase 04 — event-api
+**Current focus:** Phase 05 — export-packaging (next)
 
 ## Current Position
 
-Phase: 04 (event-api) — EXECUTING (Wave 3 complete)
-Plan: 5 of 5
-Plans complete: 04-01 ✓, 04-02 ✓, 04-03 ✓, 04-04 ✓
-Plans pending: 04-05 (Wave 4)
-Status: Ready to execute
-Last activity: 2026-04-28 -- Phase 04 planning complete
+Phase: 04 (event-api) — COMPLETE (2026-04-29)
+Plans complete: 04-01 ✓, 04-02 ✓, 04-03 ✓, 04-04 ✓, 04-05 ✓, 04-06 ✓ (gap closure)
+Status: Phase 04 closed — UAT PASS, verifier: 33/33 truths verified, 0 outstanding human items
+Last activity: 2026-04-29 -- Phase 04 closed (Plan 04-06 gap closure verified)
 
-Progress: [########__] 80% of Phase 04 plans (4/5)
+Progress: [##########] 100% of Phase 04 plans (6/6)
+
+**Next phase:** 05 (export-packaging) — not yet planned. Run `/gsd:plan-phase 05` to begin.
+
+**Known follow-up (not blocking):** Producer connection count over-reports — see `04-HUMAN-UAT.md` Test 6. Diagnosis: (1) `plugins/claude-code/src/server.ts:9` opens wsClient at module top-level so each Claude Code session contributes 1 connection; (2) `plugins/claude-code/src/wsClient.ts:55-65` `close` handler unconditionally calls scheduleReconnect, racing with connectLoop's while-iteration on error+close double-events. Fix scope: small standalone plan (e.g., 05-pre or backlog).
 
 ## Performance Metrics
 
