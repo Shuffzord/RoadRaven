@@ -52,6 +52,7 @@ export function IntegrationZone({ nodeId }: Props) {
 	);
 
 	const [historyOpen, setHistoryOpen] = useState(false);
+	const [copied, setCopied] = useState(false);
 
 	return (
 		<section className="integration-zone" style={{ marginBottom: 16 }}>
@@ -132,7 +133,16 @@ export function IntegrationZone({ nodeId }: Props) {
 							<button
 								type="button"
 								onClick={() => {
-									if (meta.source) navigator.clipboard.writeText(meta.source);
+									if (!meta.source) return;
+									navigator.clipboard.writeText(meta.source).then(
+										() => {
+											setCopied(true);
+											setTimeout(() => setCopied(false), 1200);
+										},
+										() => {
+											/* clipboard denied — silent */
+										},
+									);
 								}}
 								style={{
 									background: "none",
@@ -143,7 +153,7 @@ export function IntegrationZone({ nodeId }: Props) {
 									padding: "0 2px",
 								}}
 							>
-								Copy
+								{copied ? "Copied ✓" : "Copy"}
 							</button>
 						)}
 					</div>
