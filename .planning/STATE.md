@@ -1,17 +1,17 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.1
+milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Phase 03 closed pending milestone-end UAT retest (5 of 9 items deferred)
-last_updated: "2026-04-23T10:38:25.349Z"
-last_activity: 2026-04-23
+stopped_at: Completed Phase 04 (event-api) — all 6 plans done, UAT passed, ready for Phase 05
+last_updated: "2026-04-29T00:00:00.000Z"
+last_activity: 2026-04-29 -- Phase 04 closed (Plan 04-06 gap closure verified, UAT PASS)
 progress:
   total_phases: 5
-  completed_phases: 2
-  total_plans: 15
-  completed_plans: 14
-  percent: 93
+  completed_phases: 3
+  total_plans: 21
+  completed_plans: 21
+  percent: 100
 ---
 
 # Project State
@@ -21,19 +21,20 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-12)
 
 **Core value:** Nodes in the tree reflect real-time state of external systems through a pluggable integration layer — turning any JSON roadmap into a live progress dashboard without locking users into a workflow.
-**Current focus:** Phase 03 — full-editor
+**Current focus:** Phase 05 — export-packaging (next)
 
 ## Current Position
 
-Phase: 03 (full-editor) — CLOSED PENDING MILESTONE-END UAT RETEST
-Plan: 6 of 6
-Plans complete: 03-01 ✓, 03-04a ✓, 03-02 ✓, 03-03 ✓, 03-04b ✓, 03-04c ✓ (all code complete)
-Plans pending: none
-Status: executing
-UAT scoreboard (03-HUMAN-UAT.md): 3 pass + 1 pass-with-fix + 5 deferred to milestone-end
-Last activity: 2026-04-23
+Phase: 04 (event-api) — COMPLETE (2026-04-29)
+Plans complete: 04-01 ✓, 04-02 ✓, 04-03 ✓, 04-04 ✓, 04-05 ✓, 04-06 ✓ (gap closure)
+Status: Phase 04 closed — UAT PASS, verifier: 33/33 truths verified, 0 outstanding human items
+Last activity: 2026-04-29 -- Phase 04 closed (Plan 04-06 gap closure verified)
 
-Progress: [##########] 100% of Phase 03 plans (6/6, code complete)
+Progress: [##########] 100% of Phase 04 plans (6/6)
+
+**Next phase:** 05 (export-packaging) — not yet planned. Run `/gsd:plan-phase 05` to begin.
+
+**Known follow-up (not blocking):** Producer connection count over-reports — see `04-HUMAN-UAT.md` Test 6. Diagnosis: (1) `plugins/claude-code/src/server.ts:9` opens wsClient at module top-level so each Claude Code session contributes 1 connection; (2) `plugins/claude-code/src/wsClient.ts:55-65` `close` handler unconditionally calls scheduleReconnect, racing with connectLoop's while-iteration on error+close double-events. Fix scope: small standalone plan (e.g., 05-pre or backlog).
 
 ## Performance Metrics
 
@@ -57,6 +58,9 @@ Progress: [##########] 100% of Phase 03 plans (6/6, code complete)
 
 *Updated after each plan completion*
 | Phase 02 P02 | 11min | 2 tasks | 13 files |
+| Phase 04 P02 | 180 | 6 tasks | 20 files |
+| Phase 04 P04 | 90 | 4 tasks | 16 files |
+| Phase 04 P04-05 | 45 | 4 tasks | 13 files |
 
 ## Accumulated Context
 
@@ -75,6 +79,15 @@ Recent decisions affecting current work:
 - Phase 2: shared/types.ts re-exports use import-then-alias pattern for same-file RPC contract compatibility
 - [Phase 02]: Used role=application on Canvas and role=button on RoadmapNodeCard for a11y compliance in react-d3-tree foreignObject rendering
 - [Phase 02]: Used relative import path for @roadraven/core in bun/index.ts -- workspace alias not resolved by tsc bundler moduleResolution
+- [Phase 04]: Design C coalescer: timer anchored at first event, no re-arm — prevents timer drift under high-frequency events
+- [Phase 04]: nodeId: z.string().min(1) not .uuid() — allows non-UUID node IDs from external producers
+- [Phase 04]: appendEventLine uses O_APPEND (fs/promises.appendFile) not atomicWrite — sidecar is append-only; atomic overwrite would destroy log history
+- [Phase 04]: Bun-native tests split from vitest: vitest excludes Bun.serve-dependent files; test:bun script added using bun test
+- [Phase 04]: useMemo over inline Zustand selector for derived arrays prevents getSnapshot infinite loop in jsdom
+- [Phase 04]: vi.mock(@tanstack/react-virtual) required for jsdom test isolation (ResizeObserver not available)
+- [Phase 04]: Hello frame serialized as template literal to survive biome multi-line formatting — grep acceptance criteria requires type/source/version on one line
+- [Phase 04]: userData.test.ts uses node:path join() for expected paths — Windows backslash separator breaks literal forward-slash comparisons
+- [Phase 04]: vi.advanceTimersByTimeAsync(0) replaces non-existent vi.runAllMicrotasksAsync() in vitest 4.x
 
 ### Pending Todos
 
@@ -89,8 +102,8 @@ Recent decisions affecting current work:
 
 ## Session Continuity
 
-Last session: 2026-04-23T10:36:16.046Z
-Stopped at: Phase 03 closed pending milestone-end UAT retest (5 of 9 items deferred)
+Last session: 2026-04-28T10:57:37.085Z
+Stopped at: Completed 04-05-PLAN.md
 
 ### Wave 1 recovery context (READ FIRST on resume)
 

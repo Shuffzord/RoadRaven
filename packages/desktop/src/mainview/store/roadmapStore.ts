@@ -6,6 +6,10 @@ import type {
 } from "../../../../../packages/core/src/schema";
 import { parseSubtree, refreshNodeIds, serializeSubtree } from "./clipboard";
 
+// D-14 / D-15: a node is "live" if it received an event within this window.
+// Used by both isNodeLive (action) and useIsNodeLive (hook) — keep in one place.
+const LIVE_WINDOW_MS = 30_000;
+
 /**
  * Convert a RoadmapNode to a react-d3-tree RawNodeDatum.
  * Maps title -> name and stores all custom data in attributes.
@@ -227,6 +231,16 @@ interface RoadmapState {
 	// --- Plan 03-04c: File > New (EDIT-17) ----------------------------------
 	isUntitled: boolean;
 
+	// --- Plan 04-03: Live event state (PLUG-03, PLUG-04) --------------------
+	/** Per-node live event metadata — populated by applyEventBatch. */
+	liveEventMeta: Record<
+		string,
+		{ lastEventAt: number; source?: string; meta?: Record<string, unknown> }
+	>;
+	/** Bumped by applyEventBatch (once per batch, not per node). Used by subscribers
+	 * to re-render live status without touching dataKey. */
+	liveTick: number;
+
 	// Actions -- structural (increment dataKey)
 	loadSchema: (schema: RoadmapSchema, filePath: string | null) => void;
 	reloadSchema: (schema: RoadmapSchema) => void;
@@ -276,6 +290,22 @@ interface RoadmapState {
 	setExternalEdit: (path: string | null) => void;
 	resolveExternalEdit: (action: "reload" | "keep") => void;
 	triggerSave: () => void;
+
+	// --- Plan 04-03: Live event actions (PLUG-03, PLUG-04) ------------------
+	/** Apply a batch of status updates in a single set() — preserves dataKey. */
+	applyEventBatch: (
+		updates: Array<{
+			nodeId: string;
+			status: string;
+			meta?: Record<string, unknown>;
+			source?: string;
+			lastEventAt: number;
+		}>,
+	) => void;
+	/** Bump liveTick (called by a 1Hz setInterval in App.tsx) so live selectors re-evaluate. */
+	bumpLiveTick: () => void;
+	/** Selector: true iff a live event was received for nodeId within the last 30s. */
+	isNodeLive: (nodeId: string) => boolean;
 }
 
 export const INITIAL_STATE = {
@@ -308,6 +338,12 @@ export const INITIAL_STATE = {
 	autosavePaused: false,
 	// Plan 03-04c File > New
 	isUntitled: false,
+	// Plan 04-03 live event state
+	liveEventMeta: {} as Record<
+		string,
+		{ lastEventAt: number; source?: string; meta?: Record<string, unknown> }
+	>,
+	liveTick: 0,
 };
 
 export const useRoadmapStore = create<RoadmapState>((set, get) => {
@@ -794,5 +830,56 @@ export const useRoadmapStore = create<RoadmapState>((set, get) => {
 				window.dispatchEvent(new CustomEvent("roadraven:trigger-save"));
 			}
 		},
+
+		// --- Plan 04-03: Live event actions (PLUG-03, PLUG-04) ------------------
+
+		applyEventBatch: (updates) => {
+			if (updates.length === 0) return;
+			const state = get();
+			const nodeIndex = state.nodeIndex;
+			const nextLiveEventMeta = { ...state.liveEventMeta };
+			// In-place mutation via nodeIndex (mirrors updateNodeStatus pattern — preserves
+			// the data reference so react-d3-tree does NOT deep-clone, keeping dataKey stable)
+			for (const u of updates) {
+				const node = nodeIndex.get(u.nodeId);
+				if (node && node.status !== u.status) {
+					node.status = u.status as typeof node.status;
+				}
+				nextLiveEventMeta[u.nodeId] = {
+					lastEventAt: u.lastEventAt,
+					source: u.source,
+					meta: u.meta,
+				};
+			}
+			// Single set() call — exactly one statusTick bump per batch (D-25 / Pitfall 6)
+			set({
+				liveEventMeta: nextLiveEventMeta,
+				statusTick: state.statusTick + 1,
+				// dataKey intentionally NOT bumped — phase 4 overlay is status-only (PLUG-03)
+			});
+		},
+
+		bumpLiveTick: () => set((s) => ({ liveTick: s.liveTick + 1 })),
+
+		isNodeLive: (nodeId) => {
+			const meta = get().liveEventMeta[nodeId];
+			if (!meta) return false;
+			return Date.now() - meta.lastEventAt < LIVE_WINDOW_MS;
+		},
 	};
 });
+
+/**
+ * React hook: returns true iff the given node received a live event within the
+ * last 30 seconds. Re-evaluates whenever liveTick bumps (1Hz via App.tsx setInterval)
+ * or liveEventMeta changes — see D-14, D-15 in 04-CONTEXT.md.
+ */
+export function useIsNodeLive(nodeId: string): boolean {
+	return useRoadmapStore((s) => {
+		// Subscribe to liveTick so the selector re-runs every 1Hz tick.
+		void s.liveTick;
+		const meta = s.liveEventMeta[nodeId];
+		if (!meta) return false;
+		return Date.now() - meta.lastEventAt < LIVE_WINDOW_MS;
+	});
+}

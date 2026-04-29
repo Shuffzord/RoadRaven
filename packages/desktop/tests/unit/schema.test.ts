@@ -355,3 +355,38 @@ describe("Schema validation — negative cases", () => {
 		expect(result.success).toBe(false);
 	});
 });
+
+// Phase 4 Wave 0 — PLUG-09 additions (D-26).
+// plugin and subscribe are z.unknown().optional() — confirm they stay permissive.
+describe("PLUG-09: plugin/subscribe fields", () => {
+	it("accepts plugin as unknown optional", () => {
+		const node = {
+			id: crypto.randomUUID(),
+			title: "X",
+			status: "not-started",
+			plugin: { id: "anything", weird: true },
+		};
+		const result = RoadmapNodeSchema.safeParse(node);
+		expect(result.success).toBe(true);
+	});
+	it("accepts subscribe as unknown optional", () => {
+		const node = {
+			id: crypto.randomUUID(),
+			title: "X",
+			status: "not-started",
+			subscribe: { endpoint: "xyz" },
+		};
+		const result = RoadmapNodeSchema.safeParse(node);
+		expect(result.success).toBe(true);
+	});
+	it("accepts unknown plugin.id silently (no warning)", () => {
+		const node = {
+			id: crypto.randomUUID(),
+			title: "X",
+			status: "not-started",
+			plugin: { id: "nonexistent-plugin-xyz" },
+		};
+		const result = RoadmapNodeSchema.safeParse(node);
+		expect(result.success).toBe(true);
+	});
+});

@@ -1,7 +1,14 @@
 import { useEffect, useRef } from "react";
-import { useRoadmapStore } from "../store/roadmapStore";
+import type { NodeStatus } from "../../../../../packages/core/src/schema";
+import { useIsNodeLive, useRoadmapStore } from "../store/roadmapStore";
 
-export const STATUS_TOKEN_MAP = {
+// Typed as Record<NodeStatus, ...> so the schema's status enum is the single
+// source of truth — adding/removing a status in schema.ts forces this map to
+// be updated, preventing the silent drift that fallow flagged.
+export const STATUS_TOKEN_MAP: Record<
+	NodeStatus,
+	{ color: string; bg: string }
+> = {
 	"not-started": {
 		color: "--rv-status-not-started",
 		bg: "--rv-status-not-started-bg",
@@ -10,11 +17,12 @@ export const STATUS_TOKEN_MAP = {
 		color: "--rv-status-in-progress",
 		bg: "--rv-status-in-progress-bg",
 	},
-	completed: { color: "--rv-status-completed", bg: "--rv-status-completed-bg" },
+	completed: {
+		color: "--rv-status-completed",
+		bg: "--rv-status-completed-bg",
+	},
 	blocked: { color: "--rv-status-blocked", bg: "--rv-status-blocked-bg" },
-} as const;
-
-export type NodeStatus = keyof typeof STATUS_TOKEN_MAP;
+};
 
 export function formatStatus(status: string): string {
 	return status
@@ -95,12 +103,18 @@ export function RoadmapNodeCard({
 	const status = liveStatus as NodeStatus;
 	const tokens = STATUS_TOKEN_MAP[status] ?? STATUS_TOKEN_MAP["not-started"];
 
+	// Live pulse: true iff this node received an event within the last 30s (D-14/D-15).
+	// Re-evaluates on every 1Hz liveTick bump from App.tsx setInterval.
+	const isLive = useIsNodeLive(nodeId ?? "");
+
 	return (
 		<div
 			className={`node relative min-w-[180px] max-w-[220px] rounded-[var(--node-radius,8px)] border-[length:var(--rv-border-width,1px)] border-[color:var(--rv-border)] bg-[var(--rv-bg-node)] pl-4 pr-3 py-[10px] select-none transition-[box-shadow,border-color,background] duration-150 hover:bg-[var(--rv-bg-node-hover)] group ${isSelected ? "outline outline-2 -outline-offset-1 outline-[var(--rv-accent)]" : ""}`}
 			data-source-id={nodeId}
 			data-selected={isSelected ? "true" : undefined}
 			data-focused={isFocused ? "true" : undefined}
+			data-live={isLive ? "true" : undefined}
+			data-rv-surface="node"
 			style={
 				{
 					boxShadow: "var(--rv-shadow-node)",

@@ -52,7 +52,7 @@ Before creating a PR, ensure:
 1. `bunx vitest run` — all tests pass
 2. `bunx vite build` — production build succeeds (catches import/CSS issues that unit tests miss)
 3. `bunx @biomejs/biome lint packages/desktop/src/ shared/` — no lint errors
-4. `bunx fallow audit --changed-since=HEAD` — no new dead code / duplication / complexity regressions in your diff (see below)
+4. `fallow audit --changed-since=HEAD` — no new dead code / duplication / complexity regressions in your diff (see below)
 
 ## Static analysis (fallow)
 

@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import type { RoadmapNode } from "../../../../../packages/core/src/schema";
+import { useEventLogStore } from "../store/eventLogStore";
 import { findParentAndIndex, useRoadmapStore } from "../store/roadmapStore";
 import { dispatchOpenRename, type useInlineRename } from "./useInlineRename";
 
@@ -66,7 +67,7 @@ function returnToParent(nodeId: string): void {
 	const schema = useRoadmapStore.getState().schema;
 	if (!schema) return;
 	const found = findParentAndIndex(schema.nodes, nodeId);
-	if (!found || !found.parent) return;
+	if (!found?.parent) return;
 	useRoadmapStore.getState().setFocusedNode(found.parent.id);
 }
 
@@ -92,6 +93,18 @@ export function useKeyboardRouter(deps: RouterDeps): void {
 			const inTextInput = isInTextInput(active);
 			const store = useRoadmapStore.getState();
 			const focusedId = store.focusedNodeId;
+
+			// Ctrl+Shift+L (or Cmd+Shift+L on mac) — toggle event log drawer (D-18)
+			if (
+				(e.ctrlKey || e.metaKey) &&
+				e.shiftKey &&
+				e.key.toLowerCase() === "l"
+			) {
+				if (inTextInput) return; // respect Phase 3 input-focused guard
+				e.preventDefault();
+				useEventLogStore.getState().toggleOpen();
+				return;
+			}
 
 			// Context-aware Ctrl+C / Ctrl+V — defers to native when typing in a text input
 			if ((e.ctrlKey || e.metaKey) && (e.key === "c" || e.key === "v")) {
@@ -231,8 +244,28 @@ export function useKeyboardRouter(deps: RouterDeps): void {
 				}
 			}
 
-			// Escape — close rename or deselect
+			// Escape — closes drawer when focus is inside it; otherwise falls through
+			// to rename-cancel / deselect-node (Phase 3 contract, UAT 04-06 drive-by fix).
+			// Selector matches the EventLogDrawer's <section aria-label="Event log">
+			// directly — biome flags an explicit role="region" on <section> as
+			// redundant (implicit ARIA semantic role), so we anchor on the
+			// element + accessible-name attribute instead. The drawer's region
+			// role is preserved by the section element semantic.
 			if (e.key === "Escape") {
+				const drawer = document.querySelector(
+					'section[aria-label="Event log"]',
+				);
+				const isOpen = useEventLogStore.getState().isOpen;
+				if (
+					isOpen &&
+					drawer &&
+					active instanceof Node &&
+					drawer.contains(active)
+				) {
+					e.preventDefault();
+					useEventLogStore.getState().setOpen(false);
+					return;
+				}
 				if (deps.inlineRename.state.nodeId) {
 					e.preventDefault();
 					deps.inlineRename.cancel();

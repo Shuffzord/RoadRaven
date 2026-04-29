@@ -1,5 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import type { RoadmapNode, RoadmapSchema } from "../../../../../shared/types";
+import type {
+	RoadmapNode,
+	RoadmapSchema,
+} from "../../../../../packages/core/src/schema";
 import {
 	buildOwnershipMap,
 	getOwnership,

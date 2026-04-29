@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRoadmapStore } from "../store/roadmapStore";
+import { IntegrationZone } from "./IntegrationZone";
 import { MarkdownRenderer } from "./MarkdownRenderer";
 import { MetadataEditor } from "./MetadataEditor";
 import { NotesEditor } from "./NotesEditor";
@@ -478,6 +479,11 @@ export function SidePanel({ isOpen, onClose }: SidePanelProps) {
 								No metadata for this node.
 							</p>
 						)}
+
+						<div className="h-px bg-rv-border my-4" />
+
+						{/* Integration zone — D-16, PLUG-05 (Plan 04-03) */}
+						<IntegrationZone nodeId={selectedNodeId} />
 
 						<div className="h-px bg-rv-border my-4" />
 

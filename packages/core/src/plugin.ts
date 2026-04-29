@@ -7,7 +7,8 @@ export interface IntegrationEvent {
 	status: string;
 	meta?: Record<string, unknown>;
 	source?: string;
-	timestamp?: string;
+	timestamp?: string; // ISO 8601; mapped to `t` in the .events.jsonl line shape
+	_error?: "malformed" | "unknown_node" | "invalid_status"; // D-09 classification
 }
 
 /**

@@ -77,5 +77,4 @@ export async function setupBunLogging(): Promise<void> {
 }
 
 export const bunLogger = getLogger(["bun"]);
-export const themeLogger = getLogger(["bun", "theme"]);
-export const settingsLogger = getLogger(["bun", "settings"]);
+export const serverLogger = getLogger(["roadraven", "events", "server"]);

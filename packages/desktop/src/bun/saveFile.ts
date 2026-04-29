@@ -1,6 +1,9 @@
 import { dirname, resolve, sep } from "node:path";
+import type {
+	RoadmapNode,
+	RoadmapSchema,
+} from "../../../../packages/core/src/schema";
 import { RoadmapSchemaSchema } from "../../../../packages/core/src/schema";
-import type { RoadmapNode, RoadmapSchema } from "../../../../shared/types";
 import { atomicWrite } from "./atomicWrite";
 import { markSelfWrite } from "./fileWatcher";
 import { bunLogger } from "./logging";
@@ -67,10 +70,6 @@ export function setCachedMainPath(absolutePath: string): void {
  */
 export function clearCachedMainPath(): void {
 	cachedMainPath = null;
-}
-
-export function getCachedMainPath(): string | null {
-	return cachedMainPath;
 }
 
 /**
@@ -355,8 +354,4 @@ export function __setCachedMainPathForTests(path: string): void {
 
 export function __pushDialogAllowlistPathForTests(path: string): void {
 	pushDialogAllowlistPath(path);
-}
-
-export function __getCachedMainPathForTests(): string | null {
-	return cachedMainPath;
 }

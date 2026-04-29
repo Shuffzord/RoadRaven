@@ -1,5 +1,5 @@
 import { dirname, resolve as pathResolve, sep } from "node:path";
-import type { RoadmapNode } from "../../../../shared/types.ts";
+import type { RoadmapNode } from "../../../../packages/core/src/schema.ts";
 import { bunLogger } from "./logging";
 import { setOwnership } from "./refMap";
 

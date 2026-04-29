@@ -25,7 +25,7 @@ import {
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { RoadmapSchema } from "../../../../../shared/types";
+import type { RoadmapSchema } from "../../../../../packages/core/src/schema";
 import * as atomicWriteModule from "../../../src/bun/atomicWrite";
 import { getOwnership, resetRefMap } from "../../../src/bun/refMap";
 // Test hooks exported from bun/saveFile (real implementation lives in Task 2).

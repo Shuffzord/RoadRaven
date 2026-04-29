@@ -1,0 +1,4 @@
+{"type":"hello","source":"uat-wscat","version":"1.0"}
+{"nodeId":"deadbeef-0000-0000-0000-000000000000","status":"in-progress"}
+{"nodeId":"a0000000-4102-4000-8000-000000000000","status":"halfway"}
+not json at all

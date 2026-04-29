@@ -11,7 +11,16 @@ type RPCSchema<T> = T;
 
 // -- Theme types -------------------------------------------------------------
 
-export type ThemePreference = "dark" | "light" | "high-contrast" | "system";
+export type ThemePreference =
+	| "dark"
+	| "light"
+	| "high-contrast"
+	| "paper"
+	| "amber"
+	| "contrast"
+	| "slate"
+	| "moss"
+	| "system";
 
 /**
  * Strict settings interface — add fields here as new phases need them.
@@ -21,21 +30,22 @@ export interface AppSettings {
 	theme?: ThemePreference;
 	recentFiles?: string[];
 	fileSettings?: Record<string, { layout?: "TB" | "LR" }>;
+	eventApi?: {
+		/** User-specified WebSocket port override. When set, no auto-fallback on EADDRINUSE. */
+		port?: number;
+	};
 }
 
 // -- Zod-inferred types from @roadraven/core --------------------------------
+// Used internally by the RPC contract below. Consumers needing these types
+// should import directly from "packages/core/src/schema" — re-exporting them
+// here created two valid import paths for the same type and was flagged as
+// duplicate by fallow.
 
 import type {
-	NodeStatus as _NodeStatus,
-	RoadmapNode as _RoadmapNode,
-	RoadmapSchema as _RoadmapSchema,
-	StatusConfig as _StatusConfig,
+	RoadmapNode,
+	RoadmapSchema,
 } from "../packages/core/src/schema.ts";
-
-export type NodeStatus = _NodeStatus;
-export type RoadmapNode = _RoadmapNode;
-export type RoadmapSchema = _RoadmapSchema;
-export type StatusConfig = _StatusConfig;
 
 // -- RPC Contract -----------------------------------------------------------
 
@@ -90,6 +100,23 @@ export type RoadmapRPCType = {
 				};
 				response: undefined;
 			};
+			setNodeAllowlist: {
+				params: { nodeIds: string[]; statusIds: string[] };
+				response: { ok: true };
+			};
+			// Renderer-pulls-on-mount path so the EventApiPill / Welcome URL line do
+			// not depend on the Bun→renderer push at startup landing before the
+			// bundle's RPC handlers register (the push at index.ts initial-state
+			// site races bundle load and was dropped silently — UAT D-07 regression).
+			getEventApiState: {
+				params: Record<string, never>;
+				response: {
+					status: "off" | "listening" | "error";
+					port: number | null;
+					connectedCount: number;
+					errorMessage: string | null;
+				};
+			};
 		};
 		messages: {
 			nodeStatusUpdate: {
@@ -105,13 +132,31 @@ export type RoadmapRPCType = {
 		requests: Record<string, never>;
 		messages: {
 			pushStatusUpdate: {
-				nodeId: string;
-				status: string;
-				meta?: Record<string, unknown>;
+				// Batched shape per D-25 — emitted by the Bun producer (Plan 04-02)
+				// and consumed by the renderer handler (Plan 04-03). The legacy
+				// single-node shape was removed once Plan 04-03 stabilised.
+				updates: Array<{
+					nodeId: string;
+					status: string;
+					meta?: Record<string, unknown>;
+					source?: string;
+					lastEventAt: number;
+				}>;
 			};
-			pushEventLog: { event: IntegrationEvent };
+			pushEventLog: { events: IntegrationEvent[] };
 			pushFileChanged: { path: string };
 			pushOwnershipMap: { entries: Array<[string, string]> };
+			pushEventApiState: {
+				status: "off" | "listening" | "error";
+				port: number | null;
+				connectedCount: number;
+				errorMessage: string | null;
+			};
+			pushEventApiError: {
+				type: "malformed" | "unknown_node" | "invalid_status" | "disconnect";
+				source: string;
+				detail?: string;
+			};
 		};
 	}>;
 };
