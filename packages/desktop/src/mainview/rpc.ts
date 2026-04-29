@@ -14,24 +14,9 @@ const rpc = Electroview.defineRPC<RoadmapRPCType>({
 				});
 			},
 			pushStatusUpdate: (msg) => {
-				// Narrow the union: only handle the batched shape (Plan 04-03+)
-				if ("updates" in msg) {
-					import("./rpcHandlers").then(({ handlePushStatusUpdate }) => {
-						handlePushStatusUpdate(
-							msg as {
-								updates: Array<{
-									nodeId: string;
-									status: string;
-									meta?: Record<string, unknown>;
-									source?: string;
-									lastEventAt: number;
-								}>;
-							},
-						);
-					});
-				}
-				// Legacy single-node shape: silently drop (RETAIN for Wave 0 build-green;
-				// removed after Plan 04-03 is confirmed stable)
+				import("./rpcHandlers").then(({ handlePushStatusUpdate }) => {
+					handlePushStatusUpdate(msg);
+				});
 			},
 			pushEventLog: (msg) => {
 				import("./rpcHandlers").then(({ handlePushEventLog }) => {

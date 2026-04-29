@@ -69,6 +69,30 @@ describe("EventSchema (Zod boundary validation)", () => {
 		expect(META_MAX_BYTES).toBe(8 * 1024);
 	});
 
+	it("caps meta by UTF-8 byte length, not character count (CJK / emoji)", () => {
+		// 3000 CJK chars ≈ 9000 UTF-8 bytes — exceeds 8 KB cap even though
+		// the JSON.stringify character length is well under it.
+		const cjkValue = "测".repeat(3000);
+		const serializedChars = JSON.stringify({ data: cjkValue }).length;
+		const serializedBytes = new TextEncoder().encode(
+			JSON.stringify({ data: cjkValue }),
+		).byteLength;
+		expect(serializedChars).toBeLessThan(META_MAX_BYTES);
+		expect(serializedBytes).toBeGreaterThan(META_MAX_BYTES);
+
+		const result = parseIncoming(
+			JSON.stringify({
+				nodeId: "n1",
+				status: "done",
+				meta: { data: cjkValue },
+			}),
+		);
+		expect(result.ok).toBe(false);
+		if (!result.ok) {
+			expect(result.error).toBe("malformed");
+		}
+	});
+
 	it("classifies unknown_node when nodeId not in allowlist", () => {
 		const frame = { nodeId: "unknown-node", status: "done" };
 		const allowlist = {

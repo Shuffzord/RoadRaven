@@ -10,9 +10,15 @@
 import { DEFAULT_PORT, startEventServer } from "./eventServer";
 import { deleteSentinel, writeSentinel } from "./sentinel";
 
-const envPort = process.env.ROADRAVEN_EVENT_PORT
-	? Number(process.env.ROADRAVEN_EVENT_PORT)
-	: null;
+const envPortRaw = process.env.ROADRAVEN_EVENT_PORT;
+const envPortParsed = envPortRaw ? Number(envPortRaw) : null;
+if (envPortRaw && (envPortParsed === null || Number.isNaN(envPortParsed))) {
+	process.stderr.write(
+		`${JSON.stringify({ ok: false, error: "invalid_port", value: envPortRaw })}\n`,
+	);
+}
+const envPort =
+	envPortParsed !== null && !Number.isNaN(envPortParsed) ? envPortParsed : null;
 const requestedPort = envPort ?? DEFAULT_PORT;
 const isUserSpecified = envPort !== null;
 

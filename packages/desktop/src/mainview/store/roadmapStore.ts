@@ -6,6 +6,10 @@ import type {
 } from "../../../../../packages/core/src/schema";
 import { parseSubtree, refreshNodeIds, serializeSubtree } from "./clipboard";
 
+// D-14 / D-15: a node is "live" if it received an event within this window.
+// Used by both isNodeLive (action) and useIsNodeLive (hook) — keep in one place.
+const LIVE_WINDOW_MS = 30_000;
+
 /**
  * Convert a RoadmapNode to a react-d3-tree RawNodeDatum.
  * Maps title -> name and stores all custom data in attributes.
@@ -860,7 +864,7 @@ export const useRoadmapStore = create<RoadmapState>((set, get) => {
 		isNodeLive: (nodeId) => {
 			const meta = get().liveEventMeta[nodeId];
 			if (!meta) return false;
-			return Date.now() - meta.lastEventAt < 30_000;
+			return Date.now() - meta.lastEventAt < LIVE_WINDOW_MS;
 		},
 	};
 });
@@ -876,6 +880,6 @@ export function useIsNodeLive(nodeId: string): boolean {
 		void s.liveTick;
 		const meta = s.liveEventMeta[nodeId];
 		if (!meta) return false;
-		return Date.now() - meta.lastEventAt < 30_000;
+		return Date.now() - meta.lastEventAt < LIVE_WINDOW_MS;
 	});
 }

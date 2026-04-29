@@ -65,9 +65,13 @@ const initialSettings = loadSettings();
 bunLogger.info`Loaded settings: ${JSON.stringify(initialSettings)}`;
 
 // Port precedence: env > settings > default (D-02)
-const envPort = process.env.ROADRAVEN_EVENT_PORT
-	? Number(process.env.ROADRAVEN_EVENT_PORT)
-	: null;
+const envPortRaw = process.env.ROADRAVEN_EVENT_PORT;
+const envPortParsed = envPortRaw ? Number(envPortRaw) : null;
+if (envPortRaw && (envPortParsed === null || Number.isNaN(envPortParsed))) {
+	bunLogger.warn`ROADRAVEN_EVENT_PORT="${envPortRaw}" is not a number; ignoring`;
+}
+const envPort =
+	envPortParsed !== null && !Number.isNaN(envPortParsed) ? envPortParsed : null;
 const settingsPort = initialSettings.eventApi?.port ?? null;
 const requestedPort = envPort ?? settingsPort ?? DEFAULT_PORT;
 const isUserSpecified = envPort !== null || settingsPort !== null;

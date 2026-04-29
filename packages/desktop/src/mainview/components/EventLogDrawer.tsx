@@ -210,7 +210,6 @@ export function EventLogDrawer() {
 						display: "flex",
 						alignItems: "center",
 						width: "calc(100% - 32px)",
-						paddingRight: 32,
 						background: "none",
 						border: "none",
 						cursor: "pointer",

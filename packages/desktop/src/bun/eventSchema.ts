@@ -15,7 +15,10 @@ const EventFrameSchema = z.object({
 		.record(z.string(), z.unknown())
 		.optional()
 		.refine(
-			(v) => v === undefined || JSON.stringify(v).length <= META_MAX_BYTES,
+			(v) =>
+				v === undefined ||
+				new TextEncoder().encode(JSON.stringify(v)).byteLength <=
+					META_MAX_BYTES,
 			{
 				message: "meta exceeds 8KB",
 			},

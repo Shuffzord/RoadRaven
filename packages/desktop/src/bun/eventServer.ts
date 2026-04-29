@@ -85,18 +85,15 @@ export async function startEventServer(
 	for (const port of candidates) {
 		attempted.push(port);
 		try {
-			// I-04 belt-and-braces #1: SYNCHRONOUS try/catch around Bun.serve (RESEARCH Pitfall 1)
+			// I-04: SYNCHRONOUS try/catch around Bun.serve catches EADDRINUSE
+			// (Bun surfaces bind failures synchronously). The error() handler below
+			// is the request-path error catcher — it fires for unhandled exceptions
+			// thrown inside fetch / websocket callbacks, NOT for server binding.
 			server = Bun.serve<WsData>({
 				hostname: "127.0.0.1", // D-03 localhost boundary
 				port,
-				// I-04 belt-and-braces #2: async error handler for Bun versions that
-				// surface EADDRINUSE asynchronously rather than via sync throw.
 				error(err: Error) {
-					if (isEaddrinuse(err)) {
-						serverLogger.warn`Bun.serve async EADDRINUSE on :${port}: ${err.message}`;
-					} else {
-						serverLogger.error`Bun.serve error on :${port}: ${err.message}`;
-					}
+					serverLogger.error`Bun.serve request error on :${port}: ${err.message}`;
 					return new Response("internal error", { status: 500 });
 				},
 				fetch(req, srv) {
