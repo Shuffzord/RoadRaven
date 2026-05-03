@@ -780,7 +780,11 @@ export const useRoadmapStore = create<RoadmapState>((set, get) => {
 			});
 		},
 
-		setTranslate: (translate) => set({ translate }),
+		setTranslate: (translate) => {
+			const cur = get().translate;
+			if (cur.x === translate.x && cur.y === translate.y) return;
+			set({ translate });
+		},
 
 		setZoomLevel: (zoom) => set({ zoomLevel: zoom }),
 

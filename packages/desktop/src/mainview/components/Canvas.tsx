@@ -89,13 +89,11 @@ export function Canvas() {
 		return () => observer.disconnect();
 	}, []);
 
-	// Pan-animation state. `centeringTransitionDuration` on <Tree> only runs
-	// for the initial mount — runtime `translate` prop changes are applied
-	// instantly. So we interpolate translate ourselves via requestAnimationFrame
-	// with a cubic-ease so the camera-follow feels smooth.
+	// Self-animated because Tree's `centeringTransitionDuration` only fires
+	// on initial mount — runtime `translate` prop changes are applied instantly.
 	const panAnimRef = useRef<number | null>(null);
 	const animatePanTo = useCallback(
-		(target: { x: number; y: number }, duration = 500) => {
+		(target: { x: number; y: number }) => {
 			if (panAnimRef.current !== null) {
 				cancelAnimationFrame(panAnimRef.current);
 				panAnimRef.current = null;
@@ -104,17 +102,27 @@ export function Canvas() {
 				x: transformRef.current.x,
 				y: transformRef.current.y,
 			};
+			const reduced =
+				typeof window !== "undefined" &&
+				window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+			if (reduced) {
+				setTranslate(target);
+				return;
+			}
+			const dx = target.x - start.x;
+			const dy = target.y - start.y;
+			const distance = Math.hypot(dx, dy);
+			const duration = Math.min(900, Math.max(250, distance * 0.6));
 			const startTime = performance.now();
-			// Cubic ease-out — matches Material "standard" feel, fast start,
-			// gentle settle. Easy to swap for cubic-bezier or spring later.
-			const ease = (t: number): number => 1 - (1 - t) ** 3;
+			const ease = (t: number): number =>
+				t < 0.5 ? 4 * t ** 3 : 1 - (-2 * t + 2) ** 3 / 2;
 			const step = (now: number): void => {
 				const elapsed = now - startTime;
 				const t = Math.min(1, elapsed / duration);
 				const e = ease(t);
 				setTranslate({
-					x: start.x + (target.x - start.x) * e,
-					y: start.y + (target.y - start.y) * e,
+					x: start.x + dx * e,
+					y: start.y + dy * e,
 				});
 				if (t < 1) {
 					panAnimRef.current = requestAnimationFrame(step);
@@ -134,10 +142,9 @@ export function Canvas() {
 		};
 	}, []);
 
-	// Camera-follow: when the focused (arrow-nav) or selected (click/space)
-	// node is outside the viewport, pan so it comes into view. Uses the
-	// rAF-animated panner above so the motion feels smooth; only triggers
-	// when genuinely off-screen so manual panning isn't fought.
+	// Pan only enough to land the node inside a comfort zone (middle 50% of
+	// viewport) — recentering on every edge click whips the camera across
+	// long distances and reads as jarring.
 	const targetNodeId = focusedNodeId ?? selectedNodeId;
 	useEffect(() => {
 		if (!targetNodeId) return;
@@ -146,16 +153,22 @@ export function Canvas() {
 		const t = transformRef.current;
 		const screenX = pos.x * t.k + t.x;
 		const screenY = pos.y * t.k + t.y;
-		const margin = 100;
-		const inView =
-			screenX > margin &&
-			screenX < dimensions.width - margin &&
-			screenY > margin &&
-			screenY < dimensions.height - margin;
-		if (inView) return;
+		const clamp = (v: number, lo: number, hi: number): number =>
+			Math.min(hi, Math.max(lo, v));
+		const zoneX = {
+			min: dimensions.width * 0.25,
+			max: dimensions.width * 0.75,
+		};
+		const zoneY = {
+			min: dimensions.height * 0.25,
+			max: dimensions.height * 0.75,
+		};
+		const targetScreenX = clamp(screenX, zoneX.min, zoneX.max);
+		const targetScreenY = clamp(screenY, zoneY.min, zoneY.max);
+		if (targetScreenX === screenX && targetScreenY === screenY) return;
 		animatePanTo({
-			x: dimensions.width / 2 - pos.x * t.k,
-			y: dimensions.height / 2 - pos.y * t.k,
+			x: t.x + (targetScreenX - screenX),
+			y: t.y + (targetScreenY - screenY),
 		});
 	}, [targetNodeId, dimensions, animatePanTo]);
 
@@ -205,6 +218,14 @@ export function Canvas() {
 		},
 		getNodePosition: (nodeId: string) =>
 			nodePositionsRef.current.get(nodeId) ?? null,
+		isNodeVisible: (nodeId: string) => {
+			// Cards that aren't currently rendered (collapsed subtrees) have
+			// no DOM presence. Scope to the canvas container so panel-side
+			// references can't confuse the lookup.
+			const root = containerRef.current;
+			if (!root) return false;
+			return !!root.querySelector(`[data-source-id="${nodeId}"]`);
+		},
 		togglePanelFocus: () => {
 			// Placeholder — Plan 03 implements panel-focus handoff. For now, move
 			// focus between selected node (panel) and focused node (canvas).
@@ -370,8 +391,9 @@ export function Canvas() {
 						dataKey={dataKey}
 						orientation={layoutOrientation === "TB" ? "vertical" : "horizontal"}
 						pathFunc="step"
-						separation={{ siblings: 1.5, nonSiblings: 2.0 }}
+						separation={{ siblings: 1, nonSiblings: 1.3 }}
 						nodeSize={{ x: 240, y: 100 }}
+						initialDepth={3}
 						renderCustomNodeElement={renderNode}
 						zoom={zoomLevel}
 						enableLegacyTransitions={false}
@@ -380,7 +402,6 @@ export function Canvas() {
 						zoomable={true}
 						draggable={true}
 						translate={translate}
-						dimensions={dimensions}
 						hasInteractiveNodes={true}
 						onUpdate={handleTreeUpdate}
 					/>

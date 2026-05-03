@@ -11,6 +11,10 @@ interface RouterDeps {
 	getTransform: () => { x: number; y: number; k: number };
 	getContainerRect: () => { left: number; top: number };
 	getNodePosition: (nodeId: string) => { x: number; y: number } | null;
+	// True iff the node currently has a card rendered on screen. Collapsed
+	// subtrees aren't rendered by react-d3-tree, so their nodes return false —
+	// arrow-nav uses this to skip into-hidden moves.
+	isNodeVisible: (nodeId: string) => boolean;
 	togglePanelFocus: () => void;
 }
 
@@ -44,22 +48,37 @@ function isMenuOpen(): boolean {
 	return !!document.querySelector('[role="menu"]');
 }
 
-function navigateSibling(nodeId: string, delta: number): void {
+function navigateSibling(
+	nodeId: string,
+	delta: number,
+	isVisible: (id: string) => boolean,
+): void {
 	const schema = useRoadmapStore.getState().schema;
 	if (!schema) return;
 	const found = findParentAndIndex(schema.nodes, nodeId);
 	if (!found) return;
-	const next = found.parentArray[found.index + delta];
-	if (next) useRoadmapStore.getState().setFocusedNode(next.id);
+	// Walk in delta direction, skipping siblings whose card isn't rendered
+	// (e.g. inside a collapsed subtree). Stops at the first visible neighbour.
+	let i = found.index + delta;
+	while (i >= 0 && i < found.parentArray.length) {
+		const candidate = found.parentArray[i];
+		if (isVisible(candidate.id)) {
+			useRoadmapStore.getState().setFocusedNode(candidate.id);
+			return;
+		}
+		i += delta;
+	}
 }
 
-function enterChild(nodeId: string): void {
+function enterChild(nodeId: string, isVisible: (id: string) => boolean): void {
 	const schema = useRoadmapStore.getState().schema;
 	if (!schema) return;
 	const found = findParentAndIndex(schema.nodes, nodeId);
 	if (!found) return;
 	const target: RoadmapNode = found.parentArray[found.index];
-	const first = target.children?.[0];
+	// First child whose card is actually rendered. If the parent is collapsed,
+	// no child is visible and we no-op rather than focus a hidden node.
+	const first = target.children?.find((c) => isVisible(c.id));
 	if (first) useRoadmapStore.getState().setFocusedNode(first.id);
 }
 
@@ -224,17 +243,17 @@ export function useKeyboardRouter(deps: RouterDeps): void {
 					: { child: "ArrowDown", parent: "ArrowUp" };
 				if (e.key === siblingKeys.prev) {
 					e.preventDefault();
-					navigateSibling(focusedId, -1);
+					navigateSibling(focusedId, -1, deps.isNodeVisible);
 					return;
 				}
 				if (e.key === siblingKeys.next) {
 					e.preventDefault();
-					navigateSibling(focusedId, 1);
+					navigateSibling(focusedId, 1, deps.isNodeVisible);
 					return;
 				}
 				if (e.key === hierarchyKeys.child) {
 					e.preventDefault();
-					enterChild(focusedId);
+					enterChild(focusedId, deps.isNodeVisible);
 					return;
 				}
 				if (e.key === hierarchyKeys.parent) {
