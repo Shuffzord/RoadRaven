@@ -214,7 +214,21 @@ Plans:
 
 **Requirements covered:** PACK-01, PACK-02, PACK-03, PACK-04, PACK-05, PACK-06
 
-**Plans:**
+**Plans:** 5 plans
+
+Wave structure:
+- **Wave 0** (scaffolding): 05-01
+- **Wave 1**: 05-02
+- **Wave 2**: 05-03
+- **Wave 3** (parallel): 05-04 + 05-05
+
+Plans:
+- [ ] 05-01-WAVE-0-SCAFFOLDING.md — REQUIREMENTS.md/PROJECT.md edits (D-05/D-08/D-11/R-01) + release-test scaffolds + a11y harness skeleton + check-core-deps & bump-version scripts + devDeps
+- [ ] 05-02-NPM-PACKAGES.md - `@roadraven/core` tsup build (ESM + .d.ts) + `@roadraven/plugin-claude-code` private-to-public flip + per-package LICENSE + READMEs (PACK-04)
+- [ ] 05-03-RELEASE-WORKFLOW.md - Tag-triggered `release.yml` (Windows .zip + Linux .tar.gz + npm publish via OIDC trusted publishing per R-03) + `ci.yml` core-deps allowlist + requirements-edits invariants (D-22 fallow stays commented) + RELEASE-OPS.md (PACK-01, PACK-02, PACK-03, PACK-04)
+- [ ] 05-04-DOCS-AND-CONTRIBUTING.md - GitHub Pages (Just-the-Docs) + CONTRIBUTING.md + README install/feature-status/contributing polish + `docs/plugin-authoring.md` guide + `deploy-docs` job appended to release.yml (PACK-05)
+- [ ] 05-05-A11Y-AUDIT.md - `@axe-core/playwright` suite vs `vite preview` (R-04) + manual checklist on installed app (human checkpoint) + `05-A11Y-AUDIT.md` write-up (PACK-03, PACK-06)
+
 1. Packaging + auto-updater — macOS `.dmg`, Windows `.exe`, Ubuntu `.deb` native installers; Electrobun auto-updater configured (canary + stable channels); Linux: `bundleCEF: true` confirmed; all file actions reachable via keyboard/toolbar (no `ApplicationMenu` dependency); `process.on('SIGTERM', flushWriteQueue)` registered
 2. npm packages + accessibility + docs — `@roadmap-viewer/core` and `@roadmap-viewer/react` published to npm; `react`, `react-dom`, `react-d3-tree` marked as `peerDependencies` in `packages/react`; all peer deps externalized in Vite library build; `packages/core` has zero desktop dependencies (enforced in CI); accessibility audit: full keyboard navigation, ARIA roles on context menu and modal dialogs, colour not used as sole status indicator, focus indicators visible; README, docs site, plugin authoring guide, contribution guide
 
