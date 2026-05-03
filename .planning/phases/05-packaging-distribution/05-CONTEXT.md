@@ -211,7 +211,68 @@ Captured here so they're not lost, but explicitly out of scope for this phase.
 
 </deferred>
 
+<reconciliation>
+## Post-Research Reconciliation (2026-05-03)
+
+Research surfaced four open questions; user resolved each. These decisions LOCK and SUPERSEDE the conflicting items above where noted.
+
+### R-01: Linux installer format → `.tar.gz` (supersedes D-07/D-08 Linux assumption)
+**Decision:** Ship Electrobun's native `.tar.gz` self-extracting setup. Do NOT attempt to wrap in `.deb`.
+**Why:** Electrobun v1.16.0 does not produce native `.deb` files. Linux output is `{channel}-linux-x64-RoadRavenSetup-{channel}.tar.gz` containing a self-extracting installer. Wrapping in `.deb` via `dpkg-deb --build` would burn engineering time on packaging Electrobun was not designed to support, for marginal UX improvement.
+**Planner action — UPDATE D-07/D-08 effective scope:**
+- v1.0 Linux installer = `.tar.gz` (NOT `.deb`)
+- PACK-01 requirement edit: rewrite Linux line to `.tar.gz` (Ubuntu/Debian self-extracting bundle), NOT `.deb`
+- PROJECT.md "Out of Scope" gains row: "`.deb` packaging for v1.0 (Electrobun-native `.tar.gz` ships instead) — `.deb` wrapper deferred to v1.1 alongside GPG signing + apt repo if user demand emerges."
+- README Linux install instructions: `tar -xzf RoadRavenSetup-stable.tar.gz && cd <extracted> && ./RoadRavenSetup` — NOT `sudo dpkg -i`. Mention `bundleCEF: true` keeps CEF runtime self-contained.
+- D-13 still applies (unsigned), but the "GPG signing of Linux `.deb`" deferral row in PROJECT.md should be reworded to "GPG signing + `.deb` packaging for Linux."
+
+### R-02: Windows installer surface → `-Setup.exe` inside `.zip`
+**Decision:** Document the actual Electrobun output shape in README.
+**Why:** Electrobun produces `{channel}-win-x64-RoadRaven-Setup-{channel}.zip` containing the `-Setup.exe`. README "First run on Windows" must instruct users to download the `.zip`, extract, and run `RoadRaven-Setup.exe`.
+**Planner action:**
+- README Windows install section: "Download `.zip` → extract → double-click `RoadRaven-Setup.exe` → SmartScreen warning (More info → Run anyway)" — not "download `.exe` directly."
+- PACK-01 requirement edit: clarify Windows artifact is `-Setup.exe` distributed inside a `.zip`.
+
+### R-03: npm authentication → OIDC trusted publishing
+**Decision:** Use OIDC trusted publishing (npm trusted publishers, GA July 2025). No `NPM_TOKEN` secret.
+**Why:** Eliminates long-lived secret rotation burden, gives free supply-chain provenance attestation. Requires one-time npmjs.com Trusted Publishers config + `permissions: { id-token: write, contents: read }` in the publish workflow job.
+**Planner action:**
+- `.github/workflows/release.yml` npm publish job uses `permissions: { id-token: write, contents: read }`
+- Publish command: `npm publish --provenance --access public` (npm CLI is the only authorized exception to bun-only — explicit comment in workflow)
+- README/CONTRIBUTING.md does NOT need to mention auth — it's invisible to contributors
+- One-time setup checklist (planner generates as a `RELEASE-OPS.md` or similar): npmjs.com → Settings → Trusted Publishers → add publisher for `@roadraven/core` and `@roadraven/plugin-claude-code` pointing at `Shuffzord/RoadRaven` repo + `release.yml` workflow + `release` environment (if used)
+- Pre-flight: confirm both `@roadraven/core` and `@roadraven/plugin-claude-code` package names are unclaimed on npm (or owned by the user) BEFORE the first release tag
+
+### R-04: Accessibility audit scope → `vite preview` + `@axe-core/playwright`
+**Decision:** Run `@axe-core/playwright` against `vite preview` (port 4173, production renderer bundle). NOT against the CEF-bundled binary.
+**Why:** `vite preview` serves the production-built renderer bundle (same CSS/JS that ships in the installer's webview). Driving the shipped CEF binary with Playwright is not a paved path — Electrobun has no documented Playwright integration. The pragmatic compromise gives 95% audit coverage with paved-path tooling.
+**Planner action:**
+- Add `@axe-core/playwright@4.11.3` (verify latest at task time) as workspace devDependency
+- Audit harness: a Playwright test that runs `vite preview` on port 4173, navigates to the rendered app, runs `AxeBuilder` with `withTags(['wcag2a', 'wcag2aa'])`, asserts zero violations after manual override list (any token-bypass false positives go in the override list with rationale)
+- `05-A11Y-AUDIT.md` documents:
+  - Tool: `@axe-core/playwright` against `vite preview` build output
+  - Caveat: audit was NOT run against the final CEF-bundled binary; production CEF rendering of `--rv-*` tokens, Radix ARIA, and focus rings should be visually spot-checked manually post-install
+  - Manual checklist: keyboard-only navigation through tree edits, context menu (Radix), side panel, settings drawer, save flow, theme switcher (axe doesn't verify tab order)
+  - Findings: severity-classified, blocker findings fixed in this phase, lower severity filed as backlog
+  - Pass criterion: zero severity-blocker findings in axe + zero blocking issues in manual checklist
+
+### R-05: Bundle identifier → keep `RoadRaven.electrobun.dev` (no change)
+**Decision:** Do NOT change `app.identifier` in `electrobun.config.ts` for v1.0.
+**Why:** Already in production-ready code. The `RoadRaven.` prefix is unique enough; changing identifiers after v1.0 ships orphans installed users' settings/data directories. One-way door — only change for compelling reason.
+**Planner action:** No change to `electrobun.config.ts` `app.identifier`. No task needed.
+
+### R-06: Wave breakdown (planner guidance, not a locked decision)
+**Recommended structure** (planner may adjust if dependency graph dictates):
+- **Wave 1:** Workspace prep + npm package builds — `@roadraven/core` tsup config, `package.json` deltas (private→public, main/types/exports/files), build script, per-package LICENSE, README; same shape for `@roadraven/plugin-claude-code` private→public flip.
+- **Wave 2:** Release workflow + CI core-deps gate — `.github/workflows/release.yml` (tag-triggered, per-platform jobs not matrix, npm publish job with OIDC), small CI script enforcing `packages/core` zero-desktop-deps allowlist as new step in `ci.yml` lint job.
+- **Wave 3:** Docs site + CONTRIBUTING + README polish (PARALLEL with Wave 2) — Just-the-Docs `_config.yml`, GitHub Pages deploy job (either appended to release.yml or separate `pages.yml`), `CONTRIBUTING.md`, README install/feature-status/Contributing sections, `docs/plugin-authoring.md`, per-package READMEs.
+- **Wave 4:** Accessibility audit (depends on Wave 3 docs landing for stable surfaces, but Wave 3 itself doesn't change UI — can start as soon as Wave 1 settles) — `@axe-core/playwright` test harness, run against `vite preview`, manual checklist walk, `05-A11Y-AUDIT.md` write-up.
+- **Wave 5 (optional):** Requirement edits — touch REQUIREMENTS.md (PACK-01/02/04) and PROJECT.md ("Out of Scope" rows). Could fold into Wave 1 if planner prefers; doc-only diffs are low-risk.
+
+</reconciliation>
+
 ---
 
 *Phase: 05-packaging-distribution*
 *Context gathered: 2026-05-03*
+*Reconciled: 2026-05-03 (post-research)*
