@@ -2,7 +2,7 @@
 
 **Created:** 2026-04-12
 **Granularity:** Standard
-**Total phases:** 5 (+ Prerequisite)
+**Total phases:** 6 (+ Prerequisite)
 
 ## Overview
 
@@ -18,6 +18,7 @@ Starting from a bare Electrobun shell, we build outward through the visual stack
 - [ ] **Phase 3: Full Editor** — A complete roadmap can be created, edited, and saved without touching JSON directly
 - [ ] **Phase 4: Event API** — Nodes receive live status updates from external producers via WebSocket; Claude Code MCP wrapper works end-to-end (5/6 plans done; 04-06 gap closure pending)
 - [ ] **Phase 5: Packaging & Distribution** — Native installers on all three platforms; npm packages published
+- [ ] **Phase 6: Agentic Roadmap Authoring** — Agents (Claude Code and other MCP-capable LLMs) can read, create, edit, and delete roadmap nodes via MCP — turning RoadRaven into a substrate for agent-authored project plans
 
 ---
 
@@ -228,6 +229,39 @@ Plans:
 **Dependencies:** Phase 4
 
 **UI hint**: yes
+
+### Phase 6: Agentic Roadmap Authoring
+
+**Goal:** Agents (Claude Code and other MCP-capable LLM tools) can read, create, edit, move, and delete roadmap nodes via the MCP wrapper — turning Phase 4's one-way producer→app pipe into a bidirectional contract so a developer can ask "scaffold a roadmap for migrating service X" and watch the tree assemble live without ever touching the JSON.
+
+**Depends on:** Phase 4 (Event API / MCP wrapper foundation). Can ship before, after, or alongside Phase 5 (Packaging) — the two are independent.
+
+**Requirements**: TBD (extend PLUG-09 plugin/subscribe scaffolding into a working bidirectional contract; new requirements to be derived during planning)
+
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd-plan-phase 6 to break down)
+
+**Scope sketch (refine in planning):**
+
+*Read tools:* `getRoadmap`, `getNode(id)` (with ancestry), `findNodes(query)` (by title/status/type/metadata), `getStatusConfig`, `getTypeConfig`, `getOpenFile`.
+
+*Create tools:* `createNode({parentId, title, type?, status?, notes?, metadata?})` returning new UUID, `createRoadmap({title, statusConfig?, typeConfig?})` (mirrors File > New), stretch: `importSubtree({parentId, schema})`.
+
+*Update tools:* `renameNode`, `updateNodeStatus` (preserve Phase 4 compat), `updateNodeType`, `updateNodeNotes`, `updateNodeMetadata` (merge-vs-replace TBD), `moveNode(nodeId, newParentId, position?)`.
+
+*Delete tools:* `deleteNode(nodeId, {cascade?})` — non-leaf requires explicit cascade flag mirroring the UI confirmation dialog.
+
+*File lifecycle tools:* `saveFile` (flush autosave debounce), `saveFileAs(path)`, `openFile(path)` — all gated by the existing path-traversal allowlist.
+
+**Out of scope (initial cut):**
+- Arbitrary RPC passthrough — only explicitly-exposed tools.
+- Mutating `themeConfig` or app settings.
+- Reading files outside the loaded roadmap and its `$ref`-linked siblings.
+- Bypassing the existing path-traversal allowlist on `openFile` / `saveFileAs`.
+
+**Why this phase:** PLUG-09 left `plugin` / `subscribe` schema fields as parsed-but-unused v1.1 scaffolding. The renderer store already exposes every mutation needed (`addChild`, `deleteNode`, `renameNode`, `updateNodeStatus`, `updateNodeType`, `updateNodeMetadata`, `updateNodeNotes` in `packages/desktop/src/mainview/store/roadmapStore.ts`) — Phase 6 only adds a new transport surface, not new domain logic. Without it, an MCP agent that does not already know node UUIDs from out-of-band context cannot enumerate the roadmap, look up nodes by title, or discover valid status ids.
 
 ---
 

@@ -64,6 +64,10 @@ Progress: [##########] 100% of Phase 04 plans (6/6)
 
 ## Accumulated Context
 
+### Roadmap Evolution
+
+- 2026-05-03: Phase 6 added — Agentic Roadmap Authoring (bidirectional MCP API for agent-driven roadmap CRUD; extends PLUG-09 scaffolding)
+
 ### Decisions
 
 Decisions are logged in PROJECT.md Key Decisions table.
