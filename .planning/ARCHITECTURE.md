@@ -16,9 +16,8 @@ Electrobun enforces a strict two-process model. This is the framework's security
 │  • Plugin host (integration hubs)   │                 │  • Toolbar, StatusBar, ContextMenu     │
 │  • WebSocket / webhook / MQTT       │                 │  • Zustand store (in-memory schema)    │
 │  • SQLite event log                 │                 │  • Theme engine (CSS custom props)     │
-│  • Native menus & file dialogs      │                 │  • HTML export renderer                │
+│  • Native menus & file dialogs      │                 │                                        │
 │  • Auto-updater                     │                 │                                        │
-│  • PNG export (headless)            │                 │                                        │
 └─────────────────────────────────────┘                 └───────────────────────────────────────┘
 ```
 
@@ -36,8 +35,6 @@ export type RoadmapRPCType = {
     requests: {
       loadFile:        { params: { path: string };                          response: { data: RoadmapSchema | null; errors?: Array<{ path: string; message: string; code: string }> } }
       saveFile:        { params: { schema: RoadmapSchema };                 response: undefined }
-      exportHtml:      { params: { path: string };                          response: undefined }
-      exportPng:       { params: { path: string };                          response: undefined }
       openFilePicker:  { params: Record<string, never>;                     response: string }
       resolveRef:      { params: { refPath: string };                       response: RoadmapNode[] }
       saveSettings:    { params: { settings: Partial<AppSettings> };        response: { success: boolean } }

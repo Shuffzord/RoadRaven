@@ -79,7 +79,6 @@ The gating philosophy: **the core product is never crippled.** Revenue comes fro
 | Unlimited nodes/files | Yes | Yes | Yes |
 | WebSocket Event API | Yes | Yes | Yes |
 | Claude Code MCP wrapper | Yes | Yes | Yes |
-| Export (HTML + PNG) | Yes | Yes | Yes |
 | Commercial use | No | **Yes** | **Yes** |
 | Priority support | No | **Yes** | **Yes** |
 | Early access builds | No | **Yes** | **Yes** |

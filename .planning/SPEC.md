@@ -69,8 +69,6 @@ What the app can do, independent of build order. See §2.2 for sequence.
 **Plugin Integration System** ⚠️ *Research required — see §2.2 Step 4.*
 Nodes receive live status updates from external tools; the app can publish node state outward. Generic plugin interface — Claude Code is the reference implementation.
 
-**Export** — self-contained HTML (active theme embedded) and PNG at 2x resolution.
-
 **Packaging** — native installers (macOS, Windows, Linux), auto-updater, npm packages (`@roadmap-viewer/core`, `@roadmap-viewer/react`), plugin authoring guide.
 
 ---
@@ -179,13 +177,11 @@ All steps follow a **TDD-first** approach — tests are written before implement
 **Goal:** Shippable, accessible, documented.
 
 - Accessibility audit (full requirements in §9)
-- HTML export (self-contained, active theme embedded) and PNG export (2x resolution)
-  - **PNG export implementation note:** The capture originates in the webview (html2canvas or equivalent). The resulting blob is sent to the Bun process via RPC for file write. PNG export cannot be handled purely in the Bun process — there is no Electrobun headless screenshot API.
 - npm package publishing: `@roadmap-viewer/core`, `@roadmap-viewer/react`
 - Plugin authoring guide
 - Electrobun auto-updater configured
 - Native installers: macOS `.dmg`, Windows `.exe`, Ubuntu `.deb`
-  - **Linux note:** `bundleCEF: true` required in `electrobun.config.ts` for Linux builds. `ApplicationMenu` is not supported on Linux — all export and file actions must be reachable via keyboard shortcuts and toolbar buttons (not app menu only).
+  - **Linux note:** `bundleCEF: true` required in `electrobun.config.ts` for Linux builds. `ApplicationMenu` is not supported on Linux — all file actions must be reachable via keyboard shortcuts and toolbar buttons (not app menu only).
 - README, docs site, contribution guide
 
 **Done when:** Installers build cleanly on all three platforms. Accessibility checklist passes.
@@ -384,23 +380,6 @@ All steps follow a **TDD-first** approach — tests are written before implement
 - Unknown `plugin.id` shows a Warning indicator on the node; app continues loading normally
 
 **Phase:** 3
-
----
-
-### US-09 · Export
-
-| | |
-|---|---|
-| **As a** | user |
-| **I want** | to export my roadmap as static HTML or PNG |
-| **So that** | I can share it without requiring the app |
-
-**Acceptance criteria**
-- `File > Export > HTML` — self-contained single-file HTML with interactive tree
-- `File > Export > PNG` — full tree at 2x resolution
-- Both accessible via `Ctrl+Shift+E`
-
-**Phase:** 4
 
 ---
 
@@ -691,10 +670,9 @@ Electrobun enforces a strict two-process model. This is not optional — it is t
 │  • $ref resolution                  │                 │  • SidePanel + MarkdownEditor          │
 │  • Pub/sub adapter hub              │                 │  • Toolbar, StatusBar, ContextMenu     │
 │  • WebSocket / MQTT / webhook       │                 │  • Zustand store (in-memory schema)    │
-│  • SQLite event log                 │                 │  • HTML export renderer                │
+│  • SQLite event log                 │                 │                                        │
 │  • Native menus & file dialogs      │                 │                                        │
 │  • Auto-updater                     │                 │                                        │
-│  • PNG export (headless)            │                 │                                        │
 └─────────────────────────────────────┘                 └───────────────────────────────────────┘
 ```
 
@@ -713,8 +691,6 @@ export type RoadmapRPCType = {
     requests: {
       loadFile:        { params: { path: string };          response: RoadmapSchema }
       saveFile:        { params: { schema: RoadmapSchema }; response: void }
-      exportHtml:      { params: { path: string };          response: void }
-      exportPng:       { params: { path: string };          response: void }
       openFilePicker:  { params: {};                        response: string | null }
       resolveRef:      { params: { refPath: string };       response: RoadmapNode[] }
     }
@@ -1035,7 +1011,6 @@ All editing shortcuts. No undo/redo in MVP.
 | `→` | Expand node or move to first child | |
 | `Ctrl+Click` | Multi-select | Enables bulk status change and bulk delete |
 | `Ctrl+Enter` | Open side panel | Equivalent to single click when panel is closed |
-| `Ctrl+Shift+E` | Export | Opens export dialog |
 
 ---
 

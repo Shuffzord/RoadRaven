@@ -6,7 +6,7 @@
 
 ## Overview
 
-Starting from a bare Electrobun shell, we build outward through the visual stack: scaffold the monorepo and TDD pipeline, then establish the theme foundation, prove the tree renderer with a read-only viewer (gating on the 30 fps performance requirement), add the full editor with the `dataKey`-aware Zustand store, wire the WebSocket Event API with the Claude Code MCP reference producer, and finish with export capabilities and cross-platform packaging.
+Starting from a bare Electrobun shell, we build outward through the visual stack: scaffold the monorepo and TDD pipeline, then establish the theme foundation, prove the tree renderer with a read-only viewer (gating on the 30 fps performance requirement), add the full editor with the `dataKey`-aware Zustand store, wire the WebSocket Event API with the Claude Code MCP reference producer, and finish with cross-platform packaging and npm distribution.
 
 ---
 
@@ -17,7 +17,7 @@ Starting from a bare Electrobun shell, we build outward through the visual stack
 - [ ] **Phase 2: Read-Only Viewer** — Any valid JSON schema renders as an interactive tree; performance gate passes
 - [ ] **Phase 3: Full Editor** — A complete roadmap can be created, edited, and saved without touching JSON directly
 - [ ] **Phase 4: Event API** — Nodes receive live status updates from external producers via WebSocket; Claude Code MCP wrapper works end-to-end (5/6 plans done; 04-06 gap closure pending)
-- [ ] **Phase 5: Export & Packaging** — Self-contained HTML and 2x PNG export; native installers on all three platforms; npm packages published
+- [ ] **Phase 5: Packaging & Distribution** — Native installers on all three platforms; npm packages published
 
 ---
 
@@ -205,24 +205,19 @@ Plans:
 
 ---
 
-### Phase 5: Export & Packaging
+### Phase 5: Packaging & Distribution
 
-**Goal:** Self-contained HTML and 2x PNG exports work reliably, native installers build on all three platforms, and `@roadmap-viewer/core` + `@roadmap-viewer/react` are published to npm.
+**Goal:** Native installers build on all three platforms, and `@roadmap-viewer/core` + `@roadmap-viewer/react` are published to npm.
 
 **Depends on:** Phase 4
 
-**Requirements covered:** EXPO-01, EXPO-02, EXPO-03, PACK-01, PACK-02, PACK-03, PACK-04, PACK-05, PACK-06
+**Requirements covered:** PACK-01, PACK-02, PACK-03, PACK-04, PACK-05, PACK-06
 
 **Plans:**
-1. PNG export spike — before committing to an approach, spike both candidates (direct SVG serialization: `XMLSerializer.serializeToString(svgElement)` -> canvas -> `toDataURL('image/png')`, and `modern-screenshot`); measure output quality on a 300-node tree; choose one; raise `maxRequestTime` for `exportPng` RPC call to 15s; no production PNG code written until spike concludes
-2. Export implementation — HTML export: self-contained single-file HTML with interactive tree and active theme tokens embedded; PNG export: full tree at 2x resolution using the approach chosen in the spike; both export types accessible via `Ctrl+Shift+E` and `File > Export` menu; export E2E tests pass
-3. Packaging + auto-updater — macOS `.dmg`, Windows `.exe`, Ubuntu `.deb` native installers; Electrobun auto-updater configured (canary + stable channels); Linux: `bundleCEF: true` confirmed; all export and file actions reachable via keyboard/toolbar (no `ApplicationMenu` dependency); `process.on('SIGTERM', flushWriteQueue)` registered
-4. npm packages + accessibility + docs — `@roadmap-viewer/core` and `@roadmap-viewer/react` published to npm; `react`, `react-dom`, `react-d3-tree` marked as `peerDependencies` in `packages/react`; all peer deps externalized in Vite library build; `packages/core` has zero desktop dependencies (enforced in CI); accessibility audit: full keyboard navigation, ARIA roles on context menu and modal dialogs, colour not used as sole status indicator, focus indicators visible; README, docs site, plugin authoring guide, contribution guide
+1. Packaging + auto-updater — macOS `.dmg`, Windows `.exe`, Ubuntu `.deb` native installers; Electrobun auto-updater configured (canary + stable channels); Linux: `bundleCEF: true` confirmed; all file actions reachable via keyboard/toolbar (no `ApplicationMenu` dependency); `process.on('SIGTERM', flushWriteQueue)` registered
+2. npm packages + accessibility + docs — `@roadmap-viewer/core` and `@roadmap-viewer/react` published to npm; `react`, `react-dom`, `react-d3-tree` marked as `peerDependencies` in `packages/react`; all peer deps externalized in Vite library build; `packages/core` has zero desktop dependencies (enforced in CI); accessibility audit: full keyboard navigation, ARIA roles on context menu and modal dialogs, colour not used as sole status indicator, focus indicators visible; README, docs site, plugin authoring guide, contribution guide
 
 **Done when:**
-- HTML export produces a self-contained file that opens in a browser with the correct interactive tree and active theme
-- PNG export produces a 2x resolution image of the full tree without corrupted SVG rendering
-- Both export types are reachable via `Ctrl+Shift+E` and `File > Export` menu
 - `bun run build:canary` produces `.dmg`, `.exe`, and `.deb` installers that install and launch cleanly
 - Auto-updater channels (canary / stable) are configured and the version channel resolves correctly
 - `@roadmap-viewer/core` and `@roadmap-viewer/react` install from npm in a clean project without peer-dep errors
@@ -245,4 +240,4 @@ Plans:
 | 2. Read-Only Viewer | 4/5 | UAT Gap Closure | - |
 | 3. Full Editor | 0/6 | Planned | - |
 | 4. Event API | 6/6 | Complete | 2026-04-29 |
-| 5. Export & Packaging | 0/4 | Not started | - |
+| 5. Packaging & Distribution | 0/2 | Not started | - |

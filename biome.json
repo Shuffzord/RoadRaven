@@ -25,6 +25,7 @@
 		"lineEnding": "lf"
 	},
 	"files": {
+		"experimentalScannerIgnores": [".claude/worktrees"],
 		"includes": [
 			"packages/**",
 			"shared/**",
@@ -34,7 +35,9 @@
 			"!**/build",
 			"!**/artifacts",
 			"!**/playwright-report",
-			"!**/test-results"
+			"!**/test-results",
+			"!.claude/worktrees/**",
+			"!**/*.bak.json"
 		]
 	}
 }

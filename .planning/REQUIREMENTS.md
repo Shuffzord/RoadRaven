@@ -79,17 +79,11 @@
 - [x] **PLUG-08**: Claude Code MCP wrapper ships as the reference Event Producer — wraps the event contract as MCP tools callable by Claude; connects to the app's WebSocket and pushes `{ nodeId, status, meta }` events
 - [x] **PLUG-09**: `plugin` and `subscribe` blocks in node JSON are parsed and stored by the Zod schema validator in v1 but not acted on — fields are reserved for the v1.1 plugin system; unknown `plugin.id` values are silently accepted (no warning in v1)
 
-### Export (EXPO)
-
-- [ ] **EXPO-01**: HTML export: self-contained single-file HTML with interactive tree; active theme tokens embedded
-- [ ] **EXPO-02**: PNG export: approach determined by Phase 5 spike (html2canvas excluded); full tree at 2x resolution; approach candidates: direct SVG serialization to canvas (preferred) or `modern-screenshot`; `maxRequestTime` raised to 15s for export RPC call
-- [ ] **EXPO-03**: Both export types accessible via `Ctrl+Shift+E` and `File > Export` menu
-
 ### Packaging (PACK)
 
 - [ ] **PACK-01**: Native installers: macOS `.dmg`, Windows `.exe`, Ubuntu `.deb`
 - [ ] **PACK-02**: Electrobun auto-updater configured (canary + stable channels)
-- [ ] **PACK-03**: Linux: `bundleCEF: true` confirmed; all export and file actions reachable via keyboard shortcuts and toolbar (no `ApplicationMenu` dependency); `process.on('SIGTERM', flushWriteQueue)` registered
+- [ ] **PACK-03**: Linux: `bundleCEF: true` confirmed; all file actions reachable via keyboard shortcuts and toolbar (no `ApplicationMenu` dependency); `process.on('SIGTERM', flushWriteQueue)` registered
 - [ ] **PACK-04**: npm packages `@roadmap-viewer/core` and `@roadmap-viewer/react` published; `react`, `react-dom`, `react-d3-tree` marked as `peerDependencies` in `packages/react`; all peer deps externalized in Vite library build; `packages/core` has zero desktop dependencies (enforced in CI)
 - [ ] **PACK-05**: README, docs site, contribution guide
 - [ ] **PACK-06**: Accessibility audit passes: full keyboard navigation, ARIA roles on context menu and modal dialogs, color not used as sole status indicator (text labels required), focus indicators visible
@@ -159,12 +153,11 @@
 | VIEW-01 to VIEW-14 | Phase 2 | Pending |
 | EDIT-01 to EDIT-17 | Phase 3 | Pending |
 | PLUG-01 to PLUG-09 | Phase 4 | Pending |
-| EXPO-01 to EXPO-03 | Phase 5 | Pending |
 | PACK-01 to PACK-06 | Phase 5 | Pending |
 
 **Coverage:**
-- v1 requirements: 64 total
-- Mapped to phases: 64
+- v1 requirements: 61 total
+- Mapped to phases: 61
 - Unmapped: 0 ✓
 
 ---

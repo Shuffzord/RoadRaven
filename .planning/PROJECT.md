@@ -25,7 +25,6 @@ Nodes in the tree reflect real-time state of external systems through a pluggabl
 - [ ] Side panel (read-only): opens on node click; shows title, status, type, timestamps, markdown notes; resizable (min 320px, max 50% viewport); pinnable on wide screens
 - [ ] Full node editor: inline rename; add/delete/duplicate/move via keyboard and context menu; CodeMirror 6 markdown editor with autosave (debounced 1s); editable metadata table; atomic writes; `$ref` write-back
 - [ ] Event API: WebSocket server on `ws://127.0.0.1:<port>`; event contract `{ nodeId, status, meta?, source? }`; events routed to nodes within 100ms; Claude Code MCP wrapper as reference Event Producer; side panel Integration zone shows connection status + last event + key-value meta
-- [ ] Export: self-contained HTML and 2x PNG (approach TBD — spike required; html2canvas excluded)
 - [ ] Packaging: macOS `.dmg`, Windows `.exe`, Ubuntu `.deb`; Electrobun auto-updater; npm packages (`@roadmap-viewer/core`, `@roadmap-viewer/react`); plugin authoring guide; README and docs site
 
 ### Out of Scope
@@ -55,7 +54,6 @@ Nodes in the tree reflect real-time state of external systems through a pluggabl
 - **Integration model (v1 — Event API):** App exposes a WebSocket server on `127.0.0.1`. Any external process (Claude Code MCP wrapper, scripts, CI tools) pushes events using the event contract `{ nodeId, status, meta?, source? }`. App is passive — it receives and routes. No plugin loading, no lifecycle management in v1.
 - **Integration model (v1.1 — Plugin System):** Smart adapters running inside the Bun process. Each plugin owns its connection logic, auth, polling schedule, and data normalisation. Registered by ID; nodes reference them via the `plugin` block. Requires a dedicated research phase before implementation covering: interface contract, lifecycle, secrets management, polling pattern, security model.
 - **Linux packaging:** `bundleCEF: true` required in `electrobun.config.ts`. `ApplicationMenu` not supported — all actions must be reachable via keyboard shortcuts and toolbar buttons.
-- **PNG export:** html2canvas excluded (broken SVG support); approach TBD — spike required before Phase 4. Candidates: direct SVG serialization to canvas (no dependency), or `modern-screenshot`. Blob sent to Bun via RPC for file write regardless.
 - **react-d3-tree performance:** Must use `dataKey` prop from first render. Only increment `dataKey` on structural mutations (add/delete/move). Status-only updates go in-place via Zustand shallow selectors — never change the data reference. Required to pass 30 fps gate at 300+ nodes.
 - **Updater API:** `Updater.localInfo.channel()` in `src/bun/index.ts` is correct for Electrobun 1.16.0. Prior note about `Updater.getLocalInfo()` was wrong — that method does not exist. Wrap in try/catch; treat missing `version.json` as channel `"dev"`. Do not change this call.
 - **Safety net on file open:** Write `.bak.json` on every file open (one line). Compensates for no undo/redo in MVP.
@@ -84,7 +82,6 @@ Nodes in the tree reflect real-time state of external systems through a pluggabl
 | Monorepo with `packages/core`, `packages/react`, `packages/desktop` | Core and React packages are publishable to npm independently from the desktop app | — Pending |
 | No undo/redo in MVP | Non-leaf delete has confirmation; file is plain JSON recoverable via git; `.bak.json` on open is the safety net; `$ref` + live-subscription tracking makes it non-trivial to retrofit — but not impossible | — Pending |
 | Plugin side panel = generic state renderer (Option A) | Plugins run in Bun and cannot inject React components into webview; plugins emit serialisable state objects; webview renders generic key-value + event log | — Pending |
-| html2canvas excluded for PNG export | Broken SVG support with react-d3-tree output; approach decision deferred to Phase 4 spike | — Pending |
 
 ## Evolution
 
