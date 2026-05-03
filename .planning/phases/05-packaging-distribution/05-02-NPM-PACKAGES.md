@@ -210,14 +210,14 @@ From RESEARCH.md Pattern 2 — TARGET shape for `packages/core/package.json` aft
   </files>
 
   <action>
-    Create three identical MIT LICENSE files. Use the standard MIT template with attribution to the project author. Use the user's git config name as the copyright holder; if `git config --global user.name` is empty, fall back to `RoadRaven contributors`.
+    Create three identical MIT LICENSE files. Per checker W-5, the copyright holder is pinned literally as `Shuffzord` (matches all GitHub URLs in the plans). Do NOT run `git config --global user.name` — the holder name is not runtime-dependent.
 
-    Run first: `git config --global user.name` to detect the holder name. Then write to all three paths:
+    Write the literal content below to all three paths:
 
     ```
     MIT License
 
-    Copyright (c) 2026 <holder>
+    Copyright (c) 2026 Shuffzord
 
     Permission is hereby granted, free of charge, to any person obtaining a copy
     of this software and associated documentation files (the "Software"), to deal
@@ -533,11 +533,11 @@ From RESEARCH.md Pattern 2 — TARGET shape for `packages/core/package.json` aft
   </files>
 
   <action>
-    **A. Read `plugins/claude-code/src/index.ts`** to check for an existing shebang. If line 1 is NOT `#!/usr/bin/env node`, prepend it. The file must start with that exact line for `npm install -g` to make `roadraven-mcp` directly executable on POSIX systems (Windows uses `.cmd` shims that npm generates).
+    **A. Shebang status (verified at planning time, 2026-05-03 per checker W-4):** `plugins/claude-code/src/index.ts` line 1 is already `#!/usr/bin/env node` (verified by direct read of the source file). `bun build` preserves source-level line 1 as the output's line 1, so NO `--banner` flag is needed in the build script.
 
-    Also confirm `bun build` preserves the shebang. If not, change the build script to add `--banner='{"js": "#!/usr/bin/env node"}'` (Bun bundler) OR switch to a tsup-based build to use tsup's `banner` option. Verify by running `bun run --cwd plugins/claude-code build && head -1 plugins/claude-code/dist/index.js` — first line must be `#!/usr/bin/env node`.
+    Action: do NOT modify `src/index.ts` (shebang is already there). Do NOT add `--banner` to the build script. Just confirm the build output preserves line 1 by running `bun run --cwd plugins/claude-code build && head -1 plugins/claude-code/dist/index.js` — output MUST be exactly `#!/usr/bin/env node` (acceptance criterion W-4).
 
-    If the shebang in `src/index.ts` is the simplest fix and `bun build` preserves source-level shebangs, that's preferred (no build-config change needed).
+    If a future refactor of `src/index.ts` accidentally drops the shebang, the executor MUST restore line 1 to `#!/usr/bin/env node` before continuing — this is required for `npm install -g` to make `roadraven-mcp` directly executable on POSIX systems (Windows uses `.cmd` shims that npm generates).
 
     **B. Replace `plugins/claude-code/package.json`** with this shape (preserve existing version, dependencies, devDependencies):
 

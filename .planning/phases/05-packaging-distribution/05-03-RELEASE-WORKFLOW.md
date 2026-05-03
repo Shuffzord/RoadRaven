@@ -11,9 +11,9 @@ files_modified:
   - packages/desktop/electrobun.config.ts
   - .planning/phases/05-packaging-distribution/05-RELEASE-OPS.md
 autonomous: true
-requirements: [PACK-01, PACK-02, PACK-03, PACK-04]
-threats: [T-05-02, T-05-04, T-05-05, T-05-07, T-05-09]
-tags: [packaging, ci-cd, github-actions, release-automation]
+requirements: [PACK-01, PACK-02, PACK-03, PACK-04, PACK-05]
+threats: [T-05-02, T-05-04, T-05-05, T-05-07, T-05-09, T-05-10]
+tags: [packaging, ci-cd, github-actions, release-automation, docs-deploy]
 
 must_haves:
   truths:
@@ -22,15 +22,17 @@ must_haves:
     - "Workflow publishes @roadraven/core and @roadraven/plugin-claude-code to npm with provenance via OIDC trusted publishing (R-03)"
     - "Workflow has `permissions: id-token: write, contents: write` at workflow scope (NO NPM_TOKEN secret reference anywhere)"
     - "Workflow attaches all installers + update manifests to a GitHub Release (idempotent re-runnable)"
+    - "Workflow contains a `deploy-docs` job (gated on `if: startsWith(github.ref, 'refs/tags/v')`) that deploys the GH Pages site after the GitHub Release succeeds"
     - "ci.yml gains a step that runs `bun run scripts/check-core-deps.ts` in the lint job (D-23)"
     - "ci.yml gains a step that runs the requirements-edits grep test on every push"
     - "packages/desktop/electrobun.config.ts gains `release.baseUrl` pointing at GitHub Releases /latest/download (Strategy A from RESEARCH.md Pattern 5)"
     - "packages/desktop/package.json gains a `build:stable` script (mirrors build:canary)"
     - "RELEASE-OPS.md exists documenting the one-time npmjs.com Trusted Publishers setup + pre-flight package-name availability check"
     - "fallow CI gate stays commented (D-22 invariant)"
+    - "release.yml is the SINGLE OWNER for .github/workflows/release.yml — Plan 05-04 does NOT modify this file (per checker B-2/B-3 fix)"
   artifacts:
     - path: ".github/workflows/release.yml"
-      provides: "Tag-triggered release pipeline (Windows + Linux installers + npm publish + GH Pages — Pages job in this plan; docs site CONTENT in Plan 04)"
+      provides: "Tag-triggered release pipeline (Windows + Linux installers + npm publish + GH Pages deploy — ALL jobs in this single plan after B-2/B-3 consolidation)"
       contains: "permissions:\\n  id-token: write"
     - path: ".github/workflows/ci.yml"
       provides: "Existing PR gate + new core-deps allowlist + requirements-edits invariants"
@@ -53,6 +55,10 @@ must_haves:
       to: "Wave-0 tests/release/installer-artifacts.test.ts"
       via: "actions/upload-artifact (artifact glob matches the test's regex assertions)"
       pattern: "stable-(win|linux)-x64"
+    - from: ".github/workflows/release.yml `deploy-docs` job"
+      to: "docs/_config.yml + docs/*.md (Plan 05-04 content)"
+      via: "actions/jekyll-build-pages → actions/deploy-pages"
+      pattern: "actions/deploy-pages@v4"
     - from: ".github/workflows/ci.yml lint job"
       to: "scripts/check-core-deps.ts (Wave 0)"
       via: "bun run scripts/check-core-deps.ts step"
@@ -75,13 +81,11 @@ GitHub Actions workflow that:
 2. Attaches installers + auto-updater manifests to a GitHub Release
 3. Publishes `@roadraven/core` and `@roadraven/plugin-claude-code` to npm with
    provenance via OIDC trusted publishing (R-03 — NO `NPM_TOKEN` secret)
+4. Deploys the GitHub Pages docs site (per checker B-2/B-3, the deploy-docs
+   job is owned by THIS plan; Plan 05-04 only writes the docs CONTENT)
 
 This plan also lands the CI invariants: the `packages/core` zero-desktop-deps
 allowlist gate (D-23) and the requirements-edits grep gate (Wave-0 derivative).
-
-The actual GitHub Pages docs site CONTENT is built in Plan 05-04 (parallel
-wave). The Pages DEPLOY JOB lives in this `release.yml` so docs ship in lockstep
-with installer/npm releases.
 
 Per CLAUDE.md: `npm publish` is the explicit single exception to the bun-only
 rule, justified by first-class provenance support. The workflow comments this
@@ -89,8 +93,15 @@ exception inline so contributors don't read it as a CLAUDE.md violation.
 
 Per D-22: the fallow CI gate stays commented.
 
+**Checker B-2 + B-3 reconciliation:** Plan 05-03 is now the SOLE OWNER of
+`.github/workflows/release.yml`. The deploy-docs job that was originally split
+across Plan 05-03 (jobs 1-5) and Plan 05-04 (job 6 append) is fully consolidated
+here as Task 4. Plan 05-04 no longer touches release.yml — it owns docs content
+only.
+
 Output:
-- `.github/workflows/release.yml` (NEW) — tag-triggered, 5 jobs (build-windows, build-linux, github-release, publish-npm-core, publish-npm-mcp); deploy-docs job is added in Plan 05-04
+- `.github/workflows/release.yml` (NEW) — tag-triggered, 6 jobs (build-windows,
+  build-linux, github-release, publish-npm-core, publish-npm-mcp, deploy-docs)
 - `.github/workflows/ci.yml` (MODIFIED) — adds 2 verification steps to the lint job
 - `packages/desktop/electrobun.config.ts` (MODIFIED) — adds release.baseUrl
 - `packages/desktop/package.json` (MODIFIED) — adds build:stable script
@@ -116,7 +127,7 @@ Output:
 
 <interfaces>
 <!-- TARGET shape for release.yml — copy from RESEARCH.md Pattern 3 (lines 385-531) -->
-<!-- Note: deploy-docs job is added by Plan 05-04 (parallel wave) — do not include it here -->
+<!-- Per checker B-2/B-3: deploy-docs job is now owned by THIS plan (Task 4) -->
 
 <!-- Existing ci.yml jobs (DO NOT MODIFY): -->
 <!--   - lint: bunx @biomejs/biome check --diagnostic-level=error . -->
@@ -138,6 +149,10 @@ Output:
 <!-- OIDC permissions REQUIRED at workflow level: -->
 <!--   permissions: { contents: write, id-token: write } -->
 <!-- Without id-token: write, OIDC token mint fails with "OIDC token verification failed" -->
+
+<!-- deploy-docs job permissions OVERRIDE workflow-level: -->
+<!--   permissions: { contents: read, pages: write, id-token: write } -->
+<!-- The id-token: write is required by actions/deploy-pages@v4 (Pages OIDC). -->
 </interfaces>
 </context>
 
@@ -147,7 +162,7 @@ Output:
   <name>Task 1: Create .github/workflows/release.yml + augment electrobun.config.ts + packages/desktop/package.json</name>
 
   <read_first>
-    - .planning/phases/05-packaging-distribution/05-RESEARCH.md `## Architecture Patterns > Pattern 3` (lines ~377-549) — copy the workflow YAML LITERALLY for build-windows, build-linux, github-release, publish-npm-core, publish-npm-mcp jobs. STRIP the deploy-docs job (Plan 05-04 owns it).
+    - .planning/phases/05-packaging-distribution/05-RESEARCH.md `## Architecture Patterns > Pattern 3` (lines ~377-549) — copy the workflow YAML LITERALLY for build-windows, build-linux, github-release, publish-npm-core, publish-npm-mcp jobs. Task 4 below adds deploy-docs.
     - .planning/phases/05-packaging-distribution/05-RESEARCH.md `## Architecture Patterns > Pattern 5` (lines ~618-662) — release.baseUrl strategy A (GitHub Releases /latest/download)
     - .planning/phases/05-packaging-distribution/05-RESEARCH.md `## Code Examples > packages/desktop/electrobun.config.ts (MODIFIED)` (lines ~908-935) — copy literally
     - .planning/phases/05-packaging-distribution/05-RESEARCH.md `## Code Examples > packages/desktop/package.json (MODIFIED — add build:stable)` (lines ~937-946)
@@ -165,7 +180,7 @@ Output:
   </files>
 
   <action>
-    **A. Create `.github/workflows/release.yml`** — copy LITERALLY from RESEARCH.md Pattern 3, MINUS the `deploy-docs` job (which Plan 05-04 adds). The result:
+    **A. Create `.github/workflows/release.yml`** with the FIRST FIVE jobs (Task 4 appends the sixth job `deploy-docs`). Copy literally from RESEARCH.md Pattern 3:
 
     ```yaml
     name: Release
@@ -179,6 +194,7 @@ Output:
     # All jobs that publish or upload need explicit permissions (least-privilege).
     # id-token: write — required for npm provenance OIDC token mint (R-03)
     # contents: write — required for gh release create + asset upload
+    # NOTE: deploy-docs job (Task 4) overrides these with pages-specific permissions.
     permissions:
       contents: write
       id-token: write
@@ -324,7 +340,7 @@ Output:
             working-directory: plugins/claude-code
     ```
 
-    Note the integration of the Wave-0 `installer-artifacts.test.ts` into the build jobs as a smoke-test step. This makes the Wave-0 test do real work in CI, not just sit dormant.
+    Note the integration of the Wave-0 `installer-artifacts.test.ts` into the build jobs as a smoke-test step. This makes the Wave-0 test do real work in CI, not just sit dormant. Task 4 below appends the `deploy-docs` job at the end of this file.
 
     **B. Modify `packages/desktop/electrobun.config.ts`** — add `release` block (preserve everything else, including the `bundleCEF` env var pattern and the `app.identifier` per R-05):
 
@@ -420,7 +436,7 @@ Output:
   </acceptance_criteria>
 
   <done>
-    Release workflow exists, electrobun.config.ts has release.baseUrl, build:stable script available. Workflow does NOT yet trigger because no `v*` tag has been pushed — Plan 05-05 (or post-phase action) handles the first tag.
+    Release workflow exists with 5 of 6 jobs (deploy-docs in Task 4), electrobun.config.ts has release.baseUrl, build:stable script available. Workflow does NOT yet trigger because no `v*` tag has been pushed — Plan 05-05 (or post-phase action) handles the first tag.
   </done>
 </task>
 
@@ -508,6 +524,24 @@ Output:
     bun run scripts/check-core-deps.ts  # MUST exit 0 today
     bunx vitest run tests/release/requirements-edits.test.ts  # MUST pass today (post-Plan-01 land)
     ```
+
+    **OPTIONAL (per checker W-6):** Add a small assertion to `tests/release/requirements-edits.test.ts` that protects against the v1.1 canary tag broadening risk. Append a new `it(...)` case:
+
+    ```typescript
+    it("release.yml trigger is locked to 'v*' (canary broadening reserved for v1.1)", () => {
+      const releaseYml = readFileSync(
+        join(process.cwd(), ".github/workflows/release.yml"),
+        "utf8",
+      );
+      // v1.0 limitation: 'v*' will match v1.x-canary.* tags. Reserve canary tags
+      // until v1.1 wires a separate workflow.
+      expect(releaseYml).toMatch(/tags:\s*\n\s*-\s*['"]v\*['"]/);
+      // Guard against accidental broadening to canary-specific patterns
+      expect(releaseYml).not.toMatch(/tags:.*v\*-canary/);
+    });
+    ```
+
+    This is OPTIONAL — if YAGNI for v1.0, document the gap in the plan-level `<assumptions>` instead. Decision recorded in Task 2 acceptance criteria below.
   </action>
 
   <verify>
@@ -531,6 +565,7 @@ Output:
     - Running `bun run scripts/check-core-deps.ts` locally exits 0 today (allowlist satisfied)
     - Running `bunx vitest run tests/release/requirements-edits.test.ts` locally exits 0 today (Plan 05-01 already landed the edits)
     - Running `bunx @biomejs/biome check --diagnostic-level=error .` still exits 0 (existing lint gate did not break)
+    - W-6 disposition recorded: either the new `it(...)` assertion is in `tests/release/requirements-edits.test.ts`, OR the plan's `<assumptions>` block documents accepting the canary-overlap risk for v1.0
   </acceptance_criteria>
 
   <done>
@@ -604,9 +639,9 @@ Output:
 
     ## C. GitHub Pages — flip source to "GitHub Actions" (one-time)
 
-    Required so Plan 05-04's `pages.yml` (or the `deploy-docs` job appended to
-    `release.yml`) can deploy. Without this, the Actions job runs successfully
-    but `https://shuffzord.github.io/RoadRaven/` returns 404.
+    Required so the `deploy-docs` job in `release.yml` (Plan 05-03 Task 4) can
+    deploy. Without this, the Actions job runs successfully but
+    `https://shuffzord.github.io/RoadRaven/` returns 404.
 
     1. Navigate to https://github.com/Shuffzord/RoadRaven/settings/pages
     2. Under **Build and deployment** → **Source**, select **GitHub Actions**
@@ -717,7 +752,107 @@ Output:
   </done>
 </task>
 
+<task type="auto">
+  <name>Task 4: Append deploy-docs job to .github/workflows/release.yml (per checker B-2/B-3 — moved from Plan 05-04)</name>
+
+  <read_first>
+    - .planning/phases/05-packaging-distribution/05-RESEARCH.md `## Architecture Patterns > Pattern 3` "deploy-docs" job (lines ~510-531) — copy literally with the listed adjustments
+    - .github/workflows/release.yml (created in Task 1 of this plan — append after `publish-npm-mcp` job)
+    - .planning/phases/05-packaging-distribution/05-RESEARCH.md `## Common Pitfalls > Pitfall 4` (GitHub Pages settings flip prerequisite)
+    - docs/_config.yml (will be created by Plan 05-04 Task 1 — referenced by this job's Jekyll build step)
+  </read_first>
+
+  <files>
+    .github/workflows/release.yml
+  </files>
+
+  <action>
+    APPEND a sixth job `deploy-docs` to `.github/workflows/release.yml`. The first 5 jobs were created in Task 1; this task adds the docs deploy that was originally split into Plan 05-04 (per checker B-2/B-3 fix, file ownership is now consolidated in this plan).
+
+    Append at the end of the file (do NOT modify the existing 5 jobs):
+
+    ```yaml
+
+      deploy-docs:
+        name: Deploy docs site to GitHub Pages
+        # Gated on tag push (defense-in-depth — the workflow trigger is already
+        # tag-only, but explicit gate documents intent and protects against future
+        # workflow_dispatch additions).
+        if: startsWith(github.ref, 'refs/tags/v')
+        needs: [github-release]
+        runs-on: ubuntu-latest
+        permissions:
+          contents: read
+          pages: write
+          id-token: write
+        environment:
+          name: github-pages
+          url: ${{ steps.deployment.outputs.page_url }}
+        steps:
+          - uses: actions/checkout@v4
+          - uses: actions/configure-pages@v5
+          - uses: actions/jekyll-build-pages@v1
+            with:
+              source: ./docs
+              destination: ./_site
+          - uses: actions/upload-pages-artifact@v3
+          - id: deployment
+            uses: actions/deploy-pages@v4
+          - name: Smoke-test GH Pages site is live
+            run: |
+              # Wait briefly for Pages CDN to propagate, then verify the site responds.
+              sleep 10
+              curl -fsSL "https://shuffzord.github.io/RoadRaven/" | grep -q "RoadRaven" || (echo "GH Pages site did not return RoadRaven content"; exit 1)
+    ```
+
+    Notes:
+    - The `if: startsWith(github.ref, 'refs/tags/v')` gate (per checker B-2 acceptance criteria) is explicit even though the workflow trigger already filters to `v*` tags. This documents intent and protects against accidental future broadening of the trigger.
+    - The `permissions` block on this job OVERRIDES the workflow-level `permissions` (workflow has `contents: write, id-token: write`; this job needs `contents: read, pages: write, id-token: write`). The `id-token: write` permission is required for the Pages OIDC deployment.
+    - The `environment: github-pages` block is required by `actions/deploy-pages@v4` so GitHub knows this is the canonical Pages-deploy job.
+    - The smoke-test step at the end is a soft confirmation — Pages CDN propagation can take 30s+ on first deploys; if it fails, re-running the workflow re-deploys cleanly.
+    - This job depends on `docs/_config.yml` and `docs/*.md` (Plan 05-04 content). If Plan 05-04 has not yet landed when a tag is pushed, the Jekyll build step will fail with "missing _config.yml" — sequencing is enforced via wave ordering (Plan 05-04 is wave 3, Plan 05-03 is wave 2; both must merge before any tag can be pushed for a release).
+
+    **Verify YAML still parses after append:**
+
+    ```bash
+    node -e "const y=require('js-yaml');y.load(require('fs').readFileSync('.github/workflows/release.yml','utf8'));console.log('release.yml still parses')"
+    ```
+  </action>
+
+  <verify>
+    <automated>grep -c "deploy-docs:" .github/workflows/release.yml  # MUST be 1</automated>
+    <automated>grep -c "if: startsWith(github.ref, 'refs/tags/v')" .github/workflows/release.yml  # MUST be 1 (B-2 acceptance)</automated>
+    <automated>grep -c "actions/configure-pages@v5" .github/workflows/release.yml  # MUST be 1</automated>
+    <automated>grep -c "actions/jekyll-build-pages@v1" .github/workflows/release.yml  # MUST be 1</automated>
+    <automated>grep -c "actions/upload-pages-artifact@v3" .github/workflows/release.yml  # MUST be 1</automated>
+    <automated>grep -c "actions/deploy-pages@v4" .github/workflows/release.yml  # MUST be 1</automated>
+    <automated>grep -c "pages: write" .github/workflows/release.yml  # MUST be 1 (deploy-docs permissions)</automated>
+    <automated>grep -c "shuffzord.github.io/RoadRaven" .github/workflows/release.yml  # MUST be 1 (smoke-test step)</automated>
+    <automated>grep -c "needs: \[github-release\]" .github/workflows/release.yml  # MUST be 1 (sequenced after release)</automated>
+    <automated>node -e "const y=require('js-yaml');y.load(require('fs').readFileSync('.github/workflows/release.yml','utf8'));console.log('OK')"  # MUST exit 0</automated>
+  </verify>
+
+  <acceptance_criteria>
+    - `.github/workflows/release.yml` contains a 6th job `deploy-docs:` AFTER `publish-npm-mcp` (file now has 6 jobs total: build-windows, build-linux, github-release, publish-npm-core, publish-npm-mcp, deploy-docs)
+    - `deploy-docs` job has `if: startsWith(github.ref, 'refs/tags/v')` (per checker B-2 acceptance — explicit tag gate)
+    - `deploy-docs` job has `needs: [github-release]` (so docs only update if installer release succeeded)
+    - `deploy-docs` job has `permissions: { contents: read, pages: write, id-token: write }` and `environment: github-pages`
+    - `deploy-docs` job uses `actions/configure-pages@v5`, `actions/jekyll-build-pages@v1` (with `source: ./docs`), `actions/upload-pages-artifact@v3`, `actions/deploy-pages@v4` (the documented Pages deploy chain)
+    - `deploy-docs` job ends with a smoke-test step that curls `https://shuffzord.github.io/RoadRaven/` and asserts response body contains "RoadRaven"
+    - `release.yml` still parses as valid YAML (existing 5 jobs from Task 1 preserved; `js-yaml` parse exits 0)
+    - `.github/workflows/release.yml` is the SOLE workflow file modified by Phase 05; Plan 05-04 does NOT touch this file
+  </acceptance_criteria>
+
+  <done>
+    Release workflow now has all 6 jobs in a single file owned by this plan. Plan 05-04 only writes docs content; this plan owns the deploy job that consumes that content. File-ownership conflict (originally B-2/B-3) is resolved.
+  </done>
+</task>
+
 </tasks>
+
+<assumptions>
+- W-6 disposition: the optional canary-broadening assertion (added in Task 2 if the executor decides to include it) is treated as low-priority. If the executor skips it, the canary-overlap risk is documented here: in v1.0 the trigger `v*` will match any `v*-canary.*` tag the user might accidentally push. Mitigation: the human will not push canary tags in v1.0 (per E in 05-RELEASE-OPS.md). v1.1 canary work will narrow the trigger to a semver-strict regex AND wire a separate canary workflow.
+</assumptions>
 
 <threat_model>
 ## Trust Boundaries
@@ -728,6 +863,7 @@ Output:
 | CI runner → npm registry (publish) | Without OIDC: `NPM_TOKEN` secret travels with the workflow (rotation burden, theft risk). With OIDC (R-03): per-run token minted by GitHub's OIDC provider, scoped to the specific workflow + repo + (optionally) environment. npm server-side validates the token's `iss`, `aud`, and `repository` claims against the Trusted Publishers config. |
 | CI runner → GitHub Releases (asset upload) | `GITHUB_TOKEN` is auto-scoped per-workflow-run; `permissions: contents: write` is the explicit allow. Without it, `softprops/action-gh-release` fails with 403. |
 | `electrobun build` output → upload-artifact step | `if-no-files-found: error` ensures unexpected output paths (e.g., from a future Electrobun version that changes naming) fail the build instead of silently uploading nothing. The Wave-0 `installer-artifacts.test.ts` step provides a second layer (asserts on the exact expected filenames). |
+| `deploy-docs` job → GH Pages OIDC | `id-token: write` permission required by `actions/deploy-pages@v4` (the Pages OIDC flow); same OIDC infrastructure as the npm publish job. Both reuse the same per-run token mechanism. The `if: startsWith(github.ref, 'refs/tags/v')` gate (Task 4) ensures docs only deploy on tagged releases (not arbitrary workflow_dispatch). |
 
 ## STRIDE Threat Register
 
@@ -738,10 +874,11 @@ Output:
 | T-05-05 | Tampering | Auto-updater pulls a malicious manifest | accept | Manifest URL (`release.baseUrl`) is HTTPS-pinned to `github.com/Shuffzord/RoadRaven` (Task 1.B). GitHub's TLS + origin enforcement is the boundary. Code signing (D-12 deferred) would add a stronger guarantee but is explicitly out of scope per CONTEXT.md. README documents the trust model in Plan 05-04. |
 | T-05-07 | Repudiation | Provenance attestation on npm | mitigate | `publishConfig.provenance: true` in both package.json files (Plan 05-02) + `npm publish --provenance` in workflow (Task 1.A). Verification on consumer side: `npm audit signatures @roadraven/core`. |
 | T-05-09 | Tampering | Path traversal / unexpected filenames in `electrobun build` output | mitigate | Two layers: (1) `if-no-files-found: error` on upload-artifact; (2) Wave-0 `installer-artifacts.test.ts` asserts on the EXACT expected filenames including `debFiles).toEqual([])` to catch any accidental `.deb` production. |
+| T-05-10 | Information Disclosure | Sensitive content accidentally landing in `docs/` and getting published via deploy-docs job | mitigate | The Pages deploy is gated on tag push only (Task 4 `if:`), giving a final review window before publication. The biome lint job + planning-invariants gate (Task 2) catch obvious issues during PR. CONTRIBUTING.md (Plan 05-04) notes: "Anything under `docs/` is published — no secrets, no internal-only context." |
 </threat_model>
 
 <verification>
-After all three tasks land, run from repo root:
+After all four tasks land, run from repo root:
 
 ```bash
 # Workflow syntax-validate (GitHub Actions has no offline validator that ships with gh CLI;
@@ -759,6 +896,8 @@ grep -c "id-token: write" .github/workflows/release.yml      # >= 1
 grep -c "NPM_TOKEN" .github/workflows/release.yml            # 0
 grep -c "npm publish --access public --provenance" .github/workflows/release.yml  # 2
 grep -c "if-no-files-found: error" .github/workflows/release.yml                   # 2
+grep -c "deploy-docs:" .github/workflows/release.yml                                # 1 (Task 4)
+grep -c "actions/deploy-pages@v4" .github/workflows/release.yml                     # 1 (Task 4)
 
 # electrobun.config.ts changes
 grep -c "release:" packages/desktop/electrobun.config.ts  # >= 1
@@ -777,20 +916,24 @@ test -f .planning/phases/05-packaging-distribution/05-RELEASE-OPS.md
 </verification>
 
 <success_criteria>
-- `.github/workflows/release.yml` exists, parses, and has correct OIDC + provenance + per-platform structure
+- `.github/workflows/release.yml` exists, parses, and has correct OIDC + provenance + per-platform structure + deploy-docs job (6 jobs total — sole owner is Plan 05-03)
 - `.github/workflows/ci.yml` enforces core-deps allowlist and requirements-edits invariants on every PR
 - `packages/desktop/electrobun.config.ts` has `release.baseUrl` pointing at GitHub Releases /latest/download
 - `packages/desktop/package.json` has `build:stable` and `test:release` scripts
 - `05-RELEASE-OPS.md` documents every irreducible human step
 - All existing tests + lints still pass (no regression from added invariants)
 - Wave-0 tests (`installer-artifacts.test.ts`, `requirements-edits.test.ts`) integrated into CI gates
+- Plan 05-04 does NOT modify `.github/workflows/release.yml` (file-ownership conflict resolved per checker B-2/B-3)
 </success_criteria>
 
 <output>
 After completion, create `.planning/phases/05-packaging-distribution/05-03-SUMMARY.md` describing:
-- The release workflow shape (job graph: build-windows ‖ build-linux → github-release ‖ publish-npm-core ‖ publish-npm-mcp)
-- Why deploy-docs is NOT in this plan (deferred to Plan 05-04 parallel wave)
+- The release workflow shape (job graph: build-windows ‖ build-linux → github-release ‖ publish-npm-core ‖ publish-npm-mcp; then deploy-docs ← github-release)
+- All 6 jobs are owned by this single plan (no cross-plan release.yml ownership per checker B-2/B-3 fix)
 - The two new CI invariants and how they interact with Wave-0 tests
 - The release.baseUrl strategy (A from Pattern 5) and the v1.1 migration path (Strategy B for canary)
-- Any deviations from RESEARCH.md Pattern 3 (e.g., Bun cache step added, Wave-0 test integrated as a smoke step)
+- W-6 disposition: optional test assertion added or canary-overlap risk accepted in `<assumptions>`
+- Any deviations from RESEARCH.md Pattern 3 (e.g., Bun cache step added, Wave-0 test integrated as a smoke step, deploy-docs `if:` gate added per checker B-2)
 </output>
+</content>
+</invoke>

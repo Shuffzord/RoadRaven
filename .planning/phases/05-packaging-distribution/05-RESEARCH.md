@@ -1180,29 +1180,34 @@ calls these methods.
 
 **If this table is empty:** It is not. Items A7, A9, A10 are flagged for user confirmation. A1–A6, A8 are low-risk and the planner can proceed with the noted defaults.
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Should v1.0 ship `.tar.gz` (Electrobun-native) or `.deb` (extra packaging effort)?**
+   - **RESOLVED 2026-05-03:** see CONTEXT.md `<reconciliation>` R-01 — `.tar.gz` chosen.
    - What we know: Electrobun produces `.tar.gz`, not `.deb`. CONTEXT and REQUIREMENTS assume `.deb`.
    - What's unclear: Whether the user accepts `.tar.gz` (the path of least resistance) or wants `.deb` (matches original spec but burns ~1 day of dpkg-deb wrapping work).
    - Recommendation: **Discuss-phase question to user.** Default to `.tar.gz` for v1.0 with `.deb` as a v1.1 polish. If user picks `.deb`, planner adds a Wave 2 task for the dpkg-deb postPackage hook.
 
 2. **Is `RoadRaven.electrobun.dev` the intended permanent bundle identifier, or should it move to a conventional reverse-DNS form?**
+   - **RESOLVED 2026-05-03:** see CONTEXT.md `<reconciliation>` R-05 — keep `RoadRaven.electrobun.dev`.
    - What we know: Set in Phase 0 SCAF; carried unchanged. Functional.
    - What's unclear: Whether the user wants `dev.electrobun.RoadRaven` or `com.shuffzord.roadraven` or similar before locking it in v1.0 (changing later orphans installed users' settings).
    - Recommendation: Quick user check before tagging v1.0. If kept as-is, no action; if changed, change in `electrobun.config.ts` AND document the legacy identifier so power-users with `<userData>/RoadRaven.electrobun.dev/` directories know how to migrate (probably "manually rename the directory" — small audience for v1.0).
 
 3. **OIDC trusted publishing or NPM_TOKEN?**
+   - **RESOLVED 2026-05-03:** see CONTEXT.md `<reconciliation>` R-03 — OIDC trusted publishing chosen.
    - What we know: OIDC is the modern recommendation (no secret rotation, free provenance). NPM_TOKEN works fine if the user prefers it.
    - What's unclear: Whether the user has already set up trusted publishing on npmjs.com (one-time UI step).
    - Recommendation: Default to OIDC trusted publishing (better long-term hygiene); if the user hasn't set it up yet, the planner adds a "human checkpoint" task to do the npmjs.com config before the first release.
 
 4. **Does the audit need to run against the CEF-bundled binary or is `vite preview` acceptable?**
+   - **RESOLVED 2026-05-03:** see CONTEXT.md `<reconciliation>` R-04 — `vite preview` chosen, CEF caveat in 05-A11Y-AUDIT.md.
    - What we know: `vite preview` covers DOM/CSS/ARIA correctness (which is what axe-core checks). CEF-bundled audit is not a paved path.
    - What's unclear: User's interpretation of "automated baseline against the production-built app" (D-19) — does "production-built" mean "the production webview bundle" (vite preview is fine) or "the shipped installer" (need CEF integration)?
    - Recommendation: Clarify in discuss-phase. Default: vite preview with documented caveat in `05-A11Y-AUDIT.md`.
 
 5. **Wave breakdown — is 4 waves the right shape?**
+   - **RESOLVED 2026-05-03:** see CONTEXT.md `<reconciliation>` R-06 — 5 plans / 4 waves accepted (with Wave 0 folded into Plan 05-01).
    - What we know: This phase has 24 decisions and 6 requirements; touches packaging, npm publishing, CI, docs, a11y. Not small.
    - Recommended split (per user research focus item #12):
      - **Wave 0:** Test scaffolds + Wave-0 gaps from Validation Architecture (audit.spec.ts, check-core-deps.ts, bump-version.ts, requirements-edits grep test). Plus the requirement edits themselves (D-05, D-08, D-11) so subsequent waves work against correct requirements.

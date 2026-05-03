@@ -13,7 +13,6 @@ files_modified:
   - docs/design-system.md
   - docs/logging.md
   - docs/plugin-authoring.md
-  - .github/workflows/release.yml
   - CONTRIBUTING.md
   - README.md
 autonomous: true
@@ -27,10 +26,10 @@ must_haves:
     - "Existing docs/*.md files have Just-the-Docs front matter (title, nav_order); content is NOT rewritten"
     - "docs/index.md exists as the landing page (replaces /README at the docs site root)"
     - "docs/plugin-authoring.md exists covering Event API integration with the claude-code MCP wrapper as the worked example (D-16)"
-    - "CONTRIBUTING.md at the repo root covers local setup, tests, code style, branch/PR conventions, fallow-as-local-tool note (D-22)"
-    - "README.md gains: per-platform install instructions (R-01 Linux .tar.gz, R-02 Windows .zip→-Setup.exe with SmartScreen note D-12), feature-status block (v1 vs v1.1), Contributing section, link to published docs site"
-    - ".github/workflows/release.yml gains a `deploy-docs` job that runs after `github-release` to deploy GH Pages"
+    - "CONTRIBUTING.md at the repo root covers local setup, tests, code style, branch/PR conventions, fallow-as-local-tool note (D-22), Documentation subsection (per checker I-1) noting Ruby + manual Gemfile for local docs preview"
+    - "README.md gains: per-platform install instructions (R-01 Linux .tar.gz with chmod +x step per checker W-3, R-02 Windows .zip→-Setup.exe with SmartScreen note D-12), feature-status block (v1 vs v1.1), Contributing section, link to published docs site"
     - "fallow IS NOT enabled in CI (D-22 — verify the placeholder remains commented after Plan 05-03's edits)"
+    - "Plan 05-04 does NOT modify .github/workflows/release.yml (per checker B-2/B-3 — Plan 05-03 is sole owner; deploy-docs job belongs there)"
   artifacts:
     - path: "docs/_config.yml"
       provides: "Just-the-Docs Jekyll site config with sidebar"
@@ -47,9 +46,6 @@ must_haves:
     - path: "README.md (modified)"
       provides: "Polished v1 README with install, feature-status, contributing, docs links"
       contains: "RoadRaven-Setup.exe"
-    - path: ".github/workflows/release.yml (modified — adds deploy-docs job)"
-      provides: "GH Pages deploy step in the release pipeline"
-      contains: "actions/deploy-pages@v4"
   key_links:
     - from: "docs/_config.yml"
       to: "remote_theme just-the-docs/just-the-docs"
@@ -63,41 +59,48 @@ must_haves:
       to: "CONTRIBUTING.md + docs site URL + docs/plugin-authoring.html"
       via: "markdown links"
       pattern: "CONTRIBUTING.md"
-    - from: ".github/workflows/release.yml deploy-docs job"
-      to: "docs/_config.yml + actions/jekyll-build-pages"
-      via: "Jekyll build → Pages deploy"
-      pattern: "jekyll-build-pages"
+    - from: "docs/_config.yml + docs/*.md (this plan)"
+      to: ".github/workflows/release.yml deploy-docs job (Plan 05-03 Task 4)"
+      via: "Jekyll build consumes ./docs source"
+      pattern: "actions/jekyll-build-pages@v1"
 ---
 
 <objective>
-Land the docs surface (PACK-05). Three deliverables, one workflow:
+Land the docs surface (PACK-05). Three deliverables, three tasks (one per
+deliverable, after the checker B-3 split):
 
-1. **GitHub Pages site** — Just-the-Docs theme with sidebar; existing 5 markdown
-   files in `docs/` get front matter (no content rewrite); new `docs/index.md`
-   landing page; new `docs/plugin-authoring.md` covering Event API integration.
+1. **GitHub Pages site CONTENT** — Just-the-Docs theme with sidebar; existing 5
+   markdown files in `docs/` get front matter (no content rewrite); new
+   `docs/index.md` landing page; new `docs/plugin-authoring.md` covering Event
+   API integration. (Task 1 + Task 2)
 
 2. **CONTRIBUTING.md** — repo root; covers local setup, tests, code style,
    branch/PR conventions; mentions `bunx fallow audit --changed-since=HEAD` as
-   an optional local tool (D-22 — fallow is NOT a CI gate).
+   an optional local tool (D-22 — fallow is NOT a CI gate); includes a
+   Documentation subsection noting Ruby + Gemfile for local docs preview (per
+   checker I-1). (Task 3a)
 
-3. **README polish** — v1 install instructions per R-01 (Linux .tar.gz) and
-   R-02 (Windows .zip → -Setup.exe with SmartScreen warning per D-12);
-   feature-status block (v1 vs v1.1); Contributing + docs links.
+3. **README polish** — v1 install instructions per R-01 (Linux .tar.gz with
+   chmod +x step per checker W-3) and R-02 (Windows .zip → -Setup.exe with
+   SmartScreen warning per D-12); feature-status block (v1 vs v1.1);
+   Contributing + docs links. (Task 3b)
 
-Plus the GH Pages **deploy job** appended to `.github/workflows/release.yml`
-(created in Plan 05-03; runs in parallel wave with this plan — both touch
-release.yml so coordinate via the file ownership; see "Coordination with Plan
-05-03" below).
+**Per checker B-2/B-3 reconciliation:** This plan no longer touches
+`.github/workflows/release.yml`. The deploy-docs job that consumes this plan's
+docs content is owned by Plan 05-03 Task 4 (single-file-ownership invariant).
+This plan now modifies 10 files (was 11).
 
-This plan runs in **parallel** with Plan 05-03 (Wave 2). Plan 05-03 owns the
-release workflow's main jobs (build, publish-npm); this plan only APPENDS the
-`deploy-docs` job. Both plans CAN modify `.github/workflows/release.yml` if
-ordered correctly: Plan 05-03 runs first (creates the file), this plan runs
-second (appends). The dependency graph in this plan's frontmatter records
-`depends_on: ["05-01", "05-03"]` only because the file-ownership conflict with 05-03
-is small (one job append at end of file). If executors run truly in parallel,
-the second-to-merge worktree must rebase — orchestrator handles via wave
-sequencing if needed.
+**Per checker B-3 task split:** What was previously Task 3 (CONTRIBUTING +
+README + deploy-docs append, 3 conflated deliverables) is now split into
+Task 3a (CONTRIBUTING.md) and Task 3b (README polish). The deploy-docs append
+moved to Plan 05-03 Task 4 entirely.
+
+This plan runs in **Wave 3** (parallel with Plan 05-05 a11y audit). It depends
+on Plan 05-01 (scaffolding) and Plan 05-03 (release.yml exists with the
+deploy-docs job ready to consume this plan's docs content). Plan 05-03 has
+already created the deploy-docs job, so this plan only needs to ensure
+`docs/_config.yml` and `docs/*.md` exist before the next tag is pushed —
+which is enforced by the wave ordering.
 
 Output:
 - `docs/_config.yml` (Jekyll/Just-the-Docs config)
@@ -105,8 +108,7 @@ Output:
 - `docs/plugin-authoring.md` (Event API guide)
 - Front matter added to 5 existing `docs/*.md` files (architecture-overview, development-guide, rpc-and-ipc, design-system, logging)
 - `CONTRIBUTING.md` (new, repo root)
-- `README.md` (polished — install per platform, feature-status, contributing, docs links)
-- `.github/workflows/release.yml` (gains `deploy-docs` job)
+- `README.md` (polished — install per platform with chmod +x, feature-status, contributing, docs links)
 </objective>
 
 <execution_context>
@@ -144,15 +146,21 @@ Output:
 
 <!-- CONTRIBUTING.md target: per D-17 — local setup (bun install, bun run dev:hmr),
      tests (bun run verify), code style (Biome via lint-staged + husky), branch/PR
-     conventions, pointer to docs/development-guide.md, fallow-as-local-tool note. -->
-
-<!-- deploy-docs job: copy from RESEARCH.md Pattern 3 (lines 510-531) -->
+     conventions, pointer to docs/development-guide.md, fallow-as-local-tool note,
+     Documentation subsection per checker I-1. -->
 
 <!-- Front-matter pattern for existing docs files (RESEARCH.md ~596-614) -->
 <!-- nav_order assignments: -->
 <!-- index.md → 1, architecture-overview.md → 2, development-guide.md → 3, -->
 <!-- rpc-and-ipc.md → 4, design-system.md → 5, logging.md → 6, -->
 <!-- plugin-authoring.md → 7 -->
+
+<!-- Linux install command per checker W-3 — pin the actual extract directory: -->
+<!-- After `tar -xzf stable-linux-x64-RoadRavenSetup-stable.tar.gz`, the bundle -->
+<!-- typically extracts to a directory named `RoadRavenSetup-stable/` (Electrobun -->
+<!-- naming convention matches the basename of the .tar.gz minus the channel-arch -->
+<!-- prefix). Cross-reference RESEARCH.md Pitfall 6: Linux launcher needs `+x`. -->
+<!-- README must include the chmod step. -->
 </interfaces>
 </context>
 
@@ -617,27 +625,22 @@ Output:
 </task>
 
 <task type="auto">
-  <name>Task 3: Create CONTRIBUTING.md + polish README.md + append deploy-docs job to release.yml</name>
+  <name>Task 3a: Create CONTRIBUTING.md (per checker B-3 split)</name>
 
   <read_first>
-    - README.md (current state — preserve Quick start / Project structure / Electrobun sections)
+    - README.md (current state — just to confirm what already exists at repo root)
     - CLAUDE.md (project rules — bun-not-npm exception, Electrobun-not-Electron — must be referenced in CONTRIBUTING)
     - docs/development-guide.md (CONTRIBUTING references it; do not duplicate, just point)
-    - .planning/phases/05-packaging-distribution/05-CONTEXT.md D-12, D-17, D-18, D-22 (SmartScreen note, CONTRIBUTING scope, README polish, fallow stays commented)
-    - .planning/phases/05-packaging-distribution/05-CONTEXT.md `<reconciliation>` R-01, R-02 (Linux .tar.gz install line, Windows .zip→-Setup.exe install line)
-    - .planning/phases/05-packaging-distribution/05-RESEARCH.md `## Architecture Patterns > Pattern 3` deploy-docs job (lines ~510-531) — copy literally
-    - .github/workflows/release.yml (created in Plan 05-03 — must coordinate the append; reads file's current end-of-file)
+    - .planning/phases/05-packaging-distribution/05-CONTEXT.md D-17 (CONTRIBUTING scope), D-22 (fallow stays commented as local-only tool)
     - .husky/pre-commit (existing — references fallow as informational; CONTRIBUTING should reflect)
   </read_first>
 
   <files>
     CONTRIBUTING.md
-    README.md
-    .github/workflows/release.yml
   </files>
 
   <action>
-    **A. Create `CONTRIBUTING.md`** at the repo root:
+    Create `CONTRIBUTING.md` at the repo root. Per checker I-1, the Documentation subsection notes Ruby + Gemfile for local docs preview.
 
     ```markdown
     # Contributing to RoadRaven
@@ -699,6 +702,29 @@ Output:
 
     Fallow output is currently signal, not a gate. Treat findings as a planning
     input for refactor PRs rather than a blocking failure on each individual change.
+
+    ## Documentation
+
+    The published docs site lives at https://shuffzord.github.io/RoadRaven/
+    and is built from the `docs/` directory by the GH Pages workflow on every
+    `v*` tag (see Plan 05-03 `deploy-docs` job).
+
+    - **Edit docs:** modify files under `docs/`. Keep the Just-the-Docs front
+       matter (`title:`, `nav_order:`, `layout:`) intact.
+    - **Local preview (per checker I-1):** the docs site uses Just-the-Docs via
+       Jekyll. The repository does NOT ship a `Gemfile` (the GH Pages CI job
+       handles the build for published changes). To preview locally, you need
+       Ruby + Bundler + a manual `Gemfile` containing:
+
+       ```ruby
+       source "https://rubygems.org"
+       gem "github-pages", group: :jekyll_plugins
+       gem "just-the-docs"
+       ```
+
+       Then `bundle install && bundle exec jekyll serve --source ./docs`. For
+       most contributions, just push the changes — CI's deploy-docs job will
+       render and publish them on the next tag.
 
     ## Code style
 
@@ -772,8 +798,51 @@ Output:
     By contributing, you agree your contributions are licensed under the
     project's [MIT License](./LICENSE).
     ```
+  </action>
 
-    **B. Polish `README.md`.** Read the current README first. KEEP the existing sections (Features, Quick start as dev workflow, Project structure, Electrobun). ADD new sections AFTER `# RoadRaven` heading and BEFORE `## Features`:
+  <verify>
+    <automated>test -f CONTRIBUTING.md && echo OK</automated>
+    <automated>grep -c "bun install" CONTRIBUTING.md  # MUST be >= 1</automated>
+    <automated>grep -c "bun run verify" CONTRIBUTING.md  # MUST be >= 1</automated>
+    <automated>grep -c "bunx fallow audit --changed-since=HEAD" CONTRIBUTING.md  # MUST be 1 (D-22 — fallow as local tool)</automated>
+    <automated>grep -c "Electrobun, not Electron" CONTRIBUTING.md  # MUST be >= 1</automated>
+    <automated>grep -c "scripts/check-core-deps.ts" CONTRIBUTING.md  # MUST be >= 1</automated>
+    <automated>grep -c "## Documentation" CONTRIBUTING.md  # MUST be >= 1 (per checker I-1)</automated>
+    <automated>grep -c "Ruby + Bundler" CONTRIBUTING.md  # MUST be >= 1 (per checker I-1)</automated>
+    <automated>grep -c 'gem "just-the-docs"' CONTRIBUTING.md  # MUST be >= 1 (per checker I-1)</automated>
+  </verify>
+
+  <acceptance_criteria>
+    - `CONTRIBUTING.md` exists at the repo root; contains `## Local setup`, `## Tests, types, lint, build`, `## Documentation`, `## Code style`, `## Branches and PRs`, `## Project conventions`, `## Reporting issues`, `## License` sections
+    - `CONTRIBUTING.md` mentions `bun install`, `bun run dev:hmr`, `bun run verify`, `bunx fallow audit --changed-since=HEAD` (D-22 — informational), and references `CLAUDE.md` for the Electrobun/bun rules
+    - `CONTRIBUTING.md` `## Documentation` subsection (per checker I-1) explicitly states: "the repository does NOT ship a `Gemfile`", names Ruby + Bundler as the local prerequisites, includes the literal Ruby snippet `gem "just-the-docs"`, and notes "GitHub Pages CI handles the build for published changes"
+    - `CONTRIBUTING.md` has a project-conventions section explicitly mentioning the `npm publish` exception, the `@roadraven/core` allowlist, the `--rv-*` token rule, and the `dataKey` invariant
+    - `CONTRIBUTING.md` does NOT recommend bypassing pre-commit hooks (`--no-verify`)
+  </acceptance_criteria>
+
+  <done>
+    External contributors get a one-stop file with local setup, test commands, code style, project conventions, and an explicit local-docs-preview path that does NOT block them on a missing Gemfile.
+  </done>
+</task>
+
+<task type="auto">
+  <name>Task 3b: Polish README.md per D-18 (per checker B-3 split + W-3)</name>
+
+  <read_first>
+    - README.md (current state — preserve Quick start / Project structure / Electrobun sections)
+    - .planning/phases/05-packaging-distribution/05-CONTEXT.md D-12 (SmartScreen note), D-18 (README polish scope)
+    - .planning/phases/05-packaging-distribution/05-CONTEXT.md `<reconciliation>` R-01 (Linux .tar.gz install line), R-02 (Windows .zip→-Setup.exe install line)
+    - .planning/phases/05-packaging-distribution/05-RESEARCH.md `## Common Pitfalls > Pitfall 6` — Linux launcher needs `chmod +x` (per checker W-3 cross-reference)
+  </read_first>
+
+  <files>
+    README.md
+  </files>
+
+  <action>
+    Polish `README.md`. Read the current README first. KEEP the existing sections (Features, Quick start as dev workflow, Project structure, Electrobun). ADD new sections AFTER `# RoadRaven` heading and BEFORE `## Features`.
+
+    Per checker W-3: the Linux install instructions MUST include the `chmod +x` step (RESEARCH.md Pitfall 6 — Linux launcher needs `+x`). The extracted directory is named `RoadRavenSetup-stable/` per Electrobun's bundle naming convention (the basename of the .tar.gz minus the channel-arch prefix); README must mention the exact name AND note "adjust if extracted name differs" in case future Electrobun versions change the convention.
 
     Insert the new sections at the top (after the title block + tagline):
 
@@ -809,7 +878,8 @@ Output:
 
        ```bash
        tar -xzf stable-linux-x64-RoadRavenSetup-stable.tar.gz
-       cd <extracted-directory>
+       cd RoadRavenSetup-stable    # adjust if extracted name differs
+       chmod +x ./RoadRavenSetup   # ensure launcher is executable (per RESEARCH.md Pitfall 6)
        ./RoadRavenSetup
        ```
 
@@ -886,96 +956,35 @@ Output:
     The existing `## Features`, `## Quick start`, `## Project structure`, `## Electrobun` sections stay UNCHANGED below the new content.
 
     Then INSERT the existing `## Quick start` section heading text — change it from `## Quick start` to `## Quick start (development)` so it doesn't compete with the new `## Install` for "first-time visitor" attention. Keep the body of that section unchanged.
-
-    **C. Append `deploy-docs` job to `.github/workflows/release.yml`.** Plan 05-03 created the file ending after the `publish-npm-mcp` job. Append (do NOT modify the existing 5 jobs):
-
-    ```yaml
-
-      deploy-docs:
-        name: Deploy docs site to GitHub Pages
-        needs: [github-release]
-        runs-on: ubuntu-latest
-        permissions:
-          contents: read
-          pages: write
-          id-token: write
-        environment:
-          name: github-pages
-          url: ${{ steps.deployment.outputs.page_url }}
-        steps:
-          - uses: actions/checkout@v4
-          - uses: actions/configure-pages@v5
-          - uses: actions/jekyll-build-pages@v1
-            with:
-              source: ./docs
-              destination: ./_site
-          - uses: actions/upload-pages-artifact@v3
-          - id: deployment
-            uses: actions/deploy-pages@v4
-          - name: Smoke-test GH Pages site is live
-            run: |
-              # Wait briefly for Pages CDN to propagate, then verify the site responds.
-              sleep 10
-              curl -fsSL "https://shuffzord.github.io/RoadRaven/" | grep -q "RoadRaven" || (echo "GH Pages site did not return RoadRaven content"; exit 1)
-    ```
-
-    The `permissions` block on this job OVERRIDES the workflow-level
-    `permissions` (workflow has `contents: write, id-token: write`; this job
-    needs `contents: read, pages: write, id-token: write`). The `id-token: write`
-    permission must be present for the Pages OIDC deployment.
-
-    The `environment: github-pages` block is required by `actions/deploy-pages@v4`
-    so GitHub knows this is the canonical Pages-deploy job.
-
-    The smoke-test step at the end is a soft confirmation — Pages CDN
-    propagation can take 30s+ on first deploys; if it fails, re-running the
-    workflow re-deploys cleanly.
   </action>
 
   <verify>
-    <automated>test -f CONTRIBUTING.md && echo OK</automated>
-    <automated>grep -c "bun install" CONTRIBUTING.md  # MUST be >= 1</automated>
-    <automated>grep -c "bun run verify" CONTRIBUTING.md  # MUST be >= 1</automated>
-    <automated>grep -c "bunx fallow audit --changed-since=HEAD" CONTRIBUTING.md  # MUST be 1 (D-22 — fallow as local tool)</automated>
-    <automated>grep -c "Electrobun, not Electron" CONTRIBUTING.md  # MUST be >= 1</automated>
-    <automated>grep -c "scripts/check-core-deps.ts" CONTRIBUTING.md  # MUST be >= 1</automated>
     <automated>grep -c "## Install" README.md  # MUST be >= 1 (new section)</automated>
     <automated>grep -c "RoadRaven-Setup.exe" README.md  # MUST be >= 1 (R-02)</automated>
     <automated>grep -c "tar -xzf stable-linux-x64-RoadRavenSetup-stable.tar.gz" README.md  # MUST be >= 1 (R-01)</automated>
+    <automated>grep -c "chmod +x ./RoadRavenSetup" README.md  # MUST be >= 1 (per checker W-3 + RESEARCH.md Pitfall 6)</automated>
+    <automated>grep -c "RoadRavenSetup-stable" README.md  # MUST be >= 1 (extracted directory name)</automated>
     <automated>grep -c "SmartScreen" README.md  # MUST be >= 1 (D-12)</automated>
     <automated>grep -c "## Feature status" README.md  # MUST be >= 1</automated>
     <automated>grep -c "shuffzord.github.io/RoadRaven" README.md  # MUST be >= 1</automated>
     <automated>grep -c "CONTRIBUTING.md" README.md  # MUST be >= 1 (link to it)</automated>
-    <automated>grep -c "deploy-docs:" .github/workflows/release.yml  # MUST be 1</automated>
-    <automated>grep -c "actions/deploy-pages@v4" .github/workflows/release.yml  # MUST be 1</automated>
-    <automated>grep -c "actions/jekyll-build-pages@v1" .github/workflows/release.yml  # MUST be 1</automated>
-    <automated>grep -c "shuffzord.github.io/RoadRaven" .github/workflows/release.yml  # MUST be 1 (smoke-test step)</automated>
-    <automated>node -e "const y=require('js-yaml');y.load(require('fs').readFileSync('.github/workflows/release.yml','utf8'));console.log('release.yml still parses')" 2>/dev/null || echo "trust github parser"</automated>
   </verify>
 
   <acceptance_criteria>
-    - `CONTRIBUTING.md` exists at the repo root; contains `## Local setup`, `## Tests, types, lint, build`, `## Code style`, `## Branches and PRs`, `## Project conventions`, `## Reporting issues`, `## License` sections
-    - `CONTRIBUTING.md` mentions `bun install`, `bun run dev:hmr`, `bun run verify`, `bunx fallow audit --changed-since=HEAD` (D-22 — informational), and references `CLAUDE.md` for the Electrobun/bun rules
-    - `CONTRIBUTING.md` has a project-conventions section explicitly mentioning the `npm publish` exception, the `@roadraven/core` allowlist, the `--rv-*` token rule, and the `dataKey` invariant
-    - `CONTRIBUTING.md` does NOT recommend bypassing pre-commit hooks (`--no-verify`)
     - `README.md` contains a NEW `## Install` section as one of the first sections (after the tagline + existing notice, before the existing `## Features` heading)
     - `README.md` Install section has Windows subsection with the literal string `RoadRaven-Setup.exe` AND `SmartScreen` AND `More info` AND `Run anyway` (D-12 + R-02)
-    - `README.md` Install section has Linux subsection with the literal command `tar -xzf stable-linux-x64-RoadRavenSetup-stable.tar.gz` (R-01)
+    - `README.md` Install section has Linux subsection with ALL FOUR literal commands in order: `tar -xzf stable-linux-x64-RoadRavenSetup-stable.tar.gz`, `cd RoadRavenSetup-stable`, `chmod +x ./RoadRavenSetup`, `./RoadRavenSetup` (per checker W-3 + R-01 + RESEARCH.md Pitfall 6)
+    - `README.md` Linux subsection includes the literal comment `adjust if extracted name differs` (defensive language for future Electrobun naming changes)
+    - `README.md` Linux subsection cross-references RESEARCH.md Pitfall 6 in either an inline comment or a paragraph note (the chmod step's rationale must be traceable to the pitfall)
     - `README.md` contains a NEW `## Feature status` section with a table mapping features to v1.0 / v1.1 columns; rows include macOS, Canary, code signing, `.deb` packaging, `@roadraven/react`, smart-adapter plugin system
     - `README.md` contains a NEW `## Documentation` section linking to `https://shuffzord.github.io/RoadRaven/` and at least 4 sub-page links
     - `README.md` contains a NEW `## Contributing` section linking to `CONTRIBUTING.md`
     - `README.md` existing `## Quick start` section renamed to `## Quick start (development)` so the new install section is the user-facing entry point
     - `README.md` existing sections (Features, Project structure, Electrobun) preserved
-    - `.github/workflows/release.yml` contains a NEW job `deploy-docs:` AFTER `publish-npm-mcp` (file now has 6 jobs total)
-    - `deploy-docs` job has `needs: [github-release]` (so docs only update if installer release succeeded)
-    - `deploy-docs` job has `permissions: { contents: read, pages: write, id-token: write }` and `environment: github-pages`
-    - `deploy-docs` job uses `actions/configure-pages@v5`, `actions/jekyll-build-pages@v1`, `actions/upload-pages-artifact@v3`, `actions/deploy-pages@v4` (the documented Pages deploy chain)
-    - `deploy-docs` job ends with a smoke-test step that curls `https://shuffzord.github.io/RoadRaven/` and asserts response body contains "RoadRaven"
-    - `release.yml` still parses as valid YAML (existing 5 jobs from Plan 05-03 preserved)
   </acceptance_criteria>
 
   <done>
-    Docs site config + landing page + plugin authoring guide are all in place. CONTRIBUTING.md gives external contributors a one-stop file. README is polished for v1 release. The release workflow now ends with a Pages deploy that runs after the GitHub Release succeeds, ensuring docs always reflect the shipped version.
+    README is polished for v1 release. New visitors see Install + Feature status first; the chmod +x step prevents the most common Linux launch failure (RESEARCH.md Pitfall 6). Existing developer-facing content preserved below.
   </done>
 </task>
 
@@ -989,18 +998,17 @@ Output:
 | Docs source markdown → published GH Pages site | The site is a thin Jekyll render of files in `docs/`. No build script, no Jekyll plugins beyond `jekyll-remote-theme`. Trust boundary is "whatever you commit gets published." Sensitive content must not land in `docs/`. |
 | README.md install instructions → end-user trust | Documenting "click Run anyway" past SmartScreen is a UX necessity (D-12) but trains users to bypass a security warning. Mitigation: README is explicit that the unsigned status is a known v1.0 limitation deferred to v1.1, not a permanent posture. |
 | CONTRIBUTING.md `bunx fallow` recommendation → contributor confusion | Per D-22, fallow is informational. CONTRIBUTING.md must be explicit that fallow is NOT a CI gate so contributors don't waste cycles fixing fallow findings instead of failing tests. |
-| `deploy-docs` job → GH Pages OIDC | `id-token: write` permission required by `actions/deploy-pages@v4` (the Pages OIDC flow); same OIDC infrastructure as the npm publish job. Both reuse the same per-run token mechanism. |
 
 ## STRIDE Threat Register
 
 | Threat ID | Category | Component | Disposition | Mitigation Plan |
 |-----------|----------|-----------|-------------|-----------------|
 | T-05-06 | Repudiation | Unsigned `.exe` runs without warning on machines without SmartScreen | accept (per D-12) | README "First run on Windows" section explicitly documents the SmartScreen warning + bypass path. The deferral to v1.1 is logged in PROJECT.md "Out of Scope" (Plan 05-01). Combined: users see the warning, README explains it, deferral has a documented v1.1 follow-up. |
-| T-05-10 | Information Disclosure | Sensitive content accidentally landing in `docs/` and getting published | mitigate | The Pages deploy is gated on the same git commits that pass CI. The biome lint job + planning-invariants gate (Plan 05-03) catch obvious issues. CONTRIBUTING.md note: "Anything under `docs/` is published — no secrets, no internal-only context." Plus: the docs deploy only runs on tag pushes (not every master commit), giving a final review window. |
+| T-05-10 | Information Disclosure | Sensitive content accidentally landing in `docs/` and getting published | mitigate | The Pages deploy (Plan 05-03 Task 4) is gated on tag pushes (not every master commit), giving a final review window. The biome lint job + planning-invariants gate (Plan 05-03 Task 2) catch obvious issues. CONTRIBUTING.md Documentation note: "Anything under `docs/` is published — no secrets, no internal-only context." |
 </threat_model>
 
 <verification>
-After all three tasks land, run from repo root:
+After all four tasks land, run from repo root:
 
 ```bash
 # Docs site files
@@ -1014,18 +1022,16 @@ done
 # CONTRIBUTING + README
 test -f CONTRIBUTING.md
 grep -q "bunx fallow audit" CONTRIBUTING.md  # D-22
-grep -q "## Install" README.md
+grep -q '## Documentation' CONTRIBUTING.md  # I-1
+grep -q '## Install' README.md
 grep -q "RoadRaven-Setup.exe" README.md
 grep -q "tar -xzf stable-linux-x64-RoadRavenSetup-stable.tar.gz" README.md
-grep -q "## Feature status" README.md
+grep -q "chmod +x ./RoadRavenSetup" README.md  # W-3
+grep -q '## Feature status' README.md
 grep -q "shuffzord.github.io/RoadRaven" README.md
 
-# release.yml gained deploy-docs job
-grep -q "deploy-docs:" .github/workflows/release.yml
-grep -q "actions/deploy-pages@v4" .github/workflows/release.yml
-
-# Workflow YAML still parses
-node -e "require('js-yaml').load(require('fs').readFileSync('.github/workflows/release.yml','utf8'));console.log('OK')"
+# Plan 05-04 does NOT touch release.yml (per B-2/B-3 — Plan 05-03 sole owner)
+# (no grep needed; this is enforced by file_modified frontmatter)
 
 # Existing tests/lints still pass (no regression)
 bunx @biomejs/biome check --diagnostic-level=error .
@@ -1033,24 +1039,26 @@ bun run --cwd packages/desktop test
 ```
 
 **Manual verification (one-time):**
-- After the first `v*` tag is pushed and `deploy-docs` runs, visit `https://shuffzord.github.io/RoadRaven/` and confirm: landing page renders, sidebar nav shows all 7 pages in correct order, each page is reachable, plugin-authoring.md contains the worked example.
+- After the first `v*` tag is pushed and Plan 05-03's `deploy-docs` runs, visit `https://shuffzord.github.io/RoadRaven/` and confirm: landing page renders, sidebar nav shows all 7 pages in correct order, each page is reachable, plugin-authoring.md contains the worked example.
 </verification>
 
 <success_criteria>
 - Docs site is fully configured (Just-the-Docs, sidebar, all pages with front matter)
 - Plugin authoring guide is complete with claude-code worked example (D-16)
-- CONTRIBUTING.md provides a one-stop contributor onboarding
-- README has v1 install instructions per R-01/R-02 + SmartScreen note (D-12) + feature-status block (v1 vs. v1.1) + docs/contributing links
-- release.yml gains deploy-docs job that runs after github-release (docs ship in lockstep with installers)
-- All existing CI gates still pass; release.yml parses as valid YAML
+- CONTRIBUTING.md provides a one-stop contributor onboarding with explicit Documentation subsection (per checker I-1)
+- README has v1 install instructions per R-01 (with chmod +x step per W-3) / R-02 + SmartScreen note (D-12) + feature-status block (v1 vs. v1.1) + docs/contributing links
+- Plan 05-04 does NOT modify `.github/workflows/release.yml` (per checker B-2/B-3 — file ownership consolidated in Plan 05-03)
+- All existing CI gates still pass
 - fallow remains commented in CI (D-22 invariant); CONTRIBUTING.md notes it as a local-only informational tool
 </success_criteria>
 
 <output>
 After completion, create `.planning/phases/05-packaging-distribution/05-04-SUMMARY.md` describing:
 - Docs site sidebar order + the new index.md + plugin-authoring.md content
-- README polish: which sections were added (Install, Feature status, Documentation, Contributing) vs preserved (Features, Quick start, Project structure, Electrobun)
-- CONTRIBUTING.md scope and the explicit D-22 framing of fallow
-- The deploy-docs job appended to release.yml; coordination note with Plan 05-03 (both touched release.yml — sequenced via wave-2 file ownership)
+- README polish: which sections were added (Install with chmod step per W-3, Feature status, Documentation, Contributing) vs preserved (Features, Quick start, Project structure, Electrobun)
+- CONTRIBUTING.md scope, the explicit D-22 framing of fallow, and the Documentation subsection (I-1) noting Ruby + Gemfile for local docs preview
+- Confirmation that release.yml was NOT modified by this plan (per B-2/B-3 — Plan 05-03 owns deploy-docs job)
 - Any deviations from RESEARCH.md Pattern 4 (e.g., omitting `logo:` line because no asset)
 </output>
+</content>
+</invoke>

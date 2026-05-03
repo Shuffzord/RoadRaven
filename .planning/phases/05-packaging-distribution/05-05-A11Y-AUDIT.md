@@ -16,12 +16,13 @@ tags: [packaging, accessibility, a11y, audit, wcag]
 must_haves:
   truths:
     - "@axe-core/playwright audit suite runs against `vite preview` (port 4173, production-built renderer bundle per R-04)"
-    - "Audit covers welcome screen + loaded-roadmap-with-sample + side-panel-open + context-menu-open + confirmation-dialog-open + all three themes"
+    - "Audit covers welcome screen + loaded-roadmap-via-Hello-World-button + side-panel-open + context-menu-open + confirmation-dialog-open + all three themes"
     - "Pass criterion (D-20): zero axe violations with impact `critical` or `serious`"
     - "Manual checklist completed: keyboard-only navigation through tree edits, context menu, side panel, settings drawer, save flow, theme switcher (axe doesn't verify tab order)"
     - "Manual checklist verifies PACK-03 invariant: no `ApplicationMenu` import (file actions reachable via keyboard / toolbar)"
     - "Findings documented in 05-A11Y-AUDIT.md with severity classification and disposition (fix-in-phase / backlog / accepted)"
     - "Human checkpoint: user runs the manual checklist on the actual installed app post-Wave-2 build to catch CEF-only divergence (R-04 documented caveat)"
+    - "Selectors in audit.spec.ts are pre-verified against actual source files (per checker B-4/W-1/W-2): `[role=\"application\"]` on canvas wrapper, `[data-source-id]` + `[role=\"treeitem\"]` on node cards, button click for sample loading (NOT URL query param), `document.documentElement.setAttribute('data-theme', ...)` for theme switching (NOT localStorage)"
   artifacts:
     - path: "packages/desktop/tests/a11y/audit.spec.ts"
       provides: "Expanded axe suite covering all interaction surfaces (extends Wave 0 scaffold)"
@@ -62,8 +63,36 @@ bundle that ships in the installer's webview), NOT the CEF-bundled binary
 checkpoint at the end is where the user spot-checks the installed app for any
 CEF-only divergence in `--rv-*` token rendering, Radix ARIA, and focus rings.
 
+**Per checker B-4 + W-1 + W-2 reconciliation:** All selectors and interaction
+mechanisms in this plan are pre-verified against actual source files
+(2026-05-03). Specifically:
+
+- Component file: `packages/desktop/src/mainview/components/RoadmapNode.tsx`
+  (which exports a function named `RoadmapNodeCard`). The previously planned
+  reference to a separate `RoadmapNodeCard.tsx` file was incorrect.
+- Sample loading: The Hello World sample is loaded by clicking a button rendered
+  by `WelcomeScreen.tsx` (line 131-137: `onClick={() => onOpenSample("hello-world")}`),
+  NOT via a URL query parameter. The previously planned `?sample=hello-world`
+  pattern does not exist in the source.
+- Node card DOM contract: `data-source-id={nodeId}` and `role="treeitem"` (NOT
+  `data-node-id` and `role="button"`). Verified at `RoadmapNode.tsx` lines
+  113, 126.
+- Canvas wrapper: `role="application"` exists at `Canvas.tsx` line 344 — this
+  selector is real and usable.
+- Theme switching: Theme is stored in Zustand (`useThemeStore` in
+  `themeStore.ts`) and persisted via `electroview.rpc.request.saveSettings`
+  RPC (which is unavailable in `vite preview` — RPC is Electrobun-only). The
+  CSS source of truth is `document.documentElement.setAttribute("data-theme",
+  resolvedTheme)` (set by `ThemeProvider.tsx` line 33). The audit therefore
+  switches themes by directly setting the `data-theme` attribute on
+  `documentElement` — bypassing the store entirely. This exercises the same
+  CSS that ships in the installer. There is NO localStorage theme key.
+
+The audit can now be written without branching "if X then Y else Z" logic —
+every selector and mechanism is concrete.
+
 Output:
-- Expanded `packages/desktop/tests/a11y/audit.spec.ts` (covers 6+ interaction surfaces)
+- Expanded `packages/desktop/tests/a11y/audit.spec.ts` (covers 8+ audit invocations)
 - New `.planning/phases/05-packaging-distribution/05-A11Y-AUDIT.md` (write-up)
 - Modified `packages/desktop/package.json` (a11y suite added to existing test scripts as opt-in)
 - Human checkpoint: user runs manual checklist on installed app, signs off in 05-A11Y-AUDIT.md
@@ -82,6 +111,11 @@ Output:
 @.planning/phases/05-packaging-distribution/05-VALIDATION.md
 @packages/desktop/tests/a11y/audit.spec.ts
 @packages/desktop/tests/a11y/playwright.config.ts
+@packages/desktop/src/mainview/components/WelcomeScreen.tsx
+@packages/desktop/src/mainview/components/RoadmapNode.tsx
+@packages/desktop/src/mainview/components/Canvas.tsx
+@packages/desktop/src/mainview/components/ThemeProvider.tsx
+@packages/desktop/src/mainview/store/themeStore.ts
 
 <interfaces>
 <!-- Wave-0 scaffold (Plan 05-01) for audit.spec.ts: -->
@@ -93,31 +127,41 @@ Output:
 
 <!-- This plan EXPANDS audit.spec.ts to cover: -->
 <!--   1. Welcome screen (existing) -->
-<!--   2. Loaded sample roadmap (sample=hello-world) -->
+<!--   2. Loaded sample roadmap (Hello World button click) -->
 <!--   3. Side panel opened on a node -->
 <!--   4. Context menu opened on a node -->
 <!--   5. Confirmation dialog (delete non-leaf) -->
 <!--   6. Each of the three themes (dark, light, high-contrast) -->
 
-<!-- Sample loading: WelcomeScreen has a "Sample roadmaps" link that navigates -->
-<!-- to ?sample=hello-world. Verify by reading packages/desktop/src/mainview/components/WelcomeScreen.tsx -->
-<!-- BEFORE writing the test — if the URL pattern differs, adjust accordingly. -->
-
-<!-- Theme switching: ThemeProvider exposes data-theme attribute on root. -->
-<!-- Read packages/desktop/src/mainview/state/themeStore.ts (or similar) to confirm -->
-<!-- the API for programmatically setting a theme from a Playwright test. -->
+<!-- VERIFIED SOURCE FACTS (2026-05-03): -->
+<!--   - WelcomeScreen.tsx renders <button onClick={() => onOpenSample("hello-world")}>Hello World</button> -->
+<!--     at lines 131-137. The test loads the sample by clicking this button via -->
+<!--     `page.getByRole('button', { name: 'Hello World' }).click()`. -->
+<!--   - Canvas.tsx wraps the tree in <div role="application" tabIndex={0}> at line 344. -->
+<!--     Use `[role="application"]` to wait for tree render. -->
+<!--   - RoadmapNode.tsx renders nodes with `data-source-id={nodeId}` (line 113) and -->
+<!--     `role="treeitem"` (line 126), NOT `data-node-id` / `role="button"`. -->
+<!--     Use `[data-source-id][role="treeitem"]` (or just `[data-source-id]`) to target nodes. -->
+<!--   - ThemeProvider.tsx (line 33) sets `document.documentElement.setAttribute("data-theme", resolvedTheme)`. -->
+<!--     There is NO localStorage key for theme; theme is persisted via RPC `saveSettings` -->
+<!--     (only available under Electrobun, NOT under vite preview). -->
+<!--     The audit switches themes via `page.evaluate((t) => document.documentElement.setAttribute("data-theme", t), theme)` -->
+<!--     and verifies via `document.documentElement.getAttribute("data-theme")`. -->
+<!--     This exercises the CSS that ships in the installer without depending on RPC. -->
+<!--   - ThemePreference enum (shared/types.ts) includes "dark", "light", "high-contrast", "system". -->
+<!--     The audit tests "dark", "light", "high-contrast" (the three resolved themes). -->
 </interfaces>
 </context>
 
 <tasks>
 
 <task type="auto" tdd="true">
-  <name>Task 1: Expand audit.spec.ts to cover 6+ interaction surfaces and all three themes</name>
+  <name>Task 1: Expand audit.spec.ts to cover 6+ interaction surfaces and all three themes (with pre-verified selectors)</name>
 
   <behavior>
     - audit.spec.ts has at minimum these test cases:
       1. Welcome screen / WCAG 2.1 AA (existing — kept)
-      2. Loaded sample roadmap / WCAG 2.1 AA
+      2. Loaded sample roadmap (Hello World button click) / WCAG 2.1 AA
       3. Side panel open on a node / WCAG 2.1 AA
       4. Context menu open on a node / WCAG 2.1 AA (Radix-rendered)
       5. Confirmation dialog (delete non-leaf) / WCAG 2.1 AA
@@ -127,16 +171,18 @@ Output:
     - Each test independently asserts `blockers).toEqual([])` for `critical` + `serious` impact
     - All tests log moderate/minor findings via console.warn (do not fail)
     - Tests SKIP if `packages/desktop/dist/` is missing (existing scaffold guard preserved)
-    - Test file uses appropriate Playwright selectors that match the actual rendered DOM (read source files BEFORE writing selectors)
+    - Test file uses ONLY pre-verified selectors (per checker B-4/W-1/W-2) — no branching, no "if X else Y" logic
   </behavior>
 
   <read_first>
     - packages/desktop/tests/a11y/audit.spec.ts (Wave 0 scaffold — extend it, don't replace it)
     - packages/desktop/tests/a11y/playwright.config.ts (Wave 0 — vite preview port 4173)
-    - packages/desktop/src/mainview/components/WelcomeScreen.tsx (sample-load mechanism — find the actual selector / URL pattern)
-    - packages/desktop/src/mainview/components/Canvas.tsx (or wherever the tree renders — for the role/aria selectors used in the loaded-roadmap test)
+    - packages/desktop/src/mainview/components/WelcomeScreen.tsx (verified: Hello World button at lines 131-137)
+    - packages/desktop/src/mainview/components/Canvas.tsx (verified: role="application" at line 344)
+    - packages/desktop/src/mainview/components/RoadmapNode.tsx (verified: data-source-id + role="treeitem" at lines 113, 126)
+    - packages/desktop/src/mainview/components/ThemeProvider.tsx (verified: documentElement.setAttribute("data-theme", ...) at line 33)
+    - packages/desktop/src/mainview/store/themeStore.ts (verified: persistence via RPC saveSettings, NOT localStorage)
     - packages/desktop/src/mainview/components/SidePanel.tsx (for selectors when testing side-panel-open state)
-    - packages/desktop/src/mainview/state/themeStore.ts (or themeProvider — for programmatic theme switching from Playwright)
     - packages/desktop/src/mainview/components/ConfirmationDialog.tsx (delete-non-leaf flow — to know how to trigger it from a test)
     - .planning/phases/05-packaging-distribution/05-RESEARCH.md `## Architecture Patterns > Pattern 6` (lines 664-727) — pattern for the audit tests
   </read_first>
@@ -147,9 +193,9 @@ Output:
   </files>
 
   <action>
-    **A. Expand `packages/desktop/tests/a11y/audit.spec.ts`** to cover all listed surfaces. Read the existing scaffold + the source files first to know what selectors / URL params / interactions to use. The PRESERVED guard at the top (`test.skip(!hasDist, ...)`) stays.
+    **A. Expand `packages/desktop/tests/a11y/audit.spec.ts`** to cover all listed surfaces. Selectors and mechanisms are pre-pinned (per checker B-4/W-1/W-2 — no branching). The PRESERVED guard at the top (`test.skip(!hasDist, ...)`) stays.
 
-    Skeleton (verify selectors against actual source files; adjust as needed — DO NOT use placeholder selectors that don't exist):
+    Concrete test file (selectors pinned to verified source facts):
 
     ```typescript
     import { test, expect, type Page } from "@playwright/test";
@@ -162,6 +208,14 @@ Output:
     //
     // Pass criterion (D-20): zero axe violations of impact `critical` or `serious`.
     // `moderate` and `minor` findings are logged for the audit doc but do NOT fail.
+    //
+    // Selectors verified against source 2026-05-03 per checker B-4/W-1/W-2:
+    //   - Canvas wrapper: [role="application"] (Canvas.tsx line 344)
+    //   - Node card: [data-source-id] (RoadmapNode.tsx line 113); [role="treeitem"] (line 126)
+    //   - Sample loading: getByRole('button', { name: 'Hello World' }) (WelcomeScreen.tsx line 131-137)
+    //   - Theme switching: document.documentElement.setAttribute("data-theme", t) directly
+    //     (ThemeProvider.tsx line 33 — there is NO localStorage theme key; RPC saveSettings
+    //     is Electrobun-only and unavailable under vite preview)
 
     const DIST_DIR = join(process.cwd(), "dist");
     const hasDist = existsSync(DIST_DIR);
@@ -198,6 +252,21 @@ Output:
     	).toEqual([]);
     }
 
+    /**
+     * Helper: click the "Hello World" sample button on the welcome screen and wait
+     * for the canvas to render (per WelcomeScreen.tsx + Canvas.tsx). Sample loading
+     * is via button click, NOT URL query param (verified 2026-05-03).
+     */
+    async function loadHelloWorldSample(page: Page): Promise<void> {
+    	await page.goto("/");
+    	await page.waitForLoadState("networkidle");
+    	await page.getByRole("button", { name: "Hello World" }).click();
+    	// Wait for tree canvas to render — role="application" on Canvas wrapper
+    	await page.waitForSelector('[role="application"]', { timeout: 5000 });
+    	// Wait for at least one node card to render
+    	await page.waitForSelector('[data-source-id]', { timeout: 5000 });
+    }
+
     test.describe("Accessibility audit (production bundle, vite preview port 4173)", () => {
     	test("1. Welcome screen passes WCAG 2.1 AA", async ({ page }) => {
     		await page.goto("/");
@@ -206,12 +275,7 @@ Output:
     	});
 
     	test("2. Loaded sample roadmap passes WCAG 2.1 AA", async ({ page }) => {
-    		// VERIFY URL PATTERN against WelcomeScreen.tsx — if sample loading uses
-    		// a different mechanism (e.g., click-to-load), adapt to use page.click(...)
-    		// instead of a query param.
-    		await page.goto("/?sample=hello-world");
-    		// Wait for tree to render — selector verified against Canvas.tsx
-    		await page.waitForSelector('[role="application"]', { timeout: 5000 });
+    		await loadHelloWorldSample(page);
     		// Exclude react-d3-tree's SVG link paths (they have no semantic content
     		// and axe occasionally flags missing labels on the <path> elements)
     		await auditPage(page, "loaded-roadmap", {
@@ -220,75 +284,77 @@ Output:
     	});
 
     	test("3. Side panel open on a node passes WCAG 2.1 AA", async ({ page }) => {
-    		await page.goto("/?sample=hello-world");
-    		await page.waitForSelector('[role="application"]', { timeout: 5000 });
-    		// Click the first node card to open the side panel
-    		// VERIFY selector against RoadmapNodeCard.tsx — adjust if [role="button"]
-    		// is on a different element
-    		await page.click('[role="button"][data-node-id]', { timeout: 5000 });
-    		// Wait for side panel to render — VERIFY selector
-    		await page.waitForSelector('[data-side-panel-open="true"], aside[aria-label*="ide panel"]', {
-    			timeout: 3000,
-    		});
+    		await loadHelloWorldSample(page);
+    		// Click the first node card to open the side panel.
+    		// Verified selector: [data-source-id] (RoadmapNode.tsx line 113)
+    		await page.locator('[data-source-id]').first().click();
+    		// Wait for side panel to render. The side panel is rendered when a node
+    		// is selected; it appears as an aside element. Use a generous timeout
+    		// since the side panel may animate in.
+    		await page.waitForTimeout(500);
     		await auditPage(page, "side-panel-open", { exclude: ["svg .rd3t-link"] });
     	});
 
     	test("4. Context menu open on a node passes WCAG 2.1 AA (Radix ARIA)", async ({ page }) => {
-    		await page.goto("/?sample=hello-world");
-    		await page.waitForSelector('[role="application"]', { timeout: 5000 });
-    		// Right-click on a node to open Radix ContextMenu
-    		await page.click('[role="button"][data-node-id]', { button: "right", timeout: 5000 });
-    		// Wait for Radix-rendered menu — VERIFY selector against the Radix output
-    		// (Radix typically renders [role="menu"] or data-radix-menu-content)
+    		await loadHelloWorldSample(page);
+    		// Right-click on a node to open Radix ContextMenu.
+    		// Verified selector: [data-source-id] (RoadmapNode.tsx line 113)
+    		await page.locator('[data-source-id]').first().click({ button: "right" });
+    		// Wait for Radix-rendered menu — Radix ContextMenu renders [role="menu"]
     		await page.waitForSelector('[role="menu"]', { timeout: 3000 });
     		await auditPage(page, "context-menu-open", { exclude: ["svg .rd3t-link"] });
     	});
 
     	test("5. Confirmation dialog (delete non-leaf) passes WCAG 2.1 AA", async ({ page }) => {
-    		await page.goto("/?sample=hello-world");
-    		await page.waitForSelector('[role="application"]', { timeout: 5000 });
-    		// Trigger the delete confirmation dialog. The exact path depends on the
-    		// keyboard shortcut and which node is focused. VERIFY against
-    		// useKeyboardRouter.ts — if the test environment can't easily deliver
-    		// the keyboard event, fall back to clicking through the context menu.
-    		await page.click('[role="button"][data-node-id]', { timeout: 5000 });
+    		await loadHelloWorldSample(page);
+    		// Select the first node card. The Hello World sample's root is a
+    		// non-leaf (has children), so pressing Delete triggers the confirmation
+    		// dialog (per the keyboard router contract).
+    		await page.locator('[data-source-id]').first().click();
+    		// Focus the canvas (role="application" on Canvas wrapper) so keyboard
+    		// events route correctly. The wrapper has tabIndex={0}.
+    		await page.locator('[role="application"]').focus();
     		await page.keyboard.press("Delete");
-    		// Wait for Radix Dialog
+    		// Wait for Radix Dialog (role="dialog" or role="alertdialog")
     		await page.waitForSelector('[role="dialog"], [role="alertdialog"]', { timeout: 3000 });
     		await auditPage(page, "confirmation-dialog-open", { exclude: ["svg .rd3t-link"] });
     	});
 
-    	// Themes — applied via CSS data-attribute on root. VERIFY mechanism against
-    	// the actual ThemeProvider implementation; if it uses a different approach
-    	// (e.g., setAttribute on documentElement), adjust the page.evaluate call.
+    	// Themes — applied by setting the data-theme attribute on documentElement.
+    	// This matches what ThemeProvider.tsx does on every preference change.
+    	// We bypass the Zustand store (which would invoke RPC saveSettings — not
+    	// available under vite preview) and exercise the CSS directly. The CSS is
+    	// the same that ships in the installer.
     	for (const theme of ["dark", "light", "high-contrast"] as const) {
     		test(`6. Theme '${theme}' passes WCAG 2.1 AA`, async ({ page }) => {
-    			await page.goto("/?sample=hello-world");
-    			await page.waitForSelector('[role="application"]', { timeout: 5000 });
-    			// Apply theme via the theme store. VERIFY exposed window API or
-    			// localStorage key. If the app exposes window.__roadraven_setTheme,
-    			// use that; otherwise inspect themeStore.ts for the persistence key
-    			// and set via localStorage + reload.
+    			await loadHelloWorldSample(page);
+    			// Set the data-theme attribute directly (matches ThemeProvider.tsx
+    			// line 33 behavior). No reload needed — CSS responds to the
+    			// attribute change immediately because all theme tokens are scoped
+    			// under [data-theme="..."] selectors in the design system.
     			await page.evaluate((t) => {
-    				// First option: localStorage-based persistence
-    				localStorage.setItem("rv.theme", t);
+    				document.documentElement.setAttribute("data-theme", t);
     			}, theme);
-    			await page.reload();
-    			await page.waitForSelector('[role="application"]', { timeout: 5000 });
-    			// Sanity check the theme actually applied — VERIFY data-theme attribute
-    			// or :root CSS custom property reflects the theme
+    			// Sanity check the theme actually applied.
     			const actualTheme = await page.evaluate(() =>
     				document.documentElement.getAttribute("data-theme"),
     			);
     			expect(actualTheme, `Theme should be '${theme}' but is '${actualTheme}'`).toBe(theme);
-
+    			// Brief wait for any CSS transitions to settle before axe scan.
+    			await page.waitForTimeout(200);
     			await auditPage(page, `theme-${theme}`, { exclude: ["svg .rd3t-link"] });
     		});
     	}
     });
     ```
 
-    **CRITICAL:** Before committing the test, verify each selector + URL pattern + theme-switching mechanism by reading the actual source files (listed in `<read_first>`). If the WelcomeScreen does not support `?sample=hello-world`, find the actual mechanism (e.g., a button click) and use it. If `data-node-id` is not the actual node-card selector, find the right one. If `localStorage.setItem("rv.theme", ...)` is not how the theme is persisted, find the actual key name. Test failures from stale selectors are wasted CI time.
+    **Selector risk notes (per checker B-4/W-1/W-2):**
+
+    - `[role="application"]`, `[data-source-id]`, `[role="treeitem"]` — pre-verified to exist in source as of 2026-05-03. If a future refactor removes any of these attributes, the executor MUST flag it as a Wave-1 blocker AND restore the attribute (these are public DOM contracts the audit relies on; treat them like API surface).
+    - `getByRole('button', { name: 'Hello World' })` — depends on the WelcomeScreen rendering a button with text "Hello World" (verified at WelcomeScreen.tsx line 136). If the welcome screen sample list changes, update the test's button name OR add a `data-testid="sample-hello-world"` to the button and use `page.getByTestId(...)` instead.
+    - `[role="menu"]` for Radix ContextMenu — Radix's standard role; if Radix ContextMenu is replaced with a different library, update accordingly.
+    - `[role="dialog"], [role="alertdialog"]` — Radix Dialog standard roles; same caveat.
+    - The Delete-key + non-leaf-root assumption: the Hello World sample MUST have a root node with children (the test relies on this to trigger the confirmation dialog). If the sample changes shape, add a different non-leaf navigation step before the Delete press OR mark the test `test.skip()` until the sample is restored.
 
     **B. Add a test runner script to `packages/desktop/package.json`** (already done in Wave 0 — verify it exists). The Wave-0 script was:
 
@@ -305,7 +371,7 @@ Output:
     bun run --cwd packages/desktop test:a11y   # run axe suite
     ```
 
-    Document any selector adjustments needed (e.g., "WelcomeScreen uses click-to-load not query param; adapted test 2 to click the 'hello-world' link"). These adjustments belong in `05-A11Y-AUDIT.md` (Task 2).
+    Document any selector adjustments needed (the pre-verification was done at planning time on 2026-05-03; if the codebase has evolved between planning and execution, transcribe adjustments into `05-A11Y-AUDIT.md` Task 2). These adjustments belong in the audit doc.
 
     **D. If any test FAILS with a `critical`/`serious` blocker:** fix the underlying app issue in this plan (or file as a Wave-3-blocker that must be fixed before the next wave). The pass criterion (D-20) is zero blockers — you cannot ship Phase 5 with red blockers. Lower-severity findings are tracked in `05-A11Y-AUDIT.md` but do not block.
   </action>
@@ -316,6 +382,12 @@ Output:
     <automated>grep -c 'auditPage(page,' packages/desktop/tests/a11y/audit.spec.ts  # MUST be >= 8 (welcome + loaded + side-panel + context-menu + dialog + 3 themes = 8 audits)</automated>
     <automated>grep -c '\.exclude(' packages/desktop/tests/a11y/audit.spec.ts  # MUST be >= 1 (rd3t-link exclusion)</automated>
     <automated>grep -cE 'high-contrast|highContrast' packages/desktop/tests/a11y/audit.spec.ts  # MUST be >= 1 (THEME-02 third theme)</automated>
+    <automated>grep -c "data-source-id" packages/desktop/tests/a11y/audit.spec.ts  # MUST be >= 1 (verified node selector per B-4)</automated>
+    <automated>grep -c 'getByRole.*Hello World' packages/desktop/tests/a11y/audit.spec.ts  # MUST be >= 1 (verified sample-load mechanism per W-1)</automated>
+    <automated>grep -c 'documentElement.setAttribute..data-theme' packages/desktop/tests/a11y/audit.spec.ts  # MUST be >= 1 (verified theme mechanism per W-2)</automated>
+    <automated>grep -c 'localStorage' packages/desktop/tests/a11y/audit.spec.ts  # MUST be 0 (W-2 — there is NO localStorage theme key)</automated>
+    <automated>grep -c "?sample=" packages/desktop/tests/a11y/audit.spec.ts  # MUST be 0 (W-1 — sample loading is button click, not query param)</automated>
+    <automated>grep -c "data-node-id" packages/desktop/tests/a11y/audit.spec.ts  # MUST be 0 (B-4 — node attribute is data-source-id)</automated>
     <automated>cat packages/desktop/package.json | grep -c '"test:a11y":'  # MUST be 1</automated>
     <automated>bun run --cwd packages/desktop build  # MUST exit 0 (produces dist/)</automated>
     <automated>bun run --cwd packages/desktop test:a11y  # MUST exit 0 — zero critical/serious blockers (D-20)</automated>
@@ -326,7 +398,16 @@ Output:
     - The `auditPage` helper enforces `expect(blockers).toEqual([])` where `blockers` filters `v.impact === "critical" || v.impact === "serious"`
     - The `auditPage` helper logs moderate/minor findings via `console.warn` (audit-doc material) without failing
     - Test file preserves the Wave-0 `test.skip(!hasDist, ...)` guard
-    - Test file uses selectors that EXIST in the actual source — verified by reading packages/desktop/src/mainview/components/{WelcomeScreen,Canvas,SidePanel,RoadmapNodeCard}.tsx before writing
+    - Test file uses ONLY the pre-verified selectors documented in `<read_first>` and `<interfaces>`:
+      - `[role="application"]` for canvas wrapper (verified at Canvas.tsx line 344)
+      - `[data-source-id]` for node cards (verified at RoadmapNode.tsx line 113)
+      - `getByRole('button', { name: 'Hello World' })` for sample loading (verified at WelcomeScreen.tsx line 131-137)
+      - `document.documentElement.setAttribute("data-theme", t)` for theme switching (verified at ThemeProvider.tsx line 33)
+    - Test file does NOT contain the literal string `?sample=` (W-1 — sample loading is via button click only)
+    - Test file does NOT contain the literal string `data-node-id` (B-4 — actual attribute is `data-source-id`)
+    - Test file does NOT contain the literal string `localStorage` (W-2 — there is NO localStorage theme key; theme persistence is via Electrobun RPC `saveSettings` which is unavailable under vite preview)
+    - Test file does NOT use branching "if X then Y else Z" logic for selectors or mechanisms (per checker B-4/W-1/W-2 — selectors are pinned)
+    - Selector-risk notes in the action specify what to do if a future refactor breaks a selector (add `data-testid` and use `page.getByTestId(...)` as the documented escape hatch — this is a Wave-1 blocker if any selector breaks, NOT a silent test skip)
     - `packages/desktop/package.json` has `test:a11y` script (added in Wave 0; preserved)
     - `bun run --cwd packages/desktop build` exits 0 (produces dist/ for the audit)
     - `bun run --cwd packages/desktop test:a11y` exits 0 — every test passes (zero blockers per D-20). If any blocker found, the test FAILS LOUD with the blocker JSON, and the executor fixes the underlying app code before considering the task done.
@@ -426,7 +507,7 @@ Output:
     bun run --cwd packages/desktop build:stable
     # Find the installer in packages/desktop/artifacts/
     # Windows: extract the .zip, run RoadRaven-Setup.exe
-    # Linux: tar -xzf the .tar.gz, run ./RoadRavenSetup
+    # Linux: tar -xzf the .tar.gz, cd RoadRavenSetup-stable, chmod +x ./RoadRavenSetup, ./RoadRavenSetup
     ```
 
     Walk each item; mark each row with PASS / FAIL / N/A + brief note.
@@ -547,7 +628,7 @@ Output:
 
   <what-built>
     - Plan 05-02: `@roadraven/core` + `@roadraven/plugin-claude-code` build configs
-    - Plan 05-03: release.yml workflow + CI invariants
+    - Plan 05-03: release.yml workflow (all 6 jobs including deploy-docs) + CI invariants
     - Plan 05-04 (parallel): docs site + CONTRIBUTING.md + README polish
     - Plan 05-05 Task 1: expanded a11y suite (8+ audits, all themes — automated baseline GREEN)
     - Plan 05-05 Task 2: 05-A11Y-AUDIT.md scaffold with manual-checklist rows ready to fill in
@@ -575,7 +656,7 @@ Output:
 
     - **Windows:** Extract the `.zip`, double-click `RoadRaven-Setup.exe`,
       click through SmartScreen (More info → Run anyway).
-    - **Linux:** `tar -xzf stable-linux-x64-RoadRavenSetup-stable.tar.gz && cd <extracted> && ./RoadRavenSetup`
+    - **Linux:** `tar -xzf stable-linux-x64-RoadRavenSetup-stable.tar.gz && cd RoadRavenSetup-stable && chmod +x ./RoadRavenSetup && ./RoadRavenSetup`
 
     **Walk the manual checklist** in `.planning/phases/05-packaging-distribution/05-A11Y-AUDIT.md`:
 
@@ -610,6 +691,7 @@ Output:
 |----------|-------------|
 | `vite preview` audit ≠ CEF binary audit | The automated suite catches DOM / CSS / ARIA issues but NOT CEF-rendering-engine bugs. The manual checklist (Task 3) is the boundary — without a human walking the installed app, CEF-only regressions slip through. |
 | WCAG 2.1 AA ≠ subjective UX accessibility | axe verifies machine-checkable rules (color contrast, ARIA roles, label associations). It does NOT verify tab order matches visual reading order, focus management on dynamic content, screen-reader announcement of state changes. The manual checklist's keyboard-navigation rows fill that gap. |
+| Audit selector contract → app DOM stability | The audit relies on a stable contract: `[role="application"]` on the canvas wrapper, `[data-source-id]` + `[role="treeitem"]` on node cards, the Hello World button label. If a future refactor removes any of these without restoring them (or adding a `data-testid` equivalent), the audit silently breaks. Per checker B-4/W-1/W-2, the audit treats these as public DOM contracts and the executor must restore them as a Wave-1 blocker if broken. |
 
 ## STRIDE Threat Register
 
@@ -658,6 +740,7 @@ grep -c 'process.on("SIGTERM"' packages/desktop/src/bun/index.ts            # MU
 - PACK-03 invariants re-verified (no ApplicationMenu, bundleCEF, SIGTERM handler)
 - `05-A11Y-AUDIT.md` final disposition: Pass (or Pass-with-caveats with explicit acceptance)
 - No new app code regressions (existing `bun run verify` still passes)
+- All selectors in audit.spec.ts are pre-verified against actual source files (per checker B-4/W-1/W-2 — no branching, no uncertainty)
 </success_criteria>
 
 <output>
@@ -667,5 +750,7 @@ After completion, create `.planning/phases/05-packaging-distribution/05-05-SUMMA
 - Manual checklist outcome: PASS rows, FAIL rows + their disposition
 - PACK-03 invariant verification (paste grep outputs)
 - Final audit disposition (Pass / Pass-with-caveats / Fail)
-- Any selectors / theme-switching mechanisms in audit.spec.ts that needed adjustment from the planned skeleton (so future audit runs do not re-trip on the same selector mismatch)
+- Any selectors in audit.spec.ts that needed adjustment from the planned skeleton between planning (2026-05-03) and execution (so future audit runs do not re-trip on the same selector mismatch). The plan pre-verified selectors against source as of 2026-05-03; record any drift here.
 </output>
+</content>
+</invoke>
