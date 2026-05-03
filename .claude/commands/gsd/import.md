@@ -22,9 +22,10 @@ Future: `--prd` mode for PRD extraction is planned for a follow-up PR.
 </objective>
 
 <execution_context>
-@/home/shuffler/Work/Roadraven/.claude/get-shit-done/workflows/import.md
-@/home/shuffler/Work/Roadraven/.claude/get-shit-done/references/ui-brand.md
-@/home/shuffler/Work/Roadraven/.claude/get-shit-done/references/gate-prompts.md
+@C:/Work/RoadRaven/.claude/get-shit-done/workflows/import.md
+@C:/Work/RoadRaven/.claude/get-shit-done/references/ui-brand.md
+@C:/Work/RoadRaven/.claude/get-shit-done/references/gate-prompts.md
+@C:/Work/RoadRaven/.claude/get-shit-done/references/doc-conflict-engine.md
 </execution_context>
 
 <context>

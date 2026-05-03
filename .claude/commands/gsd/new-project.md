@@ -33,14 +33,14 @@ Initialize a new project through unified flow: questioning → research (optiona
 </objective>
 
 <execution_context>
-@/home/shuffler/Work/Roadraven/.claude/get-shit-done/workflows/new-project.md
-@/home/shuffler/Work/Roadraven/.claude/get-shit-done/references/questioning.md
-@/home/shuffler/Work/Roadraven/.claude/get-shit-done/references/ui-brand.md
-@/home/shuffler/Work/Roadraven/.claude/get-shit-done/templates/project.md
-@/home/shuffler/Work/Roadraven/.claude/get-shit-done/templates/requirements.md
+@C:/Work/RoadRaven/.claude/get-shit-done/workflows/new-project.md
+@C:/Work/RoadRaven/.claude/get-shit-done/references/questioning.md
+@C:/Work/RoadRaven/.claude/get-shit-done/references/ui-brand.md
+@C:/Work/RoadRaven/.claude/get-shit-done/templates/project.md
+@C:/Work/RoadRaven/.claude/get-shit-done/templates/requirements.md
 </execution_context>
 
 <process>
-Execute the new-project workflow from @/home/shuffler/Work/Roadraven/.claude/get-shit-done/workflows/new-project.md end-to-end.
+Execute the new-project workflow from @C:/Work/RoadRaven/.claude/get-shit-done/workflows/new-project.md end-to-end.
 Preserve all workflow gates (validation, approvals, commits, routing).
 </process>

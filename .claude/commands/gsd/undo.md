@@ -20,9 +20,9 @@ Three modes:
 </objective>
 
 <execution_context>
-@/home/shuffler/Work/Roadraven/.claude/get-shit-done/workflows/undo.md
-@/home/shuffler/Work/Roadraven/.claude/get-shit-done/references/ui-brand.md
-@/home/shuffler/Work/Roadraven/.claude/get-shit-done/references/gate-prompts.md
+@C:/Work/RoadRaven/.claude/get-shit-done/workflows/undo.md
+@C:/Work/RoadRaven/.claude/get-shit-done/references/ui-brand.md
+@C:/Work/RoadRaven/.claude/get-shit-done/references/gate-prompts.md
 </execution_context>
 
 <context>
@@ -30,5 +30,5 @@ $ARGUMENTS
 </context>
 
 <process>
-Execute the undo workflow from @/home/shuffler/Work/Roadraven/.claude/get-shit-done/workflows/undo.md end-to-end.
+Execute the undo workflow from @C:/Work/RoadRaven/.claude/get-shit-done/workflows/undo.md end-to-end.
 </process>

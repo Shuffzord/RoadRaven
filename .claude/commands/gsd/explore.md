@@ -19,9 +19,9 @@ Accepts an optional topic argument: `/gsd-explore authentication strategy`
 </objective>
 
 <execution_context>
-@/home/shuffler/Work/Roadraven/.claude/get-shit-done/workflows/explore.md
+@C:/Work/RoadRaven/.claude/get-shit-done/workflows/explore.md
 </execution_context>
 
 <process>
-Execute the explore workflow from @/home/shuffler/Work/Roadraven/.claude/get-shit-done/workflows/explore.md end-to-end.
+Execute the explore workflow from @C:/Work/RoadRaven/.claude/get-shit-done/workflows/explore.md end-to-end.
 </process>

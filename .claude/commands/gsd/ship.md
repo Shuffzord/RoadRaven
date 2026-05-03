@@ -17,7 +17,7 @@ Closes the plan → execute → verify → ship loop.
 </objective>
 
 <execution_context>
-@/home/shuffler/Work/Roadraven/.claude/get-shit-done/workflows/ship.md
+@C:/Work/RoadRaven/.claude/get-shit-done/workflows/ship.md
 </execution_context>
 
-Execute the ship workflow from @/home/shuffler/Work/Roadraven/.claude/get-shit-done/workflows/ship.md end-to-end.
+Execute the ship workflow from @C:/Work/RoadRaven/.claude/get-shit-done/workflows/ship.md end-to-end.
