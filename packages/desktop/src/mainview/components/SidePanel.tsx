@@ -312,7 +312,13 @@ export function SidePanel({ isOpen, onClose }: SidePanelProps) {
 				</div>
 			</div>
 
-			<div className="flex-1 p-4 overflow-y-auto">
+			{/* tabIndex=0 makes the scrollable region keyboard-accessible
+			    (WCAG 2.1.1, axe scrollable-region-focusable, D-20 PACK-06). */}
+			<div
+				className="flex-1 p-4 overflow-y-auto"
+				// biome-ignore lint/a11y/noNoninteractiveTabindex: scrollable region must be focusable for keyboard scroll (WCAG 2.1.1).
+				tabIndex={0}
+			>
 				{selectedNode ? (
 					<>
 						<FieldLabel flashing={flashedFields.has("title")}>TITLE</FieldLabel>
