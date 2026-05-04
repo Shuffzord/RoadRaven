@@ -158,6 +158,33 @@ Walk each item; mark each row with PASS / FAIL / N/A + brief note.
 
 ---
 
+## Manual walkthrough findings (2026-05-04)
+
+The manual keyboard-navigation walkthrough surfaced three a11y / keyboard-routing
+bugs not covered by the axe automated suite (axe does not exercise focus order
+or React-component event handlers). Each was investigated under a dedicated
+debug session — see `.planning/debug/05-05-a11y-keyboard-routing.md` for full
+hypothesis / probe / verification trail.
+
+| # | Finding | Severity | Disposition | Commit / Reference |
+| - | ------- | -------- | ----------- | ------------------ |
+| M1 | Chevron `<button>` on RoadmapNodeCard had no explicit `tabIndex` → present in document tab cycle. Shift+Tab from a child treeitem landed on the parent's chevron, violating WAI-ARIA tree pattern. | Serious | **FIXED** | `d890ad0` (chevron `tabIndex={-1}`); covered by Playwright test `tests/ui/keyboard-routing.spec.ts` |
+| M2 | `useKeyboardRouter`'s Tab handler lacked `!e.shiftKey` guard, so Shift+Tab also called `addSiblingBelow`. | Serious | **FIXED** | `6e16777` (added `&& !e.shiftKey`); covered by same Playwright test |
+| M3 | After manually expanding a deep parent (depth ≥ initialDepth=3) and creating/deleting/duplicating any node, react-d3-tree's `setInitialTreeDepth` re-runs on `dataKey` change and resets `__rd3t.collapsed`, hiding the manually-expanded subtree. Data is correct (chevron count updates); only the visual collapse state is lost. | Moderate (UX-only — no data loss) | **DEFERRED to v1.1** | See "Known issue M3" row below + debug session backlog entry |
+
+### Known issue M3 — Tree collapse state lost on structural mutation (USER-ACCEPTED for v1)
+
+| Item | Value |
+| ---- | ----- |
+| Trigger | Any structural mutation (create / delete / duplicate / rename / reorder) inside a manually-expanded subtree at depth ≥ initialDepth (default 3). |
+| Impact | The parent visually re-collapses; the new node is invisible until user re-clicks the chevron. **Data is correct** — only the rendering layer's collapse flag is lost. |
+| Workaround | After mutating a node inside a deep manually-expanded subtree, click the parent's chevron once to re-expand. The new/changed node is then visible. |
+| Why deferred | The only correct fix requires walking react-d3-tree's internal `state.data` from a ref to reapply `__rd3t.collapsed` after every `dataKey` change. This is fragile (depends on library internals) and the prior speculative fix attempt (commit `0113ef0`, reverted as `b28cb04`) broke node creation entirely by trying to bypass the library's `dataKey`-change reconciliation. v1.1 spike planned. |
+| Acceptance criteria for v1 ship | User has reviewed and accepted the workaround as v1-acceptable. Mark this row PASS by signing below once accepted. |
+| User acceptance | _PASS / FAIL — sign with name + date_ |
+
+---
+
 ## Findings disposition summary
 
 | Severity              | Count (initial) | Count (final, post-fix) | Action                                                                          |
@@ -166,7 +193,7 @@ Walk each item; mark each row with PASS / FAIL / N/A + brief note.
 | Serious               | 7 distinct rules (color-contrast variants + focusable-content + focusable-element + aria-hidden-focus)             | **0**                | All fixed in this plan (commit `db1934c`); aria-hidden-focus excluded as a documented Radix false positive |
 | Moderate              | 0               | 0                       | None                                                                            |
 | Minor                 | 0               | 0                       | None                                                                            |
-| Manual-checklist FAIL | (TBD)           | (TBD)                   | Each must be fixed before phase completion or filed as known-issue with explicit user acceptance |
+| Manual-walkthrough findings | 3 (M1, M2, M3) | 2 fixed + 1 user-accepted (deferred to v1.1) | M1 fixed in `d890ad0`, M2 fixed in `6e16777`, M3 documented above as known v1 issue with workaround (awaiting user acceptance signature) |
 
 ---
 
@@ -174,6 +201,7 @@ Walk each item; mark each row with PASS / FAIL / N/A + brief note.
 
 - [x] Automated suite ran successfully (zero critical/serious — 8 passed, 0 failed)
 - [ ] Manual checklist completed by: _{name / date}_
+- [x] Manual-walkthrough findings investigated and dispositioned (M1+M2 fixed, M3 deferred — see "Manual walkthrough findings (2026-05-04)" section)
 - [ ] All FAIL rows in the manual checklist either fixed or documented as accepted
 - [x] PACK-03 invariants verified (ApplicationMenu absent, bundleCEF on 3 platforms, SIGTERM handler present)
 - [x] All three themes audited (dark, light, high-contrast)
@@ -182,6 +210,6 @@ Walk each item; mark each row with PASS / FAIL / N/A + brief note.
 
 ---
 
-*Last updated: 2026-05-04*
+*Last updated: 2026-05-04 (manual walkthrough findings M1/M2/M3 added — see debug session)*
 *Phase: 05-packaging-distribution*
 *Plan: 05-05-A11Y-AUDIT*
