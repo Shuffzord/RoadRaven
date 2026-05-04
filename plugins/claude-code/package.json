@@ -1,13 +1,28 @@
 {
 	"name": "@roadraven/plugin-claude-code",
 	"version": "0.1.0",
-	"private": true,
+	"private": false,
 	"type": "module",
+	"description": "MCP wrapper that lets Claude Code (and any MCP host) push live node status updates to a running RoadRaven desktop app via its WebSocket Event API.",
+	"keywords": [
+		"mcp",
+		"claude-code",
+		"roadraven",
+		"roadmap",
+		"event-api"
+	],
 	"bin": {
 		"roadraven-mcp": "./dist/index.js"
 	},
+	"main": "./dist/index.js",
+	"files": [
+		"dist",
+		"README.md",
+		"LICENSE"
+	],
 	"scripts": {
 		"build": "bun build src/index.ts --outdir dist --target node",
+		"prepublishOnly": "bun run build",
 		"test": "vitest run"
 	},
 	"dependencies": {
@@ -18,5 +33,17 @@
 		"@types/node": "^22",
 		"typescript": "^5",
 		"vitest": "^4.1.4"
-	}
+	},
+	"publishConfig": {
+		"access": "public",
+		"provenance": true
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/Shuffzord/RoadRaven.git",
+		"directory": "plugins/claude-code"
+	},
+	"license": "MIT",
+	"homepage": "https://shuffzord.github.io/RoadRaven/plugin-authoring.html",
+	"bugs": "https://github.com/Shuffzord/RoadRaven/issues"
 }
