@@ -227,7 +227,7 @@ Plans:
 - [x] 05-02-NPM-PACKAGES.md - `@roadraven/core` tsup build (ESM + .d.ts) + `@roadraven/plugin-claude-code` private-to-public flip + per-package LICENSE + READMEs (PACK-04)
 - [x] 05-03-RELEASE-WORKFLOW.md - Tag-triggered `release.yml` (Windows .zip + Linux .tar.gz + npm publish via OIDC trusted publishing per R-03) + `ci.yml` core-deps allowlist + requirements-edits invariants (D-22 fallow stays commented) + RELEASE-OPS.md (PACK-01, PACK-02, PACK-03, PACK-04)
 - [x] 05-04-DOCS-AND-CONTRIBUTING.md - GitHub Pages (Just-the-Docs) + CONTRIBUTING.md + README install/feature-status/contributing polish + `docs/plugin-authoring.md` guide + `deploy-docs` job appended to release.yml (PACK-05)
-- [ ] 05-05-A11Y-AUDIT.md - `@axe-core/playwright` suite vs `vite preview` (R-04) + manual checklist on installed app (human checkpoint) + `05-A11Y-AUDIT.md` write-up (PACK-03, PACK-06)
+- [x] 05-05-A11Y-AUDIT.md - `@axe-core/playwright` suite vs `vite preview` (R-04) + manual checklist on installed app (human checkpoint) + `05-A11Y-AUDIT.md` write-up (PACK-03, PACK-06)
 
 1. Packaging + auto-updater — Windows `.exe` (in `.zip`) + Linux `.tar.gz` (Electrobun-native self-extracting); Electrobun auto-updater configured (stable channel only in v1.0; canary deferred to v1.1); Linux: `bundleCEF: true` confirmed; all file actions reachable via keyboard/toolbar (no `ApplicationMenu` dependency); `process.on('SIGTERM', flushWriteQueue)` registered
 2. npm packages + accessibility + docs — `@roadraven/core` (pre-built ESM + `.d.ts`, `zod` only) and `@roadraven/plugin-claude-code` published to npm at lockstep version with provenance; `packages/core` has zero desktop dependencies (CI enforces an allowlist); `@roadraven/react` deferred to v1.1; accessibility audit: full keyboard navigation, ARIA roles on context menu and modal dialogs, colour not used as sole status indicator, focus indicators visible; README, docs site (GitHub Pages), plugin authoring guide, CONTRIBUTING.md
@@ -288,4 +288,4 @@ Plans:
 | 2. Read-Only Viewer | 4/5 | UAT Gap Closure | - |
 | 3. Full Editor | 0/6 | Planned | - |
 | 4. Event API | 6/6 | Complete | 2026-04-29 |
-| 5. Packaging & Distribution | 4/5 | In progress | - |
+| 5. Packaging & Distribution | 5/5 | Plans complete — phase verification pending | - |
