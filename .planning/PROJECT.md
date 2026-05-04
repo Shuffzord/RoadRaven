@@ -25,7 +25,7 @@ Nodes in the tree reflect real-time state of external systems through a pluggabl
 - [ ] Side panel (read-only): opens on node click; shows title, status, type, timestamps, markdown notes; resizable (min 320px, max 50% viewport); pinnable on wide screens
 - [ ] Full node editor: inline rename; add/delete/duplicate/move via keyboard and context menu; CodeMirror 6 markdown editor with autosave (debounced 1s); editable metadata table; atomic writes; `$ref` write-back
 - [ ] Event API: WebSocket server on `ws://127.0.0.1:<port>`; event contract `{ nodeId, status, meta?, source? }`; events routed to nodes within 100ms; Claude Code MCP wrapper as reference Event Producer; side panel Integration zone shows connection status + last event + key-value meta
-- [ ] Packaging: macOS `.dmg`, Windows `.exe`, Ubuntu `.deb`; Electrobun auto-updater; npm packages (`@roadmap-viewer/core`, `@roadmap-viewer/react`); plugin authoring guide; README and docs site
+- [ ] Packaging: Windows `.exe` (in `.zip`) + Linux `.tar.gz` (Electrobun-native self-extracting); Electrobun auto-updater (stable channel only); npm packages `@roadraven/core` and `@roadraven/plugin-claude-code` (lockstep versioned); plugin authoring guide; README polish; CONTRIBUTING.md; GitHub Pages docs site
 
 ### Out of Scope
 
@@ -43,6 +43,16 @@ Nodes in the tree reflect real-time state of external systems through a pluggabl
 - Undo/redo — deferred from MVP; non-leaf delete has confirmation dialog; plain JSON + git provides recovery; `.bak.json` written on file open as safety net; `$ref` + live-subscription complexity makes retrofit viable later
 - Plugin system (smart adapters running in Bun) — deferred to v1.1; Event API covers v1 use cases; plugins are for cloud integrations requiring auth/polling/normalisation (Goodreads, GitHub Actions, Linear)
 - Custom plugin UI injection — plugins cannot inject React components into webview; deferred to v1.1 with full plugin system
+
+### v1.0 Deferrals (Phase 5 packaging scope)
+
+| Deferred Item | Rationale |
+|---------------|-----------|
+| macOS `.dmg` distribution in v1.0 | Apple Developer Program ($99/yr) + notarization tooling cost; deferred to v1.1 |
+| Linux `.deb` packaging in v1.0 | Electrobun-native `.tar.gz` ships instead; `.deb` wrapper deferred to v1.1 alongside GPG signing + apt repo |
+| Canary release channel in v1.0 | Stable channel only; canary deferred to v1.1 (tag pattern `v*-canary.*` reserved) |
+| `@roadraven/react` npm package in v1.0 | Currently `export {};`; React component extraction from `packages/desktop` is its own phase, deferred to v1.1+ |
+| Code signing for v1.0 (Windows Authenticode, Linux GPG, macOS notarization) | Document install warnings instead; defer signing until commercial pressure or user demand |
 
 ## Context
 
@@ -63,7 +73,7 @@ Nodes in the tree reflect real-time state of external systems through a pluggabl
 - **Tech stack:** Electrobun + Bun + React + TypeScript — no Electron APIs or patterns
 - **TDD-first:** Tests are written before implementation; no step begins until prior step's acceptance tests are green
 - **Performance:** 300+ visible nodes + 10 simulated `updateNode()` calls/sec must maintain ≥ 30 fps; validated before Phase 1 ships
-- **Licensing:** MIT open source — published as `@roadmap-viewer/core` and `@roadmap-viewer/react` on npm
+- **Licensing:** MIT open source — `@roadraven/core` and `@roadraven/plugin-claude-code` published on npm in v1.0; `@roadraven/react` deferred to v1.1
 - **Security:** All integration adapters bind to `127.0.0.1` by default; no external ports opened without explicit user config
 
 ## Key Decisions

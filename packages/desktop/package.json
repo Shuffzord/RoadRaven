@@ -13,6 +13,7 @@
 		"test:bun": "bun test tests/unit/bun/eventServer.test.ts tests/unit/bun/eventServer.eaddrinuse.test.ts tests/integration/eventApi.test.ts tests/integration/eventApi-e2e.test.ts",
 		"test:file": "vitest run",
 		"test:e2e": "playwright test",
+		"test:a11y": "playwright test --config=tests/a11y/playwright.config.ts",
 		"typecheck": "tsc --noEmit",
 		"build": "vite build"
 	},
