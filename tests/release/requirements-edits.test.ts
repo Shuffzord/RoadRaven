@@ -64,15 +64,20 @@ describe("REQUIREMENTS.md / PROJECT.md / ROADMAP.md edits (D-05, D-08, D-11, R-0
 		expect(PROJECT).toMatch(/Code signing for v1\.0/);
 	});
 
-	it("release.yml trigger is locked to 'v*' (canary broadening reserved for v1.1, W-6)", () => {
+	it("release.yml trigger is locked to stable semver only (B-03 fix: rejects v*-canary.*, v*-rc.*)", () => {
 		const releaseYml = readFileSync(
 			join(process.cwd(), ".github/workflows/release.yml"),
 			"utf8",
 		);
-		// v1.0 limitation: 'v*' will match v1.x-canary.* tags. Reserve canary tags
-		// until v1.1 wires a separate workflow.
-		expect(releaseYml).toMatch(/tags:\s*\n\s*-\s*['"]v\*['"]/);
-		// Guard against accidental broadening to canary-specific patterns
+		// Stable-only regex: v[0-9]+.[0-9]+.[0-9]+ matches v1.0.0 / v1.0.1 / v1.1.0
+		// but rejects v1.0.1-canary.0 / v1.0.0-rc.1 / v* (the prior wildcard footgun).
+		expect(releaseYml).toMatch(
+			/tags:\s*\n(?:\s*#[^\n]*\n)*\s*-\s*['"]v\[0-9\]\+\.\[0-9\]\+\.\[0-9\]\+['"]/,
+		);
+		// Guard against regression to the old wildcard pattern that would publish
+		// pre-release tags (v1.0.1-canary.0 → npm publish --provenance, public Release).
+		expect(releaseYml).not.toMatch(/tags:\s*\n(?:\s*#[^\n]*\n)*\s*-\s*['"]v\*['"]/);
+		// Guard against accidental broadening to canary-specific patterns (v1.1 reserved)
 		expect(releaseYml).not.toMatch(/tags:.*v\*-canary/);
 	});
 });

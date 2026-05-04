@@ -3,8 +3,12 @@ name: Release
 on:
   push:
     tags:
-      - 'v*'    # Stable: v1.0.0, v1.0.1, v1.1.0
-                # (Reserved for v1.1: 'v*-canary.*' — out of scope this phase)
+      # Stable semver only (v1.0.0, v1.0.1, v1.1.0). Pre-release tags
+      # (v1.0.1-canary.0, v1.0.0-rc.1, etc.) are explicitly rejected here;
+      # v1.1's canary channel will live in a separate workflow with its own
+      # gating. Without this anchor a v*-canary.0 push would npm publish
+      # --provenance and create a public Release with prerelease: false.
+      - 'v[0-9]+.[0-9]+.[0-9]+'
 
 # All jobs that publish or upload need explicit permissions (least-privilege).
 # id-token: write — required for npm provenance OIDC token mint (R-03)
