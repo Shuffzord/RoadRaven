@@ -17,7 +17,7 @@ import { WelcomeScreen } from "./WelcomeScreen";
 export function Canvas() {
 	const {
 		treeData,
-		dataKey,
+		loadKey,
 		layoutOrientation,
 		schemaErrors,
 		translate,
@@ -25,7 +25,7 @@ export function Canvas() {
 	} = useRoadmapStore(
 		useShallow((s) => ({
 			treeData: s.treeData,
-			dataKey: s.dataKey,
+			loadKey: s.loadKey,
 			layoutOrientation: s.layoutOrientation,
 			schemaErrors: s.schemaErrors,
 			translate: s.translate,
@@ -393,7 +393,7 @@ export function Canvas() {
 					<div role="tree" aria-label="Roadmap tree" className="w-full h-full">
 						<Tree
 							data={treeData}
-							dataKey={dataKey}
+							dataKey={loadKey}
 							orientation={
 								layoutOrientation === "TB" ? "vertical" : "horizontal"
 							}
