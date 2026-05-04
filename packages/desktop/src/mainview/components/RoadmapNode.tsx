@@ -180,6 +180,7 @@ export function RoadmapNodeCard({
 				<button
 					className="absolute bottom-1.5 right-1.5 flex items-center gap-1 px-2 py-[3px] rounded-[6px] border transition-colors duration-150"
 					type="button"
+					tabIndex={-1}
 					aria-label={isCollapsed ? "Expand subtree" : "Collapse subtree"}
 					style={{
 						backgroundColor: `var(${tokens.bg})`,

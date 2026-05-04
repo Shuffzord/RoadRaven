@@ -112,6 +112,15 @@ export function useKeyboardRouter(deps: RouterDeps): void {
 			const inTextInput = isInTextInput(active);
 			const store = useRoadmapStore.getState();
 			const focusedId = store.focusedNodeId;
+			// Action shortcuts (F2/Delete/Enter/Tab/Ctrl+D/Ctrl+↑↓/Ctrl+C/V) fall
+			// back to selectedNodeId when no explicit keyboard focus exists. This
+			// covers click-then-shortcut: clicking sets both focused+selected, but
+			// loadSchema clears focusedNodeId only — and any path that loses focus
+			// (chevron click, Portal mount, etc.) leaves the user with a selected
+			// node that shortcuts could no longer act on without this fallback.
+			// Arrow nav and Space stay focused-only — they're navigation primitives
+			// that require explicit keyboard focus to make sense.
+			const targetId = focusedId ?? store.selectedNodeId;
 
 			// Ctrl+Shift+L (or Cmd+Shift+L on mac) — toggle event log drawer (D-18)
 			if (
@@ -129,14 +138,14 @@ export function useKeyboardRouter(deps: RouterDeps): void {
 			if ((e.ctrlKey || e.metaKey) && (e.key === "c" || e.key === "v")) {
 				if (inTextInput) return;
 				if (e.key === "c") {
-					if (!focusedId) return;
+					if (!targetId) return;
 					e.preventDefault();
-					void store.copySubtreeToClipboard(focusedId);
+					void store.copySubtreeToClipboard(targetId);
 					return;
 				}
 				if (e.key === "v") {
 					e.preventDefault();
-					void store.pasteFromClipboard(focusedId);
+					void store.pasteFromClipboard(targetId);
 					return;
 				}
 			}
@@ -150,39 +159,39 @@ export function useKeyboardRouter(deps: RouterDeps): void {
 				return;
 			}
 
-			// Ctrl+D — duplicate focused; auto-rename the copy so the user can
+			// Ctrl+D — duplicate target; auto-rename the copy so the user can
 			// retitle it without a second keystroke.
 			if ((e.ctrlKey || e.metaKey) && e.key === "d") {
-				if (focusedId) {
+				if (targetId) {
 					e.preventDefault();
-					dispatchOpenRename(store.duplicateNode(focusedId));
+					dispatchOpenRename(store.duplicateNode(targetId));
 				}
 				return;
 			}
 
 			// Ctrl+Up / Ctrl+Down — reorder siblings
 			if ((e.ctrlKey || e.metaKey) && e.key === "ArrowUp") {
-				if (focusedId) {
+				if (targetId) {
 					e.preventDefault();
-					store.moveNodeUp(focusedId);
+					store.moveNodeUp(targetId);
 				}
 				return;
 			}
 			if ((e.ctrlKey || e.metaKey) && e.key === "ArrowDown") {
-				if (focusedId) {
+				if (targetId) {
 					e.preventDefault();
-					store.moveNodeDown(focusedId);
+					store.moveNodeDown(targetId);
 				}
 				return;
 			}
 
-			// F2 — inline rename on focused node
-			if (e.key === "F2" && focusedId) {
+			// F2 — inline rename on target node
+			if (e.key === "F2" && targetId) {
 				e.preventDefault();
-				const pos = deps.getNodePosition(focusedId);
+				const pos = deps.getNodePosition(targetId);
 				if (pos) {
 					deps.inlineRename.open(
-						focusedId,
+						targetId,
 						pos.x,
 						pos.y,
 						deps.getTransform(),
@@ -195,26 +204,26 @@ export function useKeyboardRouter(deps: RouterDeps): void {
 			// Enter / Shift+Enter / Tab — creation shortcuts. Each dispatches
 			// the rename bridge so the new node gets an inline rename input
 			// focused immediately (create-then-rename UX).
-			if (e.key === "Enter" && !e.shiftKey && focusedId) {
+			if (e.key === "Enter" && !e.shiftKey && targetId) {
 				e.preventDefault();
-				dispatchOpenRename(store.addChild(focusedId));
+				dispatchOpenRename(store.addChild(targetId));
 				return;
 			}
-			if (e.key === "Enter" && e.shiftKey && focusedId) {
+			if (e.key === "Enter" && e.shiftKey && targetId) {
 				e.preventDefault();
-				dispatchOpenRename(store.addSiblingAbove(focusedId));
+				dispatchOpenRename(store.addSiblingAbove(targetId));
 				return;
 			}
-			if (e.key === "Tab" && focusedId) {
+			if (e.key === "Tab" && !e.shiftKey && targetId) {
 				e.preventDefault();
-				dispatchOpenRename(store.addSiblingBelow(focusedId));
+				dispatchOpenRename(store.addSiblingBelow(targetId));
 				return;
 			}
 
 			// Delete / Backspace — confirmed delete via requestDelete (leaf: immediate; non-leaf: dialog)
-			if ((e.key === "Delete" || e.key === "Backspace") && focusedId) {
+			if ((e.key === "Delete" || e.key === "Backspace") && targetId) {
 				e.preventDefault();
-				store.requestDelete(focusedId);
+				store.requestDelete(targetId);
 				return;
 			}
 
