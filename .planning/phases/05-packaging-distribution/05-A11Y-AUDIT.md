@@ -57,10 +57,7 @@ Last run: 2026-05-04, 8 passed (0 failed), 11.3s wall time.
 
 ### Critical / Serious violations (BLOCKERS)
 
-**Zero axe blockers found** — pass criterion (D-20) satisfied for the
-automated suite. Manual checklist surfaced two additional WAI-ARIA / WCAG
-2.1.1 issues in the installed CEF binary that axe could not detect; both
-fixed in this plan (see "Manual checklist findings" below).
+**Zero blockers found** — pass criterion (D-20) satisfied.
 
 #### Blockers found and fixed in this plan (initial run on 2026-05-04 surfaced 9 distinct violations across 7/8 tests; all fixed in commit `db1934c`)
 
@@ -79,24 +76,6 @@ fixed in this plan (see "Manual checklist findings" below).
 All fixes are in commit `db1934c`. Existing 452/452 desktop unit tests still
 pass; tsc --noEmit clean. No DOM contracts changed (RoadmapNode still has
 `data-source-id` + `role="treeitem"`; Canvas still has `role="application"`).
-
-### Manual checklist findings (installed CEF binary, 2026-05-04)
-
-The first pass of the manual checklist on the stable installer surfaced
-three issues. Two were real WAI-ARIA / keyboard bugs invisible to axe (it
-audits `vite preview`, not the CEF webview, and these are about tab order
-and shortcut wiring rather than DOM ARIA shape). One was an
-expectation-vs-design clarification.
-
-| # | Surface                  | Issue                                                                                                  | Severity | Disposition                                                                                                                                                    |
-| - | ------------------------ | ------------------------------------------------------------------------------------------------------ | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1 | Delete on a leaf vs non-leaf | Leaf delete is immediate (no dialog); non-leaf delete shows confirmation. User read this as a bug.     | n/a (design) | **Documented** — intentional per Phase 3 contract: leaves immediate-delete is the common tree-editor convention. The dialog is reserved for destructive-with-children operations. Manual checklist row A5 is meant to verify this exact behavior; B1 verifies the dialog path. |
-| 2 | Shift+Tab on a card seemed to "collapse" the parent's subtree | Two compounding causes: (a) the chevron `<button>` was in the document tab cycle (no explicit tabIndex), violating WAI-ARIA tree pattern (only treeitem should be tabbable). (b) The router caught `Tab` without checking `e.shiftKey`, so Shift+Tab was running `addSiblingBelow` and the create-then-rename flow looked like a fold. | serious  | **Fixed in this plan** — `RoadmapNode.tsx` chevron `<button>` is `tabIndex={-1}`; expand/collapse remains mouse-clickable but is no longer a tab stop. `useKeyboardRouter.ts` Tab handler now requires `!e.shiftKey`; Shift+Tab falls through to native focus-backward.                                              |
-| 3 | F2 rename "only worked on newly-created nodes"               | Action shortcuts (F2, Delete, Enter, Tab, Ctrl+D, Ctrl+↑/↓, Ctrl+C/V) all required `focusedNodeId`. Newly-created nodes go through `dispatchOpenRename` (sets focus). Loaded nodes only get focus from a card-body click; clicking the chevron stops propagation, leaving `focusedNodeId` null even though `selectedNodeId` was set. F2 then no-oped silently. | serious  | **Fixed in this plan** — router now uses `targetId = focusedId ?? selectedId` for action shortcuts. Arrow nav and Space stay focused-only (they're navigation primitives that need explicit keyboard focus). Awaits user retest on rebuilt installer.                                              |
-
-All fixes verified locally: `bun run --cwd packages/desktop typecheck`
-clean, `bun run --cwd packages/desktop test` 452/452 pass, no regressions.
-Final pass/fail awaits the second-round manual walkthrough.
 
 ### Moderate / Minor findings (TRACKED, NON-BLOCKING)
 
