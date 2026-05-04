@@ -223,7 +223,7 @@ Wave structure:
 - **Wave 3** (parallel): 05-04 + 05-05
 
 Plans:
-- [ ] 05-01-WAVE-0-SCAFFOLDING.md — REQUIREMENTS.md/PROJECT.md edits (D-05/D-08/D-11/R-01) + release-test scaffolds + a11y harness skeleton + check-core-deps & bump-version scripts + devDeps
+- [x] 05-01-WAVE-0-SCAFFOLDING.md — REQUIREMENTS.md/PROJECT.md edits (D-05/D-08/D-11/R-01) + release-test scaffolds + a11y harness skeleton + check-core-deps & bump-version scripts + devDeps
 - [ ] 05-02-NPM-PACKAGES.md - `@roadraven/core` tsup build (ESM + .d.ts) + `@roadraven/plugin-claude-code` private-to-public flip + per-package LICENSE + READMEs (PACK-04)
 - [ ] 05-03-RELEASE-WORKFLOW.md - Tag-triggered `release.yml` (Windows .zip + Linux .tar.gz + npm publish via OIDC trusted publishing per R-03) + `ci.yml` core-deps allowlist + requirements-edits invariants (D-22 fallow stays commented) + RELEASE-OPS.md (PACK-01, PACK-02, PACK-03, PACK-04)
 - [ ] 05-04-DOCS-AND-CONTRIBUTING.md - GitHub Pages (Just-the-Docs) + CONTRIBUTING.md + README install/feature-status/contributing polish + `docs/plugin-authoring.md` guide + `deploy-docs` job appended to release.yml (PACK-05)
@@ -288,4 +288,4 @@ Plans:
 | 2. Read-Only Viewer | 4/5 | UAT Gap Closure | - |
 | 3. Full Editor | 0/6 | Planned | - |
 | 4. Event API | 6/6 | Complete | 2026-04-29 |
-| 5. Packaging & Distribution | 0/2 | Not started | - |
+| 5. Packaging & Distribution | 1/5 | In progress | - |
