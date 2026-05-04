@@ -190,8 +190,12 @@
 	--rv-status-in-progress-bg: rgba(74, 158, 255, 0.08);
 	--rv-status-completed: #4ade80;
 	--rv-status-completed-bg: rgba(74, 222, 128, 0.08);
-	--rv-status-blocked: #ef4444;
-	--rv-status-blocked-bg: rgba(239, 68, 68, 0.08);
+	/* B-02 fix: #ef4444 on #ffffff = 3.76:1 fails WCAG 2.1 AA (4.5:1).
+	   #c92020 on #ffffff = 5.59:1 — passes for normal text (Delete menu item,
+	   blocked status badge text). Audit suite now covers light-theme context
+	   menu to prevent regression. */
+	--rv-status-blocked: #c92020;
+	--rv-status-blocked-bg: rgba(201, 32, 32, 0.08);
 
 	/* Live event pulse — saturated green, visible against white nodes */
 	--rv-pulse: #16a34a;
@@ -437,10 +441,13 @@
 	--rv-bg-panel: #000000;
 	--rv-bg-config: #0a0a0a;
 
-	/* Text */
-	--rv-text-primary: #666666;
+	/* Text — B-01 fix: prior #666666 on #000000 = 3.66:1 fails WCAG 2.1 AA.
+	   #d1d1d1 on #000000 = 12.0:1 (primary, easy pass).
+	   #888888 on #000000 = 5.13:1 (tertiary, replaces #666666 = 3.66:1 FAIL).
+	   #9a9a9a on #000000 = 7.46:1 (secondary, already passing — kept). */
+	--rv-text-primary: #d1d1d1;
 	--rv-text-secondary: #9a9a9a;
-	--rv-text-tertiary: #666666;
+	--rv-text-tertiary: #888888;
 	--rv-text-on-accent: #000000;
 
 	/* Borders */

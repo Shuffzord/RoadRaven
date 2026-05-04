@@ -156,7 +156,12 @@ test.describe("Accessibility audit (production bundle, vite preview port 4173)",
 	// We bypass the Zustand store (which would invoke RPC saveSettings — not
 	// available under vite preview) and exercise the CSS directly. The CSS is
 	// the same that ships in the installer.
-	for (const theme of ["dark", "light", "high-contrast"] as const) {
+	// "contrast" added per code-review B-01: prior --rv-text-primary: #666666
+	// on #000000 = 3.66:1 (FAIL). Now d1d1d1 = 12.0:1. The other unaudited
+	// themes (paper, amber, slate, moss) are filed as backlog known-issues
+	// in 05-REVIEW.md disposition (v1.1 will either audit them all or mark
+	// them experimental in user-visible UI).
+	for (const theme of ["dark", "light", "high-contrast", "contrast"] as const) {
 		test(`6. Theme '${theme}' passes WCAG 2.1 AA`, async ({ page }) => {
 			await loadHelloWorldSample(page);
 			// Set the data-theme attribute directly (matches ThemeProvider.tsx
@@ -181,4 +186,24 @@ test.describe("Accessibility audit (production bundle, vite preview port 4173)",
 			});
 		});
 	}
+
+	// B-02 regression guard: the dark-theme context-menu case at test 4 only
+	// caught --rv-status-blocked: #ff5252 on #252527 = 4.74:1. The light theme
+	// uses a different blocked color (#c92020 on #ffffff = 5.59:1 post-fix —
+	// was #ef4444 = 3.76:1 FAIL). Without this case, a future revert of the
+	// light-theme blocked token would silently re-fail WCAG.
+	test("7. Context menu open in light theme passes WCAG 2.1 AA (B-02 guard)", async ({
+		page,
+	}) => {
+		await loadHelloWorldSample(page);
+		await page.evaluate(() => {
+			document.documentElement.setAttribute("data-theme", "light");
+		});
+		await page.waitForTimeout(200);
+		await page.locator("[data-source-id]").first().click({ button: "right" });
+		await page.waitForSelector('[role="menu"]', { timeout: 3000 });
+		await auditPage(page, "context-menu-open-light", {
+			exclude: ["svg .rd3t-link", "#root[aria-hidden='true']"],
+		});
+	});
 });
