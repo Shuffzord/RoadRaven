@@ -386,25 +386,33 @@ export function Canvas() {
 						onNewRoadmap={newRoadmap}
 					/>
 				) : (
-					<Tree
-						data={treeData}
-						dataKey={dataKey}
-						orientation={layoutOrientation === "TB" ? "vertical" : "horizontal"}
-						pathFunc="step"
-						separation={{ siblings: 1, nonSiblings: 1.3 }}
-						nodeSize={{ x: 240, y: 100 }}
-						initialDepth={3}
-						renderCustomNodeElement={renderNode}
-						zoom={zoomLevel}
-						enableLegacyTransitions={false}
-						centeringTransitionDuration={800}
-						collapsible={true}
-						zoomable={true}
-						draggable={true}
-						translate={translate}
-						hasInteractiveNodes={true}
-						onUpdate={handleTreeUpdate}
-					/>
+					// role="tree" wrapper satisfies aria-required-parent for the
+					// role="treeitem" nodes inside (PACK-06 / D-20). react-d3-tree
+					// renders its own SVG; this div sits between role="application"
+					// and the tree items so the ARIA hierarchy is application > tree > treeitem.
+					<div role="tree" aria-label="Roadmap tree" className="w-full h-full">
+						<Tree
+							data={treeData}
+							dataKey={dataKey}
+							orientation={
+								layoutOrientation === "TB" ? "vertical" : "horizontal"
+							}
+							pathFunc="step"
+							separation={{ siblings: 1, nonSiblings: 1.3 }}
+							nodeSize={{ x: 240, y: 100 }}
+							initialDepth={3}
+							renderCustomNodeElement={renderNode}
+							zoom={zoomLevel}
+							enableLegacyTransitions={false}
+							centeringTransitionDuration={800}
+							collapsible={true}
+							zoomable={true}
+							draggable={true}
+							translate={translate}
+							hasInteractiveNodes={true}
+							onUpdate={handleTreeUpdate}
+						/>
+					</div>
 				)}
 
 				{/* Inline rename renders inside RoadmapNodeCard (card-matched UX).
