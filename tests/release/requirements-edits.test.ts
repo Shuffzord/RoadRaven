@@ -63,4 +63,16 @@ describe("REQUIREMENTS.md / PROJECT.md / ROADMAP.md edits (D-05, D-08, D-11, R-0
 		expect(PROJECT).toMatch(/@roadraven\/react.*npm package in v1\.0/);
 		expect(PROJECT).toMatch(/Code signing for v1\.0/);
 	});
+
+	it("release.yml trigger is locked to 'v*' (canary broadening reserved for v1.1, W-6)", () => {
+		const releaseYml = readFileSync(
+			join(process.cwd(), ".github/workflows/release.yml"),
+			"utf8",
+		);
+		// v1.0 limitation: 'v*' will match v1.x-canary.* tags. Reserve canary tags
+		// until v1.1 wires a separate workflow.
+		expect(releaseYml).toMatch(/tags:\s*\n\s*-\s*['"]v\*['"]/);
+		// Guard against accidental broadening to canary-specific patterns
+		expect(releaseYml).not.toMatch(/tags:.*v\*-canary/);
+	});
 });
