@@ -1,3 +1,9 @@
+---
+title: Development Guide
+nav_order: 3
+layout: default
+---
+
 # Development Guide
 
 > Last updated: 2026-04-22 | Phase: 03-full-editor (Waves 1 + 2)

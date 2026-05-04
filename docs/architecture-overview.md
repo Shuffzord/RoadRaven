@@ -1,3 +1,9 @@
+---
+title: Architecture Overview
+nav_order: 2
+layout: default
+---
+
 # Architecture Overview
 
 > Last updated: 2026-04-22 | Phase: 03-full-editor (Waves 1 + 2)
