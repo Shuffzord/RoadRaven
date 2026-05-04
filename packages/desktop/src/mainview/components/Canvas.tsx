@@ -218,14 +218,6 @@ export function Canvas() {
 		},
 		getNodePosition: (nodeId: string) =>
 			nodePositionsRef.current.get(nodeId) ?? null,
-		isNodeVisible: (nodeId: string) => {
-			// Cards that aren't currently rendered (collapsed subtrees) have
-			// no DOM presence. Scope to the canvas container so panel-side
-			// references can't confuse the lookup.
-			const root = containerRef.current;
-			if (!root) return false;
-			return !!root.querySelector(`[data-source-id="${nodeId}"]`);
-		},
 		togglePanelFocus: () => {
 			// Placeholder — Plan 03 implements panel-focus handoff. For now, move
 			// focus between selected node (panel) and focused node (canvas).
@@ -400,7 +392,6 @@ export function Canvas() {
 							pathFunc="step"
 							separation={{ siblings: 1, nonSiblings: 1.3 }}
 							nodeSize={{ x: 240, y: 100 }}
-							initialDepth={3}
 							renderCustomNodeElement={renderNode}
 							zoom={zoomLevel}
 							enableLegacyTransitions={false}

@@ -59,7 +59,6 @@ function makeStubDeps() {
 		getTransform: () => ({ x: 0, y: 0, k: 1 }),
 		getContainerRect: () => ({ left: 0, top: 0 }),
 		getNodePosition: () => null,
-		isNodeVisible: () => true,
 		togglePanelFocus: vi.fn(),
 	};
 }
