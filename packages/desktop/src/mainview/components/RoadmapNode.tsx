@@ -180,6 +180,13 @@ export function RoadmapNodeCard({
 				<button
 					className="absolute bottom-1.5 right-1.5 flex items-center gap-1 px-2 py-[3px] rounded-[6px] border transition-colors duration-150"
 					type="button"
+					// WAI-ARIA tree pattern (https://www.w3.org/WAI/ARIA/apg/patterns/treeview/):
+					// only the treeitem itself is tabbable. Expand/collapse activates
+					// via Enter or Right/Left arrow on the row, or mouse-click on this
+					// chevron. Without tabIndex=-1 the chevron is in the document tab
+					// cycle and Shift+Tab from a child treeitem lands here instead of
+					// the parent treeitem (BUG-1, manual a11y finding 2026-05-04).
+					tabIndex={-1}
 					aria-label={isCollapsed ? "Expand subtree" : "Collapse subtree"}
 					style={{
 						backgroundColor: `var(${tokens.bg})`,
