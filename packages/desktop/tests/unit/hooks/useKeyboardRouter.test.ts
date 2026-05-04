@@ -61,7 +61,6 @@ function renderRouter(opts: RenderOpts = {}) {
 			getTransform: () => ({ x: 0, y: 0, k: 1 }),
 			getContainerRect: () => ({ left: 0, top: 0 }),
 			getNodePosition: opts.getNodePosition ?? (() => ({ x: 0, y: 0 })),
-			isNodeVisible: () => true,
 			togglePanelFocus,
 		}),
 	);
