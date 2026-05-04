@@ -189,12 +189,6 @@ interface RoadmapState {
 	filePath: string | null;
 	treeData: RawNodeDatum | null;
 	dataKey: string;
-	// Bumps ONLY on full schema load (loadSchema/reloadSchema/newUntitledSchema).
-	// Passed to react-d3-tree's `dataKey` prop so structural mutations
-	// (addChild, addSibling*, deleteNode, duplicate, paste, move) don't trigger
-	// a Tree re-init that resets manual expand/collapse state. dataKey above
-	// still bumps on every structural mutation for autosave dirty detection.
-	loadKey: string;
 	nodeIndex: Map<string, RoadmapNode>;
 
 	// UI state
@@ -319,7 +313,6 @@ export const INITIAL_STATE = {
 	filePath: null as string | null,
 	treeData: null as RawNodeDatum | null,
 	dataKey: "0",
-	loadKey: "0",
 	nodeIndex: new Map<string, RoadmapNode>(),
 	selectedNodeId: null as string | null,
 	focusedNodeId: null as string | null,
@@ -396,14 +389,12 @@ export const useRoadmapStore = create<RoadmapState>((set, get) => {
 			const treeData = schema.nodes[0] ? toTreeDatum(schema.nodes[0]) : null;
 			const nodeIndex = buildNodeIndex(schema.nodes);
 			const nextKey = String(Number(get().dataKey) + 1);
-			const nextLoadKey = String(Number(get().loadKey) + 1);
 			set({
 				schema,
 				filePath,
 				treeData,
 				nodeIndex,
 				dataKey: nextKey,
-				loadKey: nextLoadKey,
 				statusTick: 0,
 				focusedNodeId: null,
 				pendingConfirmation: null,
@@ -423,13 +414,11 @@ export const useRoadmapStore = create<RoadmapState>((set, get) => {
 			const treeData = schema.nodes[0] ? toTreeDatum(schema.nodes[0]) : null;
 			const nodeIndex = buildNodeIndex(schema.nodes);
 			const nextKey = String(Number(get().dataKey) + 1);
-			const nextLoadKey = String(Number(get().loadKey) + 1);
 			set({
 				schema,
 				treeData,
 				nodeIndex,
 				dataKey: nextKey,
-				loadKey: nextLoadKey,
 				statusTick: 0,
 				focusedNodeId: null,
 				pendingConfirmation: null,
