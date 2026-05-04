@@ -1,3 +1,9 @@
+---
+title: Design System
+nav_order: 5
+layout: default
+---
+
 # Design System
 
 > Last updated: 2026-04-15 | Phase: 02-read-only-viewer
