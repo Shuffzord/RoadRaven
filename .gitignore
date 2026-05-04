@@ -48,3 +48,7 @@ test-results/
 
 # Local developer environment overrides (not committed)
 .env.local
+
+# Build artifacts (Phase 5)
+packages/core/dist/
+packages/desktop/artifacts/
