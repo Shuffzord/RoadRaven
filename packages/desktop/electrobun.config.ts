@@ -20,4 +20,10 @@ export default {
 		linux: { bundleCEF },
 		win: { bundleCEF },
 	},
+	release: {
+		// Strategy A from RESEARCH.md Pattern 5 — GitHub Releases /latest/download
+		// always resolves to the most recent non-prerelease Release (D-10: stable only).
+		// v1.1 canary work will switch to a gh-pages-hosted manifest folder.
+		baseUrl: "https://github.com/Shuffzord/RoadRaven/releases/latest/download",
+	},
 } satisfies ElectrobunConfig;
