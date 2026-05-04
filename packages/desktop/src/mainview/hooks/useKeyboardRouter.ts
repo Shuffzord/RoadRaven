@@ -205,7 +205,13 @@ export function useKeyboardRouter(deps: RouterDeps): void {
 				dispatchOpenRename(store.addSiblingAbove(focusedId));
 				return;
 			}
-			if (e.key === "Tab" && focusedId) {
+			// BUG-2: must guard against Shift+Tab. Without !e.shiftKey,
+			// Shift+Tab also matches and creates a sibling below — combined
+			// with BUG-1 (chevron in tab cycle) the user perceives this as
+			// "Shift+Tab collapses my nodes" because addSiblingBelow bumps
+			// dataKey, which makes react-d3-tree re-init and reset collapse
+			// state via initialDepth (a separate bug, BUG-3, deferred).
+			if (e.key === "Tab" && !e.shiftKey && focusedId) {
 				e.preventDefault();
 				dispatchOpenRename(store.addSiblingBelow(focusedId));
 				return;
