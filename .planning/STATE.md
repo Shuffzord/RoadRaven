@@ -3,9 +3,9 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Phase 05 plans complete (5/5) — phase verification + UAT pending
-last_updated: "2026-05-04T16:50:00.000Z"
-last_activity: 2026-05-04 -- Phase 5 Wave 3 (05-04 docs, 05-05 a11y) merged + auto-collapse fix from develop
+stopped_at: Phase 05 verifier closed (4 blockers + Truth #1 + W-02/W-04/W-06 fixed) — manual a11y checklist pending
+last_updated: "2026-05-05T15:00:00.000Z"
+last_activity: 2026-05-05 -- Phase 5 verifier flagged installer-artifact filename mismatch (Truth #1); fixed in 4561092 + e5d0426; release-test suite green
 progress:
   total_phases: 6
   completed_phases: 3
