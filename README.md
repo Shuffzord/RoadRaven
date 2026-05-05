@@ -16,7 +16,7 @@ Download the latest release from
 
 ### Windows
 
-1. Download `stable-win-x64-RoadRaven-Setup-stable.zip`.
+1. Download `stable-win-x64-RoadRaven-Setup.zip`.
 2. Extract the `.zip`.
 3. Double-click `RoadRaven-Setup.exe`.
 4. **Windows SmartScreen will warn:** "Windows protected your PC."
@@ -28,21 +28,22 @@ Download the latest release from
 
 ### Linux
 
-1. Download `stable-linux-x64-RoadRavenSetup-stable.tar.gz`.
+1. Download `stable-linux-x64-RoadRaven-Setup.tar.gz`.
 2. Extract and run the self-extracting installer:
 
    ```bash
-   tar -xzf stable-linux-x64-RoadRavenSetup-stable.tar.gz
-   cd RoadRavenSetup-stable    # adjust if extracted name differs
-   chmod +x ./RoadRavenSetup   # ensure launcher is executable (per RESEARCH.md Pitfall 6)
-   ./RoadRavenSetup
+   tar -xzf stable-linux-x64-RoadRaven-Setup.tar.gz
+   chmod +x ./installer        # ensure self-extractor is executable (per RESEARCH.md Pitfall 6)
+   ./installer
    ```
 
-   The `chmod +x` step is required: Electrobun's `.tar.gz` bundle does not
-   guarantee the launcher's executable bit on every Linux filesystem
+   The archive extracts contents directly (no nested folder). The
+   `chmod +x` step is required: Electrobun's `.tar.gz` bundle does not
+   guarantee the executable bit on every Linux filesystem
    (cross-references RESEARCH.md Pitfall 6 — Linux launcher needs `+x`).
-   The CEF runtime ships bundled (`bundleCEF: true`), so no system
-   Chromium dependency is needed.
+   The installer extracts the app to `~/.local/share/` and creates a
+   desktop shortcut; the CEF runtime ships bundled (`bundleCEF: true`),
+   so no system Chromium dependency is needed.
 
 ### npm packages (for producers and library consumers)
 

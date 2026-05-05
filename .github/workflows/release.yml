@@ -37,9 +37,12 @@ jobs:
       - name: Build webview bundle (vite build → packages/desktop/dist)
         run: bun run --cwd packages/desktop build
       - name: Build Windows installer (stable channel)
-        # Produces: packages/desktop/artifacts/stable-win-x64-RoadRaven-Setup-stable.zip
+        # Produces: packages/desktop/artifacts/stable-win-x64-RoadRaven-Setup.zip
         #           packages/desktop/artifacts/stable-win-x64-update.json
-        #           packages/desktop/artifacts/stable-win-x64-*.tar.zst
+        #           packages/desktop/artifacts/stable-win-x64-RoadRaven.tar.zst
+        # Names verified against electrobun@1.18.1 src/shared/naming.ts — for
+        # buildEnvironment === "stable" the channel suffix is OMITTED on the
+        # bundle name (only canary/dev/etc. carry a trailing -{channel}).
         run: bunx electrobun build --env=stable
         working-directory: packages/desktop
       - name: Smoke-test installer artifact naming
@@ -73,10 +76,11 @@ jobs:
       - name: Build webview bundle (vite build → packages/desktop/dist)
         run: bun run --cwd packages/desktop build
       - name: Build Linux installer (stable channel)
-        # Produces: packages/desktop/artifacts/stable-linux-x64-RoadRavenSetup-stable.tar.gz
+        # Produces: packages/desktop/artifacts/stable-linux-x64-RoadRaven-Setup.tar.gz
         #           packages/desktop/artifacts/stable-linux-x64-update.json
-        #           packages/desktop/artifacts/stable-linux-x64-*.tar.zst
+        #           packages/desktop/artifacts/stable-linux-x64-RoadRaven.tar.zst
         # NOTE per R-01: Electrobun ships .tar.gz, NOT .deb. Wave-0 test asserts no .deb.
+        # Stable build OMITS channel suffix on bundle name (matches Electrobun naming).
         run: bunx electrobun build --env=stable
         working-directory: packages/desktop
       - name: Smoke-test installer artifact naming + .deb absence
