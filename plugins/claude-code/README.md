@@ -3,7 +3,21 @@
 MCP wrapper that lets Claude Code push node status updates to a running RoadRaven
 app via its WebSocket Event API.
 
-## Build
+## Install (recommended)
+
+```bash
+# Run as a one-shot via npx — no install needed
+npx -y @roadraven/plugin-claude-code
+
+# Or install globally
+npm install -g @roadraven/plugin-claude-code
+roadraven-mcp
+```
+
+Then register with Claude Code (see "Register with Claude Code" below); use
+`roadraven-mcp` as the command instead of an absolute path to a local build.
+
+## Build (from source)
 
 ```sh
 bun install
@@ -24,6 +38,18 @@ desktop, see Settings → MCP pane):
     "roadraven": {
       "command": "node",
       "args": ["/absolute/path/to/RoadRaven/plugins/claude-code/dist/index.js"]
+    }
+  }
+}
+```
+
+Or, if you installed from npm globally:
+
+```json
+{
+  "mcpServers": {
+    "roadraven": {
+      "command": "roadraven-mcp"
     }
   }
 }

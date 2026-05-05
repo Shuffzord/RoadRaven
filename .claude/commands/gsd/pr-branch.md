@@ -17,9 +17,9 @@ changes that are irrelevant to code review.
 </objective>
 
 <execution_context>
-@/home/shuffler/Work/Roadraven/.claude/get-shit-done/workflows/pr-branch.md
+@C:/Work/RoadRaven/.claude/get-shit-done/workflows/pr-branch.md
 </execution_context>
 
 <process>
-Execute the pr-branch workflow from @/home/shuffler/Work/Roadraven/.claude/get-shit-done/workflows/pr-branch.md end-to-end.
+Execute the pr-branch workflow from @C:/Work/RoadRaven/.claude/get-shit-done/workflows/pr-branch.md end-to-end.
 </process>

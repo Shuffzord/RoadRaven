@@ -81,10 +81,10 @@
 
 ### Packaging (PACK)
 
-- [ ] **PACK-01**: Native installers: macOS `.dmg`, Windows `.exe`, Ubuntu `.deb`
-- [ ] **PACK-02**: Electrobun auto-updater configured (canary + stable channels)
+- [ ] **PACK-01**: Native installers: Windows `.exe` (distributed inside `{channel}-win-x64-RoadRaven-Setup-{channel}.zip`) and Linux `.tar.gz` (Electrobun-native self-extracting bundle, `{channel}-linux-x64-RoadRavenSetup-{channel}.tar.gz`). macOS `.dmg` deferred to v1.1. Linux `.deb` deferred to v1.1 alongside GPG signing + apt repo.
+- [ ] **PACK-02**: Electrobun auto-updater configured for **stable channel only** in v1.0. `release.baseUrl` resolves the per-platform `{channel}-{os}-{arch}-update.json` manifest. Canary channel deferred to v1.1; tag pattern `v*-canary.*` reserved.
 - [ ] **PACK-03**: Linux: `bundleCEF: true` confirmed; all file actions reachable via keyboard shortcuts and toolbar (no `ApplicationMenu` dependency); `process.on('SIGTERM', flushWriteQueue)` registered
-- [ ] **PACK-04**: npm packages `@roadmap-viewer/core` and `@roadmap-viewer/react` published; `react`, `react-dom`, `react-d3-tree` marked as `peerDependencies` in `packages/react`; all peer deps externalized in Vite library build; `packages/core` has zero desktop dependencies (enforced in CI)
+- [ ] **PACK-04**: npm package `@roadraven/core` published with pre-built ESM + `.d.ts` in `dist/` and only `zod` as a runtime dependency (CI enforces dependency allowlist via `scripts/check-core-deps.ts`). `@roadraven/plugin-claude-code` also published at the same lockstep version. `@roadraven/react` deferred to v1.1 (currently a `export {};` stub; component extraction is its own phase). `react`, `react-dom`, `react-d3-tree` peer-dep externalization is moot in v1 since `@roadraven/react` is not published.
 - [ ] **PACK-05**: README, docs site, contribution guide
 - [ ] **PACK-06**: Accessibility audit passes: full keyboard navigation, ARIA roles on context menu and modal dialogs, color not used as sole status indicator (text labels required), focus indicators visible
 

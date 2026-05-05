@@ -25,9 +25,9 @@ Flags:
 </objective>
 
 <execution_context>
-@/home/shuffler/Work/Roadraven/.claude/get-shit-done/workflows/audit-fix.md
+@C:/Work/RoadRaven/.claude/get-shit-done/workflows/audit-fix.md
 </execution_context>
 
 <process>
-Execute the audit-fix workflow from @/home/shuffler/Work/Roadraven/.claude/get-shit-done/workflows/audit-fix.md end-to-end.
+Execute the audit-fix workflow from @C:/Work/RoadRaven/.claude/get-shit-done/workflows/audit-fix.md end-to-end.
 </process>

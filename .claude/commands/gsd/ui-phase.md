@@ -20,8 +20,8 @@ Flow: Validate → Research UI → Verify UI-SPEC → Done
 </objective>
 
 <execution_context>
-@/home/shuffler/Work/Roadraven/.claude/get-shit-done/workflows/ui-phase.md
-@/home/shuffler/Work/Roadraven/.claude/get-shit-done/references/ui-brand.md
+@C:/Work/RoadRaven/.claude/get-shit-done/workflows/ui-phase.md
+@C:/Work/RoadRaven/.claude/get-shit-done/references/ui-brand.md
 </execution_context>
 
 <context>
@@ -29,6 +29,6 @@ Phase number: $ARGUMENTS — optional, auto-detects next unplanned phase if omit
 </context>
 
 <process>
-Execute @/home/shuffler/Work/Roadraven/.claude/get-shit-done/workflows/ui-phase.md end-to-end.
+Execute @C:/Work/RoadRaven/.claude/get-shit-done/workflows/ui-phase.md end-to-end.
 Preserve all workflow gates.
 </process>

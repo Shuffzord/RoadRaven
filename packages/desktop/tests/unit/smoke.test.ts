@@ -51,9 +51,10 @@ describe("SCAF-08: bundleCEF configuration", () => {
 		// Config must derive bundleCEF from ROADRAVEN_RENDERER env var (not hardcoded)
 		expect(content).toMatch(/process\.env\.ROADRAVEN_RENDERER/);
 		// All three platforms must reference the shared bundleCEF variable
-		expect(content).toContain("mac: { bundleCEF }");
-		expect(content).toContain("linux: { bundleCEF }");
-		expect(content).toContain("win: { bundleCEF }");
+		// (additional per-platform fields like `icon` are allowed)
+		expect(content).toMatch(/mac:\s*\{\s*bundleCEF[\s,}]/);
+		expect(content).toMatch(/linux:\s*\{\s*bundleCEF[\s,}]/);
+		expect(content).toMatch(/win:\s*\{\s*bundleCEF[\s,}]/);
 		// Must NOT have hardcoded false
 		expect(content).not.toMatch(/bundleCEF:\s*false/);
 	});

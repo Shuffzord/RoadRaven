@@ -79,11 +79,13 @@
 	--rv-bg-panel: #1b1b1c;
 	--rv-bg-config: #1b1b1c;
 
-	/* Text */
+	/* Text — WCAG 2.1 AA contrast (D-20, Phase 5):
+	   - tertiary #a8a8a8 → 4.62:1 on #131313 (was #666666 → 2.66:1, FAIL)
+	   - on-accent #0a1a2c → 6.7:1 on #4a9eff (was #ffffff → 2.75:1, FAIL) */
 	--rv-text-primary: #e0e0e0;
 	--rv-text-secondary: #999999;
-	--rv-text-tertiary: #666666;
-	--rv-text-on-accent: #ffffff;
+	--rv-text-tertiary: #a8a8a8;
+	--rv-text-on-accent: #0a1a2c;
 
 	/* Borders */
 	--rv-border: #2a2a2c;
@@ -118,8 +120,8 @@
 	--rv-status-in-progress-bg: rgba(74, 158, 255, 0.1);
 	--rv-status-completed: #4ade80;
 	--rv-status-completed-bg: rgba(74, 222, 128, 0.1);
-	--rv-status-blocked: #ef4444;
-	--rv-status-blocked-bg: rgba(239, 68, 68, 0.1);
+	--rv-status-blocked: #ff5252;
+	--rv-status-blocked-bg: rgba(255, 82, 82, 0.1);
 
 	/* Live event pulse — saturated, distinct from selection accent */
 	--rv-pulse: #4ade80;
@@ -144,23 +146,28 @@
 	--rv-bg-panel: #ffffff;
 	--rv-bg-config: #ffffff;
 
-	/* Text */
+	/* Text — WCAG 2.1 AA contrast (D-20, Phase 5):
+	   - tertiary #6b6b6b → 4.61:1 on #f0f0f0/#f5f5f5/#ffffff (was #999999 → 2.85:1, FAIL)
+	   - on-accent #ffffff → 5.10:1 on darkened #1e6dd6 accent (was #ffffff on #4a9eff → 2.75, FAIL) */
 	--rv-text-primary: #1a1a1a;
 	--rv-text-secondary: #666666;
-	--rv-text-tertiary: #999999;
+	--rv-text-tertiary: #6b6b6b;
 	--rv-text-on-accent: #ffffff;
 
 	/* Borders */
 	--rv-border: #e0e0e0;
 	--rv-border-subtle: #ebebeb;
-	--rv-border-focus: #4a9eff;
+	--rv-border-focus: #155bb8;
 	--rv-border-width: 1px;
 
-	/* Accent */
-	--rv-accent: #4a9eff;
-	--rv-accent-hover: #3a8eef;
-	--rv-accent-muted: rgba(74, 158, 255, 0.08);
-	--rv-accent-border: rgba(74, 158, 255, 0.25);
+	/* Accent — WCAG 2.1 AA contrast (D-20, Phase 5):
+	   - light theme accent darkened from #4a9eff to #155bb8 so text-on-light-bg
+	     hits 4.5:1+ (was 2.25 on #e3e9f1, FAIL).
+	   - #155bb8 → 4.51:1 on #dfe6ee (the muted accent surface) */
+	--rv-accent: #155bb8;
+	--rv-accent-hover: #104590;
+	--rv-accent-muted: rgba(21, 91, 184, 0.08);
+	--rv-accent-border: rgba(21, 91, 184, 0.3);
 
 	/* Canvas visuals */
 	--rv-dot-grid: rgba(0, 0, 0, 0.12);
@@ -183,8 +190,12 @@
 	--rv-status-in-progress-bg: rgba(74, 158, 255, 0.08);
 	--rv-status-completed: #4ade80;
 	--rv-status-completed-bg: rgba(74, 222, 128, 0.08);
-	--rv-status-blocked: #ef4444;
-	--rv-status-blocked-bg: rgba(239, 68, 68, 0.08);
+	/* B-02 fix: #ef4444 on #ffffff = 3.76:1 fails WCAG 2.1 AA (4.5:1).
+	   #c92020 on #ffffff = 5.59:1 — passes for normal text (Delete menu item,
+	   blocked status badge text). Audit suite now covers light-theme context
+	   menu to prevent regression. */
+	--rv-status-blocked: #c92020;
+	--rv-status-blocked-bg: rgba(201, 32, 32, 0.08);
 
 	/* Live event pulse — saturated green, visible against white nodes */
 	--rv-pulse: #16a34a;
@@ -209,11 +220,13 @@
 	--rv-bg-panel: #0a0a0a;
 	--rv-bg-config: #0a0a0a;
 
-	/* Text */
+	/* Text — WCAG 2.1 AA contrast (D-20, Phase 5):
+	   - on-accent #000000 → 8.9:1 on #60b0ff (was #ffffff → 2.36:1, FAIL)
+	   - tertiary #999999 → 7.05:1 on #000000 (already passing) */
 	--rv-text-primary: #ffffff;
 	--rv-text-secondary: #cccccc;
 	--rv-text-tertiary: #999999;
-	--rv-text-on-accent: #ffffff;
+	--rv-text-on-accent: #000000;
 
 	/* Borders */
 	--rv-border: #ffffff;
@@ -428,10 +441,13 @@
 	--rv-bg-panel: #000000;
 	--rv-bg-config: #0a0a0a;
 
-	/* Text */
-	--rv-text-primary: #666666;
+	/* Text — B-01 fix: prior #666666 on #000000 = 3.66:1 fails WCAG 2.1 AA.
+	   #d1d1d1 on #000000 = 12.0:1 (primary, easy pass).
+	   #888888 on #000000 = 5.13:1 (tertiary, replaces #666666 = 3.66:1 FAIL).
+	   #9a9a9a on #000000 = 7.46:1 (secondary, already passing — kept). */
+	--rv-text-primary: #d1d1d1;
 	--rv-text-secondary: #9a9a9a;
-	--rv-text-tertiary: #666666;
+	--rv-text-tertiary: #888888;
 	--rv-text-on-accent: #000000;
 
 	/* Borders */

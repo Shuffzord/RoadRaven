@@ -2,7 +2,7 @@
 
 **Created:** 2026-04-12
 **Granularity:** Standard
-**Total phases:** 5 (+ Prerequisite)
+**Total phases:** 6 (+ Prerequisite)
 
 ## Overview
 
@@ -17,7 +17,8 @@ Starting from a bare Electrobun shell, we build outward through the visual stack
 - [ ] **Phase 2: Read-Only Viewer** — Any valid JSON schema renders as an interactive tree; performance gate passes
 - [ ] **Phase 3: Full Editor** — A complete roadmap can be created, edited, and saved without touching JSON directly
 - [ ] **Phase 4: Event API** — Nodes receive live status updates from external producers via WebSocket; Claude Code MCP wrapper works end-to-end (5/6 plans done; 04-06 gap closure pending)
-- [ ] **Phase 5: Packaging & Distribution** — Native installers on all three platforms; npm packages published
+- [x] **Phase 5: Packaging & Distribution** — Native installers on all three platforms; npm packages published
+- [ ] **Phase 6: Agentic Roadmap Authoring** — Agents (Claude Code and other MCP-capable LLMs) can read, create, edit, and delete roadmap nodes via MCP — turning RoadRaven into a substrate for agent-authored project plans
 
 ---
 
@@ -207,20 +208,34 @@ Plans:
 
 ### Phase 5: Packaging & Distribution
 
-**Goal:** Native installers build on all three platforms, and `@roadmap-viewer/core` + `@roadmap-viewer/react` are published to npm.
+**Goal:** Native installers build for Windows (`.exe` in `.zip`) and Linux (`.tar.gz`), `@roadraven/core` + `@roadraven/plugin-claude-code` are published to npm at lockstep version with provenance, GitHub Pages docs site is live, and the accessibility audit pass + CONTRIBUTING.md + README polish complete the v1.0 surface.
 
 **Depends on:** Phase 4
 
 **Requirements covered:** PACK-01, PACK-02, PACK-03, PACK-04, PACK-05, PACK-06
 
-**Plans:**
-1. Packaging + auto-updater — macOS `.dmg`, Windows `.exe`, Ubuntu `.deb` native installers; Electrobun auto-updater configured (canary + stable channels); Linux: `bundleCEF: true` confirmed; all file actions reachable via keyboard/toolbar (no `ApplicationMenu` dependency); `process.on('SIGTERM', flushWriteQueue)` registered
-2. npm packages + accessibility + docs — `@roadmap-viewer/core` and `@roadmap-viewer/react` published to npm; `react`, `react-dom`, `react-d3-tree` marked as `peerDependencies` in `packages/react`; all peer deps externalized in Vite library build; `packages/core` has zero desktop dependencies (enforced in CI); accessibility audit: full keyboard navigation, ARIA roles on context menu and modal dialogs, colour not used as sole status indicator, focus indicators visible; README, docs site, plugin authoring guide, contribution guide
+**Plans:** 5 plans
+
+Wave structure:
+- **Wave 0** (scaffolding): 05-01
+- **Wave 1**: 05-02
+- **Wave 2**: 05-03
+- **Wave 3** (parallel): 05-04 + 05-05
+
+Plans:
+- [x] 05-01-WAVE-0-SCAFFOLDING.md — REQUIREMENTS.md/PROJECT.md edits (D-05/D-08/D-11/R-01) + release-test scaffolds + a11y harness skeleton + check-core-deps & bump-version scripts + devDeps
+- [x] 05-02-NPM-PACKAGES.md - `@roadraven/core` tsup build (ESM + .d.ts) + `@roadraven/plugin-claude-code` private-to-public flip + per-package LICENSE + READMEs (PACK-04)
+- [x] 05-03-RELEASE-WORKFLOW.md - Tag-triggered `release.yml` (Windows .zip + Linux .tar.gz + npm publish via OIDC trusted publishing per R-03) + `ci.yml` core-deps allowlist + requirements-edits invariants (D-22 fallow stays commented) + RELEASE-OPS.md (PACK-01, PACK-02, PACK-03, PACK-04)
+- [x] 05-04-DOCS-AND-CONTRIBUTING.md - GitHub Pages (Just-the-Docs) + CONTRIBUTING.md + README install/feature-status/contributing polish + `docs/plugin-authoring.md` guide + `deploy-docs` job appended to release.yml (PACK-05)
+- [x] 05-05-A11Y-AUDIT.md - `@axe-core/playwright` suite vs `vite preview` (R-04) + manual checklist on installed app (human checkpoint) + `05-A11Y-AUDIT.md` write-up (PACK-03, PACK-06)
+
+1. Packaging + auto-updater — Windows `.exe` (in `.zip`) + Linux `.tar.gz` (Electrobun-native self-extracting); Electrobun auto-updater configured (stable channel only in v1.0; canary deferred to v1.1); Linux: `bundleCEF: true` confirmed; all file actions reachable via keyboard/toolbar (no `ApplicationMenu` dependency); `process.on('SIGTERM', flushWriteQueue)` registered
+2. npm packages + accessibility + docs — `@roadraven/core` (pre-built ESM + `.d.ts`, `zod` only) and `@roadraven/plugin-claude-code` published to npm at lockstep version with provenance; `packages/core` has zero desktop dependencies (CI enforces an allowlist); `@roadraven/react` deferred to v1.1; accessibility audit: full keyboard navigation, ARIA roles on context menu and modal dialogs, colour not used as sole status indicator, focus indicators visible; README, docs site (GitHub Pages), plugin authoring guide, CONTRIBUTING.md
 
 **Done when:**
-- `bun run build:canary` produces `.dmg`, `.exe`, and `.deb` installers that install and launch cleanly
-- Auto-updater channels (canary / stable) are configured and the version channel resolves correctly
-- `@roadmap-viewer/core` and `@roadmap-viewer/react` install from npm in a clean project without peer-dep errors
+- `bun run build:stable` (or tag-triggered CI) produces Windows `.zip` containing `-Setup.exe` and Linux `.tar.gz` self-extracting bundle that install and launch cleanly
+- Auto-updater stable channel manifest URL resolves to a real `{channel}-{os}-{arch}-update.json` after a tagged release; canary deferred to v1.1
+- `@roadraven/core` and `@roadraven/plugin-claude-code` install from npm in a clean project; `@roadraven/core` exposes Zod schemas + types; `@roadraven/plugin-claude-code` runs as the `roadraven-mcp` binary
 - `packages/core` has no desktop dependencies (CI enforces this)
 - Accessibility audit passes: keyboard navigation covers all operations, ARIA roles are correct, status is never conveyed by colour alone
 - README and plugin authoring guide are published
@@ -228,6 +243,39 @@ Plans:
 **Dependencies:** Phase 4
 
 **UI hint**: yes
+
+### Phase 6: Agentic Roadmap Authoring
+
+**Goal:** Agents (Claude Code and other MCP-capable LLM tools) can read, create, edit, move, and delete roadmap nodes via the MCP wrapper — turning Phase 4's one-way producer→app pipe into a bidirectional contract so a developer can ask "scaffold a roadmap for migrating service X" and watch the tree assemble live without ever touching the JSON.
+
+**Depends on:** Phase 4 (Event API / MCP wrapper foundation). Can ship before, after, or alongside Phase 5 (Packaging) — the two are independent.
+
+**Requirements**: TBD (extend PLUG-09 plugin/subscribe scaffolding into a working bidirectional contract; new requirements to be derived during planning)
+
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd-plan-phase 6 to break down)
+
+**Scope sketch (refine in planning):**
+
+*Read tools:* `getRoadmap`, `getNode(id)` (with ancestry), `findNodes(query)` (by title/status/type/metadata), `getStatusConfig`, `getTypeConfig`, `getOpenFile`.
+
+*Create tools:* `createNode({parentId, title, type?, status?, notes?, metadata?})` returning new UUID, `createRoadmap({title, statusConfig?, typeConfig?})` (mirrors File > New), stretch: `importSubtree({parentId, schema})`.
+
+*Update tools:* `renameNode`, `updateNodeStatus` (preserve Phase 4 compat), `updateNodeType`, `updateNodeNotes`, `updateNodeMetadata` (merge-vs-replace TBD), `moveNode(nodeId, newParentId, position?)`.
+
+*Delete tools:* `deleteNode(nodeId, {cascade?})` — non-leaf requires explicit cascade flag mirroring the UI confirmation dialog.
+
+*File lifecycle tools:* `saveFile` (flush autosave debounce), `saveFileAs(path)`, `openFile(path)` — all gated by the existing path-traversal allowlist.
+
+**Out of scope (initial cut):**
+- Arbitrary RPC passthrough — only explicitly-exposed tools.
+- Mutating `themeConfig` or app settings.
+- Reading files outside the loaded roadmap and its `$ref`-linked siblings.
+- Bypassing the existing path-traversal allowlist on `openFile` / `saveFileAs`.
+
+**Why this phase:** PLUG-09 left `plugin` / `subscribe` schema fields as parsed-but-unused v1.1 scaffolding. The renderer store already exposes every mutation needed (`addChild`, `deleteNode`, `renameNode`, `updateNodeStatus`, `updateNodeType`, `updateNodeMetadata`, `updateNodeNotes` in `packages/desktop/src/mainview/store/roadmapStore.ts`) — Phase 6 only adds a new transport surface, not new domain logic. Without it, an MCP agent that does not already know node UUIDs from out-of-band context cannot enumerate the roadmap, look up nodes by title, or discover valid status ids.
 
 ---
 
@@ -240,4 +288,4 @@ Plans:
 | 2. Read-Only Viewer | 4/5 | UAT Gap Closure | - |
 | 3. Full Editor | 0/6 | Planned | - |
 | 4. Event API | 6/6 | Complete | 2026-04-29 |
-| 5. Packaging & Distribution | 0/2 | Not started | - |
+| 5. Packaging & Distribution | 5/5 | Complete | 2026-05-05 |

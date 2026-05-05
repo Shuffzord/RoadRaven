@@ -5,7 +5,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node .claude/hooks/gsd-check-update.js"
+            "command": "\"C:/nvm4w/nodejs/node.exe\" .claude/hooks/gsd-check-update.js"
           }
         ]
       },
@@ -24,7 +24,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node .claude/hooks/gsd-context-monitor.js",
+            "command": "\"C:/nvm4w/nodejs/node.exe\" .claude/hooks/gsd-context-monitor.js",
             "timeout": 10
           }
         ]
@@ -38,6 +38,16 @@
             "timeout": 5
           }
         ]
+      },
+      {
+        "matcher": "Read",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"C:/nvm4w/nodejs/node.exe\" \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/gsd-read-injection-scanner.js",
+            "timeout": 5
+          }
+        ]
       }
     ],
     "PreToolUse": [
@@ -46,7 +56,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node .claude/hooks/gsd-prompt-guard.js",
+            "command": "\"C:/nvm4w/nodejs/node.exe\" .claude/hooks/gsd-prompt-guard.js",
             "timeout": 5
           }
         ]
@@ -56,7 +66,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node .claude/hooks/gsd-read-guard.js",
+            "command": "\"C:/nvm4w/nodejs/node.exe\" .claude/hooks/gsd-read-guard.js",
             "timeout": 5
           }
         ]
@@ -66,7 +76,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node .claude/hooks/gsd-workflow-guard.js",
+            "command": "\"C:/nvm4w/nodejs/node.exe\" .claude/hooks/gsd-workflow-guard.js",
             "timeout": 5
           }
         ]

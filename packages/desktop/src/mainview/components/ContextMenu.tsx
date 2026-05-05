@@ -225,12 +225,9 @@ function NodeMenuItems({ nodeId }: { nodeId: string }) {
 				onSelect={() => requestDelete(nodeId)}
 			>
 				<span>Delete</span>
-				<span
-					className={HINT_CLASS}
-					style={{ color: "var(--rv-status-blocked)", opacity: 0.6 }}
-				>
-					Del
-				</span>
+				{/* Hint uses standard tertiary color (not red+opacity) so the
+				    keyboard shortcut meets WCAG 2.1 AA contrast on menu surface (D-20). */}
+				<span className={HINT_CLASS}>Del</span>
 			</ContextMenuPrimitive.Item>
 		</>
 	);

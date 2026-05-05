@@ -1,3 +1,9 @@
+---
+title: Logging
+nav_order: 6
+layout: default
+---
+
 # Logging Architecture
 
 > Last updated: 2026-04-15 | Phase: 02-read-only-viewer

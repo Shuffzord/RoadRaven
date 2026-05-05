@@ -10,9 +10,9 @@ Display comprehensive project statistics including phase progress, plan executio
 </objective>
 
 <execution_context>
-@/home/shuffler/Work/Roadraven/.claude/get-shit-done/workflows/stats.md
+@C:/Work/RoadRaven/.claude/get-shit-done/workflows/stats.md
 </execution_context>
 
 <process>
-Execute the stats workflow from @/home/shuffler/Work/Roadraven/.claude/get-shit-done/workflows/stats.md end-to-end.
+Execute the stats workflow from @C:/Work/RoadRaven/.claude/get-shit-done/workflows/stats.md end-to-end.
 </process>
