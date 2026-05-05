@@ -17,7 +17,7 @@ Starting from a bare Electrobun shell, we build outward through the visual stack
 - [ ] **Phase 2: Read-Only Viewer** — Any valid JSON schema renders as an interactive tree; performance gate passes
 - [ ] **Phase 3: Full Editor** — A complete roadmap can be created, edited, and saved without touching JSON directly
 - [ ] **Phase 4: Event API** — Nodes receive live status updates from external producers via WebSocket; Claude Code MCP wrapper works end-to-end (5/6 plans done; 04-06 gap closure pending)
-- [ ] **Phase 5: Packaging & Distribution** — Native installers on all three platforms; npm packages published
+- [x] **Phase 5: Packaging & Distribution** — Native installers on all three platforms; npm packages published
 - [ ] **Phase 6: Agentic Roadmap Authoring** — Agents (Claude Code and other MCP-capable LLMs) can read, create, edit, and delete roadmap nodes via MCP — turning RoadRaven into a substrate for agent-authored project plans
 
 ---
@@ -288,4 +288,4 @@ Plans:
 | 2. Read-Only Viewer | 4/5 | UAT Gap Closure | - |
 | 3. Full Editor | 0/6 | Planned | - |
 | 4. Event API | 6/6 | Complete | 2026-04-29 |
-| 5. Packaging & Distribution | 5/5 | Plans complete — phase verification pending | - |
+| 5. Packaging & Distribution | 5/5 | Complete | 2026-05-05 |
