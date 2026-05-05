@@ -250,12 +250,22 @@ Plans:
 
 **Depends on:** Phase 4 (Event API / MCP wrapper foundation). Can ship before, after, or alongside Phase 5 (Packaging) — the two are independent.
 
-**Requirements**: TBD (extend PLUG-09 plugin/subscribe scaffolding into a working bidirectional contract; new requirements to be derived during planning)
+**Requirements covered:** PLUG-AGENT-READ-01..06, PLUG-AGENT-CREATE-01..02, PLUG-AGENT-UPDATE-01..06, PLUG-AGENT-DELETE-01, PLUG-AGENT-FILE-01..03, PLUG-AGENT-TRANSPORT-01..02, PLUG-AGENT-SAFETY-01..03 (23 IDs)
 
-**Plans:** 0 plans
+**Plans:** 5 plans
+
+Wave structure:
+- **Wave 0** (scaffolding): 06-01
+- **Wave 1** (parallel): 06-02 + 06-03
+- **Wave 2**: 06-04
+- **Wave 3**: 06-05
 
 Plans:
-- [ ] TBD (run /gsd-plan-phase 6 to break down)
+- [ ] 06-01-PLAN.md — Wave 0: REQUIREMENTS.md PLUG-AGENT-* block (23 IDs), agentRequest RPC type + agentApi setting in shared/types.ts, AgentRequestSchema in eventSchema.ts, plugin Zod input schemas (tools/schemas.ts), 6 failing/pending test scaffolds (PLUG-AGENT-TRANSPORT-01..02, SAFETY-01..03 + 17 tool IDs)
+- [ ] 06-02-PLAN.md — Wave 1: wsClient.request() correlation map + persistent message listener + on-close cleanup; eventServer type:request branch + onAgentRequest StartOptions; agentRequestHandler.ts with kill-switch + cross-ref + path-allowlist gates; isInDialogAllowlist export; roadmapStore.moveNode action (PLUG-AGENT-TRANSPORT-01..02, SAFETY-01, SAFETY-03, UPDATE-05)
+- [ ] 06-03-PLAN.md — Wave 1: Renderer agentRpcHandler.ts dispatcher with all 17 tool branches + 3 prelude branches; PATCH semantics inline (D-04); cycle/last-root/cascade gates; drawer audit event helper; rpc.ts handlers.requests.agentRequest registration (PLUG-AGENT-READ/CREATE/UPDATE/DELETE/FILE-* + SAFETY-01..02)
+- [ ] 06-04-PLAN.md — Wave 2: plugins/claude-code/src/server.ts gains 17 net-new server.registerTool calls + agentToolCallback helper; updateNodeStatus rewritten to flow through the renderer dispatcher (drawer audit event for UPDATE-06); 19 tools total registered
+- [ ] 06-05-PLAN.md — Wave 3: scaffold.e2e.test.ts (named user story end-to-end + 3 safety gates); plugins/claude-code/README.md (19-tool catalog + error taxonomy + kill-switch + concurrency model); 06-HUMAN-UAT.md (7 scenarios) + manual UAT human checkpoint
 
 **Scope sketch (refine in planning):**
 
