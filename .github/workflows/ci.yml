@@ -5,6 +5,14 @@ on:
   push:
     branches: [master]
 
+# Least-privilege workflow token (W-02 fix). CI only reads code, runs tests,
+# and lints — it never publishes, comments on PRs, or uploads release assets.
+# Setting `contents: read` here protects against repos with default `write-all`
+# token permissions and against future job additions that might inadvertently
+# inherit broader scope.
+permissions:
+  contents: read
+
 jobs:
   lint:
     name: Lint
