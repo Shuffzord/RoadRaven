@@ -31,6 +31,13 @@ Download the latest release from
 1. Download `stable-linux-x64-RoadRaven-Setup.tar.gz`.
 2. Extract and run the self-extracting installer:
 
+   <!-- The extracted file is literally named `installer` (no extension). This is the
+        Electrobun convention: see `electrobun/src/cli/index.ts` `createLinuxInstallerArchive`
+        (~line 1680) which writes `installerPath = join(stagingDir, "installer")` with
+        mode 0o755, plus the bundled README.txt that ships inside the archive instructing
+        users to "Double-click the 'installer' file" or run "./installer". Verified
+        against electrobun@1.18.1. If a future Electrobun version renames this binary,
+        update both this section and `tests/release/installer-artifacts.test.ts`. -->
    ```bash
    tar -xzf stable-linux-x64-RoadRaven-Setup.tar.gz
    chmod +x ./installer        # ensure self-extractor is executable (per RESEARCH.md Pitfall 6)

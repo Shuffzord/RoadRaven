@@ -18,11 +18,15 @@ const ALLOWLIST = new Set([
 	// MCP wrapper, future producers) take a transitive dep on.
 ]);
 
+// npm officially accepts BOTH `bundledDependencies` (canonical) and
+// `bundleDependencies` (alias) — leaving either out of the allowlist scan
+// preserves the same evasion vector W-04 was meant to close.
 const DEP_FIELDS = [
 	"dependencies",
 	"peerDependencies",
 	"optionalDependencies",
 	"bundledDependencies",
+	"bundleDependencies",
 ] as const;
 
 type DepField = (typeof DEP_FIELDS)[number];
