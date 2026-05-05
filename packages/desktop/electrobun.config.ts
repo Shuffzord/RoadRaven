@@ -17,8 +17,8 @@ export default {
 		},
 		watchIgnore: ["dist/**"],
 		mac: { bundleCEF },
-		linux: { bundleCEF },
-		win: { bundleCEF },
+		linux: { bundleCEF, icon: "assets/icon.png" },
+		win: { bundleCEF, icon: "assets/icon.ico" },
 	},
 	release: {
 		// Strategy A from RESEARCH.md Pattern 5 — GitHub Releases /latest/download
