@@ -32,7 +32,7 @@
 		"@radix-ui/react-dialog": "^1.1.15",
 		"@tailwindcss/vite": "^4.2.2",
 		"@tanstack/react-virtual": "3.13.24",
-		"electrobun": "1.16.0",
+		"electrobun": "1.18.1",
 		"react": "^19.2.5",
 		"react-d3-tree": "^3.6.6",
 		"react-dom": "^19.2.5",
