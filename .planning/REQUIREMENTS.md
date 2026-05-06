@@ -105,7 +105,7 @@
 - [ ] **PLUG-AGENT-TRANSPORT-02**: `wsClient.request(method, params): Promise<T>` correlates by id, times out at 30s, and rejects all pending requests when the WebSocket closes (D-15)
 - [ ] **PLUG-AGENT-SAFETY-01**: All gate checks (kill-switch, path-allowlist, no-file-loaded, node-not-found, cascade, cycle, last-root, cross-ref, file-read, save) return one of 13 string error codes; messages match the published taxonomy
 - [ ] **PLUG-AGENT-SAFETY-02**: Every mutating tool call writes a synthetic IntegrationEvent into `eventLogStore` with `source="claude-code"` and `meta.tool`/`meta.args`/`meta.label` — visible in the Ctrl+Shift+L drawer (D-09)
-- [ ] **PLUG-AGENT-SAFETY-03**: `agentApi.enabled === false` in `.roadmap-settings.json` short-circuits with `agent_api_disabled` BEFORE any tool dispatch (D-18 kill-switch); applies to read AND mutation tools
+- [ ] **PLUG-AGENT-SAFETY-03**: `agentApi.enabled === false` in `.roadmap-settings.json` short-circuits with `agent_api_disabled` BEFORE any tool dispatch (RESEARCH §13 — kill-switch); applies to read AND mutation tools
 
 ### Packaging (PACK)
 
