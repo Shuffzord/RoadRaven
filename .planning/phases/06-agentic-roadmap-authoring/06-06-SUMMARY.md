@@ -103,7 +103,7 @@ Replaced the Phase 4 stub (95 lines, 2-tool surface) with a 165-line public READ
   - **File-lifecycle tools (3):** saveFile, saveFileAs, openFile.
   - **Phase 4 carry-forward (1):** getEventApiStatus.
 - **Error Taxonomy (13 codes)** — table mapping each code to its trigger condition. Verbatim from RESEARCH §9.
-- **Kill-Switch** — `.roadmap-settings.json` `agentApi.enabled: false`. Hot-loaded; no restart needed.
+- **Kill-Switch** — app `settings.json` (Windows: `%LOCALAPPDATA%\RoadRaven\settings.json`; macOS: `~/Library/Application Support/RoadRaven/settings.json`; Linux: `~/.config/RoadRaven/settings.json`) with `agentApi.enabled: false`. Hot-loaded; no restart needed.
 - **Security Model** — localhost-only, path-traversal allowlist, no disk-direct writes, `source: "claude-code"` audit log (hardcoded in renderer; agents cannot spoof).
 - **Concurrency Model** — last-write-wins, eventual consistency on disk (Phase 3 autosave debounce), single-agent assumption.
 - **Tested Against** — MCP SDK 1.29.0+, Claude Code latest, Roadmap Viewer 1.0+.

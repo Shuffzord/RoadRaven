@@ -107,7 +107,13 @@ Errors are returned as MCP `isError: true` results with `Error (<code>): <messag
 
 ## Kill-Switch
 
-Users can disable the entire agent API while keeping the event-push API alive by editing their `.roadmap-settings.json`:
+Users can disable the entire agent API while keeping the event-push API alive by editing the app's `settings.json`:
+
+| Platform | Path |
+| --- | --- |
+| Windows | `%LOCALAPPDATA%\RoadRaven\settings.json` |
+| macOS | `~/Library/Application Support/RoadRaven/settings.json` |
+| Linux | `~/.config/RoadRaven/settings.json` (or `$XDG_CONFIG_HOME/RoadRaven/settings.json`) |
 
 ```json
 {
@@ -143,7 +149,7 @@ When set to `false`, every tool returns `agent_api_disabled`. The setting is hot
 - Make sure RoadRaven is running before invoking any tool.
 - Check the app's log file (platform log dir shown in the app status bar) if the Event API is unreachable despite the app being open.
 - The wrapper retries the sentinel file read up to 6 times (500 ms apart, 3 s total) to handle the race condition when the app is still starting up.
-- If you see `agent_api_disabled`, check your `.roadmap-settings.json` — the kill-switch is on.
+- If you see `agent_api_disabled`, check the app's `settings.json` (path table under [Kill-Switch](#kill-switch)) — `agentApi.enabled` is `false`.
 
 ## License
 

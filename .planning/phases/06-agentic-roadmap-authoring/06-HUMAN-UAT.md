@@ -70,7 +70,10 @@ In a Claude Code session, ask:
 
 ## Scenario 2 — Kill-switch
 
-1. Locate the app's `.roadmap-settings.json` (location: app's userData directory; logged at startup).
+1. Locate the app's `settings.json` in the platform userData directory:
+   - Windows: `%LOCALAPPDATA%\RoadRaven\settings.json` (e.g. `C:\Users\<you>\AppData\Local\RoadRaven\settings.json`)
+   - macOS: `~/Library/Application Support/RoadRaven/settings.json`
+   - Linux: `~/.config/RoadRaven/settings.json` (or `$XDG_CONFIG_HOME/RoadRaven/settings.json`)
 2. Edit the file, adding or modifying:
 
    ```json

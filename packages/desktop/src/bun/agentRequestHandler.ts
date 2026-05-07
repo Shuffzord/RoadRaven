@@ -84,7 +84,7 @@ export async function agentRequestHandler(
 			request.id,
 			"agent_api_disabled",
 			"Agent API is disabled in application settings.",
-			"Enable it in .roadmap-settings.json: agentApi.enabled = true",
+			"Enable it by setting agentApi.enabled = true in the app's settings.json (Windows: %LOCALAPPDATA%\\RoadRaven\\settings.json; macOS: ~/Library/Application Support/RoadRaven/settings.json; Linux: ~/.config/RoadRaven/settings.json).",
 		);
 		return;
 	}
