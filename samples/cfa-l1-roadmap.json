@@ -105,6 +105,20 @@
           "status": "not-started",
           "type": "milestone",
           "$ref": "./cfa-l1/topic-06-equity.json"
+        },
+        {
+          "id": "10000000-0000-4000-8000-000000000007",
+          "title": "Fixed Income (12.5%)",
+          "status": "not-started",
+          "type": "milestone",
+          "$ref": "./cfa-l1/topic-07-fi.json"
+        },
+        {
+          "id": "10000000-0000-4000-8000-000000000008",
+          "title": "Derivatives (6.5%)",
+          "status": "not-started",
+          "type": "milestone",
+          "$ref": "./cfa-l1/topic-08-derivatives.json"
         }
       ]
     }

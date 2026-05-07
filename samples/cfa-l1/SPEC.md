@@ -910,3 +910,225 @@ Required return / supporting concepts:
 
 **Difficulty calibration:** most leaves 2-3. H-model 3.
 EV/EBITDA adjustments 3. Justified P/E derivation 3-4.
+
+## 17. Coverage floor — Topic 07 Fixed Income
+
+**Hour budget (informational):** sum of leaf `estimated_hours` ∈ [40, 55].
+
+**Learning Modules (typically 10-12 phase nodes, canonical 2026 names):**
+- Fixed-Income Instrument Features
+- Fixed-Income Cash Flows and Types
+- Fixed-Income Issuance and Trading
+- Fixed-Income Markets for Corporate Issuers
+- Fixed-Income Markets for Government Issuers
+- Fixed-Income Bond Valuation: Prices and Yields
+- Yield and Yield Spread Measures for Fixed-Rate Bonds
+- Yield and Yield Spread Measures for Floating-Rate Instruments
+- The Term Structure of Interest Rates: Spot, Par, and Forward Curves
+- Interest Rate Risk and Return
+- Yield-Based Bond Duration Measures and Properties
+- Yield-Based Bond Convexity and Portfolio Properties
+- Curve-Based and Empirical Fixed-Income Risk Measures
+- Credit Risk
+- Credit Analysis for Government Issuers
+- Credit Analysis for Corporate Issuers
+- Fixed-Income Securitization
+- Asset-Backed Security (ABS) Instrument and Market Features
+- Mortgage-Backed Security (MBS) Instrument and Market Features
+
+(Trim/group LMs to actual 2026 LM count — typically 10-12 phases.)
+
+**Coverage floor (each item = its own task leaf):**
+
+Bond fundamentals:
+- Par value, Coupon rate (fixed vs floating — separate leaves), Maturity,
+  Currency denomination
+- Indenture, Affirmative covenants, Negative covenants (separate leaves)
+- Sources of bond returns (coupon, reinvestment, capital gain/loss)
+
+Bond classification:
+- Sovereign bonds — developed market, Sovereign bonds — emerging market
+  (separate leaves)
+- Supranational bonds, Agency / quasi-government, Municipal bonds,
+  Corporate bonds (separate leaves)
+- Investment-grade vs high-yield (separate leaves)
+- Secured vs unsecured, Senior vs subordinated (separate leaves)
+
+Special features / structures:
+- Callable bond, Putable bond, Convertible bond (3 separate leaves)
+- Sinking fund provision, Floating-rate notes, Inflation-linked bonds (TIPS),
+  Step-up notes, Deferred coupon bonds, Credit-linked notes,
+  Zero-coupon bonds (each its own leaf)
+
+Markets:
+- Auction process for government bonds, Primary dealers
+- OTC nature of bond markets
+- Repo market, Repo rate, Haircut, Reverse repo (each its own leaf)
+
+Securitization:
+- SPE/SPV structure
+- Asset-backed securities (ABS)
+- Mortgage-backed securities (MBS)
+- Tranching: senior/mezzanine/equity (subordination)
+- Prepayment risk, Extension risk, Contraction risk (3 separate leaves)
+- CDOs, CLOs (separate leaves)
+- MBS prepayment models (PSA)
+- Sequential pay tranches, Planned amortization class (PAC) tranches
+- Stripped MBS — IO and PO (separate leaves)
+
+Bond pricing:
+- Bond price as PV of cash flows
+- Spot rates, Forward rates, Par rates (3 separate leaves)
+- Bootstrapping spot curve from par yields
+- Z-spread, Option-Adjusted Spread (OAS), Asset swap spread
+  (3 separate leaves)
+- Flat (clean) price vs full (dirty) price, Accrued interest
+- Day count conventions (3 separate leaves): 30/360, Actual/Actual,
+  Actual/360
+
+Yield measures — EACH as own leaf:
+- Current yield, Yield-to-maturity, Yield-to-call, Yield-to-put,
+  Yield-to-worst, Effective annual yield, Bond equivalent yield,
+  Money market yield, Discount basis yield (T-bill),
+  Holding period yield, Total return
+
+Yield curve and term structure:
+- Spot curve, Par curve, Forward curve (3 separate leaves)
+- Term structure theories (4 separate leaves): Pure expectations,
+  Liquidity preference, Market segmentation, Preferred habitat
+- Yield curve shapes (4 separate leaves): Normal (upward), Inverted,
+  Flat, Humped
+
+Risk measures (duration & convexity):
+- Macaulay duration, Modified duration, Effective duration,
+  Key rate duration (4 separate leaves)
+- Convexity: Effective convexity, Modified convexity (separate leaves)
+- Money duration, Price value of basis point (PVBP/PV01) — separate leaves
+- Spread duration
+- Empirical duration vs analytical duration (separate leaves)
+- Bullet vs barbell portfolio (in context of duration matching)
+
+Credit risk:
+- Credit rating agencies (3 separate leaves): S&P, Moody's, Fitch
+- Rating scales — investment grade thresholds
+- Probability of default, Loss given default, Expected loss
+  (each its own leaf)
+- Credit spread, Credit migration risk
+- Structural models (Merton overview), Reduced-form models (overview)
+- Credit cycles, Sovereign credit risk vs corporate credit risk
+
+**Cross-topic prerequisites:**
+- Bond pricing depends on TVM (QM)
+- Spot/forward parity is reused in DER (forwards, swaps)
+- Credit spread analysis ties to Equity multipliers
+
+**Difficulty calibration:** most leaves 2-3. OAS interpretation 4.
+Empirical vs analytical duration 3. PSA prepayment model 3.
+Bootstrapping spot curve 3-4.
+
+## 18. Coverage floor — Topic 08 Derivatives
+
+**Hour budget (informational):** sum of leaf `estimated_hours` ∈ [20, 30].
+
+**Learning Modules (typically 5-7 phase nodes, canonical 2026 names):**
+- Derivative Instrument and Derivative Market Features
+- Forward Commitment and Contingent Claim Features and Instruments
+- Derivative Benefits, Risks, and Issuer and Investor Uses
+- Arbitrage, Replication, and the Cost of Carry in Pricing Derivatives
+- Pricing and Valuation of Forward Contracts and for an Underlying
+  with Varying Cash Flows
+- Pricing and Valuation of Futures Contracts
+- Pricing and Valuation of Interest Rates and Other Swaps
+- Pricing and Valuation of Options
+- Option Replication Using Put–Call Parity
+- Valuing a Derivative Using a One-Period Binomial Model
+
+(Trim/group LMs to actual 2026 LM count — typically 5-7 phases.)
+
+**Coverage floor (each item = its own task leaf):**
+
+Derivative basics:
+- Forward commitments vs contingent claims
+- Exchange-traded vs OTC derivatives
+- Linear vs non-linear payoffs
+- Hedger / speculator / arbitrageur (3 separate leaves)
+- Functions of derivatives in capital markets
+
+Forwards:
+- Forward contract definition and mechanics
+- Forward pricing (no-arbitrage / cash-and-carry)
+- Valuation between dates
+- Settlement: cash settlement, Settlement: physical settlement
+  (separate leaves)
+- Counterparty risk in forwards
+
+Futures:
+- Standardization features
+- Marking-to-market (daily settlement)
+- Initial margin, Maintenance margin, Variation margin (3 separate leaves)
+- Basis (cash − futures)
+- Contango, Backwardation (separate leaves)
+- Open interest, Convergence at expiration
+- Equity index futures, Interest rate futures, Currency futures,
+  Commodity futures (4 separate futures-category leaves)
+
+Forward rate agreements (FRA):
+- FRA mechanics, FRA pricing, FRA settlement formula (each its own leaf)
+
+Swaps:
+- Plain vanilla interest rate swap (fixed-for-floating)
+- Currency swap, Equity swap (separate leaves)
+- Swap as a portfolio of FRAs, Swap as a pair of bonds (separate leaves)
+- Swap pricing at inception (par swap), Swap valuation during life
+- Swap counterparty risk and clearing
+
+Options:
+- Call option, Put option (separate leaves)
+- American option, European option, Bermudan option (3 style leaves)
+- Moneyness: ITM, ATM, OTM (3 separate leaves)
+- Intrinsic value of an option, Time value of an option (separate leaves)
+- Payoff diagrams (4 separate leaves): long call, short call,
+  long put, short put
+- Profit diagrams (with premium netting, separate from payoff diagrams)
+
+Option price relationships:
+- Put-call parity, Put-call-forward parity (separate leaves)
+- Lower bound on European call, Upper bound on European call,
+  Lower bound on European put, Upper bound on European put
+  (4 separate bound leaves)
+- Effects of inputs on call/put price (S, X, T, r, sigma, dividends —
+  may be 1 grouped leaf or 2-3 leaves)
+
+Option pricing models:
+- One-period binomial pricing model
+- Multi-period binomial pricing model
+- Risk-neutral probability
+- Black-Scholes-Merton inputs (overview, no derivation): S, X, T, r,
+  sigma, dividends
+- BSM assumptions
+- Greeks at L1 overview (5 separate leaves): Delta, Gamma, Vega,
+  Theta, Rho
+
+Option strategies:
+- Protective put, Covered call, Collar (3 separate leaves)
+- Long straddle, Long strangle, Short straddle, Short strangle
+  (4 separate leaves)
+- Bull call spread, Bear put spread, Butterfly spread (3 separate leaves)
+
+Credit derivatives:
+- Credit Default Swap (CDS) mechanics
+- Single-name CDS, Index CDS (separate leaves)
+- CDS payoff and settlement
+
+Arbitrage relationships:
+- Cash-and-carry arbitrage, Reverse cash-and-carry arbitrage
+- Implied repo rate
+
+**Cross-topic prerequisites:**
+- Forward pricing depends on spot rates and TVM (FI, QM)
+- BSM inputs include sigma — variance from descriptive statistics (QM)
+- Hedging uses duration (FI)
+
+**Difficulty calibration:** most leaves 2-3. Swap valuation between
+dates 4. Option strategies (multi-leg) 3. Binomial pricing 3.
+Greeks interpretation 3.
