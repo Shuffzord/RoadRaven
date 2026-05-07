@@ -34,6 +34,10 @@ export interface AppSettings {
 		/** User-specified WebSocket port override. When set, no auto-fallback on EADDRINUSE. */
 		port?: number;
 	};
+	agentApi?: {
+		/** RESEARCH §13 (kill-switch — Phase 6). When false, all agent mutation/read tools return code 'agent_api_disabled' before any tool dispatch. */
+		enabled?: boolean;
+	};
 }
 
 // -- Zod-inferred types from @roadraven/core --------------------------------
@@ -116,6 +120,26 @@ export type RoadmapRPCType = {
 					connectedCount: number;
 					errorMessage: string | null;
 				};
+			};
+			/**
+			 * D-15/D-16: Phase 6 agent dispatcher. Bun forwards inbound WS `type:'request'` frames
+			 * here; the renderer routes the tool string to the appropriate roadmapStore action and
+			 * returns the structured result. Keeping ONE entry (vs 17) keeps RoadmapRPCType lean.
+			 */
+			agentRequest: {
+				params: {
+					tool: string;
+					args: Record<string, unknown>;
+				};
+				response:
+					| { ok: true; data: unknown }
+					| {
+							ok: false;
+							error: string;
+							code: string;
+							hint?: string;
+							data?: unknown;
+					  };
 			};
 		};
 		messages: {
