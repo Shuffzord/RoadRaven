@@ -9,7 +9,6 @@ allowed-tools:
   - Glob
   - Grep
   - AskUserQuestion
-  - Task
   - Agent
 ---
 <objective>
@@ -41,6 +40,6 @@ Project context, phase list, and state are resolved inside the workflow using in
 </context>
 
 <process>
-Execute the autonomous workflow from @C:/Work/RoadRaven/.claude/get-shit-done/workflows/autonomous.md end-to-end.
+Execute end-to-end.
 Preserve all workflow gates (phase discovery, per-phase execution, blocker handling, progress display).
 </process>

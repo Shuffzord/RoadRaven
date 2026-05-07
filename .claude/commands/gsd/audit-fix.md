@@ -29,5 +29,5 @@ Flags:
 </execution_context>
 
 <process>
-Execute the audit-fix workflow from @C:/Work/RoadRaven/.claude/get-shit-done/workflows/audit-fix.md end-to-end.
+Execute end-to-end.
 </process>

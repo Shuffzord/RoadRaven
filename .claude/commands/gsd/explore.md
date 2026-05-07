@@ -7,7 +7,7 @@ allowed-tools:
   - Bash
   - Grep
   - Glob
-  - Task
+  - Agent
   - AskUserQuestion
 ---
 <objective>
@@ -23,5 +23,5 @@ Accepts an optional topic argument: `/gsd-explore authentication strategy`
 </execution_context>
 
 <process>
-Execute the explore workflow from @C:/Work/RoadRaven/.claude/get-shit-done/workflows/explore.md end-to-end.
+Execute end-to-end.
 </process>

@@ -49,7 +49,7 @@ Before planning, discover project context:
 </project_context>
 
 <context_fidelity>
-## User Decision Fidelity
+## CRITICAL: User Decision Fidelity
 
 The orchestrator provides user decisions in `<user_decisions>` tags from `/gsd-discuss-phase`.
 
@@ -73,7 +73,7 @@ The orchestrator provides user decisions in `<user_decisions>` tags from `/gsd-d
 </context_fidelity>
 
 <scope_reduction_prohibition>
-## Never Simplify User Decisions — Split Instead
+## CRITICAL: Never Simplify User Decisions — Split Instead
 
 **PROHIBITED language/patterns in task actions:**
 - "v1", "v2", "simplified version", "static for now", "hardcoded for now"
@@ -94,11 +94,11 @@ Do NOT silently omit features. Instead:
 3. The orchestrator presents the split to the user for approval
 4. After approval, plan each sub-phase within budget
 
-## Multi-Source Coverage Audit
+## Multi-Source Coverage Audit (MANDATORY in every plan set)
 
 @C:/Work/RoadRaven/.claude/get-shit-done/references/planner-source-audit.md for full format, examples, and gap-handling rules.
 
-Perform this audit for every plan set before finalizing. Check all four source types: **GOAL** (ROADMAP phase goal), **REQ** (phase_req_ids from REQUIREMENTS.md), **RESEARCH** (RESEARCH.md features/constraints), **CONTEXT** (D-XX decisions from CONTEXT.md).
+Audit ALL four source types before finalizing: **GOAL** (ROADMAP phase goal), **REQ** (phase_req_ids from REQUIREMENTS.md), **RESEARCH** (RESEARCH.md features/constraints), **CONTEXT** (D-XX decisions from CONTEXT.md).
 
 Every item must be COVERED by a plan. If ANY item is MISSING → return `## ⚠ Source Audit: Unplanned Items Found` to the orchestrator with options (add plan / split phase / defer with developer confirmation). Never finalize silently with gaps.
 
@@ -160,7 +160,7 @@ Plan -> Execute -> Ship -> Learn -> Repeat
 
 ## Mandatory Discovery Protocol
 
-Discovery is required unless you can prove current context exists.
+Discovery is MANDATORY unless you can prove current context exists.
 
 **Level 0 - Skip** (pure internal work, existing patterns only)
 - ALL work follows established codebase patterns (grep confirms)
@@ -302,6 +302,35 @@ This prevents the "scavenger hunt" anti-pattern where executors explore the code
 
 Exceptions where `tdd="true"` is not needed: `type="checkpoint:*"` tasks, configuration-only files, documentation, migration scripts, glue code wiring existing tested components, styling-only changes.
 
+## MVP Mode Detection
+
+**When `MVP_MODE` is enabled (passed by the plan-phase orchestrator):** Decompose tasks as **vertical feature slices**, not horizontal layers. Required reading: `@C:/Work/RoadRaven/.claude/get-shit-done/references/planner-mvp-mode.md` (loaded conditionally by the orchestrator).
+
+**Core rule:** After each task completes, a real user can do something they could not do after the previous task. If a task only "lays foundation," it is horizontal disguised as vertical — restructure.
+
+**Plan structure under MVP_MODE:**
+
+1. Frame the phase goal as a user story at the top of `PLAN.md`. The user story is sourced from the `**Goal:**` line in ROADMAP.md (set by `mvp-phase`). Emit it with bolded keywords:
+
+   ```
+   ## Phase Goal
+
+   **As a** [user role], **I want to** [capability], **so that** [outcome].
+   ```
+
+   Format rules from `@C:/Work/RoadRaven/.claude/get-shit-done/references/user-story-template.md`:
+   - All three slots required. If the ROADMAP `**Goal:**` line is not in user-story format, surface the discrepancy and ask the user to run `/gsd mvp-phase ${PHASE}` first — do not invent a story.
+   - Bold the three keywords (`**As a**`, `**I want to**`, `**so that**`) when emitting to PLAN.md. The ROADMAP form does not use bolded keywords; the PLAN form does.
+2. First task: failing end-to-end test for the happy path.
+3. Second task: thinnest UI → API → DB slice that makes the test pass (stubs allowed for non-critical branches).
+4. Third+ tasks: replace stubs with real implementations, add validation, error states, polish.
+
+**Mode is all-or-nothing per phase** (PRD decision Q1). Do not produce a plan that mixes vertical-slice tasks with horizontal layer tasks within the same phase.
+
+**Walking Skeleton mode** (`WALKING_SKELETON=true`, set by orchestrator for Phase 1 + new project under `--mvp`): The first deliverable is a Walking Skeleton — the thinnest possible end-to-end stack. In addition to `PLAN.md`, produce `SKELETON.md` using the template at `@C:/Work/RoadRaven/.claude/get-shit-done/references/skeleton-template.md`. `SKELETON.md` records architectural decisions (framework, DB, auth, deployment, directory layout) that subsequent phases will build on without renegotiating.
+
+**Compatibility with TDD detection:** When both `MVP_MODE=true` and `workflow.tdd_mode=true`, every behavior-adding task uses `tdd="true"` and a `<behavior>` block, AND the task ordering follows the vertical-slice structure above. The first task is always a failing end-to-end test.
+
 ## User Setup Detection
 
 For tasks involving external services, identify human-required configuration:
@@ -362,7 +391,7 @@ Plans should complete within ~50% context (not 80%). No context anxiety, quality
 
 ## Split Signals
 
-**Split if any of these apply:**
+**ALWAYS split if:**
 - More than 3 tasks
 - Multiple subsystems (DB + API + UI = separate plans)
 - Any task with >5 file modifications
@@ -477,7 +506,7 @@ After completion, create `.planning/phases/XX-name/{phase}-{plan}-SUMMARY.md`
 | `depends_on` | Yes | Plan IDs this plan requires |
 | `files_modified` | Yes | Files this plan touches |
 | `autonomous` | Yes | `true` if no checkpoints |
-| `requirements` | Yes | Requirement IDs from ROADMAP. Every roadmap requirement ID MUST appear in at least one plan. |
+| `requirements` | Yes | **MUST** list requirement IDs from ROADMAP. Every roadmap requirement ID MUST appear in at least one plan. |
 | `user_setup` | No | Human-required setup items |
 | `must_haves` | Yes | Goal-backward verification criteria |
 
@@ -582,7 +611,7 @@ Only include what Claude literally cannot do.
 ## The Process
 
 **Step 0: Extract Requirement IDs**
-Read ROADMAP.md `**Requirements:**` line for this phase. Strip brackets if present (e.g., `[AUTH-01, AUTH-02]` → `AUTH-01, AUTH-02`). Distribute requirement IDs across plans — each plan's `requirements` frontmatter field lists the IDs its tasks address. Every requirement ID MUST appear in at least one plan. Plans with an empty `requirements` field are invalid.
+Read ROADMAP.md `**Requirements:**` line for this phase. Strip brackets if present (e.g., `[AUTH-01, AUTH-02]` → `AUTH-01, AUTH-02`). Distribute requirement IDs across plans — each plan's `requirements` frontmatter field MUST list the IDs its tasks address. **CRITICAL:** Every requirement ID MUST appear in at least one plan. Plans with an empty `requirements` field are invalid.
 
 **Security (when `security_enforcement` enabled — absent = enabled):** Identify trust boundaries in this phase's scope. Map STRIDE categories to applicable tech stack from RESEARCH.md security domain. For each threat: assign disposition (mitigate if ASVS L1 requires it, accept if low risk, transfer if third-party). Every plan MUST include `<threat_model>` when security_enforcement is enabled.
 
@@ -814,7 +843,7 @@ Extract from init JSON: `planner_model`, `researcher_model`, `checker_model`, `c
 
 Also load planning state (position, decisions, blockers) via the SDK — **use `node` to invoke the CLI** (not `npx`):
 ```bash
-node ./node_modules/@gsd-build/sdk/dist/cli.js query state.load 2>/dev/null
+gsd-sdk query state.load 2>/dev/null
 ```
 If the SDK is not installed under `node_modules`, use the same `query state.load` argv with your local `gsd-sdk` CLI on `PATH`.
 
@@ -1056,9 +1085,9 @@ Present breakdown with wave structure. Wait for confirmation in interactive mode
 <step name="write_phase_prompt">
 Use template structure for each PLAN.md.
 
-Use the Write tool to create files — never use `Bash(cat << 'EOF')` or heredoc commands for file creation.
+**ALWAYS use the Write tool to create files** — never use `Bash(cat << 'EOF')` or heredoc commands for file creation.
 
-**File naming convention (enforced):**
+**CRITICAL — File naming convention (enforced):**
 
 The filename MUST follow the exact pattern: `{padded_phase}-{NN}-PLAN.md`
 

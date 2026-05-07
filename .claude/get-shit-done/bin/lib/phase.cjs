@@ -50,6 +50,17 @@ function describeNonCanonicalPlans(dirFiles, matchedFiles) {
   );
 }
 
+function extractCanonicalPlanId(filename) {
+  const base = filename.replace(/-PLAN\.md$/i, '').replace(/-SUMMARY\.md$/i, '').replace(/\.md$/i, '');
+  const parts = base.split('-').filter(Boolean);
+  const tokenRe = /^\d+[A-Z]?(?:\.\d+)*$/i;
+  const phaseIdx = parts.findIndex(p => tokenRe.test(p));
+  if (phaseIdx >= 0 && phaseIdx + 1 < parts.length && tokenRe.test(parts[phaseIdx + 1])) {
+    return `${parts[phaseIdx]}-${parts[phaseIdx + 1]}`;
+  }
+  return base;
+}
+
 function cmdPhasesList(cwd, options, raw) {
   const phasesDir = path.join(planningDir(cwd), 'phases');
   const { type, phase, includeArchived } = options;
@@ -201,48 +212,64 @@ function cmdFindPhase(cwd, phase, raw) {
     error('phase identifier required');
   }
 
-  const phasesDir = path.join(planningDir(cwd), 'phases');
+  const planBase = planningDir(cwd);
   const normalized = normalizePhaseName(phase);
+  const notFound = { found: false, directory: null, phase_number: null, phase_name: null, plans: [], summaries: [], searched_directories: [] };
 
-  const notFound = { found: false, directory: null, phase_number: null, phase_name: null, plans: [], summaries: [] };
-
+  // Build candidate search dirs: flat layout first, then milestone-archive layout.
+  const searchDirs = [];
+  const flatPhasesDir = path.join(planBase, 'phases');
+  if (fs.existsSync(flatPhasesDir)) searchDirs.push(flatPhasesDir);
   try {
-    const entries = fs.readdirSync(phasesDir, { withFileTypes: true });
-    const dirs = entries.filter(e => e.isDirectory()).map(e => e.name).sort((a, b) => comparePhaseNum(a, b));
-
-    const match = dirs.find(d => phaseTokenMatches(d, normalized));
-    if (!match) {
-      output(notFound, raw, '');
-      return;
+    const milestonesDir = path.join(planBase, 'milestones');
+    const entries = fs.readdirSync(milestonesDir, { withFileTypes: true })
+      .filter(e => e.isDirectory() && /^v\d+.*-phases$/.test(e.name))
+      .sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
+    for (const e of entries) {
+      searchDirs.push(path.join(milestonesDir, e.name));
     }
+  } catch { /* no milestones dir */ }
 
-    // Extract phase number — supports project-code-prefixed (CK-01-name), numeric (01-name), and custom IDs
-    const dirMatch = match.match(/^(?:[A-Z]{1,6}-)(\d+[A-Z]?(?:\.\d+)*)-?(.*)/i)
-      || match.match(/^(\d+[A-Z]?(?:\.\d+)*)-?(.*)/i);
-    const phaseNumber = dirMatch ? dirMatch[1] : normalized;
-    const phaseName = dirMatch && dirMatch[2] ? dirMatch[2] : null;
+  notFound.searched_directories = searchDirs.map((searchDir) =>
+    toPosixPath(path.join(path.relative(cwd, planBase), path.relative(planBase, searchDir))));
 
-    const phaseDir = path.join(phasesDir, match);
-    const phaseFiles = fs.readdirSync(phaseDir);
-    const plans = phaseFiles.filter(isCanonicalPlanFile).sort();
-    const summaries = phaseFiles.filter(f => f.endsWith('-SUMMARY.md') || f === 'SUMMARY.md').sort();
-    // #2893 — same diagnostic as phase-plan-index for consistency.
-    const planNamingWarning = describeNonCanonicalPlans(phaseFiles, plans);
+  for (const searchDir of searchDirs) {
+    try {
+      const entries = fs.readdirSync(searchDir, { withFileTypes: true });
+      const dirs = entries.filter(e => e.isDirectory()).map(e => e.name).sort((a, b) => comparePhaseNum(a, b));
 
-    const result = {
-      found: true,
-      directory: toPosixPath(path.join(path.relative(cwd, planningDir(cwd)), 'phases', match)),
-      phase_number: phaseNumber,
-      phase_name: phaseName,
-      plans,
-      summaries,
-    };
-    if (planNamingWarning) result.warning = planNamingWarning;
+      const match = dirs.find(d => phaseTokenMatches(d, normalized));
+      if (!match) continue;
 
-    output(result, raw, result.directory);
-  } catch {
-    output(notFound, raw, '');
+      // Extract phase number — supports project-code-prefixed (CK-01-name), numeric (01-name), and custom IDs
+      const dirMatch = match.match(/^(?:[A-Z]{1,6}-)(\d+[A-Z]?(?:\.\d+)*)-?(.*)/i)
+        || match.match(/^(\d+[A-Z]?(?:\.\d+)*)-?(.*)/i);
+      const phaseNumber = dirMatch ? dirMatch[1] : normalized;
+      const phaseName = dirMatch && dirMatch[2] ? dirMatch[2] : null;
+
+      const phaseDir = path.join(searchDir, match);
+      const phaseFiles = fs.readdirSync(phaseDir);
+      const plans = phaseFiles.filter(isCanonicalPlanFile).sort();
+      const summaries = phaseFiles.filter(f => f.endsWith('-SUMMARY.md') || f === 'SUMMARY.md').sort();
+      // #2893 — same diagnostic as phase-plan-index for consistency.
+      const planNamingWarning = describeNonCanonicalPlans(phaseFiles, plans);
+
+      const result = {
+        found: true,
+        directory: toPosixPath(path.join(path.relative(cwd, planBase), path.relative(planBase, searchDir), match)),
+        phase_number: phaseNumber,
+        phase_name: phaseName,
+        plans,
+        summaries,
+      };
+      if (planNamingWarning) result.warning = planNamingWarning;
+
+      output(result, raw, result.directory);
+      return;
+    } catch { continue; }
   }
+
+  output(notFound, raw, '');
 }
 
 function extractObjective(content) {
@@ -288,7 +315,11 @@ function cmdPhasePlanIndex(cwd, phase, raw) {
 
   // Build set of plan IDs with summaries
   const completedPlanIds = new Set(
-    summaryFiles.map(s => s.replace('-SUMMARY.md', '').replace('SUMMARY.md', ''))
+    summaryFiles.flatMap(s => {
+      const exact = s.replace('-SUMMARY.md', '').replace('SUMMARY.md', '');
+      const canonical = extractCanonicalPlanId(s);
+      return canonical === exact ? [exact] : [exact, canonical];
+    })
   );
 
   const plans = [];
@@ -327,7 +358,7 @@ function cmdPhasePlanIndex(cwd, phase, raw) {
       filesModified = Array.isArray(fmFiles) ? fmFiles : [fmFiles];
     }
 
-    const hasSummary = completedPlanIds.has(planId);
+    const hasSummary = completedPlanIds.has(planId) || completedPlanIds.has(extractCanonicalPlanId(planFile));
     if (!hasSummary) {
       incomplete.push(planId);
     }
@@ -556,6 +587,10 @@ function cmdPhaseInsert(cwd, afterPhase, description, raw) {
     const afterPhaseEscaped = unpadded.replace(/\./g, '\\.');
     const targetPattern = new RegExp(`#{2,4}\\s*Phase\\s+0*${afterPhaseEscaped}:`, 'i');
     if (!targetPattern.test(content)) {
+      const checklistPattern = new RegExp(`-\\s*\\[[ x]\\]\\s*\\*\\*Phase\\s+0*${afterPhaseEscaped}:`, 'i');
+      if (checklistPattern.test(content)) {
+        error(`Phase ${afterPhase} exists in roadmap summary but is missing a detail section (### Phase ${afterPhase}: ...).`);
+      }
       error(`Phase ${afterPhase} not found in ROADMAP.md`);
     }
 
