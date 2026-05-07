@@ -24,7 +24,12 @@ export const VALID_STATUSES = new Set([
 	"blocked",
 ]);
 
-export const VALID_TYPES = new Set([
+// Type is z.string().optional() in the Zod schema — any non-empty string is
+// valid. Convention so far uses project/milestone/phase/plan/task/gate/research,
+// but new types may appear via typeConfig overrides. We don't enforce a fixed
+// set; we only check that the value is a non-empty string when present.
+export const KNOWN_TYPES = new Set([
+	"project",
 	"milestone",
 	"phase",
 	"plan",
@@ -115,7 +120,9 @@ export function validateRoadmapFile(filePath) {
 				result.errors.push(`missing_top_level_field: ${f}`);
 		}
 		const baseDir = dirname(filePath);
-		for (const node of data.nodes) {
+		// Count $ref at any depth, not just top-level. RoadRaven supports
+		// $ref-stub children (typical pattern: 1 root project + N $ref children).
+		const checkRef = (node) => {
 			if (node.$ref) {
 				result.stats.refsFound++;
 				const refAbs = resolve(baseDir, node.$ref);
@@ -125,6 +132,9 @@ export function validateRoadmapFile(filePath) {
 					result.errors.push(`ref_target_missing: ${node.$ref}`);
 				}
 			}
+		};
+		for (const node of data.nodes) {
+			walkNodes(node, checkRef);
 			validateNodeTree(node, result);
 		}
 	} else {
@@ -151,9 +161,14 @@ function validateNodeTree(root, result) {
 		if (n.status && !VALID_STATUSES.has(n.status)) {
 			result.errors.push(`invalid_status:${n.status} on ${n.id ?? "?"}`);
 		}
-		// Type whitelist
-		if (n.type && !VALID_TYPES.has(n.type)) {
-			result.errors.push(`invalid_type:${n.type} on ${n.id ?? "?"}`);
+		// Type: Zod accepts any non-empty string. Surface unknown types as
+		// info-level warnings (might be a typo, might be a new convention).
+		if (n.type !== undefined && n.type !== null) {
+			if (typeof n.type !== "string" || n.type.length === 0) {
+				result.errors.push(`invalid_type:${n.type} on ${n.id ?? "?"}`);
+			} else if (!KNOWN_TYPES.has(n.type)) {
+				result.warnings.push(`unknown_type:${n.type} on ${n.id ?? "?"}`);
+			}
 		}
 		// ID uniqueness
 		if (n.id) {

@@ -202,13 +202,13 @@ Apply the master prompt's standard verbatim:
 - **Formulas**: plain text, no LaTeX. Greek letters spelled out (sigma, beta).
 - **Standards**: full notation — IFRS 15, IAS 36, ASC 842, ASC 606.
 
-## 7. Output file shape
+## 7. Output file shape — both subtree AND envelope are valid
 
 Each topic agent writes ONE file: `samples/cfa-l1/topic-{TT}-{slug}.json`.
 
-The file contains a SINGLE JSON object — the milestone node with all its
-descendants. Example skeleton:
+**Two shapes are accepted by the RoadRaven `$ref` resolver:**
 
+(A) Subtree shape — single milestone-node at root:
 ```json
 {
   "id": "cfa01000-0000-4000-8000-000000000000",
@@ -223,8 +223,36 @@ descendants. Example skeleton:
 }
 ```
 
-Do NOT wrap in `{"nodes":[...]}` or any other envelope. The merger will
-collect 10 milestone objects into the final roadmap.
+(B) Envelope shape — RoadmapSchema with `nodes: [<milestone>]`:
+```json
+{
+  "version": "1.0",
+  "title": "<topic name>",
+  "themeConfig": { ... },          // optional but harmless
+  "statusConfig": [ ... ],         // optional but harmless
+  "typeConfig": [ ... ],           // optional but harmless
+  "nodes": [
+    {
+      "id": "cfa01000-...",
+      "type": "milestone",
+      ...
+      "children": [ ... ]
+    }
+  ]
+}
+```
+
+**Why both work:** `resolveRefsWithOwnership` does
+`parsed.nodes ?? [parsed]` — if the file has `nodes`, it pulls them; if
+not, it wraps the whole object as a single node.
+
+**Which one to write:** prefer (A) subtree. RoadRaven will rewrite the
+file to (B) envelope on the next save (see `splitSchemaByOwnership` in
+`packages/desktop/src/bun/refMap.ts`), so don't fight that flow — both
+shapes round-trip identically.
+
+The validator (`scripts/validate-roadmap.mjs`) accepts both; you'll see
+`shape: subtree` or `shape: entry` in its output but neither is an error.
 
 ## 8. Validation gate (1-shot rule — no retry loop)
 
@@ -270,6 +298,9 @@ later step.
   exists.** If your target file already has rich notes, common_pitfalls,
   and suggested_resources, you may keep them. Don't regenerate prose
   unless you have a concrete improvement.
+
+  Note: subtree vs envelope file shape is not a hard constraint
+  (see §7). Both pass validation and round-trip through RoadRaven save.
 
 ## 9. Coverage minimums (per-topic)
 
@@ -367,6 +398,87 @@ methodology may be 3. Decision-making framework 2.
 
 **Estimated hours per leaf:** typically 0.5-2.0h for Standards (memorization
 heavy). Some short ones (e.g. VII-B reference rules) may be 0.25-0.5.
+
+## 12. Coverage floor — Topic 02 Quantitative Methods
+
+**Hour budget (informational):** sum of leaf `estimated_hours` ∈ [30, 40].
+
+**Learning Modules (10-12 phase nodes, canonical 2026 names):**
+- Rates and Returns
+- The Time Value of Money in Finance
+- Statistical Measures of Asset Returns
+- Probability Trees and Conditional Expectations
+- Portfolio Mathematics
+- Simulation Methods
+- Estimation and Inference
+- Hypothesis Testing
+- Parametric and Non-Parametric Tests of Independence
+- Simple Linear Regression
+- Introduction to Big Data Techniques
+
+**Coverage floor (each item = its own task leaf):**
+
+Time Value of Money:
+- FV (lump sum), PV (lump sum), Annuity (ordinary), Annuity due,
+  Perpetuity, Growing annuity, Growing perpetuity, Solving for r,
+  Solving for n, Stated vs effective annual rate, Continuous compounding.
+
+Returns (each as own leaf):
+- Holding period return, Arithmetic mean return, Geometric mean return,
+  Harmonic mean return, Money-weighted return (IRR), Time-weighted return,
+  Gross vs net return, Pre-tax vs after-tax return, Real vs nominal return,
+  Leveraged return.
+
+Descriptive statistics:
+- Mean (separate from median, mode), Median, Mode, Range, Mean absolute
+  deviation, Variance, Standard deviation, Skewness, Kurtosis,
+  Coefficient of variation, Box plot, Percentiles, Quartiles, Deciles.
+
+Probability:
+- Unconditional probability, Conditional probability, Joint probability,
+  Total probability rule, Bayes' theorem, Combinations, Permutations,
+  Multinomial.
+
+Distributions (each as own leaf):
+- Discrete uniform, Bernoulli, Binomial, Continuous uniform,
+  Normal distribution, Lognormal distribution, Student's t,
+  Chi-square, F-distribution, Standard normal (z-distribution),
+  z-score and confidence intervals.
+
+Sampling and estimation:
+- Simple random sampling, Stratified random sampling, Cluster sampling,
+  Systematic sampling, Sampling distribution, Central limit theorem,
+  Standard error, Point estimate vs interval estimate,
+  t-distribution vs z-distribution selection.
+
+Hypothesis testing:
+- Null vs alternative hypothesis, Type I vs Type II error, p-value,
+  One-tailed vs two-tailed test, t-test for single mean,
+  t-test for difference of means (paired/unpaired),
+  Chi-square test for variance, F-test for variance ratio,
+  Parametric vs non-parametric tests.
+
+Regression and correlation:
+- Simple linear regression model, Assumptions of linear regression,
+  Consequences of assumption violations, R-squared,
+  Standard error of estimate, F-statistic,
+  t-statistic for coefficients, Confidence interval for predicted value,
+  Multiple regression basics, Pearson correlation coefficient,
+  Spearman rank correlation, Correlation vs causation.
+
+Simulation, Big Data, Fintech:
+- Monte Carlo simulation overview, Bootstrap resampling, Big data basics,
+  Machine learning concepts (supervised / unsupervised / deep learning at
+  L1 overview level), Fintech overview, Robo-advisors.
+
+**Cross-topic prerequisites to surface in `metadata.prerequisites`:**
+- TVM concepts are prereqs for every DCF model (Equity, FI, CI, AI, PM)
+- Regression is prereq for beta estimation (CI, PM)
+- Descriptive statistics is prereq for portfolio risk measures (PM)
+- Probability distributions is prereq for VaR (PM)
+
+**Difficulty calibration:** most leaves 2-3. Bayes' theorem 3.
+Regression assumption violations 3-4. Hypothesis testing nuances 3.
 
 ## 10. NO OUTPUT BUT THE FILE
 

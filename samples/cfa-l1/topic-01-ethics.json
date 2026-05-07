@@ -34,6 +34,10 @@
   ],
   "typeConfig": [
     {
+      "id": "project",
+      "label": "Exam"
+    },
+    {
       "id": "milestone",
       "label": "Topic Area"
     },
