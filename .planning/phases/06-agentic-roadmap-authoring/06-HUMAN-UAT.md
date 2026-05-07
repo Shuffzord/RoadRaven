@@ -147,17 +147,21 @@ Pre-condition: a roadmap with at least one non-root node `X` that has at least o
 
 ## Sign-off
 
-- [ ] Scenario 1 passed
-- [ ] Scenario 2 passed
-- [ ] Scenario 3 passed
-- [ ] Scenario 4 passed
-- [ ] Scenario 5 passed
-- [ ] Scenario 6 passed
-- [ ] Scenario 7 passed
+- [x] Scenario 1 passed
+- [x] Scenario 2 passed
+- [x] Scenario 3 passed
+- [x] Scenario 4 passed
+- [x] Scenario 5 passed
+- [x] Scenario 6 passed
+- [x] Scenario 7 passed
 
-**Tester:** ____________________
-**Date:** ____________________
+**Tester:** analizagpw
+**Date:** 2026-05-07
 **Notes:**
+
+- Pre-flight: discovered `plugins/claude-code/dist/index.js` was stale (April 28 build, only 2 tools). Rebuilt with `bun run build` so the MCP host loaded the full 19-tool surface. Restart of the MCP host required for changes to take effect.
+- Scenario 2: original docs and runtime hint pointed at `.roadmap-settings.json`; the actual settings file is `settings.json` in the platform userData directory. Fixed in commit `5198a08` (agentRequestHandler error hint, README kill-switch section + troubleshooting, this UAT script). Confirmed working with `agent_api_disabled` returned and the corrected hint visible to the agent.
+- All other scenarios passed verbatim against the script.
 
 <!--
 If any scenario fails, document:

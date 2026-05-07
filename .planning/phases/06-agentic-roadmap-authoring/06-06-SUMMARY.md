@@ -2,7 +2,7 @@
 phase: 06-agentic-roadmap-authoring
 plan: 06
 subsystem: agent-api
-status: partial
+status: complete
 tags:
   - e2e
   - documentation
@@ -198,12 +198,11 @@ No new threat surface introduced beyond the threat_model already declared in the
 - **T-06-06-02 (UAT script not signed → ambiguous release readiness)** — mitigated; sign-off block has tester name + date + notes + 7-checkbox checklist. The orchestrator's checkpoint resume signal requires "approved" reply quoting the sign-off.
 - **T-06-06-03 (E2E test mocks the wire and could mask a real wire-up bug)** — mitigated; the test drives the renderer dispatcher (the brain) directly; transport + Bun gate are tested in 06-02/06-03 with their own contract tests. The combination + the manual UAT (7 scenarios end-to-end through a real Claude Code session) covers the full wire end-to-end.
 
-## Awaiting
+## UAT Sign-off
 
-**Human tester sign-off on 06-HUMAN-UAT.md.** When the tester replies "approved" with the filled-in sign-off block (or describes failures), the orchestrator will:
+Tester: analizagpw — 2026-05-07 — all 7 scenarios passed.
 
-1. Commit the signed-off `06-HUMAN-UAT.md` with `docs(06-06): record Phase 6 UAT sign-off`.
-2. Update this SUMMARY's `status` from `partial` to `complete` and re-record the sign-off in the Tasks Completed table.
-3. Advance STATE.md / ROADMAP.md to mark Phase 6 complete.
-4. Mark `PLUG-AGENT-SAFETY-02`, `PLUG-AGENT-CREATE-01`, `PLUG-AGENT-CREATE-02`, `PLUG-AGENT-FILE-01` complete in REQUIREMENTS.md.
-5. Hand off to `/gsd-verify-work 06`.
+Two pre-flight findings during UAT:
+
+1. **Stale plugin dist** — `plugins/claude-code/dist/index.js` was the April 28 (Phase 4) build, exposing only `getEventApiStatus` + `updateNodeStatus`. Plan 06-05 updated `src/server.ts` to 19 tools but the bundle was never rebuilt. Resolved by running `bun run build` in `plugins/claude-code/`. The dist directory is gitignored, so future contributors hitting this need to rebuild after pulling — worth a follow-up todo to either auto-rebuild on `dev` or commit the dist artifact.
+2. **Settings filename mismatch** — runtime hint, README, and UAT script all said `.roadmap-settings.json`; the actual file is `settings.json` in the platform userData directory. Fixed in commit `5198a08` (agentRequestHandler error hint with full platform paths, README kill-switch table, UAT Scenario 2 platform paths, this SUMMARY's Kill-Switch line).
