@@ -91,6 +91,20 @@
           "status": "not-started",
           "type": "milestone",
           "$ref": "./cfa-l1/topic-04-fsa.json"
+        },
+        {
+          "id": "10000000-0000-4000-8000-000000000005",
+          "title": "Corporate Issuers (7.5%)",
+          "status": "not-started",
+          "type": "milestone",
+          "$ref": "./cfa-l1/topic-05-corp-issuers.json"
+        },
+        {
+          "id": "10000000-0000-4000-8000-000000000006",
+          "title": "Equity Investments (12.5%)",
+          "status": "not-started",
+          "type": "milestone",
+          "$ref": "./cfa-l1/topic-06-equity.json"
         }
       ]
     }
