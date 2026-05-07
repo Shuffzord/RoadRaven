@@ -1,0 +1,17 @@
+{
+  "id": "cfa100000-0000-4000-8000-000000000000",
+  "title": "Portfolio Management",
+  "status": "not-started",
+  "type": "milestone",
+  "notes": "# Portfolio Management\n\nObszar Portfolio Management na CFA L1 obejmuje fundamenty teorii portfela (MPT, CAPM, mean-variance), proces inwestycyjny (IPS, alokacja aktywów, rebalancing), pomiary wyników (Sharpe, Treynor, M-squared, Jensen, Information Ratio), zarządzanie ryzykiem (VaR, stress testing) oraz fintech w investment management. Materiał integruje statystykę z QM (mean, variance, correlation, regression) z praktyką alokacji kapitału dla różnych typów inwestorów.\n\n**Exam weight (mid-point):** 10.0%\n**Learning Modules:** 8\n**Estimated study time:** 25-35h",
+  "createdAt": "2026-05-06T00:00:00Z",
+  "updatedAt": "2026-05-06T00:00:00Z",
+  "metadata": {
+    "topic_number": "10",
+    "topic_name": "Portfolio Management",
+    "exam_weight_share": 10.0,
+    "lm_count": 8,
+    "estimated_hours_total": 30.5
+  },
+  "children": []
+}

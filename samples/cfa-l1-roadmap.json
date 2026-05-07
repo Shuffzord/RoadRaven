@@ -1,0 +1,62 @@
+{
+  "version": "1.0",
+  "title": "CFA Level I 2026 — Roadmapa Egzaminacyjna",
+  "themeConfig": {
+    "statusColors": {
+      "not-started": "#6b7280",
+      "in-progress": "#3b82f6",
+      "completed": "#22c55e",
+      "blocked": "#ef4444"
+    },
+    "nodeRadius": 8
+  },
+  "statusConfig": [
+    {
+      "id": "not-started",
+      "label": "Nie zaczęte",
+      "color": "#6b7280"
+    },
+    {
+      "id": "in-progress",
+      "label": "W trakcie",
+      "color": "#3b82f6"
+    },
+    {
+      "id": "completed",
+      "label": "Ukończone",
+      "color": "#22c55e"
+    },
+    {
+      "id": "blocked",
+      "label": "Zablokowane",
+      "color": "#ef4444"
+    }
+  ],
+  "typeConfig": [
+    {
+      "id": "milestone",
+      "label": "Topic Area"
+    },
+    {
+      "id": "phase",
+      "label": "Learning Module"
+    },
+    {
+      "id": "plan",
+      "label": "Sub-section"
+    },
+    {
+      "id": "task",
+      "label": "Concept / Formula"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "10000000-0000-4000-8000-000000000001",
+      "title": "Ethics & Professional Standards (17.5%)",
+      "status": "not-started",
+      "type": "milestone",
+      "$ref": "./cfa-l1/topic-01-ethics.json"
+    }
+  ]
+}

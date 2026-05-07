@@ -1,0 +1,1511 @@
+{
+  "id": "cfa060000-0000-4000-8000-000000000000",
+  "title": "Equity Investments",
+  "status": "not-started",
+  "type": "milestone",
+  "notes": "# Equity Investments\n\nObszar Equity Investments na CFA L1 2026 obejmuje strukturę rynków akcji, indeksy giełdowe, efektywność rynku, charakterystykę instrumentów udziałowych, analizę branżową i firmową oraz podstawowe modele wyceny akcji (DDM, FCFE/FCFF, mnożniki). Egzamin testuje zarówno definicje (typy akcji, rodzaje zleceń, formy EMH), jak i obliczenia (Gordon, H-model, justified P/E, margin call).\n\n**Exam weight (mid-point):** 12.5%\n**Learning Modules:** 8\n**Estimated study time:** 35-50h",
+  "createdAt": "2026-05-06T00:00:00Z",
+  "updatedAt": "2026-05-06T00:00:00Z",
+  "metadata": {
+    "topic_number": "06",
+    "topic_name": "Equity Investments",
+    "exam_weight_share": 12.5,
+    "lm_count": 8,
+    "estimated_hours_total": 42.5
+  },
+  "children": [
+    {
+      "id": "cfa060100-0000-4000-8000-000000000000",
+      "title": "Market Organization and Structure",
+      "status": "not-started",
+      "type": "phase",
+      "notes": "# Market Organization and Structure\n\nLM omawia funkcje systemu finansowego, klasyfikację aktywów, pośredników, typy rynków pierwotnych i wtórnych, rodzaje zleceń oraz mechanikę handlu z dźwignią i krótkiej sprzedaży.\n\n**Learning Modules:** 1 · **Egzamin weight (topic):** 12.5%",
+      "createdAt": "2026-05-06T00:00:00Z",
+      "updatedAt": "2026-05-06T00:00:00Z",
+      "metadata": {
+        "lm_index": "01",
+        "lm_name_canonical": "Market Organization and Structure",
+        "los_count": 7,
+        "topic": "Equity Investments"
+      },
+      "children": [
+        {
+          "id": "cfa060101-0000-4000-8000-000000000000",
+          "title": "Primary markets",
+          "status": "not-started",
+          "type": "plan",
+          "notes": "# Primary markets\n\nGrupuje sposoby pozyskiwania kapitału przez emitentów: IPO, oferta wtórna i private placement.\n\n**Learning Modules:** 1 · **Egzamin weight (topic):** 12.5%",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "section_index": "01"
+          },
+          "children": [
+            {
+              "id": "cfa060101-0001-4000-8000-000000000000",
+              "title": "Initial Public Offering (IPO)",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# Initial Public Offering (IPO)\n\n**LOS:** LOS 1.c\n**Difficulty:** 2 · **Estimated:** 0.5h\n\n## Opis\nIPO to pierwsza publiczna oferta akcji spółki. Underwriter (firmly committed lub best efforts) ustala cenę poprzez book building, a akcje są przydzielane inwestorom przed debiutem na giełdzie.\n\n## Formuły / kluczowe relacje\n- Underwriter spread = offer price - proceeds to issuer\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Mylenie firmly committed (ryzyko po stronie underwritera) z best efforts (ryzyko po stronie emitenta).\n- Zapominanie o lock-up period dla insiderów po IPO.\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 4, Reading 'Market Organization and Structure'\n- Schweser SchweserNotes Book 4, SS12, Reading 'Market Organization'",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": [
+                  "1.c"
+                ],
+                "difficulty": 2,
+                "estimated_hours": 0.5,
+                "prerequisites": [],
+                "formulas": [
+                  "Underwriter spread = offer price - proceeds to issuer"
+                ],
+                "common_pitfalls": [
+                  "Mylenie firmly committed z best efforts",
+                  "Pomijanie lock-up period"
+                ],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 4, Reading 'Market Organization and Structure'",
+                  "Schweser SchweserNotes Book 4, SS12, Reading 'Market Organization'"
+                ],
+                "tags": [
+                  "primary-market"
+                ]
+              }
+            },
+            {
+              "id": "cfa060101-0002-4000-8000-000000000000",
+              "title": "Seasoned/follow-on offering",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# Seasoned/follow-on offering\n\n**LOS:** LOS 1.c\n**Difficulty:** 2 · **Estimated:** 0.25h\n\n## Opis\nDodatkowa emisja akcji przez spółkę już notowaną. Zwykle rozwadnia EPS, ale zwiększa float i płynność. Może być dilutive (nowe akcje) lub non-dilutive (sprzedaż akcji insiderów).\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Mylenie z IPO — emitent jest już publiczny.\n- Pomijanie efektu dilution na EPS.\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 4, Reading 'Market Organization and Structure'\n- AnalystPrep, Equity Investments — 'Primary Markets'",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": [
+                  "1.c"
+                ],
+                "difficulty": 2,
+                "estimated_hours": 0.25,
+                "prerequisites": [],
+                "formulas": [],
+                "common_pitfalls": [
+                  "Mylenie z IPO",
+                  "Pomijanie dilution"
+                ],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 4, Reading 'Market Organization and Structure'",
+                  "AnalystPrep, Equity Investments — 'Primary Markets'"
+                ],
+                "tags": [
+                  "primary-market"
+                ]
+              }
+            },
+            {
+              "id": "cfa060101-0003-4000-8000-000000000000",
+              "title": "Private placement",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# Private placement\n\n**LOS:** LOS 1.c\n**Difficulty:** 2 · **Estimated:** 0.25h\n\n## Opis\nSprzedaż papierów wartościowych ograniczonej grupie wykwalifikowanych inwestorów (Rule 144A w USA). Tańsza i szybsza niż IPO, ale ograniczona płynność i mniejsze wymogi ujawnień.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Pomijanie braku płynności i restricted stock.\n- Mylenie z private equity (forma, nie klasa aktywów).\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 4, Reading 'Market Organization and Structure'\n- Mark Meldrum, Equity — 'Primary Markets'",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": [
+                  "1.c"
+                ],
+                "difficulty": 2,
+                "estimated_hours": 0.25,
+                "prerequisites": [],
+                "formulas": [],
+                "common_pitfalls": [
+                  "Pomijanie restricted stock",
+                  "Mylenie z private equity"
+                ],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 4, Reading 'Market Organization and Structure'",
+                  "Mark Meldrum, Equity — 'Primary Markets'"
+                ],
+                "tags": [
+                  "primary-market"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "id": "cfa060102-0000-4000-8000-000000000000",
+          "title": "Secondary markets",
+          "status": "not-started",
+          "type": "plan",
+          "notes": "# Secondary markets\n\nMiejsca obrotu już wyemitowanymi papierami: giełdy, OTC, ATS i dark pools.\n\n**Learning Modules:** 1 · **Egzamin weight (topic):** 12.5%",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "section_index": "02"
+          },
+          "children": [
+            {
+              "id": "cfa060102-0001-4000-8000-000000000000",
+              "title": "Exchanges",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# Exchanges\n\n**LOS:** LOS 1.d\n**Difficulty:** 1 · **Estimated:** 0.25h\n\n## Opis\nScentralizowane, regulowane miejsca obrotu z jednolitymi zasadami listingu i transparentnym order book. Przykłady: NYSE, NASDAQ, LSE.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Mylenie quote-driven (NASDAQ historycznie) z order-driven (NYSE).\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 4, Reading 'Market Organization and Structure'\n- Schweser SchweserNotes Book 4, SS12",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": [
+                  "1.d"
+                ],
+                "difficulty": 1,
+                "estimated_hours": 0.25,
+                "prerequisites": [],
+                "formulas": [],
+                "common_pitfalls": [
+                  "Mylenie quote-driven z order-driven"
+                ],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 4, Reading 'Market Organization and Structure'",
+                  "Schweser SchweserNotes Book 4, SS12"
+                ],
+                "tags": [
+                  "secondary-market"
+                ]
+              }
+            },
+            {
+              "id": "cfa060102-0002-4000-8000-000000000000",
+              "title": "OTC markets",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# OTC markets\n\n**LOS:** LOS 1.d\n**Difficulty:** 2 · **Estimated:** 0.25h\n\n## Opis\nZdecentralizowany rynek pozagiełdowy oparty na sieci dealerów. Mniej standaryzacji, mniej transparentności, większa elastyczność (np. obligacje korporacyjne, FX).\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Mylenie OTC z dark pools — OTC obejmuje wszystkie pozagiełdowe transakcje.\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 4, Reading 'Market Organization and Structure'\n- AnalystPrep, Equity — 'Secondary Markets'",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": [
+                  "1.d"
+                ],
+                "difficulty": 2,
+                "estimated_hours": 0.25,
+                "prerequisites": [],
+                "formulas": [],
+                "common_pitfalls": [
+                  "Mylenie OTC z dark pools"
+                ],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 4, Reading 'Market Organization and Structure'",
+                  "AnalystPrep, Equity — 'Secondary Markets'"
+                ],
+                "tags": [
+                  "secondary-market"
+                ]
+              }
+            },
+            {
+              "id": "cfa060102-0003-4000-8000-000000000000",
+              "title": "Alternative Trading Systems (ATS)",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# Alternative Trading Systems (ATS)\n\n**LOS:** LOS 1.d\n**Difficulty:** 2 · **Estimated:** 0.25h\n\n## Opis\nElektroniczne platformy obrotu (ECNs, MTFs) konkurujące z giełdami; nie pełnią funkcji regulatora listingu, ale dopasowują zlecenia. W UE odpowiednikiem są MTF/OTF pod MiFID II.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Traktowanie ATS i dark pools jako synonimów — dark pools to podzbiór ATS.\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 4, Reading 'Market Organization and Structure'\n- Mark Meldrum, Equity — 'Secondary Markets'",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": [
+                  "1.d"
+                ],
+                "difficulty": 2,
+                "estimated_hours": 0.25,
+                "prerequisites": [],
+                "formulas": [],
+                "common_pitfalls": [
+                  "ATS = nadzbiór, dark pools = podzbiór"
+                ],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 4, Reading 'Market Organization and Structure'",
+                  "Mark Meldrum, Equity — 'Secondary Markets'"
+                ],
+                "tags": [
+                  "secondary-market"
+                ]
+              }
+            },
+            {
+              "id": "cfa060102-0004-4000-8000-000000000000",
+              "title": "Dark pools",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# Dark pools\n\n**LOS:** LOS 1.d\n**Difficulty:** 2 · **Estimated:** 0.25h\n\n## Opis\nPrywatne fora obrotu, w których pre-trade quotes nie są ujawniane; instytucje wykorzystują je do realizacji dużych zleceń bez wpływu na cenę (information leakage).\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Mylenie braku pre-trade transparency z brakiem post-trade reportingu.\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 4, Reading 'Market Organization and Structure'\n- Schweser SchweserNotes Book 4, SS12",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": [
+                  "1.d"
+                ],
+                "difficulty": 2,
+                "estimated_hours": 0.25,
+                "prerequisites": [],
+                "formulas": [],
+                "common_pitfalls": [
+                  "Mylenie pre-trade z post-trade transparency"
+                ],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 4, Reading 'Market Organization and Structure'",
+                  "Schweser SchweserNotes Book 4, SS12"
+                ],
+                "tags": [
+                  "secondary-market"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "id": "cfa060103-0000-4000-8000-000000000000",
+          "title": "Order types",
+          "status": "not-started",
+          "type": "plan",
+          "notes": "# Order types\n\nRodzaje zleceń giełdowych — execution instructions i validity instructions.\n\n**Learning Modules:** 1 · **Egzamin weight (topic):** 12.5%",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "section_index": "03"
+          },
+          "children": [
+            {
+              "id": "cfa060103-0001-4000-8000-000000000000",
+              "title": "Market order",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# Market order\n\n**LOS:** LOS 1.e\n**Difficulty:** 1 · **Estimated:** 0.25h\n\n## Opis\nZlecenie natychmiastowej realizacji po najlepszej dostępnej cenie. Gwarantuje wykonanie, nie gwarantuje ceny — ryzyko slippage przy niskiej płynności.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Zakładanie wykonania po ostatnim quote zamiast po cenie z order book.\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 4, Reading 'Market Organization and Structure'\n- Schweser SchweserNotes Book 4, SS12",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": [
+                  "1.e"
+                ],
+                "difficulty": 1,
+                "estimated_hours": 0.25,
+                "prerequisites": [],
+                "formulas": [],
+                "common_pitfalls": [
+                  "Slippage vs ostatni quote"
+                ],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 4, Reading 'Market Organization and Structure'",
+                  "Schweser SchweserNotes Book 4, SS12"
+                ],
+                "tags": [
+                  "order-type"
+                ]
+              }
+            },
+            {
+              "id": "cfa060103-0002-4000-8000-000000000000",
+              "title": "Limit order",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# Limit order\n\n**LOS:** LOS 1.e\n**Difficulty:** 2 · **Estimated:** 0.25h\n\n## Opis\nZlecenie z określoną ceną graniczną. Buy limit poniżej rynku, sell limit powyżej. Gwarantuje cenę, nie gwarantuje wykonania.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Mylenie marketable limit order (limit ustawiony tak, by od razu się wykonać) z market order.\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 4, Reading 'Market Organization and Structure'\n- AnalystPrep, Equity — 'Order Types'",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": [
+                  "1.e"
+                ],
+                "difficulty": 2,
+                "estimated_hours": 0.25,
+                "prerequisites": [],
+                "formulas": [],
+                "common_pitfalls": [
+                  "Marketable limit vs market order"
+                ],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 4, Reading 'Market Organization and Structure'",
+                  "AnalystPrep, Equity — 'Order Types'"
+                ],
+                "tags": [
+                  "order-type"
+                ]
+              }
+            },
+            {
+              "id": "cfa060103-0003-4000-8000-000000000000",
+              "title": "Stop-loss order",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# Stop-loss order\n\n**LOS:** LOS 1.e\n**Difficulty:** 2 · **Estimated:** 0.25h\n\n## Opis\nZlecenie aktywujące się po przekroczeniu stop price; po triggerze działa jak market order. Używane do ograniczania strat lub ochrony zysków na pozycjach long.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Pomijanie ryzyka gap-down — egzekucja może nastąpić znacznie poniżej stop price.\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 4, Reading 'Market Organization and Structure'\n- Mark Meldrum, Equity — 'Order Types'",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": [
+                  "1.e"
+                ],
+                "difficulty": 2,
+                "estimated_hours": 0.25,
+                "prerequisites": [],
+                "formulas": [],
+                "common_pitfalls": [
+                  "Gap-down execution poniżej stop"
+                ],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 4, Reading 'Market Organization and Structure'",
+                  "Mark Meldrum, Equity — 'Order Types'"
+                ],
+                "tags": [
+                  "order-type"
+                ]
+              }
+            },
+            {
+              "id": "cfa060103-0004-4000-8000-000000000000",
+              "title": "Stop-limit order",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# Stop-limit order\n\n**LOS:** LOS 1.e\n**Difficulty:** 2 · **Estimated:** 0.25h\n\n## Opis\nKombinacja stop i limit: po przekroczeniu stop price aktywuje się limit order. Ogranicza poślizg, ale nie gwarantuje wykonania, jeśli rynek przeskoczy obie ceny.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Założenie, że stop-limit zawsze się zrealizuje.\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 4, Reading 'Market Organization and Structure'\n- Schweser SchweserNotes Book 4, SS12",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": [
+                  "1.e"
+                ],
+                "difficulty": 2,
+                "estimated_hours": 0.25,
+                "prerequisites": [],
+                "formulas": [],
+                "common_pitfalls": [
+                  "Brak realizacji przy gap"
+                ],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 4, Reading 'Market Organization and Structure'",
+                  "Schweser SchweserNotes Book 4, SS12"
+                ],
+                "tags": [
+                  "order-type"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "id": "cfa060104-0000-4000-8000-000000000000",
+          "title": "Positions, leverage and short selling",
+          "status": "not-started",
+          "type": "plan",
+          "notes": "# Positions, leverage and short selling\n\nLong/short, margin, krótka sprzedaż i pożyczanie papierów.\n\n**Learning Modules:** 1 · **Egzamin weight (topic):** 12.5%",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "section_index": "04"
+          },
+          "children": [
+            {
+              "id": "cfa060104-0001-4000-8000-000000000000",
+              "title": "Long position",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# Long position\n\n**LOS:** LOS 1.b\n**Difficulty:** 1 · **Estimated:** 0.25h\n\n## Opis\nPosiadanie aktywa z zyskiem przy wzroście ceny. Maksymalna strata = zainwestowany kapitał; potencjalny zysk teoretycznie nieograniczony.\n\n## Formuły / kluczowe relacje\n- HPR_long = (P1 - P0 + Div) / P0\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Mylenie long z buy-and-hold (long może być krótkoterminowe).\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 4, Reading 'Market Organization and Structure'\n- Schweser SchweserNotes Book 4, SS12",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": [
+                  "1.b"
+                ],
+                "difficulty": 1,
+                "estimated_hours": 0.25,
+                "prerequisites": [],
+                "formulas": [
+                  "HPR_long = (P1 - P0 + Div) / P0"
+                ],
+                "common_pitfalls": [
+                  "Long != buy-and-hold"
+                ],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 4, Reading 'Market Organization and Structure'",
+                  "Schweser SchweserNotes Book 4, SS12"
+                ],
+                "tags": [
+                  "position"
+                ]
+              }
+            },
+            {
+              "id": "cfa060104-0002-4000-8000-000000000000",
+              "title": "Short position",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# Short position\n\n**LOS:** LOS 1.b\n**Difficulty:** 2 · **Estimated:** 0.25h\n\n## Opis\nSprzedaż pożyczonego aktywa z nadzieją odkupu po niższej cenie. Maksymalny zysk = cena sprzedaży (cena spada do 0); strata teoretycznie nieograniczona.\n\n## Formuły / kluczowe relacje\n- HPR_short = (P0 - P1 - Div_paid - fees) / Initial margin\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Pomijanie obowiązku zwrotu dywidendy pożyczkodawcy.\n- Pomijanie short squeeze.\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 4, Reading 'Market Organization and Structure'\n- AnalystPrep, Equity — 'Short Selling'",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": [
+                  "1.b"
+                ],
+                "difficulty": 2,
+                "estimated_hours": 0.25,
+                "prerequisites": [],
+                "formulas": [
+                  "HPR_short = (P0 - P1 - Div_paid - fees) / Initial margin"
+                ],
+                "common_pitfalls": [
+                  "Pomijanie zwrotu dywidendy",
+                  "Pomijanie short squeeze"
+                ],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 4, Reading 'Market Organization and Structure'",
+                  "AnalystPrep, Equity — 'Short Selling'"
+                ],
+                "tags": [
+                  "position"
+                ]
+              }
+            },
+            {
+              "id": "cfa060104-0003-4000-8000-000000000000",
+              "title": "Margin trading",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# Margin trading\n\n**LOS:** LOS 1.f\n**Difficulty:** 2 · **Estimated:** 0.5h\n\n## Opis\nZakup papierów częściowo finansowany pożyczką od brokera. Dźwignia zwiększa zarówno zwroty, jak i straty; wymaga rachunku margin i depozytu zabezpieczającego.\n\n## Formuły / kluczowe relacje\n- Leverage ratio = 1 / Initial margin requirement\n- Return on margin = (HPR_unlevered * Total assets - interest) / Equity\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Pomijanie kosztu odsetek od pożyczonych środków.\n- Liczenie zwrotu od total position zamiast od equity.\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 4, Reading 'Market Organization and Structure'\n- Schweser SchweserNotes Book 4, SS12",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": [
+                  "1.f"
+                ],
+                "difficulty": 2,
+                "estimated_hours": 0.5,
+                "prerequisites": [],
+                "formulas": [
+                  "Leverage ratio = 1 / Initial margin requirement",
+                  "Return on margin = (HPR_unlevered * Total assets - interest) / Equity"
+                ],
+                "common_pitfalls": [
+                  "Pomijanie odsetek",
+                  "Zwrot od total position zamiast equity"
+                ],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 4, Reading 'Market Organization and Structure'",
+                  "Schweser SchweserNotes Book 4, SS12"
+                ],
+                "tags": [
+                  "leverage",
+                  "formula"
+                ]
+              }
+            },
+            {
+              "id": "cfa060104-0004-4000-8000-000000000000",
+              "title": "Initial margin / Maintenance margin",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# Initial margin / Maintenance margin\n\n**LOS:** LOS 1.f\n**Difficulty:** 2 · **Estimated:** 0.5h\n\n## Opis\nInitial margin = procent wartości pozycji wniesiony własnym kapitałem przy otwarciu. Maintenance margin = minimalny equity ratio utrzymywany na rachunku; spadek poniżej wywołuje margin call.\n\n## Formuły / kluczowe relacje\n- Equity % = (MV - Loan) / MV\n- Initial margin (US Reg T) typowo 50%; maintenance ~25%\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Mylenie initial z maintenance margin.\n- Liczenie equity od pożyczki zamiast od MV.\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 4, Reading 'Market Organization and Structure'\n- AnalystPrep, Equity — 'Margin'",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": [
+                  "1.f"
+                ],
+                "difficulty": 2,
+                "estimated_hours": 0.5,
+                "prerequisites": [],
+                "formulas": [
+                  "Equity % = (MV - Loan) / MV"
+                ],
+                "common_pitfalls": [
+                  "Mylenie initial z maintenance",
+                  "Equity liczone od pożyczki"
+                ],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 4, Reading 'Market Organization and Structure'",
+                  "AnalystPrep, Equity — 'Margin'"
+                ],
+                "tags": [
+                  "margin"
+                ]
+              }
+            },
+            {
+              "id": "cfa060104-0005-4000-8000-000000000000",
+              "title": "Margin call price calculation",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# Margin call price calculation\n\n**LOS:** LOS 1.f\n**Difficulty:** 3 · **Estimated:** 0.75h\n\n## Opis\nKalkulacja ceny, przy której equity spada do maintenance margin. Klasyczne pytanie egzaminacyjne — wymaga uwzględnienia zarówno strony long, jak i short.\n\n## Formuły / kluczowe relacje\n- Margin call price (long) = P0 * (1 - Initial margin) / (1 - Maintenance margin)\n- Margin call price (short) = P0 * (1 + Initial margin) / (1 + Maintenance margin)\n\n## Prerequisites\n- Initial margin / Maintenance margin\n\n## Common pitfalls\n- Mylenie wzoru long z short (znaki).\n- Używanie ceny rynkowej zamiast P0 w mianowniku.\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 4, Reading 'Market Organization and Structure'\n- Schweser QBank — 'Margin Call'",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": [
+                  "1.f"
+                ],
+                "difficulty": 3,
+                "estimated_hours": 0.75,
+                "prerequisites": [
+                  "Initial margin / Maintenance margin"
+                ],
+                "formulas": [
+                  "Margin call price (long) = P0 * (1 - Initial margin) / (1 - Maintenance margin)",
+                  "Margin call price (short) = P0 * (1 + Initial margin) / (1 + Maintenance margin)"
+                ],
+                "common_pitfalls": [
+                  "Mylenie wzoru long z short",
+                  "Zła cena bazowa"
+                ],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 4, Reading 'Market Organization and Structure'",
+                  "Schweser QBank — 'Margin Call'"
+                ],
+                "tags": [
+                  "formula",
+                  "margin"
+                ]
+              }
+            },
+            {
+              "id": "cfa060104-0006-4000-8000-000000000000",
+              "title": "Short selling mechanics",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# Short selling mechanics\n\n**LOS:** LOS 1.b\n**Difficulty:** 3 · **Estimated:** 0.5h\n\n## Opis\nProces: locate, borrow, sell, hold, buy-to-cover, return. Wymaga depozytu margin po stronie short. Inwestor pokrywa dywidendy i koszty pożyczki (rebate rate).\n\n## Formuły / kluczowe relacje\n- Net short proceeds = Sale proceeds - Borrow fee - Dividends paid\n\n## Prerequisites\n- Short position\n\n## Common pitfalls\n- Pomijanie pożyczki papierów (must locate first).\n- Mylenie naked short z covered short.\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 4, Reading 'Market Organization and Structure'\n- Mark Meldrum, Equity — 'Short Mechanics'",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": [
+                  "1.b"
+                ],
+                "difficulty": 3,
+                "estimated_hours": 0.5,
+                "prerequisites": [
+                  "Short position"
+                ],
+                "formulas": [
+                  "Net short proceeds = Sale proceeds - Borrow fee - Dividends paid"
+                ],
+                "common_pitfalls": [
+                  "Pomijanie locate/borrow",
+                  "Naked vs covered short"
+                ],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 4, Reading 'Market Organization and Structure'",
+                  "Mark Meldrum, Equity — 'Short Mechanics'"
+                ],
+                "tags": [
+                  "short-selling"
+                ]
+              }
+            },
+            {
+              "id": "cfa060104-0007-4000-8000-000000000000",
+              "title": "Securities lending",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# Securities lending\n\n**LOS:** LOS 1.b\n**Difficulty:** 2 · **Estimated:** 0.25h\n\n## Opis\nWypożyczanie papierów za opłatę (lending fee) i kolateral. Generuje dodatkowy dochód dla long-term holderów i umożliwia krótką sprzedaż innym uczestnikom.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Pomijanie ryzyka recall (pożyczkodawca może zażądać zwrotu).\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 4, Reading 'Market Organization and Structure'\n- AnalystPrep, Equity — 'Securities Lending'",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": [
+                  "1.b"
+                ],
+                "difficulty": 2,
+                "estimated_hours": 0.25,
+                "prerequisites": [],
+                "formulas": [],
+                "common_pitfalls": [
+                  "Pomijanie recall risk"
+                ],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 4, Reading 'Market Organization and Structure'",
+                  "AnalystPrep, Equity — 'Securities Lending'"
+                ],
+                "tags": [
+                  "short-selling"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "cfa060200-0000-4000-8000-000000000000",
+      "title": "Security Market Indexes",
+      "status": "not-started",
+      "type": "phase",
+      "notes": "# Security Market Indexes\n\nLM omawia konstrukcję, ważenie i utrzymanie indeksów giełdowych oraz ich zastosowania (benchmarking, ETF, sentiment).\n\n**Learning Modules:** 1 · **Egzamin weight (topic):** 12.5%",
+      "createdAt": "2026-05-06T00:00:00Z",
+      "updatedAt": "2026-05-06T00:00:00Z",
+      "metadata": {
+        "lm_index": "02",
+        "lm_name_canonical": "Security Market Indexes",
+        "los_count": 5,
+        "topic": "Equity Investments"
+      },
+      "children": [
+        {
+          "id": "cfa060201-0001-4000-8000-000000000000",
+          "title": "Price-weighted index",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# Price-weighted index\n\n**LOS:** LOS 2.b · **Difficulty:** 2 · **Estimated:** 0.5h\n\n## Opis\nIndeks ważony ceną — średnia arytmetyczna cen, dzielona przez divisor korygowany przy splitach. Akcje droższe mają większy wpływ; przykład: DJIA, Nikkei 225.\n\n## Formuły\n- Index = sum(P_i) / Divisor\n\n## Common pitfalls\n- Mylenie wpływu ceny vs market cap.\n- Pomijanie korekty divisor po splicie.\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 4, Reading 'Security Market Indexes'\n- Schweser SchweserNotes Book 4, SS12",
+          "metadata": {
+            "los_codes": [
+              "2.b"
+            ],
+            "difficulty": 2,
+            "estimated_hours": 0.5,
+            "prerequisites": [],
+            "formulas": [
+              "Index = sum(P_i) / Divisor"
+            ],
+            "common_pitfalls": [
+              "Wpływ ceny vs cap",
+              "Korekta divisor po splicie"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 4, Reading 'Security Market Indexes'",
+              "Schweser SchweserNotes Book 4, SS12"
+            ],
+            "tags": [
+              "index",
+              "formula"
+            ]
+          }
+        },
+        {
+          "id": "cfa060201-0002-4000-8000-000000000000",
+          "title": "Market-cap weighted index",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# Market-cap weighted index\n\n**LOS:** LOS 2.b · **Difficulty:** 2 · **Estimated:** 0.5h\n\n## Opis\nWaga proporcjonalna do market cap. Większe spółki dominują indeks; przykład: S&P 500, MSCI World. Float-adjusted to standard branżowy.\n\n## Formuły\n- w_i = (P_i * Q_i) / sum(P_j * Q_j)\n\n## Common pitfalls\n- Mylenie z equal-weight rebalanced.\n- Pomijanie momentum bias (overweighting overvalued).\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 4, Reading 'Security Market Indexes'\n- AnalystPrep, Equity — 'Index Construction'",
+          "metadata": {
+            "los_codes": [
+              "2.b"
+            ],
+            "difficulty": 2,
+            "estimated_hours": 0.5,
+            "prerequisites": [],
+            "formulas": [
+              "w_i = (P_i * Q_i) / sum(P_j * Q_j)"
+            ],
+            "common_pitfalls": [
+              "Mylenie z equal-weight",
+              "Momentum bias"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 4, Reading 'Security Market Indexes'",
+              "AnalystPrep, Equity — 'Index Construction'"
+            ],
+            "tags": [
+              "index"
+            ]
+          }
+        },
+        {
+          "id": "cfa060201-0003-4000-8000-000000000000",
+          "title": "Equal-weighted index",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# Equal-weighted index\n\n**LOS:** LOS 2.b · **Difficulty:** 2 · **Estimated:** 0.5h\n\n## Opis\nKażda spółka ma identyczną wagę. Wymaga częstego rebalancingu (transakcje); preferuje small caps. Może być skonstruowany na bazie ceny lub stóp zwrotu.\n\n## Formuły\n- w_i = 1 / N\n\n## Common pitfalls\n- Pomijanie kosztów rebalancingu.\n- Mylenie equal-weight z buy-and-hold.\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 4, Reading 'Security Market Indexes'\n- Mark Meldrum, Equity — 'Index Weighting'",
+          "metadata": {
+            "los_codes": [
+              "2.b"
+            ],
+            "difficulty": 2,
+            "estimated_hours": 0.5,
+            "prerequisites": [],
+            "formulas": [
+              "w_i = 1 / N"
+            ],
+            "common_pitfalls": [
+              "Koszty rebalancingu",
+              "Equal-weight != buy-and-hold"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 4, Reading 'Security Market Indexes'",
+              "Mark Meldrum, Equity — 'Index Weighting'"
+            ],
+            "tags": [
+              "index"
+            ]
+          }
+        },
+        {
+          "id": "cfa060201-0004-4000-8000-000000000000",
+          "title": "Fundamental-weighted index",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# Fundamental-weighted index\n\n**LOS:** LOS 2.b · **Difficulty:** 2 · **Estimated:** 0.5h\n\n## Opis\nWaga oparta na metrykach fundamentalnych (sales, BV, CF, dividends). Eliminuje momentum bias cap-weight, ale wprowadza value tilt.\n\n## Formuły\n- w_i = Fundamental_i / sum(Fundamental_j)\n\n## Common pitfalls\n- Założenie, że fundamental-weighted = aktywny stock-picking.\n- Pomijanie value tilt jako źródła risk premium.\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 4, Reading 'Security Market Indexes'\n- Schweser SchweserNotes Book 4, SS12",
+          "metadata": {
+            "los_codes": [
+              "2.b"
+            ],
+            "difficulty": 2,
+            "estimated_hours": 0.5,
+            "prerequisites": [],
+            "formulas": [
+              "w_i = Fundamental_i / sum(Fundamental_j)"
+            ],
+            "common_pitfalls": [
+              "Pomijanie value tilt",
+              "Mylenie z aktywnym pickingiem"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 4, Reading 'Security Market Indexes'",
+              "Schweser SchweserNotes Book 4, SS12"
+            ],
+            "tags": [
+              "index"
+            ]
+          }
+        },
+        {
+          "id": "cfa060201-0005-4000-8000-000000000000",
+          "title": "Index calculation method differences",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# Index calculation method differences\n\n**LOS:** LOS 2.c · **Difficulty:** 2 · **Estimated:** 0.5h\n\n## Opis\nRóżnice w obliczaniu wartości indeksu: price return vs total return; arithmetic vs geometric averaging (Value Line). Total return doliczają reinwestowaną dywidendę.\n\n## Formuły\n- Total return index_t = Price index_t + reinvested dividends\n\n## Common pitfalls\n- Mylenie price return z total return przy benchmarkingu.\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 4, Reading 'Security Market Indexes'\n- AnalystPrep, Equity — 'Index Returns'",
+          "metadata": {
+            "los_codes": [
+              "2.c"
+            ],
+            "difficulty": 2,
+            "estimated_hours": 0.5,
+            "prerequisites": [],
+            "formulas": [
+              "Total return index_t = Price index_t + reinvested dividends"
+            ],
+            "common_pitfalls": [
+              "Price vs total return"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 4, Reading 'Security Market Indexes'",
+              "AnalystPrep, Equity — 'Index Returns'"
+            ],
+            "tags": [
+              "index"
+            ]
+          }
+        },
+        {
+          "id": "cfa060201-0006-4000-8000-000000000000",
+          "title": "Float-adjusted market cap",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# Float-adjusted market cap\n\n**LOS:** LOS 2.b · **Difficulty:** 2 · **Estimated:** 0.25h\n\n## Opis\nMarket cap z wyłączeniem akcji niedostępnych do obrotu (insider, government, cross-holdings). Standard w nowoczesnych indeksach (S&P, MSCI).\n\n## Formuły\n- Float MC = Price * Free float shares\n\n## Common pitfalls\n- Mylenie shares outstanding z free float.\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 4, Reading 'Security Market Indexes'\n- Mark Meldrum, Equity — 'Float Adjustment'",
+          "metadata": {
+            "los_codes": [
+              "2.b"
+            ],
+            "difficulty": 2,
+            "estimated_hours": 0.25,
+            "prerequisites": [],
+            "formulas": [
+              "Float MC = Price * Free float shares"
+            ],
+            "common_pitfalls": [
+              "Outstanding vs free float"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 4, Reading 'Security Market Indexes'",
+              "Mark Meldrum, Equity — 'Float Adjustment'"
+            ],
+            "tags": [
+              "index"
+            ]
+          }
+        },
+        {
+          "id": "cfa060201-0007-4000-8000-000000000000",
+          "title": "Rebalancing",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# Rebalancing\n\n**LOS:** LOS 2.d · **Difficulty:** 2 · **Estimated:** 0.25h\n\n## Opis\nOkresowe przywracanie wag indeksu do stanu docelowego. Najistotniejsze dla indeksów equal-weight i fundamental-weight; cap-weight rebalansuje się sam (poza split/dividend).\n\n## Common pitfalls\n- Mylenie rebalancingu z reconstitution.\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 4, Reading 'Security Market Indexes'\n- Schweser SchweserNotes Book 4, SS12",
+          "metadata": {
+            "los_codes": [
+              "2.d"
+            ],
+            "difficulty": 2,
+            "estimated_hours": 0.25,
+            "prerequisites": [],
+            "formulas": [],
+            "common_pitfalls": [
+              "Rebalancing vs reconstitution"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 4, Reading 'Security Market Indexes'",
+              "Schweser SchweserNotes Book 4, SS12"
+            ],
+            "tags": [
+              "index"
+            ]
+          }
+        },
+        {
+          "id": "cfa060201-0008-4000-8000-000000000000",
+          "title": "Reconstitution",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# Reconstitution\n\n**LOS:** LOS 2.d · **Difficulty:** 2 · **Estimated:** 0.25h\n\n## Opis\nCykliczny proces dodawania i usuwania spółek z indeksu zgodnie z kryteriami (size, liquidity, sector). Wywołuje 'index effect' — wzrost ceny przy włączeniu, spadek przy usunięciu.\n\n## Common pitfalls\n- Mylenie z rebalancingiem.\n- Pomijanie front-running przed reconstitution.\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 4, Reading 'Security Market Indexes'\n- AnalystPrep, Equity — 'Reconstitution'",
+          "metadata": {
+            "los_codes": [
+              "2.d"
+            ],
+            "difficulty": 2,
+            "estimated_hours": 0.25,
+            "prerequisites": [],
+            "formulas": [],
+            "common_pitfalls": [
+              "Reconstitution vs rebalancing",
+              "Front-running"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 4, Reading 'Security Market Indexes'",
+              "AnalystPrep, Equity — 'Reconstitution'"
+            ],
+            "tags": [
+              "index"
+            ]
+          }
+        },
+        {
+          "id": "cfa060201-0009-4000-8000-000000000000",
+          "title": "Tracking error",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# Tracking error\n\n**LOS:** LOS 2.e · **Difficulty:** 2 · **Estimated:** 0.5h\n\n## Opis\nOdchylenie standardowe różnic stóp zwrotu portfela i benchmarku. Mierzy aktywne ryzyko zarządzającego; niska tracking error u funduszy indeksowych, wyższa u aktywnych.\n\n## Formuły\n- Tracking error = sigma(R_p - R_b)\n\n## Common pitfalls\n- Mylenie tracking error z tracking difference (mean różnic).\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 4, Reading 'Security Market Indexes'\n- Schweser SchweserNotes Book 4, SS12",
+          "metadata": {
+            "los_codes": [
+              "2.e"
+            ],
+            "difficulty": 2,
+            "estimated_hours": 0.5,
+            "prerequisites": [
+              "Standardowe odchylenie"
+            ],
+            "formulas": [
+              "Tracking error = sigma(R_p - R_b)"
+            ],
+            "common_pitfalls": [
+              "Tracking error vs tracking difference"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 4, Reading 'Security Market Indexes'",
+              "Schweser SchweserNotes Book 4, SS12"
+            ],
+            "tags": [
+              "index",
+              "formula"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "cfa060300-0000-4000-8000-000000000000",
+      "title": "Market Efficiency",
+      "status": "not-started",
+      "type": "phase",
+      "notes": "# Market Efficiency\n\nLM omawia formy efektywności rynku (EMH), implikacje dla aktywnego vs pasywnego zarządzania, anomalie rynkowe i zniekształcenia behawioralne.\n\n**Learning Modules:** 1 · **Egzamin weight (topic):** 12.5%",
+      "createdAt": "2026-05-06T00:00:00Z",
+      "updatedAt": "2026-05-06T00:00:00Z",
+      "metadata": {
+        "lm_index": "03",
+        "lm_name_canonical": "Market Efficiency",
+        "los_count": 6,
+        "topic": "Equity Investments"
+      },
+      "children": [
+        {
+          "id": "cfa060301-0000-4000-8000-000000000000",
+          "title": "Efficient Markets Hypothesis (EMH) — forms",
+          "status": "not-started",
+          "type": "plan",
+          "notes": "# Efficient Markets Hypothesis (EMH) — forms\n\nTrzy formy efektywności i ich implikacje dla aktywnego zarządzania.\n\n**Learning Modules:** 1 · **Egzamin weight (topic):** 12.5%",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "section_index": "01"
+          },
+          "children": [
+            {
+              "id": "cfa060301-0001-4000-8000-000000000000",
+              "title": "EMH — Weak form",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# EMH — Weak form\n\n**LOS:** LOS 3.b · **Difficulty:** 2 · **Estimated:** 0.5h\n\n## Opis\nForma weak: ceny w pełni odzwierciedlają historyczne dane rynkowe (ceny, wolumen). Implikuje, że analiza techniczna nie generuje abnormal returns. Testy: serial correlation, runs test.\n\n## Formuły\n—\n\n## Common pitfalls\n- Mylenie weak form z brakiem efektywności\n- Twierdzenie, że anomalia momentum obala weak form\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 4, Reading 'Market Efficiency'\n- Schweser SchweserNotes Book 4, SS13",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": [
+                  "3.b"
+                ],
+                "difficulty": 2,
+                "estimated_hours": 0.5,
+                "prerequisites": [],
+                "formulas": [],
+                "common_pitfalls": [
+                  "Mylenie weak form z brakiem efektywności",
+                  "Twierdzenie, że anomalia momentum obala weak form"
+                ],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 4, Reading 'Market Efficiency'",
+                  "Schweser SchweserNotes Book 4, SS13"
+                ],
+                "tags": [
+                  "emh"
+                ]
+              }
+            },
+            {
+              "id": "cfa060301-0002-4000-8000-000000000000",
+              "title": "EMH — Semi-strong form",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# EMH — Semi-strong form\n\n**LOS:** LOS 3.b · **Difficulty:** 2 · **Estimated:** 0.5h\n\n## Opis\nForma semi-strong: ceny w pełni odzwierciedlają wszystkie publicznie dostępne informacje. Implikuje, że analiza fundamentalna nie generuje abnormal returns na bazie publicznych danych. Testy: event studies (np. earnings announcements).\n\n## Formuły\n—\n\n## Common pitfalls\n- Mylenie z weak form\n- Wnioskowanie ze slow drift po earnings, że SS jest spełniona\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 4, Reading 'Market Efficiency'\n- AnalystPrep, Equity — 'Market Efficiency'",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": [
+                  "3.b"
+                ],
+                "difficulty": 2,
+                "estimated_hours": 0.5,
+                "prerequisites": [],
+                "formulas": [],
+                "common_pitfalls": [
+                  "Mylenie z weak form",
+                  "Wnioskowanie ze slow drift po earnings, że SS jest spełniona"
+                ],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 4, Reading 'Market Efficiency'",
+                  "AnalystPrep, Equity — 'Market Efficiency'"
+                ],
+                "tags": [
+                  "emh"
+                ]
+              }
+            },
+            {
+              "id": "cfa060301-0003-4000-8000-000000000000",
+              "title": "EMH — Strong form",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# EMH — Strong form\n\n**LOS:** LOS 3.b · **Difficulty:** 2 · **Estimated:** 0.5h\n\n## Opis\nForma strong: ceny odzwierciedlają WSZYSTKIE informacje, w tym informacje insiderskie. Implikuje brak abnormal returns nawet dla insiderów. Większość dowodów empirycznych odrzuca strong form (np. zyski insiderów).\n\n## Formuły\n—\n\n## Common pitfalls\n- Założenie, że insider trading świadczy o EMH\n- Mylenie strong z semi-strong\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 4, Reading 'Market Efficiency'\n- Mark Meldrum, Equity — 'EMH and Behavioral'",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": [
+                  "3.b"
+                ],
+                "difficulty": 2,
+                "estimated_hours": 0.5,
+                "prerequisites": [],
+                "formulas": [],
+                "common_pitfalls": [
+                  "Założenie, że insider trading świadczy o EMH",
+                  "Mylenie strong z semi-strong"
+                ],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 4, Reading 'Market Efficiency'",
+                  "Mark Meldrum, Equity — 'EMH and Behavioral'"
+                ],
+                "tags": [
+                  "emh"
+                ]
+              }
+            },
+            {
+              "id": "cfa060301-0004-4000-8000-000000000000",
+              "title": "Implications: active vs passive management",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# Implications: active vs passive management\n\n**LOS:** LOS 3.c · **Difficulty:** 3 · **Estimated:** 0.5h\n\n## Opis\nW formie weak — TA bezużyteczna; w SS — FA bezużyteczna; w strong — nawet insider edge zanika. Implikacja praktyczna: niska average alpha funduszy aktywnych po kosztach uzasadnia indeksowanie pasywne.\n\n## Formuły\n—\n\n## Common pitfalls\n- Wnioskowanie, że żaden fundusz nie pobije rynku\n- Pomijanie kosztów (gross vs net alpha)\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 4, Reading 'Market Efficiency'\n- Schweser SchweserNotes Book 4, SS13",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": [
+                  "3.c"
+                ],
+                "difficulty": 3,
+                "estimated_hours": 0.5,
+                "prerequisites": [],
+                "formulas": [],
+                "common_pitfalls": [
+                  "Wnioskowanie, że żaden fundusz nie pobije rynku",
+                  "Pomijanie kosztów (gross vs net alpha)"
+                ],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 4, Reading 'Market Efficiency'",
+                  "Schweser SchweserNotes Book 4, SS13"
+                ],
+                "tags": [
+                  "emh"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "id": "cfa060302-0000-4000-8000-000000000000",
+          "title": "Market anomalies",
+          "status": "not-started",
+          "type": "plan",
+          "notes": "# Market anomalies\n\nUtrwalone odchylenia od EMH — sygnały lub artefakty data mining.\n\n**Learning Modules:** 1 · **Egzamin weight (topic):** 12.5%",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "section_index": "02"
+          },
+          "children": [
+            {
+              "id": "cfa060302-0001-4000-8000-000000000000",
+              "title": "Momentum effect",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# Momentum effect\n\n**LOS:** LOS 3.d · **Difficulty:** 2 · **Estimated:** 0.25h\n\n## Opis\nAkcje, które wzrosły w ostatnich 3-12 miesiącach, kontynuują outperformance. Anomalia spójna z behavioral underreaction.\n\n## Formuły\n—\n\n## Common pitfalls\n- Mylenie momentum z trend-following retail\n- Założenie, że momentum działa zawsze (crash 2009)\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 4, Reading 'Market Efficiency'\n- AnalystPrep, Equity — 'Market Efficiency'",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": [
+                  "3.d"
+                ],
+                "difficulty": 2,
+                "estimated_hours": 0.25,
+                "prerequisites": [],
+                "formulas": [],
+                "common_pitfalls": [
+                  "Mylenie momentum z trend-following retail",
+                  "Założenie, że momentum działa zawsze (crash 2009)"
+                ],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 4, Reading 'Market Efficiency'",
+                  "AnalystPrep, Equity — 'Market Efficiency'"
+                ],
+                "tags": [
+                  "anomaly"
+                ]
+              }
+            },
+            {
+              "id": "cfa060302-0002-4000-8000-000000000000",
+              "title": "Value effect",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# Value effect\n\n**LOS:** LOS 3.d · **Difficulty:** 2 · **Estimated:** 0.25h\n\n## Opis\nAkcje value (low P/E, P/B) historycznie pobijają growth. Może być wynikiem risk premium (Fama-French HML) lub błędów w extrapolation.\n\n## Formuły\n—\n\n## Common pitfalls\n- Mylenie value z deep-value distress\n- Pomijanie ryzyka jako wyjaśnienia\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 4, Reading 'Market Efficiency'\n- Schweser SchweserNotes Book 4, SS13",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": [
+                  "3.d"
+                ],
+                "difficulty": 2,
+                "estimated_hours": 0.25,
+                "prerequisites": [],
+                "formulas": [],
+                "common_pitfalls": [
+                  "Mylenie value z deep-value distress",
+                  "Pomijanie ryzyka jako wyjaśnienia"
+                ],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 4, Reading 'Market Efficiency'",
+                  "Schweser SchweserNotes Book 4, SS13"
+                ],
+                "tags": [
+                  "anomaly"
+                ]
+              }
+            },
+            {
+              "id": "cfa060302-0003-4000-8000-000000000000",
+              "title": "Size effect",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# Size effect\n\n**LOS:** LOS 3.d · **Difficulty:** 2 · **Estimated:** 0.25h\n\n## Opis\nMałe spółki historycznie generują wyższe stopy zwrotu (Fama-French SMB). Anomalia osłabła po publikacji Banza (1981).\n\n## Formuły\n—\n\n## Common pitfalls\n- Pomijanie kosztów transakcyjnych w small caps\n- Założenie, że anomalia trwa dziś\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 4, Reading 'Market Efficiency'\n- AnalystPrep, Equity — 'Market Efficiency'",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": [
+                  "3.d"
+                ],
+                "difficulty": 2,
+                "estimated_hours": 0.25,
+                "prerequisites": [],
+                "formulas": [],
+                "common_pitfalls": [
+                  "Pomijanie kosztów transakcyjnych w small caps",
+                  "Założenie, że anomalia trwa dziś"
+                ],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 4, Reading 'Market Efficiency'",
+                  "AnalystPrep, Equity — 'Market Efficiency'"
+                ],
+                "tags": [
+                  "anomaly"
+                ]
+              }
+            },
+            {
+              "id": "cfa060302-0004-4000-8000-000000000000",
+              "title": "Calendar effects (January effect)",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# Calendar effects (January effect)\n\n**LOS:** LOS 3.d · **Difficulty:** 2 · **Estimated:** 0.25h\n\n## Opis\nSezonowe wzorce stóp zwrotu, m.in. January effect (małe spółki w styczniu), turn-of-the-month, day-of-week. Często przypisywane tax-loss harvesting i window dressing.\n\n## Formuły\n—\n\n## Common pitfalls\n- Mylenie January effect z całorocznym size\n- Założenie, że anomalia wciąż jest istotna ekonomicznie\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 4, Reading 'Market Efficiency'\n- Mark Meldrum, Equity — 'EMH and Behavioral'",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": [
+                  "3.d"
+                ],
+                "difficulty": 2,
+                "estimated_hours": 0.25,
+                "prerequisites": [],
+                "formulas": [],
+                "common_pitfalls": [
+                  "Mylenie January effect z całorocznym size",
+                  "Założenie, że anomalia wciąż jest istotna ekonomicznie"
+                ],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 4, Reading 'Market Efficiency'",
+                  "Mark Meldrum, Equity — 'EMH and Behavioral'"
+                ],
+                "tags": [
+                  "anomaly"
+                ]
+              }
+            },
+            {
+              "id": "cfa060302-0005-4000-8000-000000000000",
+              "title": "Post-earnings announcement drift (PEAD)",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# Post-earnings announcement drift (PEAD)\n\n**LOS:** LOS 3.d · **Difficulty:** 3 · **Estimated:** 0.5h\n\n## Opis\nStopniowy drift ceny w kierunku surprise przez tygodnie po ogłoszeniu wyników — sprzeczne z semi-strong EMH. Wyjaśnienia behavioralne: underreaction, anchoring na konsensus.\n\n## Formuły\n—\n\n## Common pitfalls\n- Mylenie z initial reaction (event window)\n- Pomijanie limits to arbitrage\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 4, Reading 'Market Efficiency'\n- Schweser SchweserNotes Book 4, SS13",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": [
+                  "3.d"
+                ],
+                "difficulty": 3,
+                "estimated_hours": 0.5,
+                "prerequisites": [],
+                "formulas": [],
+                "common_pitfalls": [
+                  "Mylenie z initial reaction (event window)",
+                  "Pomijanie limits to arbitrage"
+                ],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 4, Reading 'Market Efficiency'",
+                  "Schweser SchweserNotes Book 4, SS13"
+                ],
+                "tags": [
+                  "anomaly"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "id": "cfa060303-0000-4000-8000-000000000000",
+          "title": "Behavioral finance biases",
+          "status": "not-started",
+          "type": "plan",
+          "notes": "# Behavioral finance biases\n\nKluczowe bias kognitywne i emocjonalne wpływające na ceny i decyzje inwestorów.\n\n**Learning Modules:** 1 · **Egzamin weight (topic):** 12.5%",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "section_index": "03"
+          },
+          "children": [
+            {
+              "id": "cfa060303-0001-4000-8000-000000000000",
+              "title": "Representativeness",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# Representativeness\n\n**LOS:** LOS 3.e · **Difficulty:** 2 · **Estimated:** 0.25h\n\n## Opis\nOcena prawdopodobieństwa zdarzenia na bazie podobieństwa do prototypu zamiast statystyki bazowej. Skutek: extrapolation past performance, base-rate neglect.\n\n## Formuły\n—\n\n## Common pitfalls\n- Mylenie z confirmation bias\n- Pomijanie base rate\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 4, Reading 'Market Efficiency'\n- AnalystPrep, Equity — 'Market Efficiency'",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": [
+                  "3.e"
+                ],
+                "difficulty": 2,
+                "estimated_hours": 0.25,
+                "prerequisites": [],
+                "formulas": [],
+                "common_pitfalls": [
+                  "Mylenie z confirmation bias",
+                  "Pomijanie base rate"
+                ],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 4, Reading 'Market Efficiency'",
+                  "AnalystPrep, Equity — 'Market Efficiency'"
+                ],
+                "tags": [
+                  "behavioral"
+                ]
+              }
+            },
+            {
+              "id": "cfa060303-0002-4000-8000-000000000000",
+              "title": "Overconfidence",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# Overconfidence\n\n**LOS:** LOS 3.e · **Difficulty:** 2 · **Estimated:** 0.25h\n\n## Opis\nPrzeszacowanie własnej wiedzy/zdolności predykcyjnych. Skutek: nadmierny trading, koncentracja portfela, narrow confidence intervals.\n\n## Formuły\n—\n\n## Common pitfalls\n- Mylenie z optimism bias\n- Pomijanie skutku — wysokie obroty\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 4, Reading 'Market Efficiency'\n- Mark Meldrum, Equity — 'EMH and Behavioral'",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": [
+                  "3.e"
+                ],
+                "difficulty": 2,
+                "estimated_hours": 0.25,
+                "prerequisites": [],
+                "formulas": [],
+                "common_pitfalls": [
+                  "Mylenie z optimism bias",
+                  "Pomijanie skutku — wysokie obroty"
+                ],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 4, Reading 'Market Efficiency'",
+                  "Mark Meldrum, Equity — 'EMH and Behavioral'"
+                ],
+                "tags": [
+                  "behavioral"
+                ]
+              }
+            },
+            {
+              "id": "cfa060303-0003-4000-8000-000000000000",
+              "title": "Loss aversion",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# Loss aversion\n\n**LOS:** LOS 3.e · **Difficulty:** 2 · **Estimated:** 0.25h\n\n## Opis\nStrata boli ~2x bardziej niż równowartościowy zysk cieszy (Kahneman/Tversky). Element prospect theory; tłumaczy disposition effect.\n\n## Formuły\n- Loss aversion coefficient lambda ≈ 2 - 2.5\n\n## Common pitfalls\n- Mylenie z risk aversion\n- Twierdzenie, że loss aversion = irracjonalność\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 4, Reading 'Market Efficiency'\n- Schweser SchweserNotes Book 4, SS13",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": [
+                  "3.e"
+                ],
+                "difficulty": 2,
+                "estimated_hours": 0.25,
+                "prerequisites": [],
+                "formulas": [
+                  "Loss aversion coefficient lambda ≈ 2 - 2.5"
+                ],
+                "common_pitfalls": [
+                  "Mylenie z risk aversion",
+                  "Twierdzenie, że loss aversion = irracjonalność"
+                ],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 4, Reading 'Market Efficiency'",
+                  "Schweser SchweserNotes Book 4, SS13"
+                ],
+                "tags": [
+                  "behavioral"
+                ]
+              }
+            },
+            {
+              "id": "cfa060303-0004-4000-8000-000000000000",
+              "title": "Herding",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# Herding\n\n**LOS:** LOS 3.e · **Difficulty:** 2 · **Estimated:** 0.25h\n\n## Opis\nNaśladowanie decyzji innych inwestorów ignorując własne sygnały. Skutek: bańki, momentum, slow correction.\n\n## Formuły\n—\n\n## Common pitfalls\n- Mylenie z information cascade\n- Pomijanie rationale herd (career risk)\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 4, Reading 'Market Efficiency'\n- AnalystPrep, Equity — 'Market Efficiency'",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": [
+                  "3.e"
+                ],
+                "difficulty": 2,
+                "estimated_hours": 0.25,
+                "prerequisites": [],
+                "formulas": [],
+                "common_pitfalls": [
+                  "Mylenie z information cascade",
+                  "Pomijanie rationale herd (career risk)"
+                ],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 4, Reading 'Market Efficiency'",
+                  "AnalystPrep, Equity — 'Market Efficiency'"
+                ],
+                "tags": [
+                  "behavioral"
+                ]
+              }
+            },
+            {
+              "id": "cfa060303-0005-4000-8000-000000000000",
+              "title": "Anchoring",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# Anchoring\n\n**LOS:** LOS 3.e · **Difficulty:** 2 · **Estimated:** 0.25h\n\n## Opis\nNadmierne przywiązanie do wartości referencyjnej (np. cena zakupu, target price analityka). Skutek: wolna adaptacja do nowych informacji.\n\n## Formuły\n—\n\n## Common pitfalls\n- Mylenie z conservatism bias\n- Pomijanie roli anchoringu w forecastach\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 4, Reading 'Market Efficiency'\n- Mark Meldrum, Equity — 'EMH and Behavioral'",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": [
+                  "3.e"
+                ],
+                "difficulty": 2,
+                "estimated_hours": 0.25,
+                "prerequisites": [],
+                "formulas": [],
+                "common_pitfalls": [
+                  "Mylenie z conservatism bias",
+                  "Pomijanie roli anchoringu w forecastach"
+                ],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 4, Reading 'Market Efficiency'",
+                  "Mark Meldrum, Equity — 'EMH and Behavioral'"
+                ],
+                "tags": [
+                  "behavioral"
+                ]
+              }
+            },
+            {
+              "id": "cfa060303-0006-4000-8000-000000000000",
+              "title": "Framing",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# Framing\n\n**LOS:** LOS 3.e · **Difficulty:** 2 · **Estimated:** 0.25h\n\n## Opis\nDecyzja zależy od sposobu przedstawienia informacji (gain frame vs loss frame), nie od jej treści. Klasyczny test: Asian disease.\n\n## Formuły\n—\n\n## Common pitfalls\n- Mylenie z mental accounting\n- Pomijanie roli wording w research notes\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 4, Reading 'Market Efficiency'\n- Schweser SchweserNotes Book 4, SS13",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": [
+                  "3.e"
+                ],
+                "difficulty": 2,
+                "estimated_hours": 0.25,
+                "prerequisites": [],
+                "formulas": [],
+                "common_pitfalls": [
+                  "Mylenie z mental accounting",
+                  "Pomijanie roli wording w research notes"
+                ],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 4, Reading 'Market Efficiency'",
+                  "Schweser SchweserNotes Book 4, SS13"
+                ],
+                "tags": [
+                  "behavioral"
+                ]
+              }
+            },
+            {
+              "id": "cfa060303-0007-4000-8000-000000000000",
+              "title": "Mental accounting",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# Mental accounting\n\n**LOS:** LOS 3.e · **Difficulty:** 2 · **Estimated:** 0.25h\n\n## Opis\nTraktowanie pieniędzy w odrębnych mental buckets (savings, gambling, salary) zamiast jako fungible. Skutek: nieoptymalne portfele warstwowe.\n\n## Formuły\n—\n\n## Common pitfalls\n- Mylenie z framing\n- Pomijanie powiązań korelacyjnych między bucketami\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 4, Reading 'Market Efficiency'\n- AnalystPrep, Equity — 'Market Efficiency'",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": [
+                  "3.e"
+                ],
+                "difficulty": 2,
+                "estimated_hours": 0.25,
+                "prerequisites": [],
+                "formulas": [],
+                "common_pitfalls": [
+                  "Mylenie z framing",
+                  "Pomijanie powiązań korelacyjnych między bucketami"
+                ],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 4, Reading 'Market Efficiency'",
+                  "AnalystPrep, Equity — 'Market Efficiency'"
+                ],
+                "tags": [
+                  "behavioral"
+                ]
+              }
+            },
+            {
+              "id": "cfa060303-0008-4000-8000-000000000000",
+              "title": "Disposition effect",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# Disposition effect\n\n**LOS:** LOS 3.e · **Difficulty:** 2 · **Estimated:** 0.25h\n\n## Opis\nTendencja do zbyt szybkiej sprzedaży zwycięzców i trzymania przegranych. Wynika z loss aversion + mental accounting; zniekształca momentum.\n\n## Formuły\n—\n\n## Common pitfalls\n- Mylenie z herding\n- Pomijanie skutku podatkowego (tax-loss)\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 4, Reading 'Market Efficiency'\n- Mark Meldrum, Equity — 'EMH and Behavioral'",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": [
+                  "3.e"
+                ],
+                "difficulty": 2,
+                "estimated_hours": 0.25,
+                "prerequisites": [],
+                "formulas": [],
+                "common_pitfalls": [
+                  "Mylenie z herding",
+                  "Pomijanie skutku podatkowego (tax-loss)"
+                ],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 4, Reading 'Market Efficiency'",
+                  "Mark Meldrum, Equity — 'EMH and Behavioral'"
+                ],
+                "tags": [
+                  "behavioral"
+                ]
+              }
+            },
+            {
+              "id": "cfa060303-0009-4000-8000-000000000000",
+              "title": "Confirmation bias",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# Confirmation bias\n\n**LOS:** LOS 3.e · **Difficulty:** 2 · **Estimated:** 0.25h\n\n## Opis\nSelektywne wyszukiwanie informacji potwierdzających own thesis i ignorowanie kontrargumentów. Skutek: niedoszacowanie ryzyka.\n\n## Formuły\n—\n\n## Common pitfalls\n- Mylenie z hindsight bias\n- Pomijanie roli devil's advocate\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 4, Reading 'Market Efficiency'\n- Schweser SchweserNotes Book 4, SS13",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": [
+                  "3.e"
+                ],
+                "difficulty": 2,
+                "estimated_hours": 0.25,
+                "prerequisites": [],
+                "formulas": [],
+                "common_pitfalls": [
+                  "Mylenie z hindsight bias",
+                  "Pomijanie roli devil's advocate"
+                ],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 4, Reading 'Market Efficiency'",
+                  "Schweser SchweserNotes Book 4, SS13"
+                ],
+                "tags": [
+                  "behavioral"
+                ]
+              }
+            },
+            {
+              "id": "cfa060303-0010-4000-8000-000000000000",
+              "title": "Availability bias",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# Availability bias\n\n**LOS:** LOS 3.e · **Difficulty:** 2 · **Estimated:** 0.25h\n\n## Opis\nPrzeszacowanie prawdopodobieństwa zdarzeń łatwo dostępnych w pamięci (recency, vividness). Skutek: overweighting recent news.\n\n## Formuły\n—\n\n## Common pitfalls\n- Mylenie z representativeness\n- Pomijanie media bias\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 4, Reading 'Market Efficiency'\n- AnalystPrep, Equity — 'Market Efficiency'",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": [
+                  "3.e"
+                ],
+                "difficulty": 2,
+                "estimated_hours": 0.25,
+                "prerequisites": [],
+                "formulas": [],
+                "common_pitfalls": [
+                  "Mylenie z representativeness",
+                  "Pomijanie media bias"
+                ],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 4, Reading 'Market Efficiency'",
+                  "AnalystPrep, Equity — 'Market Efficiency'"
+                ],
+                "tags": [
+                  "behavioral"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,3544 @@
+{
+  "id": "cfa020000-0000-4000-8000-000000000000",
+  "title": "Quantitative Methods",
+  "status": "not-started",
+  "type": "milestone",
+  "notes": "# Quantitative Methods\n\nIlościowy fundament całego CFA Level I. Obejmuje TVM, statystykę opisową, prawdopodobieństwo, rozkłady, próbkowanie, testowanie hipotez, regresję oraz wprowadzenie do big data i ML. Te narzędzia są wykorzystywane wszędzie: w wycenie equity (DCF), fixed income (bond pricing, duration), corporate (NPV, WACC), portfolio (mean-variance, beta), derivatives (binomial trees) i alternatives (NPV).\n\n**Exam weight (mid-point):** 7.5%\n**Learning Modules:** 11\n**Estimated study time:** 30-40h",
+  "createdAt": "2026-05-06T00:00:00Z",
+  "updatedAt": "2026-05-06T00:00:00Z",
+  "metadata": {
+    "topic_number": "02",
+    "topic_name": "Quantitative Methods",
+    "exam_weight_share": 7.5,
+    "lm_count": 11,
+    "estimated_hours_total": 35
+  },
+  "children": [
+    {
+      "id": "cfa020100-0000-4000-8000-000000000000",
+      "title": "Rates and Returns",
+      "status": "not-started",
+      "type": "phase",
+      "notes": "# Rates and Returns\n\nFundamenty stóp zwrotu — od HPR przez średnie (arytmetyczna, geometryczna, harmoniczna) po MWR/TWR i podziały gross/net, pre/after-tax, real/nominal, leveraged. Baza dla performance measurement w PM.\n\n**Learning Modules:** 1 · **Egzamin weight (topic):** 7.5%",
+      "createdAt": "2026-05-06T00:00:00Z",
+      "updatedAt": "2026-05-06T00:00:00Z",
+      "metadata": {
+        "lm_index": "01",
+        "lm_name_canonical": "Rates and Returns",
+        "los_count": 5,
+        "topic": "Quantitative Methods"
+      },
+      "children": [
+        {
+          "id": "cfa020100-0001-4000-8000-000000000000",
+          "title": "Holding period return",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# Holding period return\n\n**LOS:** LOS 1.a · **Difficulty:** 2 · **Estimated:** 0.4h\n\n## Opis\nHPR to całkowita stopa zwrotu z aktywa za cały okres trzymania, łącznie z dochodem i zmianą ceny. Punkt wyjścia dla wszystkich innych miar zwrotu.\n\n## Formuły / kluczowe relacje\n- HPR = (P1 - P0 + D1) / P0\n- Wieloletnie HPR = (1+r1)(1+r2)...(1+rn) - 1\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Mylenie HPR z annualized return przy okresach krótszych/dłuższych niż rok\n- Pomijanie reinwestycji dochodów\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Rates and Returns'\n- Schweser SchweserNotes Book 1, SS1, Reading 'Rates and Returns'",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": [
+              "1.a"
+            ],
+            "difficulty": 2,
+            "estimated_hours": 0.4,
+            "prerequisites": [],
+            "formulas": [
+              "HPR = (P1 - P0 + D1) / P0"
+            ],
+            "common_pitfalls": [
+              "Mylenie HPR z annualized return",
+              "Pomijanie reinwestycji dochodów"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 1, Reading 'Rates and Returns'",
+              "Schweser SchweserNotes Book 1, SS1, Reading 'Rates and Returns'"
+            ],
+            "tags": [
+              "return",
+              "formula"
+            ]
+          },
+          "children": []
+        },
+        {
+          "id": "cfa020100-0002-4000-8000-000000000000",
+          "title": "Arithmetic mean return",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# Arithmetic mean return\n\n**LOS:** LOS 1.b · **Difficulty:** 2 · **Estimated:** 0.4h\n\n## Opis\nProsta średnia zwrotów okresowych. Najlepszy estymator oczekiwanego zwrotu pojedynczego okresu, ale zawyża rzeczywisty wzrost majątku w czasie.\n\n## Formuły / kluczowe relacje\n- Arithmetic mean = sum(r_i) / n\n\n## Prerequisites\n- Holding period return\n\n## Common pitfalls\n- Używanie do oceny historycznego wzrostu (powinno być geometric)\n- Mylenie z geometric mean przy zmiennych zwrotach\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Rates and Returns'\n- AnalystPrep QM — Returns",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": [
+              "1.b"
+            ],
+            "difficulty": 2,
+            "estimated_hours": 0.4,
+            "prerequisites": [
+              "Holding period return"
+            ],
+            "formulas": [
+              "Arithmetic mean = sum(r_i) / n"
+            ],
+            "common_pitfalls": [
+              "Używanie do oceny historycznego wzrostu",
+              "Mylenie z geometric mean"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 1, Reading 'Rates and Returns'",
+              "AnalystPrep QM — Returns"
+            ],
+            "tags": [
+              "return",
+              "mean"
+            ]
+          },
+          "children": []
+        },
+        {
+          "id": "cfa020100-0003-4000-8000-000000000000",
+          "title": "Geometric mean return",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# Geometric mean return\n\n**LOS:** LOS 1.b · **Difficulty:** 2 · **Estimated:** 0.4h\n\n## Opis\nCAGR — średnia uwzględniająca compounding. Właściwa miara historycznego wzrostu kapitału. Zawsze ≤ arithmetic mean (równość tylko gdy wszystkie zwroty identyczne).\n\n## Formuły / kluczowe relacje\n- Geometric mean = [(1+r1)(1+r2)...(1+rn)]^(1/n) - 1\n\n## Prerequisites\n- Arithmetic mean return\n\n## Common pitfalls\n- Zapominanie o '-1' na końcu wzoru\n- Mylenie z arithmetic mean dla forward-looking estimates\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Rates and Returns'\n- Mark Meldrum QM Module 1",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": [
+              "1.b"
+            ],
+            "difficulty": 2,
+            "estimated_hours": 0.4,
+            "prerequisites": [
+              "Arithmetic mean return"
+            ],
+            "formulas": [
+              "Geometric mean = [(1+r1)(1+r2)...(1+rn)]^(1/n) - 1"
+            ],
+            "common_pitfalls": [
+              "Zapominanie o '-1' na końcu",
+              "Mylenie z arithmetic mean dla forward-looking"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 1, Reading 'Rates and Returns'",
+              "Mark Meldrum QM Module 1"
+            ],
+            "tags": [
+              "return",
+              "mean",
+              "compounding"
+            ]
+          },
+          "children": []
+        },
+        {
+          "id": "cfa020100-0004-4000-8000-000000000000",
+          "title": "Harmonic mean return",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# Harmonic mean return\n\n**LOS:** LOS 1.b · **Difficulty:** 2 · **Estimated:** 0.3h\n\n## Opis\nUżywana do uśredniania wskaźników (np. P/E) i kosztu zakupu w strategii dollar-cost averaging. Zawsze ≤ geometric ≤ arithmetic mean.\n\n## Formuły / kluczowe relacje\n- Harmonic mean = n / sum(1/x_i)\n\n## Prerequisites\n- Geometric mean return\n\n## Common pitfalls\n- Stosowanie do zwrotów zamiast do cen/wskaźników\n- Mylenie kolejności średnich (H ≤ G ≤ A)\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Rates and Returns'\n- Kaplan Schweser QBank — Quantitative Methods",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": [
+              "1.b"
+            ],
+            "difficulty": 2,
+            "estimated_hours": 0.3,
+            "prerequisites": [
+              "Geometric mean return"
+            ],
+            "formulas": [
+              "Harmonic mean = n / sum(1/x_i)"
+            ],
+            "common_pitfalls": [
+              "Stosowanie do zwrotów zamiast cen",
+              "Mylenie kolejności H ≤ G ≤ A"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 1, Reading 'Rates and Returns'",
+              "Kaplan Schweser QBank — Quantitative Methods"
+            ],
+            "tags": [
+              "return",
+              "mean",
+              "dca"
+            ]
+          },
+          "children": []
+        },
+        {
+          "id": "cfa020100-0005-4000-8000-000000000000",
+          "title": "Money-weighted return (IRR)",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# Money-weighted return (IRR)\n\n**LOS:** LOS 1.c · **Difficulty:** 3 · **Estimated:** 0.6h\n\n## Opis\nIRR portfela — uwzględnia timing i wielkość przepływów (kontrybucji/wypłat). Mierzy doświadczenie inwestora, ale zniekształcony przez decyzje o timingu.\n\n## Formuły / kluczowe relacje\n- 0 = sum(CF_t / (1+MWR)^t) dla t = 0..n\n\n## Prerequisites\n- Holding period return\n\n## Common pitfalls\n- Mylenie z TWR — używanie MWR do oceny umiejętności managera\n- Błędne znaki przepływów (kontrybucja = ujemny CF z perspektywy inwestora)\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Rates and Returns'\n- Schweser SchweserNotes Book 1, SS1",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": [
+              "1.c"
+            ],
+            "difficulty": 3,
+            "estimated_hours": 0.6,
+            "prerequisites": [
+              "Holding period return"
+            ],
+            "formulas": [
+              "0 = sum(CF_t / (1+MWR)^t)"
+            ],
+            "common_pitfalls": [
+              "Mylenie z TWR przy ocenie managera",
+              "Błędne znaki przepływów"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 1, Reading 'Rates and Returns'",
+              "Schweser SchweserNotes Book 1, SS1"
+            ],
+            "tags": [
+              "return",
+              "irr",
+              "performance"
+            ]
+          },
+          "children": []
+        },
+        {
+          "id": "cfa020100-0006-4000-8000-000000000000",
+          "title": "Time-weighted return",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# Time-weighted return\n\n**LOS:** LOS 1.c · **Difficulty:** 3 · **Estimated:** 0.5h\n\n## Opis\nGeometryczny łańcuch sub-period returns. Eliminuje wpływ timingu cashflows — preferowana miara umiejętności portfolio managera (GIPS standard).\n\n## Formuły / kluczowe relacje\n- TWR = [(1+r1)(1+r2)...(1+rn)]^(1/n) - 1, gdzie każde r_i to HPR sub-okresu między cashflows\n\n## Prerequisites\n- Geometric mean return\n- Money-weighted return (IRR)\n\n## Common pitfalls\n- Niepodział okresu na sub-periods przy każdym cashflow\n- Mylenie kierunku — TWR ≥ MWR gdy manager kupuje przed wzrostem\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Rates and Returns'\n- AnalystPrep — TWR vs MWR",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": [
+              "1.c"
+            ],
+            "difficulty": 3,
+            "estimated_hours": 0.5,
+            "prerequisites": [
+              "Geometric mean return",
+              "Money-weighted return (IRR)"
+            ],
+            "formulas": [
+              "TWR = [(1+r1)(1+r2)...(1+rn)]^(1/n) - 1"
+            ],
+            "common_pitfalls": [
+              "Brak podziału na sub-periods przy cashflow",
+              "Mylenie kierunku vs MWR"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 1, Reading 'Rates and Returns'",
+              "AnalystPrep — TWR vs MWR"
+            ],
+            "tags": [
+              "return",
+              "performance",
+              "gips"
+            ]
+          },
+          "children": []
+        },
+        {
+          "id": "cfa020100-0007-4000-8000-000000000000",
+          "title": "Gross vs net return",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# Gross vs net return\n\n**LOS:** LOS 1.d · **Difficulty:** 1 · **Estimated:** 0.2h\n\n## Opis\nGross return = przed kosztami zarządzania i prowizjami. Net return = po opłatach. GIPS wymaga raportowania obu.\n\n## Formuły / kluczowe relacje\n- Net return = Gross return - management fees - admin fees\n\n## Prerequisites\n- Holding period return\n\n## Common pitfalls\n- Pomijanie kosztów transakcyjnych w gross\n- Mylenie z pre-tax/after-tax\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Rates and Returns'\n- GIPS Standards 2020",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": [
+              "1.d"
+            ],
+            "difficulty": 1,
+            "estimated_hours": 0.2,
+            "prerequisites": [
+              "Holding period return"
+            ],
+            "formulas": [
+              "Net return = Gross return - fees"
+            ],
+            "common_pitfalls": [
+              "Pomijanie kosztów transakcyjnych w gross",
+              "Mylenie z pre/after-tax"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 1, Reading 'Rates and Returns'",
+              "GIPS Standards 2020"
+            ],
+            "tags": [
+              "return",
+              "fees"
+            ]
+          },
+          "children": []
+        },
+        {
+          "id": "cfa020100-0008-4000-8000-000000000000",
+          "title": "Pre-tax vs after-tax return",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# Pre-tax vs after-tax return\n\n**LOS:** LOS 1.d · **Difficulty:** 2 · **Estimated:** 0.3h\n\n## Opis\nAfter-tax = pre-tax skorygowany o podatek od dochodu i zysków kapitałowych. Kluczowe dla taxable accounts i porównania municipal vs corporate bonds.\n\n## Formuły / kluczowe relacje\n- After-tax return = Pre-tax return * (1 - tax rate)\n- Taxable equivalent yield = muni yield / (1 - marginal tax rate)\n\n## Prerequisites\n- Holding period return\n\n## Common pitfalls\n- Stosowanie tej samej stawki do dochodu odsetkowego i kapitałowego\n- Pomijanie różnicy short-term vs long-term capital gains\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Rates and Returns'\n- Schweser QBank",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": [
+              "1.d"
+            ],
+            "difficulty": 2,
+            "estimated_hours": 0.3,
+            "prerequisites": [
+              "Holding period return"
+            ],
+            "formulas": [
+              "After-tax = Pre-tax * (1 - tax rate)",
+              "TEY = muni / (1 - tax)"
+            ],
+            "common_pitfalls": [
+              "Jedna stawka dla różnych typów dochodu",
+              "Pomijanie short vs long-term gains"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 1, Reading 'Rates and Returns'",
+              "Schweser QBank"
+            ],
+            "tags": [
+              "return",
+              "tax"
+            ]
+          },
+          "children": []
+        },
+        {
+          "id": "cfa020100-0009-4000-8000-000000000000",
+          "title": "Real vs nominal return",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# Real vs nominal return\n\n**LOS:** LOS 1.d · **Difficulty:** 2 · **Estimated:** 0.3h\n\n## Opis\nReal return koryguje nominal return o inflację. Fisher equation łączy nominalną stopę z realną i oczekiwaną inflacją.\n\n## Formuły / kluczowe relacje\n- (1 + nominal) = (1 + real)(1 + inflation)\n- Real return ≈ nominal - inflation (przybliżenie)\n\n## Prerequisites\n- Holding period return\n\n## Common pitfalls\n- Używanie przybliżenia liniowego przy wysokiej inflacji\n- Mylenie ex-ante z ex-post real return\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Rates and Returns'\n- Mark Meldrum QM",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": [
+              "1.d"
+            ],
+            "difficulty": 2,
+            "estimated_hours": 0.3,
+            "prerequisites": [
+              "Holding period return"
+            ],
+            "formulas": [
+              "(1+nominal) = (1+real)(1+inflation)",
+              "real ≈ nominal - inflation"
+            ],
+            "common_pitfalls": [
+              "Liniowe przybliżenie przy wysokiej inflacji",
+              "Ex-ante vs ex-post"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 1, Reading 'Rates and Returns'",
+              "Mark Meldrum QM"
+            ],
+            "tags": [
+              "return",
+              "inflation",
+              "fisher"
+            ]
+          },
+          "children": []
+        },
+        {
+          "id": "cfa020100-0010-4000-8000-000000000000",
+          "title": "Leveraged return",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# Leveraged return\n\n**LOS:** LOS 1.d · **Difficulty:** 3 · **Estimated:** 0.4h\n\n## Opis\nZwrot z pozycji finansowanej długiem. Magnifies zarówno zyski jak i straty; uwzględnia koszt finansowania.\n\n## Formuły / kluczowe relacje\n- Leveraged return = [r_asset * V_asset - r_borrow * V_borrow] / V_equity\n\n## Prerequisites\n- Holding period return\n\n## Common pitfalls\n- Pomijanie kosztu finansowania\n- Niezauważanie asymetrii: dźwignia powiększa straty bardziej niż intuicja sugeruje\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Rates and Returns'\n- AnalystPrep — Leverage",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": [
+              "1.d"
+            ],
+            "difficulty": 3,
+            "estimated_hours": 0.4,
+            "prerequisites": [
+              "Holding period return"
+            ],
+            "formulas": [
+              "Leveraged return = (r_a*V_a - r_b*V_b) / V_e"
+            ],
+            "common_pitfalls": [
+              "Pomijanie kosztu finansowania",
+              "Asymetria zysków/strat"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 1, Reading 'Rates and Returns'",
+              "AnalystPrep — Leverage"
+            ],
+            "tags": [
+              "return",
+              "leverage"
+            ]
+          },
+          "children": []
+        },
+        {
+          "id": "cfa020100-0011-4000-8000-000000000000",
+          "title": "Stated vs effective annual rate",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# Stated vs effective annual rate\n\n**LOS:** LOS 1.e · **Difficulty:** 2 · **Estimated:** 0.4h\n\n## Opis\nStated annual rate (nominal) nie uwzględnia compounding. EAR uwzględnia wewnątrzroczne kapitalizacje. EAR > stated rate gdy kompoundowanie częstsze niż roczne.\n\n## Formuły / kluczowe relacje\n- EAR = (1 + stated/m)^m - 1, gdzie m = liczba okresów rocznie\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Używanie stated rate w kalkulatorze TVM gdy zadanie wymaga EAR\n- Mylenie m=12 (monthly) z m=2 (semiannual)\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Rates and Returns'\n- Schweser SchweserNotes Book 1, SS1",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": [
+              "1.e"
+            ],
+            "difficulty": 2,
+            "estimated_hours": 0.4,
+            "prerequisites": [],
+            "formulas": [
+              "EAR = (1 + stated/m)^m - 1"
+            ],
+            "common_pitfalls": [
+              "Stated zamiast EAR w TVM",
+              "Mylenie częstotliwości m"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 1, Reading 'Rates and Returns'",
+              "Schweser SchweserNotes Book 1, SS1"
+            ],
+            "tags": [
+              "rate",
+              "compounding",
+              "ear"
+            ]
+          },
+          "children": []
+        },
+        {
+          "id": "cfa020100-0012-4000-8000-000000000000",
+          "title": "Continuous compounding",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# Continuous compounding\n\n**LOS:** LOS 1.e · **Difficulty:** 2 · **Estimated:** 0.3h\n\n## Opis\nGraniczny przypadek compounding (m → ∞). Używane w modelach derivatives (Black-Scholes) oraz przy log returns.\n\n## Formuły / kluczowe relacje\n- EAR_continuous = e^r - 1\n- Continuously compounded return = ln(P1/P0)\n\n## Prerequisites\n- Stated vs effective annual rate\n\n## Common pitfalls\n- Mylenie continuously compounded return z simple return\n- Pomijanie addytywności log returns w czasie\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Rates and Returns'\n- Hull — Options, Futures",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": [
+              "1.e"
+            ],
+            "difficulty": 2,
+            "estimated_hours": 0.3,
+            "prerequisites": [
+              "Stated vs effective annual rate"
+            ],
+            "formulas": [
+              "EAR_continuous = e^r - 1",
+              "r_cc = ln(P1/P0)"
+            ],
+            "common_pitfalls": [
+              "Mylenie cc return z simple",
+              "Pomijanie addytywności log returns"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 1, Reading 'Rates and Returns'",
+              "Hull — Options, Futures"
+            ],
+            "tags": [
+              "rate",
+              "continuous",
+              "log-return"
+            ]
+          },
+          "children": []
+        }
+      ]
+    },
+    {
+      "id": "cfa020200-0000-4000-8000-000000000000",
+      "title": "The Time Value of Money in Finance",
+      "status": "not-started",
+      "type": "phase",
+      "notes": "# The Time Value of Money in Finance\n\nFundamentalny LM — PV, FV, anuity, perpetuity, growing variants. Baza pod DCF (Equity), bond pricing (FI), NPV (CI), pension obligations.\n\n**Learning Modules:** 1 · **Egzamin weight (topic):** 7.5%",
+      "createdAt": "2026-05-06T00:00:00Z",
+      "updatedAt": "2026-05-06T00:00:00Z",
+      "metadata": {
+        "lm_index": "02",
+        "lm_name_canonical": "The Time Value of Money in Finance",
+        "los_count": 6,
+        "topic": "Quantitative Methods"
+      },
+      "children": [
+        {
+          "id": "cfa020200-0001-4000-8000-000000000000",
+          "title": "FV (lump sum)",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# FV (lump sum)\n\n**LOS:** LOS 2.a · **Difficulty:** 2 · **Estimated:** 0.4h\n\n## Opis\nKluczowy element TVM — fundament wyceny aktywów i analizy finansowej.\n\n## Formuły / kluczowe relacje\n- FV = PV * (1 + r)^n\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Mylenie znaków PV/FV w TI BA II Plus\n- Pomijanie częstotliwości compounding\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'The Time Value of Money in Finance'\n- Schweser SchweserNotes Book 1, SS1",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": [
+              "2.a"
+            ],
+            "difficulty": 2,
+            "estimated_hours": 0.4,
+            "prerequisites": [],
+            "formulas": [
+              "FV = PV * (1 + r)^n"
+            ],
+            "common_pitfalls": [
+              "Mylenie znaków PV/FV w TI BA II Plus",
+              "Pomijanie częstotliwości compounding"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 1, Reading 'The Time Value of Money in Finance'",
+              "Schweser SchweserNotes Book 1, SS1"
+            ],
+            "tags": [
+              "tvm",
+              "formula"
+            ]
+          },
+          "children": []
+        },
+        {
+          "id": "cfa020200-0002-4000-8000-000000000000",
+          "title": "PV (lump sum)",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# PV (lump sum)\n\n**LOS:** LOS 2.a · **Difficulty:** 2 · **Estimated:** 0.4h\n\n## Opis\nKluczowy element TVM — fundament wyceny aktywów i analizy finansowej.\n\n## Formuły / kluczowe relacje\n- PV = FV / (1 + r)^n\n\n## Prerequisites\n- FV (lump sum)\n\n## Common pitfalls\n- Pomijanie konwersji nominal→periodic rate\n- Brak zerowania kalkulatora między zadaniami\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'The Time Value of Money in Finance'\n- Schweser SchweserNotes Book 1, SS1",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": [
+              "2.a"
+            ],
+            "difficulty": 2,
+            "estimated_hours": 0.4,
+            "prerequisites": [
+              "FV (lump sum)"
+            ],
+            "formulas": [
+              "PV = FV / (1 + r)^n"
+            ],
+            "common_pitfalls": [
+              "Pomijanie konwersji nominal→periodic rate",
+              "Brak zerowania kalkulatora między zadaniami"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 1, Reading 'The Time Value of Money in Finance'",
+              "Schweser SchweserNotes Book 1, SS1"
+            ],
+            "tags": [
+              "tvm",
+              "formula"
+            ]
+          },
+          "children": []
+        },
+        {
+          "id": "cfa020200-0003-4000-8000-000000000000",
+          "title": "Annuity (ordinary)",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# Annuity (ordinary)\n\n**LOS:** LOS 2.b · **Difficulty:** 2 · **Estimated:** 0.5h\n\n## Opis\nKluczowy element TVM — fundament wyceny aktywów i analizy finansowej.\n\n## Formuły / kluczowe relacje\n- PV_A = PMT * [1 - (1+r)^-n] / r\n- FV_A = PMT * [(1+r)^n - 1] / r\n\n## Prerequisites\n- PV (lump sum)\n- FV (lump sum)\n\n## Common pitfalls\n- Mylenie ordinary z annuity due (END vs BGN)\n- Niewłaściwy znak PMT\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'The Time Value of Money in Finance'\n- Schweser SchweserNotes Book 1, SS1",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": [
+              "2.b"
+            ],
+            "difficulty": 2,
+            "estimated_hours": 0.5,
+            "prerequisites": [
+              "PV (lump sum)",
+              "FV (lump sum)"
+            ],
+            "formulas": [
+              "PV_A = PMT * [1 - (1+r)^-n] / r",
+              "FV_A = PMT * [(1+r)^n - 1] / r"
+            ],
+            "common_pitfalls": [
+              "Mylenie ordinary z annuity due (END vs BGN)",
+              "Niewłaściwy znak PMT"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 1, Reading 'The Time Value of Money in Finance'",
+              "Schweser SchweserNotes Book 1, SS1"
+            ],
+            "tags": [
+              "tvm",
+              "formula"
+            ]
+          },
+          "children": []
+        },
+        {
+          "id": "cfa020200-0004-4000-8000-000000000000",
+          "title": "Annuity due",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# Annuity due\n\n**LOS:** LOS 2.b · **Difficulty:** 2 · **Estimated:** 0.4h\n\n## Opis\nKluczowy element TVM — fundament wyceny aktywów i analizy finansowej.\n\n## Formuły / kluczowe relacje\n- PV_AD = PV_A * (1+r)\n- FV_AD = FV_A * (1+r)\n\n## Prerequisites\n- Annuity (ordinary)\n\n## Common pitfalls\n- Brak ustawienia BGN w kalkulatorze\n- Mylenie z ordinary przy interpretacji zadania\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'The Time Value of Money in Finance'\n- Schweser SchweserNotes Book 1, SS1",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": [
+              "2.b"
+            ],
+            "difficulty": 2,
+            "estimated_hours": 0.4,
+            "prerequisites": [
+              "Annuity (ordinary)"
+            ],
+            "formulas": [
+              "PV_AD = PV_A * (1+r)",
+              "FV_AD = FV_A * (1+r)"
+            ],
+            "common_pitfalls": [
+              "Brak ustawienia BGN w kalkulatorze",
+              "Mylenie z ordinary przy interpretacji zadania"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 1, Reading 'The Time Value of Money in Finance'",
+              "Schweser SchweserNotes Book 1, SS1"
+            ],
+            "tags": [
+              "tvm",
+              "formula"
+            ]
+          },
+          "children": []
+        },
+        {
+          "id": "cfa020200-0005-4000-8000-000000000000",
+          "title": "Perpetuity",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# Perpetuity\n\n**LOS:** LOS 2.c · **Difficulty:** 2 · **Estimated:** 0.3h\n\n## Opis\nKluczowy element TVM — fundament wyceny aktywów i analizy finansowej.\n\n## Formuły / kluczowe relacje\n- PV_perp = PMT / r\n\n## Prerequisites\n- Annuity (ordinary)\n\n## Common pitfalls\n- Stosowanie do skończonej anuity\n- Pomijanie założenia stałości PMT\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'The Time Value of Money in Finance'\n- Schweser SchweserNotes Book 1, SS1",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": [
+              "2.c"
+            ],
+            "difficulty": 2,
+            "estimated_hours": 0.3,
+            "prerequisites": [
+              "Annuity (ordinary)"
+            ],
+            "formulas": [
+              "PV_perp = PMT / r"
+            ],
+            "common_pitfalls": [
+              "Stosowanie do skończonej anuity",
+              "Pomijanie założenia stałości PMT"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 1, Reading 'The Time Value of Money in Finance'",
+              "Schweser SchweserNotes Book 1, SS1"
+            ],
+            "tags": [
+              "tvm",
+              "formula"
+            ]
+          },
+          "children": []
+        },
+        {
+          "id": "cfa020200-0006-4000-8000-000000000000",
+          "title": "Growing annuity",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# Growing annuity\n\n**LOS:** LOS 2.c · **Difficulty:** 3 · **Estimated:** 0.5h\n\n## Opis\nKluczowy element TVM — fundament wyceny aktywów i analizy finansowej.\n\n## Formuły / kluczowe relacje\n- PV = PMT_1/(r-g) * [1 - ((1+g)/(1+r))^n]\n\n## Prerequisites\n- Annuity (ordinary)\n- Perpetuity\n\n## Common pitfalls\n- Pomijanie warunku r>g\n- Mylenie PMT_1 z PMT_0\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'The Time Value of Money in Finance'\n- Schweser SchweserNotes Book 1, SS1",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": [
+              "2.c"
+            ],
+            "difficulty": 3,
+            "estimated_hours": 0.5,
+            "prerequisites": [
+              "Annuity (ordinary)",
+              "Perpetuity"
+            ],
+            "formulas": [
+              "PV = PMT_1/(r-g) * [1 - ((1+g)/(1+r))^n]"
+            ],
+            "common_pitfalls": [
+              "Pomijanie warunku r>g",
+              "Mylenie PMT_1 z PMT_0"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 1, Reading 'The Time Value of Money in Finance'",
+              "Schweser SchweserNotes Book 1, SS1"
+            ],
+            "tags": [
+              "tvm",
+              "formula"
+            ]
+          },
+          "children": []
+        },
+        {
+          "id": "cfa020200-0007-4000-8000-000000000000",
+          "title": "Growing perpetuity",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# Growing perpetuity\n\n**LOS:** LOS 2.c · **Difficulty:** 2 · **Estimated:** 0.3h\n\n## Opis\nKluczowy element TVM — fundament wyceny aktywów i analizy finansowej.\n\n## Formuły / kluczowe relacje\n- PV = PMT_1 / (r - g)\n\n## Prerequisites\n- Perpetuity\n\n## Common pitfalls\n- r ≤ g powoduje rozbieżność\n- Używanie PMT_0 zamiast PMT_1\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'The Time Value of Money in Finance'\n- Schweser SchweserNotes Book 1, SS1",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": [
+              "2.c"
+            ],
+            "difficulty": 2,
+            "estimated_hours": 0.3,
+            "prerequisites": [
+              "Perpetuity"
+            ],
+            "formulas": [
+              "PV = PMT_1 / (r - g)"
+            ],
+            "common_pitfalls": [
+              "r ≤ g powoduje rozbieżność",
+              "Używanie PMT_0 zamiast PMT_1"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 1, Reading 'The Time Value of Money in Finance'",
+              "Schweser SchweserNotes Book 1, SS1"
+            ],
+            "tags": [
+              "tvm",
+              "formula"
+            ]
+          },
+          "children": []
+        },
+        {
+          "id": "cfa020200-0008-4000-8000-000000000000",
+          "title": "Solving for r",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# Solving for r\n\n**LOS:** LOS 2.d · **Difficulty:** 2 · **Estimated:** 0.4h\n\n## Opis\nKluczowy element TVM — fundament wyceny aktywów i analizy finansowej.\n\n## Formuły / kluczowe relacje\n- r = (FV/PV)^(1/n) - 1\n\n## Prerequisites\n- FV (lump sum)\n- PV (lump sum)\n\n## Common pitfalls\n- Pomijanie sign convention\n- Mylenie periodic z annual rate\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'The Time Value of Money in Finance'\n- Schweser SchweserNotes Book 1, SS1",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": [
+              "2.d"
+            ],
+            "difficulty": 2,
+            "estimated_hours": 0.4,
+            "prerequisites": [
+              "FV (lump sum)",
+              "PV (lump sum)"
+            ],
+            "formulas": [
+              "r = (FV/PV)^(1/n) - 1"
+            ],
+            "common_pitfalls": [
+              "Pomijanie sign convention",
+              "Mylenie periodic z annual rate"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 1, Reading 'The Time Value of Money in Finance'",
+              "Schweser SchweserNotes Book 1, SS1"
+            ],
+            "tags": [
+              "tvm",
+              "formula"
+            ]
+          },
+          "children": []
+        },
+        {
+          "id": "cfa020200-0009-4000-8000-000000000000",
+          "title": "Solving for n",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# Solving for n\n\n**LOS:** LOS 2.d · **Difficulty:** 2 · **Estimated:** 0.3h\n\n## Opis\nKluczowy element TVM — fundament wyceny aktywów i analizy finansowej.\n\n## Formuły / kluczowe relacje\n- n = ln(FV/PV) / ln(1+r)\n\n## Prerequisites\n- FV (lump sum)\n- PV (lump sum)\n\n## Common pitfalls\n- Pomyłka w bazie logarytmu\n- Pomijanie zaokrąglenia n w górę\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'The Time Value of Money in Finance'\n- Schweser SchweserNotes Book 1, SS1",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": [
+              "2.d"
+            ],
+            "difficulty": 2,
+            "estimated_hours": 0.3,
+            "prerequisites": [
+              "FV (lump sum)",
+              "PV (lump sum)"
+            ],
+            "formulas": [
+              "n = ln(FV/PV) / ln(1+r)"
+            ],
+            "common_pitfalls": [
+              "Pomyłka w bazie logarytmu",
+              "Pomijanie zaokrąglenia n w górę"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 1, Reading 'The Time Value of Money in Finance'",
+              "Schweser SchweserNotes Book 1, SS1"
+            ],
+            "tags": [
+              "tvm",
+              "formula"
+            ]
+          },
+          "children": []
+        }
+      ]
+    },
+    {
+      "id": "cfa020300-0000-4000-8000-000000000000",
+      "title": "Statistical Measures of Asset Returns",
+      "status": "not-started",
+      "type": "phase",
+      "notes": "# Statistical Measures of Asset Returns\n\nStatystyka opisowa stosowana do zwrotów: tendencja centralna, dyspersja, kształt rozkładu (skewness, kurtosis), CV, percentyle. Fundament dla portfolio risk i performance analysis.\n\n**Learning Modules:** 1 · **Egzamin weight (topic):** 7.5%",
+      "createdAt": "2026-05-06T00:00:00Z",
+      "updatedAt": "2026-05-06T00:00:00Z",
+      "metadata": {
+        "lm_index": "03",
+        "lm_name_canonical": "Statistical Measures of Asset Returns",
+        "los_count": 6,
+        "topic": "Quantitative Methods"
+      },
+      "children": [
+        {
+          "id": "cfa020300-0001-4000-8000-000000000000",
+          "title": "Mean (measure of central tendency)",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# Mean (measure of central tendency)\n\n**LOS:** LOS 3.a · **Difficulty:** 1 · **Estimated:** 0.2h\n\n## Opis\nNajczęstsza miara tendencji centralnej. Wrażliwa na ekstrema, ale matematycznie traktowalna (suma odchyleń = 0).\n\n## Formuły / kluczowe relacje\n- mean = sum(x_i)/n\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Wrażliwość na outliery\n- Mylenie z medianą w skewed data\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Statistical Measures of Asset Returns'\n- Schweser SchweserNotes Book 1",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": [
+              "3.a"
+            ],
+            "difficulty": 1,
+            "estimated_hours": 0.2,
+            "prerequisites": [],
+            "formulas": [
+              "mean = sum(x_i)/n"
+            ],
+            "common_pitfalls": [
+              "Wrażliwość na outliery",
+              "Mylenie z medianą w skewed data"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 1, Reading 'Statistical Measures of Asset Returns'",
+              "Schweser SchweserNotes Book 1"
+            ],
+            "tags": [
+              "qm"
+            ]
+          },
+          "children": []
+        },
+        {
+          "id": "cfa020300-0002-4000-8000-000000000000",
+          "title": "Median (measure of central tendency)",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# Median (measure of central tendency)\n\n**LOS:** LOS 3.a · **Difficulty:** 1 · **Estimated:** 0.2h\n\n## Opis\nWartość środkowa po posortowaniu. Robust na outliery — preferowana dla skewed distributions.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Mylenie pozycji median dla parzystego n\n- Pomijanie sortowania\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Statistical Measures of Asset Returns'\n- Schweser SchweserNotes Book 1",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": [
+              "3.a"
+            ],
+            "difficulty": 1,
+            "estimated_hours": 0.2,
+            "prerequisites": [],
+            "formulas": [],
+            "common_pitfalls": [
+              "Mylenie pozycji median dla parzystego n",
+              "Pomijanie sortowania"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 1, Reading 'Statistical Measures of Asset Returns'",
+              "Schweser SchweserNotes Book 1"
+            ],
+            "tags": [
+              "qm"
+            ]
+          },
+          "children": []
+        },
+        {
+          "id": "cfa020300-0003-4000-8000-000000000000",
+          "title": "Mode (measure of central tendency)",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# Mode (measure of central tendency)\n\n**LOS:** LOS 3.a · **Difficulty:** 1 · **Estimated:** 0.2h\n\n## Opis\nWartość najczęstsza. Jedyna miara stosowalna do nominalnych danych. Może nie istnieć lub być wielokrotna.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Brak mody / wiele mód\n- Mylenie z medianą w bimodal\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Statistical Measures of Asset Returns'\n- Schweser SchweserNotes Book 1",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": [
+              "3.a"
+            ],
+            "difficulty": 1,
+            "estimated_hours": 0.2,
+            "prerequisites": [],
+            "formulas": [],
+            "common_pitfalls": [
+              "Brak mody / wiele mód",
+              "Mylenie z medianą w bimodal"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 1, Reading 'Statistical Measures of Asset Returns'",
+              "Schweser SchweserNotes Book 1"
+            ],
+            "tags": [
+              "qm"
+            ]
+          },
+          "children": []
+        },
+        {
+          "id": "cfa020300-0004-4000-8000-000000000000",
+          "title": "Range",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# Range\n\n**LOS:** LOS 3.b · **Difficulty:** 1 · **Estimated:** 0.2h\n\n## Opis\nNajprostsza miara dyspersji. Ekstremalna wrażliwość na outliery.\n\n## Formuły / kluczowe relacje\n- Range = max - min\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Wrażliwość na outliery\n- Nie odróżnia rozkładów o różnym kształcie\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Statistical Measures of Asset Returns'\n- Schweser SchweserNotes Book 1",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": [
+              "3.b"
+            ],
+            "difficulty": 1,
+            "estimated_hours": 0.2,
+            "prerequisites": [],
+            "formulas": [
+              "Range = max - min"
+            ],
+            "common_pitfalls": [
+              "Wrażliwość na outliery",
+              "Nie odróżnia rozkładów o różnym kształcie"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 1, Reading 'Statistical Measures of Asset Returns'",
+              "Schweser SchweserNotes Book 1"
+            ],
+            "tags": [
+              "qm"
+            ]
+          },
+          "children": []
+        },
+        {
+          "id": "cfa020300-0005-4000-8000-000000000000",
+          "title": "Mean absolute deviation",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# Mean absolute deviation\n\n**LOS:** LOS 3.b · **Difficulty:** 2 · **Estimated:** 0.3h\n\n## Opis\nŚrednie odchylenie absolutne. Bardziej intuicyjna niż wariancja, ale matematycznie mniej przydatna.\n\n## Formuły / kluczowe relacje\n- MAD = sum(|x_i - mean|)/n\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Mylenie z standard deviation\n- Pomijanie wartości bezwzględnej\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Statistical Measures of Asset Returns'\n- Schweser SchweserNotes Book 1",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": [
+              "3.b"
+            ],
+            "difficulty": 2,
+            "estimated_hours": 0.3,
+            "prerequisites": [],
+            "formulas": [
+              "MAD = sum(|x_i - mean|)/n"
+            ],
+            "common_pitfalls": [
+              "Mylenie z standard deviation",
+              "Pomijanie wartości bezwzględnej"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 1, Reading 'Statistical Measures of Asset Returns'",
+              "Schweser SchweserNotes Book 1"
+            ],
+            "tags": [
+              "qm"
+            ]
+          },
+          "children": []
+        },
+        {
+          "id": "cfa020300-0006-4000-8000-000000000000",
+          "title": "Variance",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# Variance\n\n**LOS:** LOS 3.b · **Difficulty:** 2 · **Estimated:** 0.4h\n\n## Opis\nŚrednia kwadratów odchyleń. Sample variance używa Bessel's correction (n-1) dla unbiased estimator.\n\n## Formuły / kluczowe relacje\n- population: sigma^2 = sum((x_i - mu)^2)/N\n- sample: s^2 = sum((x_i - x_bar)^2)/(n-1)\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Mylenie n vs n-1\n- Zapominanie o kwadracie jednostek\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Statistical Measures of Asset Returns'\n- Schweser SchweserNotes Book 1",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": [
+              "3.b"
+            ],
+            "difficulty": 2,
+            "estimated_hours": 0.4,
+            "prerequisites": [],
+            "formulas": [
+              "population: sigma^2 = sum((x_i - mu)^2)/N",
+              "sample: s^2 = sum((x_i - x_bar)^2)/(n-1)"
+            ],
+            "common_pitfalls": [
+              "Mylenie n vs n-1",
+              "Zapominanie o kwadracie jednostek"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 1, Reading 'Statistical Measures of Asset Returns'",
+              "Schweser SchweserNotes Book 1"
+            ],
+            "tags": [
+              "qm"
+            ]
+          },
+          "children": []
+        },
+        {
+          "id": "cfa020300-0007-4000-8000-000000000000",
+          "title": "Standard deviation",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# Standard deviation\n\n**LOS:** LOS 3.b · **Difficulty:** 2 · **Estimated:** 0.3h\n\n## Opis\nPierwiastek z wariancji — ta sama jednostka co dane. Standardowa miara ryzyka.\n\n## Formuły / kluczowe relacje\n- sigma = sqrt(variance)\n\n## Prerequisites\n- Variance\n\n## Common pitfalls\n- Mylenie sample vs population SD\n- Stosowanie do skewed bez kontekstu\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Statistical Measures of Asset Returns'\n- Schweser SchweserNotes Book 1",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": [
+              "3.b"
+            ],
+            "difficulty": 2,
+            "estimated_hours": 0.3,
+            "prerequisites": [
+              "Variance"
+            ],
+            "formulas": [
+              "sigma = sqrt(variance)"
+            ],
+            "common_pitfalls": [
+              "Mylenie sample vs population SD",
+              "Stosowanie do skewed bez kontekstu"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 1, Reading 'Statistical Measures of Asset Returns'",
+              "Schweser SchweserNotes Book 1"
+            ],
+            "tags": [
+              "qm"
+            ]
+          },
+          "children": []
+        },
+        {
+          "id": "cfa020300-0008-4000-8000-000000000000",
+          "title": "Coefficient of variation",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# Coefficient of variation\n\n**LOS:** LOS 3.c · **Difficulty:** 2 · **Estimated:** 0.3h\n\n## Opis\nZnormalizowana miara dyspersji. Pozwala porównywać ryzyko aktywów o różnych średnich zwrotach.\n\n## Formuły / kluczowe relacje\n- CV = sigma / mean\n\n## Prerequisites\n- Standard deviation\n\n## Common pitfalls\n- Stosowanie gdy mean ≈ 0\n- Mylenie kierunku — niższe CV = lepiej\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Statistical Measures of Asset Returns'\n- Schweser SchweserNotes Book 1",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": [
+              "3.c"
+            ],
+            "difficulty": 2,
+            "estimated_hours": 0.3,
+            "prerequisites": [
+              "Standard deviation"
+            ],
+            "formulas": [
+              "CV = sigma / mean"
+            ],
+            "common_pitfalls": [
+              "Stosowanie gdy mean ≈ 0",
+              "Mylenie kierunku — niższe CV = lepiej"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 1, Reading 'Statistical Measures of Asset Returns'",
+              "Schweser SchweserNotes Book 1"
+            ],
+            "tags": [
+              "qm"
+            ]
+          },
+          "children": []
+        },
+        {
+          "id": "cfa020300-0009-4000-8000-000000000000",
+          "title": "Skewness",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# Skewness\n\n**LOS:** LOS 3.d · **Difficulty:** 3 · **Estimated:** 0.5h\n\n## Opis\nMiara asymetrii rozkładu. Positive skew: mean > median > mode. Inwestorzy preferują positive skew.\n\n## Formuły / kluczowe relacje\n- skew = E[(X-mu)^3]/sigma^3\n\n## Prerequisites\n- Standard deviation\n\n## Common pitfalls\n- Mylenie kierunku — positive skew = długi prawy ogon\n- Pomijanie wpływu na mean vs median\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Statistical Measures of Asset Returns'\n- Schweser SchweserNotes Book 1",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": [
+              "3.d"
+            ],
+            "difficulty": 3,
+            "estimated_hours": 0.5,
+            "prerequisites": [
+              "Standard deviation"
+            ],
+            "formulas": [
+              "skew = E[(X-mu)^3]/sigma^3"
+            ],
+            "common_pitfalls": [
+              "Mylenie kierunku — positive skew = długi prawy ogon",
+              "Pomijanie wpływu na mean vs median"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 1, Reading 'Statistical Measures of Asset Returns'",
+              "Schweser SchweserNotes Book 1"
+            ],
+            "tags": [
+              "qm"
+            ]
+          },
+          "children": []
+        },
+        {
+          "id": "cfa020300-0010-4000-8000-000000000000",
+          "title": "Kurtosis",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# Kurtosis\n\n**LOS:** LOS 3.d · **Difficulty:** 3 · **Estimated:** 0.5h\n\n## Opis\nMiara grubości ogonów. Leptokurtic (excess > 0): grube ogony — typowe dla zwrotów akcji.\n\n## Formuły / kluczowe relacje\n- kurt = E[(X-mu)^4]/sigma^4 - 3 (excess)\n\n## Prerequisites\n- Standard deviation\n\n## Common pitfalls\n- Mylenie kurtosis z excess kurtosis\n- Interpretacja jako peakedness\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Statistical Measures of Asset Returns'\n- Schweser SchweserNotes Book 1",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": [
+              "3.d"
+            ],
+            "difficulty": 3,
+            "estimated_hours": 0.5,
+            "prerequisites": [
+              "Standard deviation"
+            ],
+            "formulas": [
+              "kurt = E[(X-mu)^4]/sigma^4 - 3 (excess)"
+            ],
+            "common_pitfalls": [
+              "Mylenie kurtosis z excess kurtosis",
+              "Interpretacja jako peakedness"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 1, Reading 'Statistical Measures of Asset Returns'",
+              "Schweser SchweserNotes Book 1"
+            ],
+            "tags": [
+              "qm"
+            ]
+          },
+          "children": []
+        },
+        {
+          "id": "cfa020300-0011-4000-8000-000000000000",
+          "title": "Box plot",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# Box plot\n\n**LOS:** LOS 3.e · **Difficulty:** 1 · **Estimated:** 0.2h\n\n## Opis\nWizualizacja: median, Q1, Q3, wąsy do 1.5*IQR, outliery jako punkty. Szybkie czytanie skewness.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- Quartiles\n\n## Common pitfalls\n- Mylenie outlierów (1.5*IQR rule)\n- Pomijanie skewness w interpretacji\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Statistical Measures of Asset Returns'\n- Schweser SchweserNotes Book 1",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": [
+              "3.e"
+            ],
+            "difficulty": 1,
+            "estimated_hours": 0.2,
+            "prerequisites": [
+              "Quartiles"
+            ],
+            "formulas": [],
+            "common_pitfalls": [
+              "Mylenie outlierów (1.5*IQR rule)",
+              "Pomijanie skewness w interpretacji"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 1, Reading 'Statistical Measures of Asset Returns'",
+              "Schweser SchweserNotes Book 1"
+            ],
+            "tags": [
+              "qm"
+            ]
+          },
+          "children": []
+        },
+        {
+          "id": "cfa020300-0012-4000-8000-000000000000",
+          "title": "Percentiles",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# Percentiles\n\n**LOS:** LOS 3.f · **Difficulty:** 1 · **Estimated:** 0.2h\n\n## Opis\nP-ty percentyl: wartość, poniżej której znajduje się p% obserwacji. Używane w VaR (5th percentile).\n\n## Formuły / kluczowe relacje\n- L_y = (n+1) * y/100\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Off-by-one przy interpolacji\n- Mylenie percentile rank z value\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Statistical Measures of Asset Returns'\n- Schweser SchweserNotes Book 1",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": [
+              "3.f"
+            ],
+            "difficulty": 1,
+            "estimated_hours": 0.2,
+            "prerequisites": [],
+            "formulas": [
+              "L_y = (n+1) * y/100"
+            ],
+            "common_pitfalls": [
+              "Off-by-one przy interpolacji",
+              "Mylenie percentile rank z value"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 1, Reading 'Statistical Measures of Asset Returns'",
+              "Schweser SchweserNotes Book 1"
+            ],
+            "tags": [
+              "qm"
+            ]
+          },
+          "children": []
+        },
+        {
+          "id": "cfa020300-0013-4000-8000-000000000000",
+          "title": "Quartiles",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# Quartiles\n\n**LOS:** LOS 3.f · **Difficulty:** 1 · **Estimated:** 0.2h\n\n## Opis\nQ1=25th, Q2=50th, Q3=75th percentile. IQR jako robust miara dyspersji.\n\n## Formuły / kluczowe relacje\n- IQR = Q3 - Q1\n\n## Prerequisites\n- Percentiles\n\n## Common pitfalls\n- Mylenie kwartyli z kwintylami\n- Różne metody interpolacji\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Statistical Measures of Asset Returns'\n- Schweser SchweserNotes Book 1",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": [
+              "3.f"
+            ],
+            "difficulty": 1,
+            "estimated_hours": 0.2,
+            "prerequisites": [
+              "Percentiles"
+            ],
+            "formulas": [
+              "IQR = Q3 - Q1"
+            ],
+            "common_pitfalls": [
+              "Mylenie kwartyli z kwintylami",
+              "Różne metody interpolacji"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 1, Reading 'Statistical Measures of Asset Returns'",
+              "Schweser SchweserNotes Book 1"
+            ],
+            "tags": [
+              "qm"
+            ]
+          },
+          "children": []
+        },
+        {
+          "id": "cfa020300-0014-4000-8000-000000000000",
+          "title": "Deciles",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# Deciles\n\n**LOS:** LOS 3.f · **Difficulty:** 1 · **Estimated:** 0.15h\n\n## Opis\nDecyle dzielą rozkład na 10 równych części (10th, 20th, ..., 90th percentile).\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- Percentiles\n\n## Common pitfalls\n- Mylenie deciles z quartiles\n- Pomijanie reguł interpolacji\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Statistical Measures of Asset Returns'\n- Schweser SchweserNotes Book 1",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": [
+              "3.f"
+            ],
+            "difficulty": 1,
+            "estimated_hours": 0.15,
+            "prerequisites": [
+              "Percentiles"
+            ],
+            "formulas": [],
+            "common_pitfalls": [
+              "Mylenie deciles z quartiles",
+              "Pomijanie reguł interpolacji"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 1, Reading 'Statistical Measures of Asset Returns'",
+              "Schweser SchweserNotes Book 1"
+            ],
+            "tags": [
+              "qm"
+            ]
+          },
+          "children": []
+        }
+      ]
+    },
+    {
+      "id": "cfa020400-0000-4000-8000-000000000000",
+      "title": "Probability Trees and Conditional Expectations",
+      "status": "not-started",
+      "type": "phase",
+      "notes": "# Probability Trees and Conditional Expectations\n\nProbabilistyka: prawdopodobieństwo unconditional/conditional/joint, Bayes, kombinatoryka. Fundament pod scenariusze i tree-based pricing.\n\n**Learning Modules:** 1 · **Egzamin weight (topic):** 7.5%",
+      "createdAt": "2026-05-06T00:00:00Z",
+      "updatedAt": "2026-05-06T00:00:00Z",
+      "metadata": {
+        "lm_index": "04",
+        "lm_name_canonical": "Probability Trees and Conditional Expectations",
+        "los_count": 5,
+        "topic": "Quantitative Methods"
+      },
+      "children": [
+        {
+          "id": "cfa020400-0001-4000-8000-000000000000",
+          "title": "Unconditional probability",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# Unconditional probability\n\n**LOS:** LOS 4.a · **Difficulty:** 2 · **Estimated:** 0.3h\n\n## Opis\nMarginal probability — prawdopodobieństwo zdarzenia bez uwarunkowania. Suma po całej przestrzeni = 1.\n\n## Formuły / kluczowe relacje\n- P(A) = liczba korzystnych / wszystkie\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Mylenie z conditional\n- Pomijanie założeń o discrete vs continuous\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Probability Trees and Conditional Expectations'\n- Schweser SchweserNotes Book 1",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": [
+              "4.a"
+            ],
+            "difficulty": 2,
+            "estimated_hours": 0.3,
+            "prerequisites": [],
+            "formulas": [
+              "P(A) = liczba korzystnych / wszystkie"
+            ],
+            "common_pitfalls": [
+              "Mylenie z conditional",
+              "Pomijanie założeń o discrete vs continuous"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 1, Reading 'Probability Trees and Conditional Expectations'",
+              "Schweser SchweserNotes Book 1"
+            ],
+            "tags": [
+              "qm"
+            ]
+          },
+          "children": []
+        },
+        {
+          "id": "cfa020400-0002-4000-8000-000000000000",
+          "title": "Conditional probability",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# Conditional probability\n\n**LOS:** LOS 4.a · **Difficulty:** 2 · **Estimated:** 0.4h\n\n## Opis\nPrawdopodobieństwo A pod warunkiem zaistnienia B. Aktualizuje wiedzę po obserwacji.\n\n## Formuły / kluczowe relacje\n- P(A|B) = P(A∩B)/P(B)\n\n## Prerequisites\n- Unconditional probability\n\n## Common pitfalls\n- Mylenie P(A|B) z P(B|A)\n- Pomijanie warunku P(B)>0\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Probability Trees and Conditional Expectations'\n- Schweser SchweserNotes Book 1",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": [
+              "4.a"
+            ],
+            "difficulty": 2,
+            "estimated_hours": 0.4,
+            "prerequisites": [
+              "Unconditional probability"
+            ],
+            "formulas": [
+              "P(A|B) = P(A∩B)/P(B)"
+            ],
+            "common_pitfalls": [
+              "Mylenie P(A|B) z P(B|A)",
+              "Pomijanie warunku P(B)>0"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 1, Reading 'Probability Trees and Conditional Expectations'",
+              "Schweser SchweserNotes Book 1"
+            ],
+            "tags": [
+              "qm"
+            ]
+          },
+          "children": []
+        },
+        {
+          "id": "cfa020400-0003-4000-8000-000000000000",
+          "title": "Joint probability",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# Joint probability\n\n**LOS:** LOS 4.a · **Difficulty:** 2 · **Estimated:** 0.3h\n\n## Opis\nPrawdopodobieństwo wystąpienia obu zdarzeń. Dla niezależnych: P(A∩B) = P(A)*P(B).\n\n## Formuły / kluczowe relacje\n- P(A∩B) = P(A|B)*P(B) = P(B|A)*P(A)\n\n## Prerequisites\n- Conditional probability\n\n## Common pitfalls\n- Pomijanie niezależności\n- Mylenie z union P(A∪B)\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Probability Trees and Conditional Expectations'\n- Schweser SchweserNotes Book 1",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": [
+              "4.a"
+            ],
+            "difficulty": 2,
+            "estimated_hours": 0.3,
+            "prerequisites": [
+              "Conditional probability"
+            ],
+            "formulas": [
+              "P(A∩B) = P(A|B)*P(B) = P(B|A)*P(A)"
+            ],
+            "common_pitfalls": [
+              "Pomijanie niezależności",
+              "Mylenie z union P(A∪B)"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 1, Reading 'Probability Trees and Conditional Expectations'",
+              "Schweser SchweserNotes Book 1"
+            ],
+            "tags": [
+              "qm"
+            ]
+          },
+          "children": []
+        },
+        {
+          "id": "cfa020400-0004-4000-8000-000000000000",
+          "title": "Total probability rule",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# Total probability rule\n\n**LOS:** LOS 4.b · **Difficulty:** 3 · **Estimated:** 0.4h\n\n## Opis\nMarginalizacja: P(A) jako ważona suma warunkowych po partycji przestrzeni próbkowej.\n\n## Formuły / kluczowe relacje\n- P(A) = sum_i P(A|S_i)*P(S_i), gdzie S_i to partycja\n\n## Prerequisites\n- Conditional probability\n- Joint probability\n\n## Common pitfalls\n- Niepełna partycja\n- Pomijanie wzajemnej rozłączności S_i\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Probability Trees and Conditional Expectations'\n- Schweser SchweserNotes Book 1",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": [
+              "4.b"
+            ],
+            "difficulty": 3,
+            "estimated_hours": 0.4,
+            "prerequisites": [
+              "Conditional probability",
+              "Joint probability"
+            ],
+            "formulas": [
+              "P(A) = sum_i P(A|S_i)*P(S_i), gdzie S_i to partycja"
+            ],
+            "common_pitfalls": [
+              "Niepełna partycja",
+              "Pomijanie wzajemnej rozłączności S_i"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 1, Reading 'Probability Trees and Conditional Expectations'",
+              "Schweser SchweserNotes Book 1"
+            ],
+            "tags": [
+              "qm"
+            ]
+          },
+          "children": []
+        },
+        {
+          "id": "cfa020400-0005-4000-8000-000000000000",
+          "title": "Bayes' theorem",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# Bayes' theorem\n\n**LOS:** LOS 4.c · **Difficulty:** 3 · **Estimated:** 0.7h\n\n## Opis\nAktualizacja prawdopodobieństwa po obserwacji. Egzamin często testuje przez tree diagrams. Klasyczne: P(disease|positive test).\n\n## Formuły / kluczowe relacje\n- P(A|B) = P(B|A)*P(A)/P(B)\n- P(A|B) = P(B|A)*P(A) / [P(B|A)*P(A) + P(B|~A)*P(~A)]\n\n## Prerequisites\n- Total probability rule\n- Conditional probability\n\n## Common pitfalls\n- Mylenie prior z posterior\n- Niewłaściwe użycie total probability w mianowniku\n- Base rate fallacy\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Probability Trees and Conditional Expectations'\n- Schweser SchweserNotes Book 1",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": [
+              "4.c"
+            ],
+            "difficulty": 3,
+            "estimated_hours": 0.7,
+            "prerequisites": [
+              "Total probability rule",
+              "Conditional probability"
+            ],
+            "formulas": [
+              "P(A|B) = P(B|A)*P(A)/P(B)",
+              "P(A|B) = P(B|A)*P(A) / [P(B|A)*P(A) + P(B|~A)*P(~A)]"
+            ],
+            "common_pitfalls": [
+              "Mylenie prior z posterior",
+              "Niewłaściwe użycie total probability w mianowniku",
+              "Base rate fallacy"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 1, Reading 'Probability Trees and Conditional Expectations'",
+              "Schweser SchweserNotes Book 1"
+            ],
+            "tags": [
+              "qm"
+            ]
+          },
+          "children": []
+        },
+        {
+          "id": "cfa020400-0006-4000-8000-000000000000",
+          "title": "Combinations",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# Combinations\n\n**LOS:** LOS 4.d · **Difficulty:** 2 · **Estimated:** 0.3h\n\n## Opis\nLiczba sposobów wyboru r elementów z n bez kolejności. Przykład: liczba portfeli 5-akcyjnych z uniwersum 100.\n\n## Formuły / kluczowe relacje\n- nCr = n! / [r!(n-r)!]\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Mylenie z permutations\n- Off-by-one w factorial\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Probability Trees and Conditional Expectations'\n- Schweser SchweserNotes Book 1",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": [
+              "4.d"
+            ],
+            "difficulty": 2,
+            "estimated_hours": 0.3,
+            "prerequisites": [],
+            "formulas": [
+              "nCr = n! / [r!(n-r)!]"
+            ],
+            "common_pitfalls": [
+              "Mylenie z permutations",
+              "Off-by-one w factorial"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 1, Reading 'Probability Trees and Conditional Expectations'",
+              "Schweser SchweserNotes Book 1"
+            ],
+            "tags": [
+              "qm"
+            ]
+          },
+          "children": []
+        },
+        {
+          "id": "cfa020400-0007-4000-8000-000000000000",
+          "title": "Permutations",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# Permutations\n\n**LOS:** LOS 4.d · **Difficulty:** 2 · **Estimated:** 0.3h\n\n## Opis\nLiczba sposobów uporządkowanego wyboru r z n. Kolejność istotna (np. ranking 1-2-3 medalistów).\n\n## Formuły / kluczowe relacje\n- nPr = n! / (n-r)!\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Mylenie z combinations\n- Pomijanie znaczenia kolejności\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Probability Trees and Conditional Expectations'\n- Schweser SchweserNotes Book 1",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": [
+              "4.d"
+            ],
+            "difficulty": 2,
+            "estimated_hours": 0.3,
+            "prerequisites": [],
+            "formulas": [
+              "nPr = n! / (n-r)!"
+            ],
+            "common_pitfalls": [
+              "Mylenie z combinations",
+              "Pomijanie znaczenia kolejności"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 1, Reading 'Probability Trees and Conditional Expectations'",
+              "Schweser SchweserNotes Book 1"
+            ],
+            "tags": [
+              "qm"
+            ]
+          },
+          "children": []
+        },
+        {
+          "id": "cfa020400-0008-4000-8000-000000000000",
+          "title": "Multinomial",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# Multinomial\n\n**LOS:** LOS 4.d · **Difficulty:** 2 · **Estimated:** 0.3h\n\n## Opis\nLiczba sposobów podziału n na k grup o rozmiarach n_1..n_k. Generalizacja combinations.\n\n## Formuły / kluczowe relacje\n- n! / (n_1! * n_2! * ... * n_k!)\n\n## Prerequisites\n- Combinations\n\n## Common pitfalls\n- Mylenie z binomial\n- Pomijanie warunku sum(n_i)=n\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Probability Trees and Conditional Expectations'\n- Schweser SchweserNotes Book 1",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": [
+              "4.d"
+            ],
+            "difficulty": 2,
+            "estimated_hours": 0.3,
+            "prerequisites": [
+              "Combinations"
+            ],
+            "formulas": [
+              "n! / (n_1! * n_2! * ... * n_k!)"
+            ],
+            "common_pitfalls": [
+              "Mylenie z binomial",
+              "Pomijanie warunku sum(n_i)=n"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 1, Reading 'Probability Trees and Conditional Expectations'",
+              "Schweser SchweserNotes Book 1"
+            ],
+            "tags": [
+              "qm"
+            ]
+          },
+          "children": []
+        },
+        {
+          "id": "cfa020400-0009-4000-8000-000000000000",
+          "title": "Expected value and variance",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# Expected value and variance\n\n**LOS:** LOS 4.e · **Difficulty:** 2 · **Estimated:** 0.4h\n\n## Opis\nOczekiwana wartość zmiennej losowej. Wariancja jako miara dyspersji wokół E[X].\n\n## Formuły / kluczowe relacje\n- E[X] = sum(x_i * P(x_i))\n- Var(X) = E[X^2] - (E[X])^2\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Mylenie expected value z arithmetic mean\n- Stosowanie wzoru sample do random variable\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Probability Trees and Conditional Expectations'\n- Schweser SchweserNotes Book 1",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": [
+              "4.e"
+            ],
+            "difficulty": 2,
+            "estimated_hours": 0.4,
+            "prerequisites": [],
+            "formulas": [
+              "E[X] = sum(x_i * P(x_i))",
+              "Var(X) = E[X^2] - (E[X])^2"
+            ],
+            "common_pitfalls": [
+              "Mylenie expected value z arithmetic mean",
+              "Stosowanie wzoru sample do random variable"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 1, Reading 'Probability Trees and Conditional Expectations'",
+              "Schweser SchweserNotes Book 1"
+            ],
+            "tags": [
+              "qm"
+            ]
+          },
+          "children": []
+        },
+        {
+          "id": "cfa020400-0010-4000-8000-000000000000",
+          "title": "Conditional expectation",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# Conditional expectation\n\n**LOS:** LOS 4.e · **Difficulty:** 2 · **Estimated:** 0.3h\n\n## Opis\nOczekiwana wartość X pod warunkiem informacji Y. Centralne dla prognozowania (regression as conditional expectation).\n\n## Formuły / kluczowe relacje\n- E[X|Y]\n\n## Prerequisites\n- Expected value and variance\n- Conditional probability\n\n## Common pitfalls\n- Mylenie z unconditional\n- Pomijanie iterated expectations: E[E[X|Y]]=E[X]\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Probability Trees and Conditional Expectations'\n- Schweser SchweserNotes Book 1",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": [
+              "4.e"
+            ],
+            "difficulty": 2,
+            "estimated_hours": 0.3,
+            "prerequisites": [
+              "Expected value and variance",
+              "Conditional probability"
+            ],
+            "formulas": [
+              "E[X|Y]"
+            ],
+            "common_pitfalls": [
+              "Mylenie z unconditional",
+              "Pomijanie iterated expectations: E[E[X|Y]]=E[X]"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 1, Reading 'Probability Trees and Conditional Expectations'",
+              "Schweser SchweserNotes Book 1"
+            ],
+            "tags": [
+              "qm"
+            ]
+          },
+          "children": []
+        }
+      ]
+    },
+    {
+      "id": "cfa020500-0000-4000-8000-000000000000",
+      "title": "Portfolio Mathematics",
+      "status": "not-started",
+      "type": "phase",
+      "notes": "# Portfolio Mathematics\n\nMatematyka portfela: oczekiwany zwrot, wariancja portfela 2-aktywnego, covariance, correlation. Bezpośredni fundament pod Modern Portfolio Theory w PM.\n\n**Learning Modules:** 1 · **Egzamin weight (topic):** 7.5%",
+      "createdAt": "2026-05-06T00:00:00Z",
+      "updatedAt": "2026-05-06T00:00:00Z",
+      "metadata": {
+        "lm_index": "05",
+        "lm_name_canonical": "Portfolio Mathematics",
+        "los_count": 4,
+        "topic": "Quantitative Methods"
+      },
+      "children": [
+        {
+          "id": "cfa020500-0001-4000-8000-000000000000",
+          "title": "Expected return of a portfolio",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# Expected return of a portfolio\n\n**LOS:** LOS 5.a · **Difficulty:** 2 · **Estimated:** 0.3h\n\n## Opis\nLiniowa kombinacja oczekiwanych zwrotów składników portfela.\n\n## Formuły / kluczowe relacje\n- E[R_p] = sum(w_i * E[R_i])\n\n## Prerequisites\n- Expected value and variance\n\n## Common pitfalls\n- Pomijanie warunku sum(w_i)=1\n- Mylenie z weighted geometric\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Portfolio Mathematics'\n- Schweser SchweserNotes Book 1",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": [
+              "5.a"
+            ],
+            "difficulty": 2,
+            "estimated_hours": 0.3,
+            "prerequisites": [
+              "Expected value and variance"
+            ],
+            "formulas": [
+              "E[R_p] = sum(w_i * E[R_i])"
+            ],
+            "common_pitfalls": [
+              "Pomijanie warunku sum(w_i)=1",
+              "Mylenie z weighted geometric"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 1, Reading 'Portfolio Mathematics'",
+              "Schweser SchweserNotes Book 1"
+            ],
+            "tags": [
+              "qm"
+            ]
+          },
+          "children": []
+        },
+        {
+          "id": "cfa020500-0002-4000-8000-000000000000",
+          "title": "Variance of a 2-asset portfolio",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# Variance of a 2-asset portfolio\n\n**LOS:** LOS 5.a · **Difficulty:** 3 · **Estimated:** 0.5h\n\n## Opis\nWariancja portfela jako kwadratowa funkcja wag. Diversification benefit gdy correlation < 1.\n\n## Formuły / kluczowe relacje\n- Var(R_p) = w_A^2*sigma_A^2 + w_B^2*sigma_B^2 + 2*w_A*w_B*Cov(A,B)\n\n## Prerequisites\n- Variance\n- Standard deviation\n\n## Common pitfalls\n- Pomijanie 2*w_A*w_B w cross-term\n- Mylenie covariance z correlation\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Portfolio Mathematics'\n- Schweser SchweserNotes Book 1",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": [
+              "5.a"
+            ],
+            "difficulty": 3,
+            "estimated_hours": 0.5,
+            "prerequisites": [
+              "Variance",
+              "Standard deviation"
+            ],
+            "formulas": [
+              "Var(R_p) = w_A^2*sigma_A^2 + w_B^2*sigma_B^2 + 2*w_A*w_B*Cov(A,B)"
+            ],
+            "common_pitfalls": [
+              "Pomijanie 2*w_A*w_B w cross-term",
+              "Mylenie covariance z correlation"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 1, Reading 'Portfolio Mathematics'",
+              "Schweser SchweserNotes Book 1"
+            ],
+            "tags": [
+              "qm"
+            ]
+          },
+          "children": []
+        },
+        {
+          "id": "cfa020500-0003-4000-8000-000000000000",
+          "title": "Covariance",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# Covariance\n\n**LOS:** LOS 5.b · **Difficulty:** 2 · **Estimated:** 0.3h\n\n## Opis\nMiara kierunku współzmienności. Bez znormalizowanej skali — stąd correlation.\n\n## Formuły / kluczowe relacje\n- Cov(A,B) = E[(R_A - E[R_A])(R_B - E[R_B])]\n\n## Prerequisites\n- Expected value and variance\n\n## Common pitfalls\n- Mylenie z correlation\n- Brak skali — trudna interpretacja\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Portfolio Mathematics'\n- Schweser SchweserNotes Book 1",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": [
+              "5.b"
+            ],
+            "difficulty": 2,
+            "estimated_hours": 0.3,
+            "prerequisites": [
+              "Expected value and variance"
+            ],
+            "formulas": [
+              "Cov(A,B) = E[(R_A - E[R_A])(R_B - E[R_B])]"
+            ],
+            "common_pitfalls": [
+              "Mylenie z correlation",
+              "Brak skali — trudna interpretacja"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 1, Reading 'Portfolio Mathematics'",
+              "Schweser SchweserNotes Book 1"
+            ],
+            "tags": [
+              "qm"
+            ]
+          },
+          "children": []
+        },
+        {
+          "id": "cfa020500-0004-4000-8000-000000000000",
+          "title": "Correlation coefficient",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# Correlation coefficient\n\n**LOS:** LOS 5.b · **Difficulty:** 2 · **Estimated:** 0.3h\n\n## Opis\nZnormalizowana covariance w [-1,1]. -1: perfect negative, 0: brak liniowej zależności, 1: perfect positive.\n\n## Formuły / kluczowe relacje\n- rho = Cov(A,B) / (sigma_A * sigma_B)\n\n## Prerequisites\n- Covariance\n\n## Common pitfalls\n- Mylenie z covariance\n- Interpretacja correlation jako causation\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Portfolio Mathematics'\n- Schweser SchweserNotes Book 1",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": [
+              "5.b"
+            ],
+            "difficulty": 2,
+            "estimated_hours": 0.3,
+            "prerequisites": [
+              "Covariance"
+            ],
+            "formulas": [
+              "rho = Cov(A,B) / (sigma_A * sigma_B)"
+            ],
+            "common_pitfalls": [
+              "Mylenie z covariance",
+              "Interpretacja correlation jako causation"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 1, Reading 'Portfolio Mathematics'",
+              "Schweser SchweserNotes Book 1"
+            ],
+            "tags": [
+              "qm"
+            ]
+          },
+          "children": []
+        },
+        {
+          "id": "cfa020500-0005-4000-8000-000000000000",
+          "title": "Correlation matrix interpretation",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# Correlation matrix interpretation\n\n**LOS:** LOS 5.b · **Difficulty:** 2 · **Estimated:** 0.3h\n\n## Opis\nMacierz par-korelacji. Diagonal=1, symmetric. Podstawa risk modeling i factor analysis.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- Correlation coefficient\n\n## Common pitfalls\n- Pomijanie diagonal = 1\n- Mylenie symmetric matrix\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Portfolio Mathematics'\n- Schweser SchweserNotes Book 1",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": [
+              "5.b"
+            ],
+            "difficulty": 2,
+            "estimated_hours": 0.3,
+            "prerequisites": [
+              "Correlation coefficient"
+            ],
+            "formulas": [],
+            "common_pitfalls": [
+              "Pomijanie diagonal = 1",
+              "Mylenie symmetric matrix"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 1, Reading 'Portfolio Mathematics'",
+              "Schweser SchweserNotes Book 1"
+            ],
+            "tags": [
+              "qm"
+            ]
+          },
+          "children": []
+        },
+        {
+          "id": "cfa020500-0006-4000-8000-000000000000",
+          "title": "Portfolio diversification benefit",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# Portfolio diversification benefit\n\n**LOS:** LOS 5.c · **Difficulty:** 2 · **Estimated:** 0.3h\n\n## Opis\nIm niższe rho, tym większa redukcja sigma_p. Pełny benefit przy rho=-1; brak gdy rho=+1.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- Variance of a 2-asset portfolio\n- Correlation coefficient\n\n## Common pitfalls\n- Mylenie diversification z hedging\n- Pomijanie limitu — systematic risk\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Portfolio Mathematics'\n- Schweser SchweserNotes Book 1",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": [
+              "5.c"
+            ],
+            "difficulty": 2,
+            "estimated_hours": 0.3,
+            "prerequisites": [
+              "Variance of a 2-asset portfolio",
+              "Correlation coefficient"
+            ],
+            "formulas": [],
+            "common_pitfalls": [
+              "Mylenie diversification z hedging",
+              "Pomijanie limitu — systematic risk"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 1, Reading 'Portfolio Mathematics'",
+              "Schweser SchweserNotes Book 1"
+            ],
+            "tags": [
+              "qm"
+            ]
+          },
+          "children": []
+        }
+      ]
+    },
+    {
+      "id": "cfa020600-0000-4000-8000-000000000000",
+      "title": "Simulation Methods and Distributions",
+      "status": "not-started",
+      "type": "phase",
+      "notes": "# Simulation Methods and Distributions\n\nRozkłady prawdopodobieństwa kluczowe dla CFA: dyskretne (uniform, Bernoulli, binomial), ciągłe (uniform, normal, lognormal, t, chi-square, F, standard normal). Fundament pod VaR, hipotezy, regression.\n\n**Learning Modules:** 1 · **Egzamin weight (topic):** 7.5%",
+      "createdAt": "2026-05-06T00:00:00Z",
+      "updatedAt": "2026-05-06T00:00:00Z",
+      "metadata": {
+        "lm_index": "06",
+        "lm_name_canonical": "Simulation Methods and Distributions",
+        "los_count": 4,
+        "topic": "Quantitative Methods"
+      },
+      "children": [
+        {
+          "id": "cfa020600-0001-4000-8000-000000000000",
+          "title": "Discrete uniform distribution",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# Discrete uniform distribution\n\n**LOS:** LOS 6.a · **Difficulty:** 1 · **Estimated:** 0.2h\n\n## Opis\nKażda z n wartości równo prawdopodobna. Przykład: rzut sprawiedliwą kością.\n\n## Formuły / kluczowe relacje\n- P(X=x) = 1/n\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Mylenie z continuous uniform\n- Pomijanie skończonej liczby outcomes\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Simulation Methods'\n- Schweser SchweserNotes Book 1",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": [
+              "6.a"
+            ],
+            "difficulty": 1,
+            "estimated_hours": 0.2,
+            "prerequisites": [],
+            "formulas": [
+              "P(X=x) = 1/n"
+            ],
+            "common_pitfalls": [
+              "Mylenie z continuous uniform",
+              "Pomijanie skończonej liczby outcomes"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 1, Reading 'Simulation Methods'",
+              "Schweser SchweserNotes Book 1"
+            ],
+            "tags": [
+              "qm"
+            ]
+          },
+          "children": []
+        },
+        {
+          "id": "cfa020600-0002-4000-8000-000000000000",
+          "title": "Bernoulli distribution",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# Bernoulli distribution\n\n**LOS:** LOS 6.a · **Difficulty:** 1 · **Estimated:** 0.2h\n\n## Opis\nPojedyncza próba binarna (success/failure). Building block dla binomial.\n\n## Formuły / kluczowe relacje\n- P(X=1)=p, P(X=0)=1-p\n- E[X]=p, Var(X)=p(1-p)\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Mylenie z binomial\n- Pomijanie warunku 0≤p≤1\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Simulation Methods'\n- Schweser SchweserNotes Book 1",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": [
+              "6.a"
+            ],
+            "difficulty": 1,
+            "estimated_hours": 0.2,
+            "prerequisites": [],
+            "formulas": [
+              "P(X=1)=p, P(X=0)=1-p",
+              "E[X]=p, Var(X)=p(1-p)"
+            ],
+            "common_pitfalls": [
+              "Mylenie z binomial",
+              "Pomijanie warunku 0≤p≤1"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 1, Reading 'Simulation Methods'",
+              "Schweser SchweserNotes Book 1"
+            ],
+            "tags": [
+              "qm"
+            ]
+          },
+          "children": []
+        },
+        {
+          "id": "cfa020600-0003-4000-8000-000000000000",
+          "title": "Binomial distribution",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# Binomial distribution\n\n**LOS:** LOS 6.a · **Difficulty:** 2 · **Estimated:** 0.4h\n\n## Opis\nLiczba sukcesów w n niezależnych Bernoulli trials. Stałe p. Używane do credit defaults, up/down moves w binomial trees.\n\n## Formuły / kluczowe relacje\n- P(X=k) = nCk * p^k * (1-p)^(n-k)\n- E[X]=np, Var(X)=np(1-p)\n\n## Prerequisites\n- Bernoulli distribution\n- Combinations\n\n## Common pitfalls\n- Pomijanie założenia niezależnych prób\n- Mylenie z hipergeometric\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Simulation Methods'\n- Schweser SchweserNotes Book 1",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": [
+              "6.a"
+            ],
+            "difficulty": 2,
+            "estimated_hours": 0.4,
+            "prerequisites": [
+              "Bernoulli distribution",
+              "Combinations"
+            ],
+            "formulas": [
+              "P(X=k) = nCk * p^k * (1-p)^(n-k)",
+              "E[X]=np, Var(X)=np(1-p)"
+            ],
+            "common_pitfalls": [
+              "Pomijanie założenia niezależnych prób",
+              "Mylenie z hipergeometric"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 1, Reading 'Simulation Methods'",
+              "Schweser SchweserNotes Book 1"
+            ],
+            "tags": [
+              "qm"
+            ]
+          },
+          "children": []
+        },
+        {
+          "id": "cfa020600-0004-4000-8000-000000000000",
+          "title": "Continuous uniform distribution",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# Continuous uniform distribution\n\n**LOS:** LOS 6.b · **Difficulty:** 2 · **Estimated:** 0.3h\n\n## Opis\nStała gęstość na [a,b]. Często używane jako noninformative prior.\n\n## Formuły / kluczowe relacje\n- f(x) = 1/(b-a) dla x in [a,b]\n- P(c<X<d) = (d-c)/(b-a)\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Mylenie probability density z probability\n- Pomijanie warunków a<b\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Simulation Methods'\n- Schweser SchweserNotes Book 1",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": [
+              "6.b"
+            ],
+            "difficulty": 2,
+            "estimated_hours": 0.3,
+            "prerequisites": [],
+            "formulas": [
+              "f(x) = 1/(b-a) dla x in [a,b]",
+              "P(c<X<d) = (d-c)/(b-a)"
+            ],
+            "common_pitfalls": [
+              "Mylenie probability density z probability",
+              "Pomijanie warunków a<b"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 1, Reading 'Simulation Methods'",
+              "Schweser SchweserNotes Book 1"
+            ],
+            "tags": [
+              "qm"
+            ]
+          },
+          "children": []
+        },
+        {
+          "id": "cfa020600-0005-4000-8000-000000000000",
+          "title": "Normal distribution",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# Normal distribution\n\n**LOS:** LOS 6.b · **Difficulty:** 2 · **Estimated:** 0.5h\n\n## Opis\nSymetryczny rozkład dzwonowy. Centralna w QM przez CLT. W praktyce zwroty mają fatter tails.\n\n## Formuły / kluczowe relacje\n- X ~ N(mu, sigma^2)\n- 68-95-99.7 rule\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Pomijanie założenia normalności w finance (fat tails)\n- Mylenie sigma z sigma^2\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Simulation Methods'\n- Schweser SchweserNotes Book 1",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": [
+              "6.b"
+            ],
+            "difficulty": 2,
+            "estimated_hours": 0.5,
+            "prerequisites": [],
+            "formulas": [
+              "X ~ N(mu, sigma^2)",
+              "68-95-99.7 rule"
+            ],
+            "common_pitfalls": [
+              "Pomijanie założenia normalności w finance (fat tails)",
+              "Mylenie sigma z sigma^2"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 1, Reading 'Simulation Methods'",
+              "Schweser SchweserNotes Book 1"
+            ],
+            "tags": [
+              "qm"
+            ]
+          },
+          "children": []
+        },
+        {
+          "id": "cfa020600-0006-4000-8000-000000000000",
+          "title": "Lognormal distribution",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# Lognormal distribution\n\n**LOS:** LOS 6.b · **Difficulty:** 3 · **Estimated:** 0.4h\n\n## Opis\nUżywana dla cen aktywów (nie mogą być ujemne). Continuously compounded returns ~ N implikuje ceny ~ Lognormal.\n\n## Formuły / kluczowe relacje\n- X lognormal jeśli ln(X) ~ N\n- E[X]=exp(mu+sigma^2/2)\n\n## Prerequisites\n- Normal distribution\n\n## Common pitfalls\n- Mylenie X z ln(X)\n- Pomijanie skewness — lognormal jest right-skewed\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Simulation Methods'\n- Schweser SchweserNotes Book 1",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": [
+              "6.b"
+            ],
+            "difficulty": 3,
+            "estimated_hours": 0.4,
+            "prerequisites": [
+              "Normal distribution"
+            ],
+            "formulas": [
+              "X lognormal jeśli ln(X) ~ N",
+              "E[X]=exp(mu+sigma^2/2)"
+            ],
+            "common_pitfalls": [
+              "Mylenie X z ln(X)",
+              "Pomijanie skewness — lognormal jest right-skewed"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 1, Reading 'Simulation Methods'",
+              "Schweser SchweserNotes Book 1"
+            ],
+            "tags": [
+              "qm"
+            ]
+          },
+          "children": []
+        },
+        {
+          "id": "cfa020600-0007-4000-8000-000000000000",
+          "title": "Student's t-distribution",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# Student's t-distribution\n\n**LOS:** LOS 6.c · **Difficulty:** 2 · **Estimated:** 0.3h\n\n## Opis\nSymmetric, bell-shaped, fat tails. Używane gdy mała próbka i nieznane sigma. df→∞ zbliża się do normal.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- Normal distribution\n\n## Common pitfalls\n- Mylenie z normal — t ma grubsze ogony\n- Pomijanie degrees of freedom\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Simulation Methods'\n- Schweser SchweserNotes Book 1",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": [
+              "6.c"
+            ],
+            "difficulty": 2,
+            "estimated_hours": 0.3,
+            "prerequisites": [
+              "Normal distribution"
+            ],
+            "formulas": [],
+            "common_pitfalls": [
+              "Mylenie z normal — t ma grubsze ogony",
+              "Pomijanie degrees of freedom"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 1, Reading 'Simulation Methods'",
+              "Schweser SchweserNotes Book 1"
+            ],
+            "tags": [
+              "qm"
+            ]
+          },
+          "children": []
+        },
+        {
+          "id": "cfa020600-0008-4000-8000-000000000000",
+          "title": "Chi-square distribution",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# Chi-square distribution\n\n**LOS:** LOS 6.c · **Difficulty:** 2 · **Estimated:** 0.3h\n\n## Opis\nSum of squared standard normals. Right-skewed, na [0,∞). Test wariancji i goodness-of-fit.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- Normal distribution\n\n## Common pitfalls\n- Mylenie z F-distribution\n- Brak symmetryczności — right-skewed\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Simulation Methods'\n- Schweser SchweserNotes Book 1",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": [
+              "6.c"
+            ],
+            "difficulty": 2,
+            "estimated_hours": 0.3,
+            "prerequisites": [
+              "Normal distribution"
+            ],
+            "formulas": [],
+            "common_pitfalls": [
+              "Mylenie z F-distribution",
+              "Brak symmetryczności — right-skewed"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 1, Reading 'Simulation Methods'",
+              "Schweser SchweserNotes Book 1"
+            ],
+            "tags": [
+              "qm"
+            ]
+          },
+          "children": []
+        },
+        {
+          "id": "cfa020600-0009-4000-8000-000000000000",
+          "title": "F-distribution",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# F-distribution\n\n**LOS:** LOS 6.c · **Difficulty:** 2 · **Estimated:** 0.3h\n\n## Opis\nRatio dwóch chi-square. Test równości wariancji, F-test w regression.\n\n## Formuły / kluczowe relacje\n- F = (chi^2_1/df_1) / (chi^2_2/df_2)\n\n## Prerequisites\n- Chi-square distribution\n\n## Common pitfalls\n- Mylenie F z chi-square\n- Pomijanie dwóch parametrów df\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Simulation Methods'\n- Schweser SchweserNotes Book 1",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": [
+              "6.c"
+            ],
+            "difficulty": 2,
+            "estimated_hours": 0.3,
+            "prerequisites": [
+              "Chi-square distribution"
+            ],
+            "formulas": [
+              "F = (chi^2_1/df_1) / (chi^2_2/df_2)"
+            ],
+            "common_pitfalls": [
+              "Mylenie F z chi-square",
+              "Pomijanie dwóch parametrów df"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 1, Reading 'Simulation Methods'",
+              "Schweser SchweserNotes Book 1"
+            ],
+            "tags": [
+              "qm"
+            ]
+          },
+          "children": []
+        },
+        {
+          "id": "cfa020600-0010-4000-8000-000000000000",
+          "title": "Standard normal (z-distribution)",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# Standard normal (z-distribution)\n\n**LOS:** LOS 6.d · **Difficulty:** 2 · **Estimated:** 0.3h\n\n## Opis\nNormalna z mu=0, sigma=1. Tabela z umożliwia obliczanie P dla każdej normal.\n\n## Formuły / kluczowe relacje\n- Z = (X - mu)/sigma\n- Z ~ N(0,1)\n\n## Prerequisites\n- Normal distribution\n\n## Common pitfalls\n- Brak standaryzacji przed użyciem tablic\n- Mylenie tabeli kumulatywnej z PDF\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Simulation Methods'\n- Schweser SchweserNotes Book 1",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": [
+              "6.d"
+            ],
+            "difficulty": 2,
+            "estimated_hours": 0.3,
+            "prerequisites": [
+              "Normal distribution"
+            ],
+            "formulas": [
+              "Z = (X - mu)/sigma",
+              "Z ~ N(0,1)"
+            ],
+            "common_pitfalls": [
+              "Brak standaryzacji przed użyciem tablic",
+              "Mylenie tabeli kumulatywnej z PDF"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 1, Reading 'Simulation Methods'",
+              "Schweser SchweserNotes Book 1"
+            ],
+            "tags": [
+              "qm"
+            ]
+          },
+          "children": []
+        },
+        {
+          "id": "cfa020600-0011-4000-8000-000000000000",
+          "title": "Z-score and confidence intervals",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# Z-score and confidence intervals\n\n**LOS:** LOS 6.d · **Difficulty:** 2 · **Estimated:** 0.4h\n\n## Opis\nConfidence interval = punkt estimate ± critical_z * SE. Klasyczne wartości: 1.645, 1.96, 2.58.\n\n## Formuły / kluczowe relacje\n- 95% CI: x_bar ± 1.96*sigma/sqrt(n)\n- 99% CI: ± 2.58\n- 90% CI: ± 1.645\n\n## Prerequisites\n- Standard normal (z-distribution)\n\n## Common pitfalls\n- Mylenie z 1.96 vs 2\n- Pomijanie warunku znanego sigma\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Simulation Methods'\n- Schweser SchweserNotes Book 1",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": [
+              "6.d"
+            ],
+            "difficulty": 2,
+            "estimated_hours": 0.4,
+            "prerequisites": [
+              "Standard normal (z-distribution)"
+            ],
+            "formulas": [
+              "95% CI: x_bar ± 1.96*sigma/sqrt(n)",
+              "99% CI: ± 2.58",
+              "90% CI: ± 1.645"
+            ],
+            "common_pitfalls": [
+              "Mylenie z 1.96 vs 2",
+              "Pomijanie warunku znanego sigma"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 1, Reading 'Simulation Methods'",
+              "Schweser SchweserNotes Book 1"
+            ],
+            "tags": [
+              "qm"
+            ]
+          },
+          "children": []
+        }
+      ]
+    },
+    {
+      "id": "cfa020700-0000-4000-8000-000000000000",
+      "title": "Estimation and Inference",
+      "status": "not-started",
+      "type": "phase",
+      "notes": "# Estimation and Inference\n\nSampling i inference: metody próbkowania, sampling distribution, CLT, standard error, point/interval estimate, wybór t vs z, resampling.\n\n**Learning Modules:** 1 · **Egzamin weight (topic):** 7.5%",
+      "createdAt": "2026-05-06T00:00:00Z",
+      "updatedAt": "2026-05-06T00:00:00Z",
+      "metadata": {
+        "lm_index": "07",
+        "lm_name_canonical": "Estimation and Inference",
+        "los_count": 6,
+        "topic": "Quantitative Methods"
+      },
+      "children": [
+        {
+          "id": "cfa020700-0001-4000-8000-000000000000",
+          "title": "Simple random sampling",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# Simple random sampling\n\n**LOS:** LOS 7.a · **Difficulty:** 1 · **Estimated:** 0.2h\n\n## Opis\nKażda jednostka populacji ma równe prawdopodobieństwo wyboru. Złoty standard, ale często niepraktyczny.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Mylenie z systematic\n- Pomijanie założenia o equal probability\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Estimation and Inference'\n- Schweser SchweserNotes Book 1",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": [
+              "7.a"
+            ],
+            "difficulty": 1,
+            "estimated_hours": 0.2,
+            "prerequisites": [],
+            "formulas": [],
+            "common_pitfalls": [
+              "Mylenie z systematic",
+              "Pomijanie założenia o equal probability"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 1, Reading 'Estimation and Inference'",
+              "Schweser SchweserNotes Book 1"
+            ],
+            "tags": [
+              "qm"
+            ]
+          },
+          "children": []
+        },
+        {
+          "id": "cfa020700-0002-4000-8000-000000000000",
+          "title": "Stratified random sampling",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# Stratified random sampling\n\n**LOS:** LOS 7.a · **Difficulty:** 2 · **Estimated:** 0.3h\n\n## Opis\nPopulacja podzielona na strata (homogeniczne grupy), próbkowanie SRS w każdym. Redukuje variance estymatora.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- Simple random sampling\n\n## Common pitfalls\n- Mylenie strata z clusters\n- Pomijanie potrzeby homogeniczności wewnątrz strata\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Estimation and Inference'\n- Schweser SchweserNotes Book 1",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": [
+              "7.a"
+            ],
+            "difficulty": 2,
+            "estimated_hours": 0.3,
+            "prerequisites": [
+              "Simple random sampling"
+            ],
+            "formulas": [],
+            "common_pitfalls": [
+              "Mylenie strata z clusters",
+              "Pomijanie potrzeby homogeniczności wewnątrz strata"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 1, Reading 'Estimation and Inference'",
+              "Schweser SchweserNotes Book 1"
+            ],
+            "tags": [
+              "qm"
+            ]
+          },
+          "children": []
+        },
+        {
+          "id": "cfa020700-0003-4000-8000-000000000000",
+          "title": "Cluster sampling",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# Cluster sampling\n\n**LOS:** LOS 7.a · **Difficulty:** 2 · **Estimated:** 0.3h\n\n## Opis\nPopulacja podzielona na clusters (heterogeniczne miniatury), losowane całe clusters. Cheaper, ale mniej efektywne.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- Simple random sampling\n\n## Common pitfalls\n- Mylenie clusters z strata\n- Wyższa variance niż SRS\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Estimation and Inference'\n- Schweser SchweserNotes Book 1",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": [
+              "7.a"
+            ],
+            "difficulty": 2,
+            "estimated_hours": 0.3,
+            "prerequisites": [
+              "Simple random sampling"
+            ],
+            "formulas": [],
+            "common_pitfalls": [
+              "Mylenie clusters z strata",
+              "Wyższa variance niż SRS"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 1, Reading 'Estimation and Inference'",
+              "Schweser SchweserNotes Book 1"
+            ],
+            "tags": [
+              "qm"
+            ]
+          },
+          "children": []
+        },
+        {
+          "id": "cfa020700-0004-4000-8000-000000000000",
+          "title": "Systematic sampling",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# Systematic sampling\n\n**LOS:** LOS 7.a · **Difficulty:** 1 · **Estimated:** 0.2h\n\n## Opis\nCo k-ty element po losowym starcie. Tańsze niż SRS; problemy gdy lista ma okresową strukturę.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Periodyczność danych może powodować bias\n- Mylenie z simple random\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Estimation and Inference'\n- Schweser SchweserNotes Book 1",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": [
+              "7.a"
+            ],
+            "difficulty": 1,
+            "estimated_hours": 0.2,
+            "prerequisites": [],
+            "formulas": [],
+            "common_pitfalls": [
+              "Periodyczność danych może powodować bias",
+              "Mylenie z simple random"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 1, Reading 'Estimation and Inference'",
+              "Schweser SchweserNotes Book 1"
+            ],
+            "tags": [
+              "qm"
+            ]
+          },
+          "children": []
+        },
+        {
+          "id": "cfa020700-0005-4000-8000-000000000000",
+          "title": "Sampling distribution",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# Sampling distribution\n\n**LOS:** LOS 7.b · **Difficulty:** 2 · **Estimated:** 0.3h\n\n## Opis\nRozkład statystyki (np. mean) liczonej z wielu prób. Podstawa inference.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- Variance\n\n## Common pitfalls\n- Mylenie z distribution of population\n- Pomijanie wpływu n\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Estimation and Inference'\n- Schweser SchweserNotes Book 1",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": [
+              "7.b"
+            ],
+            "difficulty": 2,
+            "estimated_hours": 0.3,
+            "prerequisites": [
+              "Variance"
+            ],
+            "formulas": [],
+            "common_pitfalls": [
+              "Mylenie z distribution of population",
+              "Pomijanie wpływu n"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 1, Reading 'Estimation and Inference'",
+              "Schweser SchweserNotes Book 1"
+            ],
+            "tags": [
+              "qm"
+            ]
+          },
+          "children": []
+        },
+        {
+          "id": "cfa020700-0006-4000-8000-000000000000",
+          "title": "Central limit theorem",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# Central limit theorem\n\n**LOS:** LOS 7.c · **Difficulty:** 3 · **Estimated:** 0.5h\n\n## Opis\nDla dużego n (n≥30 rule of thumb), sampling distribution mean ma rozkład normalny niezależnie od populacji. Fundament inference.\n\n## Formuły / kluczowe relacje\n- x_bar ~ N(mu, sigma^2/n) gdy n duże\n\n## Prerequisites\n- Sampling distribution\n- Normal distribution\n\n## Common pitfalls\n- Stosowanie do małych n bez sprawdzenia normalności\n- Mylenie z LLN\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Estimation and Inference'\n- Schweser SchweserNotes Book 1",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": [
+              "7.c"
+            ],
+            "difficulty": 3,
+            "estimated_hours": 0.5,
+            "prerequisites": [
+              "Sampling distribution",
+              "Normal distribution"
+            ],
+            "formulas": [
+              "x_bar ~ N(mu, sigma^2/n) gdy n duże"
+            ],
+            "common_pitfalls": [
+              "Stosowanie do małych n bez sprawdzenia normalności",
+              "Mylenie z LLN"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 1, Reading 'Estimation and Inference'",
+              "Schweser SchweserNotes Book 1"
+            ],
+            "tags": [
+              "qm"
+            ]
+          },
+          "children": []
+        },
+        {
+          "id": "cfa020700-0007-4000-8000-000000000000",
+          "title": "Standard error",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# Standard error\n\n**LOS:** LOS 7.c · **Difficulty:** 2 · **Estimated:** 0.3h\n\n## Opis\nSD sampling distribution. Spada z 1/sqrt(n) — czterokrotne n potrzebne, by halve SE.\n\n## Formuły / kluczowe relacje\n- SE = sigma/sqrt(n) (znane sigma)\n- SE = s/sqrt(n) (nieznane sigma)\n\n## Prerequisites\n- Sampling distribution\n\n## Common pitfalls\n- Mylenie SE z standard deviation\n- Pomijanie wpływu n na SE\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Estimation and Inference'\n- Schweser SchweserNotes Book 1",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": [
+              "7.c"
+            ],
+            "difficulty": 2,
+            "estimated_hours": 0.3,
+            "prerequisites": [
+              "Sampling distribution"
+            ],
+            "formulas": [
+              "SE = sigma/sqrt(n) (znane sigma)",
+              "SE = s/sqrt(n) (nieznane sigma)"
+            ],
+            "common_pitfalls": [
+              "Mylenie SE z standard deviation",
+              "Pomijanie wpływu n na SE"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 1, Reading 'Estimation and Inference'",
+              "Schweser SchweserNotes Book 1"
+            ],
+            "tags": [
+              "qm"
+            ]
+          },
+          "children": []
+        },
+        {
+          "id": "cfa020700-0008-4000-8000-000000000000",
+          "title": "Point estimate vs interval estimate",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# Point estimate vs interval estimate\n\n**LOS:** LOS 7.d · **Difficulty:** 1 · **Estimated:** 0.2h\n\n## Opis\nPoint: jedna wartość (np. x_bar). Interval: zakres z określonym confidence (np. 95%). Interval informuje o uncertainty.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- Standard error\n\n## Common pitfalls\n- Mylenie precision z accuracy\n- Pomijanie confidence level\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Estimation and Inference'\n- Schweser SchweserNotes Book 1",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": [
+              "7.d"
+            ],
+            "difficulty": 1,
+            "estimated_hours": 0.2,
+            "prerequisites": [
+              "Standard error"
+            ],
+            "formulas": [],
+            "common_pitfalls": [
+              "Mylenie precision z accuracy",
+              "Pomijanie confidence level"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 1, Reading 'Estimation and Inference'",
+              "Schweser SchweserNotes Book 1"
+            ],
+            "tags": [
+              "qm"
+            ]
+          },
+          "children": []
+        },
+        {
+          "id": "cfa020700-0009-4000-8000-000000000000",
+          "title": "t-distribution vs z-distribution selection",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# t-distribution vs z-distribution selection\n\n**LOS:** LOS 7.e · **Difficulty:** 2 · **Estimated:** 0.3h\n\n## Opis\nZ: znane sigma lub n duże (n>30). T: nieznane sigma i mała próbka. T ma fatter tails — szersze CI.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- Standard normal (z-distribution)\n- Student's t-distribution\n\n## Common pitfalls\n- Używanie z gdy nieznane sigma i mała próbka\n- Pomijanie warunków normalności populacji\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Estimation and Inference'\n- Schweser SchweserNotes Book 1",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": [
+              "7.e"
+            ],
+            "difficulty": 2,
+            "estimated_hours": 0.3,
+            "prerequisites": [
+              "Standard normal (z-distribution)",
+              "Student's t-distribution"
+            ],
+            "formulas": [],
+            "common_pitfalls": [
+              "Używanie z gdy nieznane sigma i mała próbka",
+              "Pomijanie warunków normalności populacji"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 1, Reading 'Estimation and Inference'",
+              "Schweser SchweserNotes Book 1"
+            ],
+            "tags": [
+              "qm"
+            ]
+          },
+          "children": []
+        },
+        {
+          "id": "cfa020700-0010-4000-8000-000000000000",
+          "title": "Resampling methods (bootstrap, jackknife)",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# Resampling methods (bootstrap, jackknife)\n\n**LOS:** LOS 7.f · **Difficulty:** 2 · **Estimated:** 0.3h\n\n## Opis\nBootstrap: resampling z replacement do estymacji sampling distribution. Jackknife: leave-one-out. Używane gdy parametric assumptions zawodzą.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- Sampling distribution\n\n## Common pitfalls\n- Mylenie bootstrap z Monte Carlo\n- Pomijanie z replacement vs without\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Estimation and Inference'\n- Schweser SchweserNotes Book 1",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": [
+              "7.f"
+            ],
+            "difficulty": 2,
+            "estimated_hours": 0.3,
+            "prerequisites": [
+              "Sampling distribution"
+            ],
+            "formulas": [],
+            "common_pitfalls": [
+              "Mylenie bootstrap z Monte Carlo",
+              "Pomijanie z replacement vs without"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 1, Reading 'Estimation and Inference'",
+              "Schweser SchweserNotes Book 1"
+            ],
+            "tags": [
+              "qm"
+            ]
+          },
+          "children": []
+        }
+      ]
+    },
+    {
+      "id": "cfa020800-0000-4000-8000-000000000000",
+      "title": "Hypothesis Testing",
+      "status": "not-started",
+      "type": "phase",
+      "notes": "# Hypothesis Testing\n\nTest hipotez: H_0/H_a, błędy I/II rodzaju, p-value, jedno- i dwustronne testy. Klasyczne testy: t (pojedyncza średnia, różnica średnich), chi-square (wariancja), F (ratio wariancji). Parametric vs non-parametric.\n\n**Learning Modules:** 1 · **Egzamin weight (topic):** 7.5%",
+      "createdAt": "2026-05-06T00:00:00Z",
+      "updatedAt": "2026-05-06T00:00:00Z",
+      "metadata": {
+        "lm_index": "08",
+        "lm_name_canonical": "Hypothesis Testing",
+        "los_count": 6,
+        "topic": "Quantitative Methods"
+      },
+      "children": [
+        {
+          "id": "cfa020800-0001-4000-8000-000000000000",
+          "title": "Null vs alternative hypothesis",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# Null vs alternative hypothesis\n\n**LOS:** LOS 8.a · **Difficulty:** 2 · **Estimated:** 0.3h\n\n## Opis\nH_0: status quo (zazwyczaj zawiera =). H_a: to, co chcemy wykazać. Test może odrzucić lub nie odrzucić H_0 — nigdy nie 'akceptuje' H_0.\n\n## Formuły / kluczowe relacje\n- H_0 vs H_a\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Mylenie kierunku H_0 i H_a\n- Stawianie tego, co chcemy udowodnić, jako H_0\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Hypothesis Testing'\n- Schweser SchweserNotes Book 1",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": [
+              "8.a"
+            ],
+            "difficulty": 2,
+            "estimated_hours": 0.3,
+            "prerequisites": [],
+            "formulas": [
+              "H_0 vs H_a"
+            ],
+            "common_pitfalls": [
+              "Mylenie kierunku H_0 i H_a",
+              "Stawianie tego, co chcemy udowodnić, jako H_0"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 1, Reading 'Hypothesis Testing'",
+              "Schweser SchweserNotes Book 1"
+            ],
+            "tags": [
+              "qm"
+            ]
+          },
+          "children": []
+        },
+        {
+          "id": "cfa020800-0002-4000-8000-000000000000",
+          "title": "Type I vs Type II error",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# Type I vs Type II error\n\n**LOS:** LOS 8.b · **Difficulty:** 3 · **Estimated:** 0.4h\n\n## Opis\nType I: false positive (odrzucamy prawdziwe H_0). Type II: false negative (nie odrzucamy fałszywego H_0). Power testu rośnie z n i effect size.\n\n## Formuły / kluczowe relacje\n- alpha = P(Type I) = P(reject H_0 | H_0 true)\n- beta = P(Type II) = P(fail to reject | H_0 false)\n- Power = 1 - beta\n\n## Prerequisites\n- Null vs alternative hypothesis\n\n## Common pitfalls\n- Mylenie alpha z beta\n- Pomijanie trade-off — niższe alpha → wyższe beta przy stałym n\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Hypothesis Testing'\n- Schweser SchweserNotes Book 1",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": [
+              "8.b"
+            ],
+            "difficulty": 3,
+            "estimated_hours": 0.4,
+            "prerequisites": [
+              "Null vs alternative hypothesis"
+            ],
+            "formulas": [
+              "alpha = P(Type I) = P(reject H_0 | H_0 true)",
+              "beta = P(Type II) = P(fail to reject | H_0 false)",
+              "Power = 1 - beta"
+            ],
+            "common_pitfalls": [
+              "Mylenie alpha z beta",
+              "Pomijanie trade-off — niższe alpha → wyższe beta przy stałym n"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 1, Reading 'Hypothesis Testing'",
+              "Schweser SchweserNotes Book 1"
+            ],
+            "tags": [
+              "qm"
+            ]
+          },
+          "children": []
+        },
+        {
+          "id": "cfa020800-0003-4000-8000-000000000000",
+          "title": "p-value",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# p-value\n\n**LOS:** LOS 8.c · **Difficulty:** 3 · **Estimated:** 0.4h\n\n## Opis\nNajmniejsze alpha, przy którym odrzucilibyśmy H_0. Reject jeśli p-value < alpha. Nie jest prawdopodobieństwem prawdziwości H_0.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- Type I vs Type II error\n\n## Common pitfalls\n- Interpretacja p-value jako P(H_0 true)\n- Pomijanie significance level\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Hypothesis Testing'\n- Schweser SchweserNotes Book 1",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": [
+              "8.c"
+            ],
+            "difficulty": 3,
+            "estimated_hours": 0.4,
+            "prerequisites": [
+              "Type I vs Type II error"
+            ],
+            "formulas": [],
+            "common_pitfalls": [
+              "Interpretacja p-value jako P(H_0 true)",
+              "Pomijanie significance level"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 1, Reading 'Hypothesis Testing'",
+              "Schweser SchweserNotes Book 1"
+            ],
+            "tags": [
+              "qm"
+            ]
+          },
+          "children": []
+        },
+        {
+          "id": "cfa020800-0004-4000-8000-000000000000",
+          "title": "One-tailed vs two-tailed test",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# One-tailed vs two-tailed test\n\n**LOS:** LOS 8.c · **Difficulty:** 2 · **Estimated:** 0.3h\n\n## Opis\nOne-tailed: H_a kierunkowa (>, <). Two-tailed: H_a ≠. Critical value dla two-tailed dzieli alpha na 2 ogony.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- Null vs alternative hypothesis\n\n## Common pitfalls\n- Używanie one-tailed gdy H_a jest dwustronne\n- Mylenie critical values\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Hypothesis Testing'\n- Schweser SchweserNotes Book 1",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": [
+              "8.c"
+            ],
+            "difficulty": 2,
+            "estimated_hours": 0.3,
+            "prerequisites": [
+              "Null vs alternative hypothesis"
+            ],
+            "formulas": [],
+            "common_pitfalls": [
+              "Używanie one-tailed gdy H_a jest dwustronne",
+              "Mylenie critical values"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 1, Reading 'Hypothesis Testing'",
+              "Schweser SchweserNotes Book 1"
+            ],
+            "tags": [
+              "qm"
+            ]
+          },
+          "children": []
+        },
+        {
+          "id": "cfa020800-0005-4000-8000-000000000000",
+          "title": "t-test for single mean",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# t-test for single mean\n\n**LOS:** LOS 8.d · **Difficulty:** 3 · **Estimated:** 0.4h\n\n## Opis\nTest czy mean populacji = mu_0. Stosujemy t gdy sigma nieznane. Egzaminowane bardzo często.\n\n## Formuły / kluczowe relacje\n- t = (x_bar - mu_0) / (s/sqrt(n))\n- df = n - 1\n\n## Prerequisites\n- Standard error\n- Student's t-distribution\n\n## Common pitfalls\n- Stosowanie z gdy nieznane sigma i mała próbka\n- Pomijanie założenia normalności populacji\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Hypothesis Testing'\n- Schweser SchweserNotes Book 1",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": [
+              "8.d"
+            ],
+            "difficulty": 3,
+            "estimated_hours": 0.4,
+            "prerequisites": [
+              "Standard error",
+              "Student's t-distribution"
+            ],
+            "formulas": [
+              "t = (x_bar - mu_0) / (s/sqrt(n))",
+              "df = n - 1"
+            ],
+            "common_pitfalls": [
+              "Stosowanie z gdy nieznane sigma i mała próbka",
+              "Pomijanie założenia normalności populacji"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 1, Reading 'Hypothesis Testing'",
+              "Schweser SchweserNotes Book 1"
+            ],
+            "tags": [
+              "qm"
+            ]
+          },
+          "children": []
+        },
+        {
+          "id": "cfa020800-0006-4000-8000-000000000000",
+          "title": "t-test for difference of means (paired/unpaired)",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# t-test for difference of means (paired/unpaired)\n\n**LOS:** LOS 8.d · **Difficulty:** 3 · **Estimated:** 0.5h\n\n## Opis\nPaired: te same podmioty before/after. Unpaired: dwie niezależne próbki. Paired ma wyższą power gdy korelacja istnieje.\n\n## Formuły / kluczowe relacje\n- unpaired (pooled): t = (x_bar1 - x_bar2)/sqrt(s_p^2*(1/n_1+1/n_2))\n- paired: t = d_bar / (s_d/sqrt(n))\n\n## Prerequisites\n- t-test for single mean\n\n## Common pitfalls\n- Mylenie paired z unpaired\n- Założenie równych wariancji bez weryfikacji\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Hypothesis Testing'\n- Schweser SchweserNotes Book 1",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": [
+              "8.d"
+            ],
+            "difficulty": 3,
+            "estimated_hours": 0.5,
+            "prerequisites": [
+              "t-test for single mean"
+            ],
+            "formulas": [
+              "unpaired (pooled): t = (x_bar1 - x_bar2)/sqrt(s_p^2*(1/n_1+1/n_2))",
+              "paired: t = d_bar / (s_d/sqrt(n))"
+            ],
+            "common_pitfalls": [
+              "Mylenie paired z unpaired",
+              "Założenie równych wariancji bez weryfikacji"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 1, Reading 'Hypothesis Testing'",
+              "Schweser SchweserNotes Book 1"
+            ],
+            "tags": [
+              "qm"
+            ]
+          },
+          "children": []
+        },
+        {
+          "id": "cfa020800-0007-4000-8000-000000000000",
+          "title": "Chi-square test for variance",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# Chi-square test for variance\n\n**LOS:** LOS 8.e · **Difficulty:** 3 · **Estimated:** 0.4h\n\n## Opis\nTest czy sigma populacji = sigma_0. Right-skewed distribution — krytyczne wartości asymetryczne.\n\n## Formuły / kluczowe relacje\n- chi^2 = (n-1)*s^2 / sigma_0^2\n- df = n - 1\n\n## Prerequisites\n- Chi-square distribution\n\n## Common pitfalls\n- Mylenie z chi-square goodness-of-fit\n- Pomijanie założenia normalności\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Hypothesis Testing'\n- Schweser SchweserNotes Book 1",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": [
+              "8.e"
+            ],
+            "difficulty": 3,
+            "estimated_hours": 0.4,
+            "prerequisites": [
+              "Chi-square distribution"
+            ],
+            "formulas": [
+              "chi^2 = (n-1)*s^2 / sigma_0^2",
+              "df = n - 1"
+            ],
+            "common_pitfalls": [
+              "Mylenie z chi-square goodness-of-fit",
+              "Pomijanie założenia normalności"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 1, Reading 'Hypothesis Testing'",
+              "Schweser SchweserNotes Book 1"
+            ],
+            "tags": [
+              "qm"
+            ]
+          },
+          "children": []
+        },
+        {
+          "id": "cfa020800-0008-4000-8000-000000000000",
+          "title": "F-test for variance ratio",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# F-test for variance ratio\n\n**LOS:** LOS 8.e · **Difficulty:** 3 · **Estimated:** 0.4h\n\n## Opis\nTest równości wariancji dwóch populacji. Konwencja: większa s^2 jako licznik (F≥1). Założenie: niezależne, normalne populacje.\n\n## Formuły / kluczowe relacje\n- F = s_1^2 / s_2^2\n- df_1 = n_1-1, df_2 = n_2-1\n\n## Prerequisites\n- F-distribution\n\n## Common pitfalls\n- Pomijanie konwencji większa wariancja w liczniku\n- Mylenie F z chi-square\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Hypothesis Testing'\n- Schweser SchweserNotes Book 1",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": [
+              "8.e"
+            ],
+            "difficulty": 3,
+            "estimated_hours": 0.4,
+            "prerequisites": [
+              "F-distribution"
+            ],
+            "formulas": [
+              "F = s_1^2 / s_2^2",
+              "df_1 = n_1-1, df_2 = n_2-1"
+            ],
+            "common_pitfalls": [
+              "Pomijanie konwencji większa wariancja w liczniku",
+              "Mylenie F z chi-square"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 1, Reading 'Hypothesis Testing'",
+              "Schweser SchweserNotes Book 1"
+            ],
+            "tags": [
+              "qm"
+            ]
+          },
+          "children": []
+        },
+        {
+          "id": "cfa020800-0009-4000-8000-000000000000",
+          "title": "Parametric vs non-parametric tests",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# Parametric vs non-parametric tests\n\n**LOS:** LOS 8.f · **Difficulty:** 2 · **Estimated:** 0.3h\n\n## Opis\nParametric: zakłada konkretny rozkład (np. normalny) — wyższa power. Non-parametric (rank-based): mniej założeń, używane gdy distribution unknown.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Stosowanie parametric gdy założenia złamane\n- Mylenie nazw — np. Mann-Whitney vs Wilcoxon\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Hypothesis Testing'\n- Schweser SchweserNotes Book 1",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": [
+              "8.f"
+            ],
+            "difficulty": 2,
+            "estimated_hours": 0.3,
+            "prerequisites": [],
+            "formulas": [],
+            "common_pitfalls": [
+              "Stosowanie parametric gdy założenia złamane",
+              "Mylenie nazw — np. Mann-Whitney vs Wilcoxon"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 1, Reading 'Hypothesis Testing'",
+              "Schweser SchweserNotes Book 1"
+            ],
+            "tags": [
+              "qm"
+            ]
+          },
+          "children": []
+        },
+        {
+          "id": "cfa020800-0010-4000-8000-000000000000",
+          "title": "Test for correlation (parametric and non-parametric)",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# Test for correlation (parametric and non-parametric)\n\n**LOS:** LOS 8.f · **Difficulty:** 3 · **Estimated:** 0.4h\n\n## Opis\nTest H_0: rho=0. Wersja parametric (Pearson) i non-parametric (Spearman).\n\n## Formuły / kluczowe relacje\n- t = r*sqrt(n-2)/sqrt(1-r^2)\n- df = n-2\n\n## Prerequisites\n- Pearson correlation coefficient\n\n## Common pitfalls\n- Mylenie t-test for correlation z t-test for slope\n- Pomijanie założeń linearity\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Hypothesis Testing'\n- Schweser SchweserNotes Book 1",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": [
+              "8.f"
+            ],
+            "difficulty": 3,
+            "estimated_hours": 0.4,
+            "prerequisites": [
+              "Pearson correlation coefficient"
+            ],
+            "formulas": [
+              "t = r*sqrt(n-2)/sqrt(1-r^2)",
+              "df = n-2"
+            ],
+            "common_pitfalls": [
+              "Mylenie t-test for correlation z t-test for slope",
+              "Pomijanie założeń linearity"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 1, Reading 'Hypothesis Testing'",
+              "Schweser SchweserNotes Book 1"
+            ],
+            "tags": [
+              "qm"
+            ]
+          },
+          "children": []
+        }
+      ]
+    },
+    {
+      "id": "cfa020900-0000-4000-8000-000000000000",
+      "title": "Parametric and Non-Parametric Tests of Independence",
+      "status": "not-started",
+      "type": "phase",
+      "notes": "# Parametric and Non-Parametric Tests of Independence\n\nTesty zależności: Pearson (parametric, liniowa), Spearman (rank-based, monotoniczna), chi-square test of independence (kategoryczne dane). Distinkcja correlation vs causation.\n\n**Learning Modules:** 1 · **Egzamin weight (topic):** 7.5%",
+      "createdAt": "2026-05-06T00:00:00Z",
+      "updatedAt": "2026-05-06T00:00:00Z",
+      "metadata": {
+        "lm_index": "09",
+        "lm_name_canonical": "Parametric and Non-Parametric Tests of Independence",
+        "los_count": 3,
+        "topic": "Quantitative Methods"
+      },
+      "children": [
+        {
+          "id": "cfa020900-0001-4000-8000-000000000000",
+          "title": "Pearson correlation coefficient",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# Pearson correlation coefficient\n\n**LOS:** LOS 9.a · **Difficulty:** 2 · **Estimated:** 0.4h\n\n## Opis\nPróbkowy odpowiednik rho. Mierzy siłę i kierunek liniowej zależności. Wrażliwy na outliery.\n\n## Formuły / kluczowe relacje\n- r = Cov(X,Y) / (s_X * s_Y)\n\n## Prerequisites\n- Correlation coefficient\n\n## Common pitfalls\n- Mylenie correlation z causation\n- Pomijanie założenia linearity\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Parametric and Non-Parametric Tests of Independence'\n- Schweser SchweserNotes Book 1",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": [
+              "9.a"
+            ],
+            "difficulty": 2,
+            "estimated_hours": 0.4,
+            "prerequisites": [
+              "Correlation coefficient"
+            ],
+            "formulas": [
+              "r = Cov(X,Y) / (s_X * s_Y)"
+            ],
+            "common_pitfalls": [
+              "Mylenie correlation z causation",
+              "Pomijanie założenia linearity"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 1, Reading 'Parametric and Non-Parametric Tests of Independence'",
+              "Schweser SchweserNotes Book 1"
+            ],
+            "tags": [
+              "qm"
+            ]
+          },
+          "children": []
+        },
+        {
+          "id": "cfa020900-0002-4000-8000-000000000000",
+          "title": "Spearman rank correlation",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# Spearman rank correlation\n\n**LOS:** LOS 9.a · **Difficulty:** 2 · **Estimated:** 0.3h\n\n## Opis\nPearson liczony na rankach zamiast wartościach. Robust na outliery; wykrywa monotonic (niekoniecznie liniowe) relacje.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- Pearson correlation coefficient\n\n## Common pitfalls\n- Mylenie z Pearson\n- Pomijanie zalety na non-linear monotonic relationships\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Parametric and Non-Parametric Tests of Independence'\n- Schweser SchweserNotes Book 1",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": [
+              "9.a"
+            ],
+            "difficulty": 2,
+            "estimated_hours": 0.3,
+            "prerequisites": [
+              "Pearson correlation coefficient"
+            ],
+            "formulas": [],
+            "common_pitfalls": [
+              "Mylenie z Pearson",
+              "Pomijanie zalety na non-linear monotonic relationships"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 1, Reading 'Parametric and Non-Parametric Tests of Independence'",
+              "Schweser SchweserNotes Book 1"
+            ],
+            "tags": [
+              "qm"
+            ]
+          },
+          "children": []
+        },
+        {
+          "id": "cfa020900-0003-4000-8000-000000000000",
+          "title": "Correlation vs causation",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# Correlation vs causation\n\n**LOS:** LOS 9.a · **Difficulty:** 1 · **Estimated:** 0.2h\n\n## Opis\nKorelacja nie implikuje przyczynowości. Możliwe wyjaśnienia: chance, reverse causation, confounder, third variable.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- Pearson correlation coefficient\n\n## Common pitfalls\n- Wnioskowanie causation z correlation\n- Pomijanie spurious correlation i confounders\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Parametric and Non-Parametric Tests of Independence'\n- Schweser SchweserNotes Book 1",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": [
+              "9.a"
+            ],
+            "difficulty": 1,
+            "estimated_hours": 0.2,
+            "prerequisites": [
+              "Pearson correlation coefficient"
+            ],
+            "formulas": [],
+            "common_pitfalls": [
+              "Wnioskowanie causation z correlation",
+              "Pomijanie spurious correlation i confounders"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 1, Reading 'Parametric and Non-Parametric Tests of Independence'",
+              "Schweser SchweserNotes Book 1"
+            ],
+            "tags": [
+              "qm"
+            ]
+          },
+          "children": []
+        },
+        {
+          "id": "cfa020900-0004-4000-8000-000000000000",
+          "title": "Test of independence (chi-square)",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# Test of independence (chi-square)\n\n**LOS:** LOS 9.b · **Difficulty:** 3 · **Estimated:** 0.5h\n\n## Opis\nTest niezależności dwóch zmiennych kategorycznych. O = obserwowane, E = oczekiwane przy niezależności. Tabela kontyngencji.\n\n## Formuły / kluczowe relacje\n- chi^2 = sum((O - E)^2 / E)\n- df = (r-1)(c-1)\n\n## Prerequisites\n- Chi-square distribution\n\n## Common pitfalls\n- Pomijanie warunku oczekiwane ≥ 5\n- Mylenie z chi-square goodness-of-fit\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Parametric and Non-Parametric Tests of Independence'\n- Schweser SchweserNotes Book 1",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": [
+              "9.b"
+            ],
+            "difficulty": 3,
+            "estimated_hours": 0.5,
+            "prerequisites": [
+              "Chi-square distribution"
+            ],
+            "formulas": [
+              "chi^2 = sum((O - E)^2 / E)",
+              "df = (r-1)(c-1)"
+            ],
+            "common_pitfalls": [
+              "Pomijanie warunku oczekiwane ≥ 5",
+              "Mylenie z chi-square goodness-of-fit"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 1, Reading 'Parametric and Non-Parametric Tests of Independence'",
+              "Schweser SchweserNotes Book 1"
+            ],
+            "tags": [
+              "qm"
+            ]
+          },
+          "children": []
+        }
+      ]
+    },
+    {
+      "id": "cfa021000-0000-4000-8000-000000000000",
+      "title": "Simple Linear Regression",
+      "status": "not-started",
+      "type": "phase",
+      "notes": "# Simple Linear Regression\n\nRegresja liniowa: model, założenia, konsekwencje ich naruszenia, R^2, SEE, F-stat, t-stat dla coefficients, CI, multiple regression basics. Fundament beta estimation, factor models, performance attribution.\n\n**Learning Modules:** 1 · **Egzamin weight (topic):** 7.5%",
+      "createdAt": "2026-05-06T00:00:00Z",
+      "updatedAt": "2026-05-06T00:00:00Z",
+      "metadata": {
+        "lm_index": "10",
+        "lm_name_canonical": "Simple Linear Regression",
+        "los_count": 5,
+        "topic": "Quantitative Methods"
+      },
+      "children": [
+        {
+          "id": "cfa021000-0001-4000-8000-000000000000",
+          "title": "Simple linear regression model",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# Simple linear regression model\n\n**LOS:** LOS 10.a · **Difficulty:** 2 · **Estimated:** 0.4h\n\n## Opis\nModeluje liniową zależność Y od X. OLS minimalizuje sum of squared residuals. Fundament dla beta estimation w PM/CI.\n\n## Formuły / kluczowe relacje\n- Y_i = b_0 + b_1*X_i + epsilon_i\n- b_1 = Cov(X,Y)/Var(X)\n- b_0 = Y_bar - b_1*X_bar\n\n## Prerequisites\n- Pearson correlation coefficient\n\n## Common pitfalls\n- Mylenie zmiennych dependent vs independent\n- Pomijanie residual term\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Simple Linear Regression'\n- Schweser SchweserNotes Book 1",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": [
+              "10.a"
+            ],
+            "difficulty": 2,
+            "estimated_hours": 0.4,
+            "prerequisites": [
+              "Pearson correlation coefficient"
+            ],
+            "formulas": [
+              "Y_i = b_0 + b_1*X_i + epsilon_i",
+              "b_1 = Cov(X,Y)/Var(X)",
+              "b_0 = Y_bar - b_1*X_bar"
+            ],
+            "common_pitfalls": [
+              "Mylenie zmiennych dependent vs independent",
+              "Pomijanie residual term"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 1, Reading 'Simple Linear Regression'",
+              "Schweser SchweserNotes Book 1"
+            ],
+            "tags": [
+              "qm"
+            ]
+          },
+          "children": []
+        },
+        {
+          "id": "cfa021000-0002-4000-8000-000000000000",
+          "title": "Assumptions of linear regression",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# Assumptions of linear regression\n\n**LOS:** LOS 10.b · **Difficulty:** 3 · **Estimated:** 0.5h\n\n## Opis\nZałożenia: (1) liniowa zależność, (2) niezależność błędów, (3) homoscedasticity (stała wariancja błędów), (4) normalnie rozłożone błędy, (5) X nie jest losowy / brak measurement error.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- Simple linear regression model\n\n## Common pitfalls\n- Mylenie linearity z linear in parameters\n- Pomijanie homoscedasticity\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Simple Linear Regression'\n- Schweser SchweserNotes Book 1",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": [
+              "10.b"
+            ],
+            "difficulty": 3,
+            "estimated_hours": 0.5,
+            "prerequisites": [
+              "Simple linear regression model"
+            ],
+            "formulas": [],
+            "common_pitfalls": [
+              "Mylenie linearity z linear in parameters",
+              "Pomijanie homoscedasticity"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 1, Reading 'Simple Linear Regression'",
+              "Schweser SchweserNotes Book 1"
+            ],
+            "tags": [
+              "qm"
+            ]
+          },
+          "children": []
+        },
+        {
+          "id": "cfa021000-0003-4000-8000-000000000000",
+          "title": "Consequences of assumption violations",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# Consequences of assumption violations\n\n**LOS:** LOS 10.b · **Difficulty:** 4 · **Estimated:** 0.6h\n\n## Opis\nHeteroscedasticity: SE biased — t-stat unreliable. Autocorrelation: SE underestimated → false significance. Multicollinearity (multiple): inflated SE, niestabilne coefficients. Coefficients pozostają unbiased w (hetero/auto), ale BLUE nie zachodzi.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- Assumptions of linear regression\n\n## Common pitfalls\n- Mylenie heteroscedasticity z autocorrelation\n- Pomijanie wpływu na standard errors vs coefficients\n- Niezauważanie, że OLS estimators pozostają unbiased, ale nieefektywne\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Simple Linear Regression'\n- Schweser SchweserNotes Book 1",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": [
+              "10.b"
+            ],
+            "difficulty": 4,
+            "estimated_hours": 0.6,
+            "prerequisites": [
+              "Assumptions of linear regression"
+            ],
+            "formulas": [],
+            "common_pitfalls": [
+              "Mylenie heteroscedasticity z autocorrelation",
+              "Pomijanie wpływu na standard errors vs coefficients",
+              "Niezauważanie, że OLS estimators pozostają unbiased, ale nieefektywne"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 1, Reading 'Simple Linear Regression'",
+              "Schweser SchweserNotes Book 1"
+            ],
+            "tags": [
+              "qm"
+            ]
+          },
+          "children": []
+        },
+        {
+          "id": "cfa021000-0004-4000-8000-000000000000",
+          "title": "R-squared",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# R-squared\n\n**LOS:** LOS 10.c · **Difficulty:** 2 · **Estimated:** 0.3h\n\n## Opis\nFrakcja zmienności Y wyjaśniona przez X. R^2 = r^2 dla simple regression. Skala [0,1].\n\n## Formuły / kluczowe relacje\n- R^2 = SSR/SST = 1 - SSE/SST\n- SST = SSR + SSE\n\n## Prerequisites\n- Simple linear regression model\n\n## Common pitfalls\n- Mylenie R^2 z correlation r\n- Pomijanie ograniczeń (zawsze rośnie z dodawaniem zmiennych w multiple)\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Simple Linear Regression'\n- Schweser SchweserNotes Book 1",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": [
+              "10.c"
+            ],
+            "difficulty": 2,
+            "estimated_hours": 0.3,
+            "prerequisites": [
+              "Simple linear regression model"
+            ],
+            "formulas": [
+              "R^2 = SSR/SST = 1 - SSE/SST",
+              "SST = SSR + SSE"
+            ],
+            "common_pitfalls": [
+              "Mylenie R^2 z correlation r",
+              "Pomijanie ograniczeń (zawsze rośnie z dodawaniem zmiennych w multiple)"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 1, Reading 'Simple Linear Regression'",
+              "Schweser SchweserNotes Book 1"
+            ],
+            "tags": [
+              "qm"
+            ]
+          },
+          "children": []
+        },
+        {
+          "id": "cfa021000-0005-4000-8000-000000000000",
+          "title": "Standard error of estimate",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# Standard error of estimate\n\n**LOS:** LOS 10.c · **Difficulty:** 2 · **Estimated:** 0.3h\n\n## Opis\nSD residuals — typowa wielkość błędu predykcji. Niższy SEE → lepsze fit.\n\n## Formuły / kluczowe relacje\n- SEE = sqrt(SSE/(n-2))\n\n## Prerequisites\n- Simple linear regression model\n\n## Common pitfalls\n- Mylenie SEE z standard error of coefficient\n- Pomijanie df = n-k-1\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Simple Linear Regression'\n- Schweser SchweserNotes Book 1",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": [
+              "10.c"
+            ],
+            "difficulty": 2,
+            "estimated_hours": 0.3,
+            "prerequisites": [
+              "Simple linear regression model"
+            ],
+            "formulas": [
+              "SEE = sqrt(SSE/(n-2))"
+            ],
+            "common_pitfalls": [
+              "Mylenie SEE z standard error of coefficient",
+              "Pomijanie df = n-k-1"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 1, Reading 'Simple Linear Regression'",
+              "Schweser SchweserNotes Book 1"
+            ],
+            "tags": [
+              "qm"
+            ]
+          },
+          "children": []
+        },
+        {
+          "id": "cfa021000-0006-4000-8000-000000000000",
+          "title": "F-statistic",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# F-statistic\n\n**LOS:** LOS 10.c · **Difficulty:** 3 · **Estimated:** 0.4h\n\n## Opis\nTest ogólnej istotności regression. H_0: wszystkie coefficients (oprócz intercept) = 0. Dla simple regression F = t^2 dla slope.\n\n## Formuły / kluczowe relacje\n- F = MSR/MSE = (SSR/k)/(SSE/(n-k-1))\n\n## Prerequisites\n- F-distribution\n- Simple linear regression model\n\n## Common pitfalls\n- Mylenie F-test for overall significance z t-tests for coefficients\n- Pomijanie df_1=k, df_2=n-k-1\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Simple Linear Regression'\n- Schweser SchweserNotes Book 1",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": [
+              "10.c"
+            ],
+            "difficulty": 3,
+            "estimated_hours": 0.4,
+            "prerequisites": [
+              "F-distribution",
+              "Simple linear regression model"
+            ],
+            "formulas": [
+              "F = MSR/MSE = (SSR/k)/(SSE/(n-k-1))"
+            ],
+            "common_pitfalls": [
+              "Mylenie F-test for overall significance z t-tests for coefficients",
+              "Pomijanie df_1=k, df_2=n-k-1"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 1, Reading 'Simple Linear Regression'",
+              "Schweser SchweserNotes Book 1"
+            ],
+            "tags": [
+              "qm"
+            ]
+          },
+          "children": []
+        },
+        {
+          "id": "cfa021000-0007-4000-8000-000000000000",
+          "title": "t-statistic for coefficients",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# t-statistic for coefficients\n\n**LOS:** LOS 10.c · **Difficulty:** 3 · **Estimated:** 0.4h\n\n## Opis\nTest H_0: b_i = 0. Reject jeśli |t| > critical value. Standardowy output regression w Excel/R.\n\n## Formuły / kluczowe relacje\n- t = b / SE(b)\n- df = n - k - 1\n\n## Prerequisites\n- Simple linear regression model\n- t-test for single mean\n\n## Common pitfalls\n- Mylenie z F-test\n- Pomijanie testowania zarówno slope jak i intercept\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Simple Linear Regression'\n- Schweser SchweserNotes Book 1",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": [
+              "10.c"
+            ],
+            "difficulty": 3,
+            "estimated_hours": 0.4,
+            "prerequisites": [
+              "Simple linear regression model",
+              "t-test for single mean"
+            ],
+            "formulas": [
+              "t = b / SE(b)",
+              "df = n - k - 1"
+            ],
+            "common_pitfalls": [
+              "Mylenie z F-test",
+              "Pomijanie testowania zarówno slope jak i intercept"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 1, Reading 'Simple Linear Regression'",
+              "Schweser SchweserNotes Book 1"
+            ],
+            "tags": [
+              "qm"
+            ]
+          },
+          "children": []
+        },
+        {
+          "id": "cfa021000-0008-4000-8000-000000000000",
+          "title": "Confidence interval for predicted value",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# Confidence interval for predicted value\n\n**LOS:** LOS 10.d · **Difficulty:** 3 · **Estimated:** 0.4h\n\n## Opis\nDwa rodzaje: CI dla mean predicted Y (wąsze) i prediction interval dla individual Y (szersze, bo zawiera epsilon variance). Oba szerokie dla X daleko od X_bar.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- Simple linear regression model\n- Standard error\n\n## Common pitfalls\n- Mylenie CI for E[Y|X] z prediction interval for individual Y\n- Pomijanie wpływu odległości X od X_bar\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Simple Linear Regression'\n- Schweser SchweserNotes Book 1",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": [
+              "10.d"
+            ],
+            "difficulty": 3,
+            "estimated_hours": 0.4,
+            "prerequisites": [
+              "Simple linear regression model",
+              "Standard error"
+            ],
+            "formulas": [],
+            "common_pitfalls": [
+              "Mylenie CI for E[Y|X] z prediction interval for individual Y",
+              "Pomijanie wpływu odległości X od X_bar"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 1, Reading 'Simple Linear Regression'",
+              "Schweser SchweserNotes Book 1"
+            ],
+            "tags": [
+              "qm"
+            ]
+          },
+          "children": []
+        },
+        {
+          "id": "cfa021000-0009-4000-8000-000000000000",
+          "title": "Multiple regression basics",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# Multiple regression basics\n\n**LOS:** LOS 10.e · **Difficulty:** 2 · **Estimated:** 0.3h\n\n## Opis\nGeneralizacja na wiele predictorów. Adjusted R^2 koryguje za liczbę zmiennych. Multicollinearity gdy predyktory skorelowane.\n\n## Formuły / kluczowe relacje\n- Y = b_0 + b_1*X_1 + b_2*X_2 + ... + b_k*X_k + epsilon\n\n## Prerequisites\n- Simple linear regression model\n\n## Common pitfalls\n- Mylenie multicollinearity z autocorrelation\n- Pomijanie adjusted R^2\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Simple Linear Regression'\n- Schweser SchweserNotes Book 1",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": [
+              "10.e"
+            ],
+            "difficulty": 2,
+            "estimated_hours": 0.3,
+            "prerequisites": [
+              "Simple linear regression model"
+            ],
+            "formulas": [
+              "Y = b_0 + b_1*X_1 + b_2*X_2 + ... + b_k*X_k + epsilon"
+            ],
+            "common_pitfalls": [
+              "Mylenie multicollinearity z autocorrelation",
+              "Pomijanie adjusted R^2"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 1, Reading 'Simple Linear Regression'",
+              "Schweser SchweserNotes Book 1"
+            ],
+            "tags": [
+              "qm"
+            ]
+          },
+          "children": []
+        }
+      ]
+    },
+    {
+      "id": "cfa021100-0000-4000-8000-000000000000",
+      "title": "Introduction to Big Data Techniques",
+      "status": "not-started",
+      "type": "phase",
+      "notes": "# Introduction to Big Data Techniques\n\nWprowadzenie do big data, machine learning, fintech i robo-advisors. Overview-level w L1 — głębsze treatment w L2 (Quantitative Methods).\n\n**Learning Modules:** 1 · **Egzamin weight (topic):** 7.5%",
+      "createdAt": "2026-05-06T00:00:00Z",
+      "updatedAt": "2026-05-06T00:00:00Z",
+      "metadata": {
+        "lm_index": "11",
+        "lm_name_canonical": "Introduction to Big Data Techniques",
+        "los_count": 4,
+        "topic": "Quantitative Methods"
+      },
+      "children": [
+        {
+          "id": "cfa021100-0001-4000-8000-000000000000",
+          "title": "Big data basics",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# Big data basics\n\n**LOS:** LOS 11.a · **Difficulty:** 1 · **Estimated:** 0.3h\n\n## Opis\n4 V's: Volume (skala), Velocity (szybkość), Variety (formaty: structured/unstructured/semi-structured), Veracity (wiarygodność). Źródła: traditional (financial), alternative (social media, satellite, credit card).\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Mylenie volume z velocity\n- Pomijanie veracity i variety\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Introduction to Big Data Techniques'\n- Schweser SchweserNotes Book 1",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": [
+              "11.a"
+            ],
+            "difficulty": 1,
+            "estimated_hours": 0.3,
+            "prerequisites": [],
+            "formulas": [],
+            "common_pitfalls": [
+              "Mylenie volume z velocity",
+              "Pomijanie veracity i variety"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 1, Reading 'Introduction to Big Data Techniques'",
+              "Schweser SchweserNotes Book 1"
+            ],
+            "tags": [
+              "qm",
+              "fintech"
+            ]
+          },
+          "children": []
+        },
+        {
+          "id": "cfa021100-0002-4000-8000-000000000000",
+          "title": "Machine learning concepts (supervised/unsupervised/deep learning)",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# Machine learning concepts (supervised/unsupervised/deep learning)\n\n**LOS:** LOS 11.b · **Difficulty:** 2 · **Estimated:** 0.5h\n\n## Opis\nSupervised: model z labeled data (regression, classification — np. SVM, kNN). Unsupervised: pattern discovery bez labels (clustering — k-means, dimension reduction — PCA). Deep learning: neural nets z wieloma warstwami; rozpoznawanie obrazu, NLP.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Mylenie supervised z unsupervised\n- Pomijanie roli labeled data\n- Niezauważanie różnicy między classification a regression\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Introduction to Big Data Techniques'\n- Schweser SchweserNotes Book 1",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": [
+              "11.b"
+            ],
+            "difficulty": 2,
+            "estimated_hours": 0.5,
+            "prerequisites": [],
+            "formulas": [],
+            "common_pitfalls": [
+              "Mylenie supervised z unsupervised",
+              "Pomijanie roli labeled data",
+              "Niezauważanie różnicy między classification a regression"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 1, Reading 'Introduction to Big Data Techniques'",
+              "Schweser SchweserNotes Book 1"
+            ],
+            "tags": [
+              "qm",
+              "fintech"
+            ]
+          },
+          "children": []
+        },
+        {
+          "id": "cfa021100-0003-4000-8000-000000000000",
+          "title": "Fintech overview",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# Fintech overview\n\n**LOS:** LOS 11.c · **Difficulty:** 1 · **Estimated:** 0.2h\n\n## Opis\nTechnologie fintech: AI/ML, big data, robo-advisors, blockchain/DLT, cryptocurrencies, smart contracts, P2P lending. Disrupting traditional finance.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Mylenie blockchain z cryptocurrency\n- Pomijanie regulatory implications\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Introduction to Big Data Techniques'\n- Schweser SchweserNotes Book 1",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": [
+              "11.c"
+            ],
+            "difficulty": 1,
+            "estimated_hours": 0.2,
+            "prerequisites": [],
+            "formulas": [],
+            "common_pitfalls": [
+              "Mylenie blockchain z cryptocurrency",
+              "Pomijanie regulatory implications"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 1, Reading 'Introduction to Big Data Techniques'",
+              "Schweser SchweserNotes Book 1"
+            ],
+            "tags": [
+              "qm",
+              "fintech"
+            ]
+          },
+          "children": []
+        },
+        {
+          "id": "cfa021100-0004-4000-8000-000000000000",
+          "title": "Robo-advisors",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# Robo-advisors\n\n**LOS:** LOS 11.c · **Difficulty:** 1 · **Estimated:** 0.2h\n\n## Opis\nAutomated wealth management: questionnaire → risk profile → portfolio allocation → rebalancing. Niższe fees niż tradycyjny advisor; ograniczenia dla complex needs (estate planning, tax optimization).\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Mylenie z high-frequency trading\n- Pomijanie ograniczeń (brak human judgment dla complex situations)\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Introduction to Big Data Techniques'\n- Schweser SchweserNotes Book 1",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": [
+              "11.c"
+            ],
+            "difficulty": 1,
+            "estimated_hours": 0.2,
+            "prerequisites": [],
+            "formulas": [],
+            "common_pitfalls": [
+              "Mylenie z high-frequency trading",
+              "Pomijanie ograniczeń (brak human judgment dla complex situations)"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 1, Reading 'Introduction to Big Data Techniques'",
+              "Schweser SchweserNotes Book 1"
+            ],
+            "tags": [
+              "qm",
+              "fintech"
+            ]
+          },
+          "children": []
+        }
+      ]
+    }
+  ]
+}

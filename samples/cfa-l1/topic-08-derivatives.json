@@ -1,0 +1,17 @@
+{
+  "id": "cfa080000-0000-4000-8000-000000000000",
+  "title": "Derivatives",
+  "status": "not-started",
+  "type": "milestone",
+  "notes": "# Derivatives\n\nTopic 08 obejmuje instrumenty pochodne — kontrakty terminowe, futures, swapy, opcje oraz derywaty kredytowe. Na egzaminie L1 nacisk położony jest na koncepcje (definicje, mechanika, no-arbitrage pricing), a nie na zaawansowane wyceny.\n\n**Exam weight (mid-point):** 6.5%\n**Learning Modules:** 10\n**Estimated study time:** 20-30h",
+  "createdAt": "2026-05-06T00:00:00Z",
+  "updatedAt": "2026-05-06T00:00:00Z",
+  "metadata": {
+    "topic_number": "08",
+    "topic_name": "Derivatives",
+    "exam_weight_share": 6.5,
+    "lm_count": 10,
+    "estimated_hours_total": 25.5
+  },
+  "children": []
+}

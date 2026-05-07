@@ -1,0 +1,734 @@
+{
+  "id": "cfa090000-0000-4000-8000-000000000000",
+  "title": "Alternative Investments",
+  "status": "not-started",
+  "type": "milestone",
+  "notes": "# Alternative Investments\n\nTopic 09 obejmuje aktywa alternatywne wobec tradycyjnych akcji i obligacji: hedge fundy, private equity, real estate, commodities, infrastructure oraz digital assets. Nacisk pada cechy strukturalne (płynność, opłaty, regulacje), strategie inwestycyjne, metryki wynikowe i due diligence. Egzamin testuje rozumienie fee structures (2-and-20, hurdle, high-water mark), waterfall PE, valuation real estate (cap rate, NOI, FFO/AFFO) oraz roll yield w commodities.\n\n**Exam weight (mid-point):** 8.5%\n**Learning Modules:** 7\n**Estimated study time:** 15-25h",
+  "createdAt": "2026-05-06T00:00:00Z",
+  "updatedAt": "2026-05-06T00:00:00Z",
+  "metadata": {
+    "topic_number": "09",
+    "topic_name": "Alternative Investments",
+    "exam_weight_share": 8.5,
+    "lm_count": 7,
+    "estimated_hours_total": 20.0
+  },
+  "children": [
+    {
+      "id": "cfa090100-0000-4000-8000-000000000000",
+      "title": "Alternative Investment Features, Methods, and Structures",
+      "status": "not-started",
+      "type": "phase",
+      "notes": "# Alternative Investment Features, Methods, and Structures\n\nWprowadzenie do klasy alternatyw: definicje, charakterystyki, struktury prawne i ograniczenia regulacyjne. Fundament całego topica.\n\n**Learning Modules:** 1 · **Egzamin weight (topic):** 8.5%",
+      "createdAt": "2026-05-06T00:00:00Z",
+      "updatedAt": "2026-05-06T00:00:00Z",
+      "metadata": {
+        "lm_index": "01",
+        "lm_name_canonical": "Alternative Investment Features, Methods, and Structures",
+        "los_count": 4,
+        "topic": "Alternative Investments"
+      },
+      "children": [
+        {
+          "id": "cfa090101-0001-4000-8000-000000000000",
+          "title": "Definition of Alternative Investments vs Traditional",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# Definition of Alternative Investments vs Traditional\n\n**LOS:** LOS 1.a\n**Difficulty:** 2 · **Estimated:** 0.5h\n\n## Opis\nAlternative investments to klasa aktywów odmienna od tradycyjnych long-only akcji, obligacji i gotówki. Charakteryzują się unikalnymi strukturami (LP/GP, fundusze zamknięte), niską płynnością, wyższymi opłatami i często ograniczeniami regulacyjnymi. Egzamin sprawdza rozróżnienie kategorii.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Mylenie 'alternatives' wyłącznie z hedge fundami — kategoria obejmuje także PE, RE, commodities, infra, crypto.\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 5, Reading 'Alternative Investment Features, Methods, and Structures'\n- Schweser SchweserNotes Book 5, Alternative Investments, LM 1",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": ["1.a"],
+            "difficulty": 2,
+            "estimated_hours": 0.5,
+            "prerequisites": [],
+            "formulas": [],
+            "common_pitfalls": ["Mylenie 'alternatives' wyłącznie z hedge fundami — kategoria obejmuje także PE, RE, commodities, infra, crypto."],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 5, Reading 'Alternative Investment Features, Methods, and Structures'",
+              "Schweser SchweserNotes Book 5, Alternative Investments, LM 1"
+            ],
+            "tags": ["definition", "concept"]
+          }
+        },
+        {
+          "id": "cfa090101-0002-4000-8000-000000000000",
+          "title": "Low Correlation to Traditional Asset Classes",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# Low Correlation to Traditional Asset Classes\n\n**LOS:** LOS 1.a\n**Difficulty:** 2 · **Estimated:** 0.25h\n\n## Opis\nKluczowy benefit alternatyw — niska (czasem ujemna) korelacja z akcjami i obligacjami daje korzyści dywersyfikacyjne. Korelacje raportowane mogą być sztucznie zaniżone przez smoothed returns (illikwidność).\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Zakładanie, że niska reportowana korelacja = realna niska korelacja; smoothing zaniża true volatility i correlation.\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 5, Reading 'Alternative Investment Features, Methods, and Structures'\n- AnalystPrep CFA Level 1 — Alternative Investments",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": ["1.a"],
+            "difficulty": 2,
+            "estimated_hours": 0.25,
+            "prerequisites": [],
+            "formulas": [],
+            "common_pitfalls": ["Zakładanie, że niska reportowana korelacja = realna niska korelacja; smoothing zaniża true volatility i correlation."],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 5, Reading 'Alternative Investment Features, Methods, and Structures'",
+              "AnalystPrep CFA Level 1 — Alternative Investments"
+            ],
+            "tags": ["concept", "diversification"]
+          }
+        },
+        {
+          "id": "cfa090101-0003-4000-8000-000000000000",
+          "title": "Low Liquidity and Lock-up Implications",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# Low Liquidity and Lock-up Implications\n\n**LOS:** LOS 1.a\n**Difficulty:** 2 · **Estimated:** 0.25h\n\n## Opis\nWiększość alternatyw to inwestycje niepłynne — kapitał uwięziony na lata. Inwestor żąda illiquidity premium jako rekompensaty. Płynność ograniczona przez lock-ups, gates, redemption notice.\n\n## Formuły / kluczowe relacje\n- Total expected return = liquid benchmark + illiquidity premium\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Niedoszacowanie czasu potrzebnego do exit pozycji w stress scenario.\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 5, Reading 'Alternative Investment Features, Methods, and Structures'\n- Mark Meldrum CFA L1 — Alternative Investments video series",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": ["1.a"],
+            "difficulty": 2,
+            "estimated_hours": 0.25,
+            "prerequisites": [],
+            "formulas": ["Total expected return = liquid benchmark + illiquidity premium"],
+            "common_pitfalls": ["Niedoszacowanie czasu potrzebnego do exit pozycji w stress scenario."],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 5, Reading 'Alternative Investment Features, Methods, and Structures'",
+              "Mark Meldrum CFA L1 — Alternative Investments video series"
+            ],
+            "tags": ["liquidity", "concept"]
+          }
+        },
+        {
+          "id": "cfa090101-0004-4000-8000-000000000000",
+          "title": "High Fees Structure (Management + Performance)",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# High Fees Structure (Management + Performance)\n\n**LOS:** LOS 1.b\n**Difficulty:** 2 · **Estimated:** 0.25h\n\n## Opis\nAlternatywy charakteryzują się wyższymi opłatami niż mutual funds: management fee (1-2% AUM) plus performance/incentive fee (typowo 20% zysku). Efektywne netto zwroty mocno zredukowane.\n\n## Formuły / kluczowe relacje\n- Net return ≈ Gross return − management fee − incentive fee × max(0, performance − hurdle)\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Pomijanie efektu compounding wysokich opłat na wieloletnim horyzoncie.\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 5, Reading 'Alternative Investment Features, Methods, and Structures'\n- Schweser SchweserNotes Book 5, Alternative Investments, LM 1",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": ["1.b"],
+            "difficulty": 2,
+            "estimated_hours": 0.25,
+            "prerequisites": [],
+            "formulas": ["Net return ≈ Gross return − management fee − incentive fee × max(0, performance − hurdle)"],
+            "common_pitfalls": ["Pomijanie efektu compounding wysokich opłat na wieloletnim horyzoncie."],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 5, Reading 'Alternative Investment Features, Methods, and Structures'",
+              "Schweser SchweserNotes Book 5, Alternative Investments, LM 1"
+            ],
+            "tags": ["fees", "concept"]
+          }
+        },
+        {
+          "id": "cfa090101-0005-4000-8000-000000000000",
+          "title": "Regulatory Restrictions on Alternative Investments",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# Regulatory Restrictions on Alternative Investments\n\n**LOS:** LOS 1.c\n**Difficulty:** 2 · **Estimated:** 0.25h\n\n## Opis\nFundusze alternatywne podlegają ograniczeniom marketingowym i sprzedażowym (np. zwolnienia z rejestracji SEC pod Reg D, AIFMD w UE). Limity liczby inwestorów, zakaz general solicitation w wielu jurysdykcjach.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Mylenie zwolnienia z rejestracji ze zwolnieniem od antifraud rules.\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 5, Reading 'Alternative Investment Features, Methods, and Structures'\n- AnalystPrep CFA Level 1 — Alternative Investments",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": ["1.c"],
+            "difficulty": 2,
+            "estimated_hours": 0.25,
+            "prerequisites": [],
+            "formulas": [],
+            "common_pitfalls": ["Mylenie zwolnienia z rejestracji ze zwolnieniem od antifraud rules."],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 5, Reading 'Alternative Investment Features, Methods, and Structures'",
+              "AnalystPrep CFA Level 1 — Alternative Investments"
+            ],
+            "tags": ["regulation", "concept"]
+          }
+        },
+        {
+          "id": "cfa090101-0006-4000-8000-000000000000",
+          "title": "Accredited Investor and Qualified Purchaser Requirements",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# Accredited Investor and Qualified Purchaser Requirements\n\n**LOS:** LOS 1.c\n**Difficulty:** 2 · **Estimated:** 0.25h\n\n## Opis\nUS regulacje (Reg D) ograniczają sprzedaż alternatyw do accredited investors (income $200k+ lub net worth $1M ex-residence) oraz qualified purchasers ($5M+ investments) — definicje krytyczne dla 3(c)(1) vs 3(c)(7) funds pod Investment Company Act 1940.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Mylenie thresholdów accredited investor (indywidualny) z qualified purchaser (znacznie wyższy).\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 5, Reading 'Alternative Investment Features, Methods, and Structures'\n- Schweser SchweserNotes Book 5, Alternative Investments, LM 1",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": ["1.c"],
+            "difficulty": 2,
+            "estimated_hours": 0.25,
+            "prerequisites": [],
+            "formulas": [],
+            "common_pitfalls": ["Mylenie thresholdów accredited investor (indywidualny) z qualified purchaser (znacznie wyższy)."],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 5, Reading 'Alternative Investment Features, Methods, and Structures'",
+              "Schweser SchweserNotes Book 5, Alternative Investments, LM 1"
+            ],
+            "tags": ["regulation", "concept"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "cfa090200-0000-4000-8000-000000000000",
+      "title": "Alternative Investment Performance and Returns",
+      "status": "not-started",
+      "type": "phase",
+      "notes": "# Alternative Investment Performance and Returns\n\nPerformance reporting, due diligence, biases w indeksach alternatyw oraz ogólne ramy oceny wyników. Krytyczne dla rozumienia metryk PE i hedge funds.\n\n**Learning Modules:** 1 · **Egzamin weight (topic):** 8.5%",
+      "createdAt": "2026-05-06T00:00:00Z",
+      "updatedAt": "2026-05-06T00:00:00Z",
+      "metadata": {
+        "lm_index": "02",
+        "lm_name_canonical": "Alternative Investment Performance and Returns",
+        "los_count": 3,
+        "topic": "Alternative Investments"
+      },
+      "children": [
+        {
+          "id": "cfa090201-0001-4000-8000-000000000000",
+          "title": "Performance Reporting Challenges (Smoothed Returns and Illiquidity Premium)",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# Performance Reporting Challenges (Smoothed Returns and Illiquidity Premium)\n\n**LOS:** LOS 2.a\n**Difficulty:** 3 · **Estimated:** 0.5h\n\n## Opis\nReportowane zwroty alternatyw są często wygładzone (stale prices, appraisal-based NAV), co zaniża volatility i correlation z rynkiem. Illiquidity premium ma rekompensować inwestorowi blokadę kapitału. Metryki risk-adjusted (Sharpe) nadmiernie korzystne dla niepłynnych klas.\n\n## Formuły / kluczowe relacje\n- True volatility ≥ reported volatility (smoothing reduces measured sigma)\n\n## Prerequisites\n- Volatility (sigma)\n\n## Common pitfalls\n- Bezkrytyczne porównywanie Sharpe HF/PE z Sharpe akcji bez korekty na smoothing.\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 5, Reading 'Alternative Investment Performance and Returns'\n- Schweser SchweserNotes Book 5, Alternative Investments, LM 2",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": ["2.a"],
+            "difficulty": 3,
+            "estimated_hours": 0.5,
+            "prerequisites": ["Volatility (sigma)"],
+            "formulas": ["True volatility ≥ reported volatility (smoothing reduces measured sigma)"],
+            "common_pitfalls": ["Bezkrytyczne porównywanie Sharpe HF/PE z Sharpe akcji bez korekty na smoothing."],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 5, Reading 'Alternative Investment Performance and Returns'",
+              "Schweser SchweserNotes Book 5, Alternative Investments, LM 2"
+            ],
+            "tags": ["performance", "concept"]
+          }
+        },
+        {
+          "id": "cfa090201-0002-4000-8000-000000000000",
+          "title": "Due Diligence Framework for Alternative Investments",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# Due Diligence Framework for Alternative Investments\n\n**LOS:** LOS 2.b\n**Difficulty:** 2 · **Estimated:** 0.5h\n\n## Opis\nDD obejmuje: investment process, manager track record, operations & service providers (administrator, prime broker, auditor), legal structure & terms (lock-up, fees), risk management, alignment of interests (GP commit), oraz regulatory & compliance review.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Skupianie się tylko na track record, ignorowanie operations & service-provider DD (ryzyko fraud).\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 5, Reading 'Alternative Investment Performance and Returns'\n- AnalystPrep CFA Level 1 — Alternative Investments",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": ["2.b"],
+            "difficulty": 2,
+            "estimated_hours": 0.5,
+            "prerequisites": [],
+            "formulas": [],
+            "common_pitfalls": ["Skupianie się tylko na track record, ignorowanie operations & service-provider DD (ryzyko fraud)."],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 5, Reading 'Alternative Investment Performance and Returns'",
+              "AnalystPrep CFA Level 1 — Alternative Investments"
+            ],
+            "tags": ["due-diligence", "concept"]
+          }
+        },
+        {
+          "id": "cfa090201-0003-4000-8000-000000000000",
+          "title": "Survivorship Bias in Alternative Indices",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# Survivorship Bias in Alternative Indices\n\n**LOS:** LOS 2.c\n**Difficulty:** 2 · **Estimated:** 0.25h\n\n## Opis\nIndeksy hedge fund / PE pokazują tylko fundusze, które przetrwały — failed funds wypadają z bazy. Skutek: indeks zawyża średni zwrot i zaniża risk vs reality.\n\n## Formuły / kluczowe relacje\n- Reported index return > true universe return\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Traktowanie HFRI/Cambridge jako bezstronnego benchmarku bez korekty.\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 5, Reading 'Alternative Investment Performance and Returns'\n- Schweser SchweserNotes Book 5, Alternative Investments, LM 2",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": ["2.c"],
+            "difficulty": 2,
+            "estimated_hours": 0.25,
+            "prerequisites": [],
+            "formulas": ["Reported index return > true universe return"],
+            "common_pitfalls": ["Traktowanie HFRI/Cambridge jako bezstronnego benchmarku bez korekty."],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 5, Reading 'Alternative Investment Performance and Returns'",
+              "Schweser SchweserNotes Book 5, Alternative Investments, LM 2"
+            ],
+            "tags": ["bias", "performance"]
+          }
+        },
+        {
+          "id": "cfa090201-0004-4000-8000-000000000000",
+          "title": "Backfill Bias and Selection Bias in Alternative Indices",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# Backfill Bias and Selection Bias in Alternative Indices\n\n**LOS:** LOS 2.c\n**Difficulty:** 2 · **Estimated:** 0.25h\n\n## Opis\nBackfill bias: nowy fundusz dołącza do bazy z historycznymi (dobrymi) wynikami — zawyża indeks. Selection/self-reporting bias: fundusze raportują dobrowolnie i tylko gdy chcą — słabe fundusze ukryte.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Mylenie backfill bias z survivorship bias — to różne mechanizmy (oba zawyżają indeks).\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 5, Reading 'Alternative Investment Performance and Returns'\n- Mark Meldrum CFA L1 — Alternative Investments video series",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": ["2.c"],
+            "difficulty": 2,
+            "estimated_hours": 0.25,
+            "prerequisites": [],
+            "formulas": [],
+            "common_pitfalls": ["Mylenie backfill bias z survivorship bias — to różne mechanizmy (oba zawyżają indeks)."],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 5, Reading 'Alternative Investment Performance and Returns'",
+              "Mark Meldrum CFA L1 — Alternative Investments video series"
+            ],
+            "tags": ["bias", "performance"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "cfa090300-0000-4000-8000-000000000000",
+      "title": "Investments in Private Capital: Equity and Debt",
+      "status": "not-started",
+      "type": "phase",
+      "notes": "# Investments in Private Capital: Equity and Debt\n\nPrivate equity (LBO, VC, growth, distressed), strategie wyjścia, lifecycle funduszu, waterfall i metryki PE (IRR, MOIC, TVPI, DPI, RVPI). Najbardziej obciążone formułowo LM topica.\n\n**Learning Modules:** 1 · **Egzamin weight (topic):** 8.5%",
+      "createdAt": "2026-05-06T00:00:00Z",
+      "updatedAt": "2026-05-06T00:00:00Z",
+      "metadata": {
+        "lm_index": "03",
+        "lm_name_canonical": "Investments in Private Capital: Equity and Debt",
+        "los_count": 5,
+        "topic": "Alternative Investments"
+      },
+      "children": [
+        {
+          "id": "cfa090301-0000-4000-8000-000000000000",
+          "title": "Private Equity Structure and Strategies",
+          "status": "not-started",
+          "type": "plan",
+          "notes": "# Private Equity Structure and Strategies\n\nStruktura LP/GP, główne strategie inwestycyjne PE oraz exit routes.\n\n**Learning Modules:** 0 · **Egzamin weight (topic):** 8.5%",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {"section_index": "01"},
+          "children": [
+            {
+              "id": "cfa090301-0001-4000-8000-000000000000",
+              "title": "Private Equity Overview and LP/GP Structure",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# Private Equity Overview and LP/GP Structure\n\n**LOS:** LOS 3.a\n**Difficulty:** 2 · **Estimated:** 0.5h\n\n## Opis\nPE fund to limited partnership: GP zarządza, LPs dostarczają kapitał. Typowo 10-letni horyzont z opcją extensionu. Capital commitments są drawdownowane przez lata. GP odpowiedzialność wobec LP regulowana LPA.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Mylenie commitment z funded capital — committed nie znaczy invested.\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 5, Reading 'Investments in Private Capital: Equity and Debt'\n- Schweser SchweserNotes Book 5, Alternative Investments, LM 3",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": ["3.a"],
+                "difficulty": 2,
+                "estimated_hours": 0.5,
+                "prerequisites": [],
+                "formulas": [],
+                "common_pitfalls": ["Mylenie commitment z funded capital — committed nie znaczy invested."],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 5, Reading 'Investments in Private Capital: Equity and Debt'",
+                  "Schweser SchweserNotes Book 5, Alternative Investments, LM 3"
+                ],
+                "tags": ["structure", "concept"]
+              }
+            },
+            {
+              "id": "cfa090301-0002-4000-8000-000000000000",
+              "title": "Leveraged Buyout (LBO)",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# Leveraged Buyout (LBO)\n\n**LOS:** LOS 3.b\n**Difficulty:** 3 · **Estimated:** 0.5h\n\n## Opis\nLBO: przejęcie dojrzałej firmy z dużym udziałem długu (60-80% EV). Cel: wyższy IRR przez leverage, optymalizację operacyjną i exit. MBO (management) i MBI (incoming managers) to warianty.\n\n## Formuły / kluczowe relacje\n- Equity IRR ≈ leveraged via (Asset return − cost of debt) × D/E + Asset return\n\n## Prerequisites\n- Time Value of Money\n\n## Common pitfalls\n- Nieuwzględnianie kowenantów dłużnych ograniczających dystrybucje.\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 5, Reading 'Investments in Private Capital: Equity and Debt'\n- AnalystPrep CFA Level 1 — Alternative Investments",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": ["3.b"],
+                "difficulty": 3,
+                "estimated_hours": 0.5,
+                "prerequisites": ["Time Value of Money"],
+                "formulas": ["Equity IRR ≈ leveraged via (Asset return − cost of debt) × D/E + Asset return"],
+                "common_pitfalls": ["Nieuwzględnianie kowenantów dłużnych ograniczających dystrybucje."],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 5, Reading 'Investments in Private Capital: Equity and Debt'",
+                  "AnalystPrep CFA Level 1 — Alternative Investments"
+                ],
+                "tags": ["strategy", "lbo"]
+              }
+            },
+            {
+              "id": "cfa090301-0003-4000-8000-000000000000",
+              "title": "Venture Capital — Seed Stage",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# Venture Capital — Seed Stage\n\n**LOS:** LOS 3.b\n**Difficulty:** 2 · **Estimated:** 0.25h\n\n## Opis\nNajwcześniejszy etap VC: financing produktu/POC, walidacji rynku. Wysokie ryzyko niepowodzenia, najwyższy potencjalny multiple.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Mylenie seed (przed produktem) z early-stage (po MVP).\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 5, Reading 'Investments in Private Capital: Equity and Debt'\n- Schweser SchweserNotes Book 5, Alternative Investments, LM 3",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": ["3.b"],
+                "difficulty": 2,
+                "estimated_hours": 0.25,
+                "prerequisites": [],
+                "formulas": [],
+                "common_pitfalls": ["Mylenie seed (przed produktem) z early-stage (po MVP)."],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 5, Reading 'Investments in Private Capital: Equity and Debt'",
+                  "Schweser SchweserNotes Book 5, Alternative Investments, LM 3"
+                ],
+                "tags": ["vc", "stage"]
+              }
+            },
+            {
+              "id": "cfa090301-0004-4000-8000-000000000000",
+              "title": "Venture Capital — Early Stage",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# Venture Capital — Early Stage\n\n**LOS:** LOS 3.b\n**Difficulty:** 2 · **Estimated:** 0.25h\n\n## Opis\nSeries A/B financing: produkt istnieje, firma ma early traction, potrzebuje kapitału na skalowanie zespołu i operacji.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Mylenie early-stage z growth-stage (różny poziom revenue / scaling).\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 5, Reading 'Investments in Private Capital: Equity and Debt'\n- AnalystPrep CFA Level 1 — Alternative Investments",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": ["3.b"],
+                "difficulty": 2,
+                "estimated_hours": 0.25,
+                "prerequisites": [],
+                "formulas": [],
+                "common_pitfalls": ["Mylenie early-stage z growth-stage (różny poziom revenue / scaling)."],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 5, Reading 'Investments in Private Capital: Equity and Debt'",
+                  "AnalystPrep CFA Level 1 — Alternative Investments"
+                ],
+                "tags": ["vc", "stage"]
+              }
+            },
+            {
+              "id": "cfa090301-0005-4000-8000-000000000000",
+              "title": "Venture Capital — Growth Stage (Later Stage)",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# Venture Capital — Growth Stage (Later Stage)\n\n**LOS:** LOS 3.b\n**Difficulty:** 2 · **Estimated:** 0.25h\n\n## Opis\nLater-stage VC / pre-IPO: firma ma znaczące przychody, ścieżkę do profitability, kapitał na ekspansję geograficzną/M&A. Niższe ryzyko, niższy multiple niż seed.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Mylenie growth-stage VC z growth equity (różne struktury ownership).\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 5, Reading 'Investments in Private Capital: Equity and Debt'\n- Schweser SchweserNotes Book 5, Alternative Investments, LM 3",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": ["3.b"],
+                "difficulty": 2,
+                "estimated_hours": 0.25,
+                "prerequisites": [],
+                "formulas": [],
+                "common_pitfalls": ["Mylenie growth-stage VC z growth equity (różne struktury ownership)."],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 5, Reading 'Investments in Private Capital: Equity and Debt'",
+                  "Schweser SchweserNotes Book 5, Alternative Investments, LM 3"
+                ],
+                "tags": ["vc", "stage"]
+              }
+            },
+            {
+              "id": "cfa090301-0006-4000-8000-000000000000",
+              "title": "Growth Equity",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# Growth Equity\n\n**LOS:** LOS 3.b\n**Difficulty:** 2 · **Estimated:** 0.25h\n\n## Opis\nMinority stake w profitowych firmach z dużym wzrostem. Brak kontroli operacyjnej, brak typowego LBO leverage. Mostek między VC a buyout.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Mylenie growth equity z LBO (growth equity to typically minority i unlevered).\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 5, Reading 'Investments in Private Capital: Equity and Debt'\n- AnalystPrep CFA Level 1 — Alternative Investments",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": ["3.b"],
+                "difficulty": 2,
+                "estimated_hours": 0.25,
+                "prerequisites": [],
+                "formulas": [],
+                "common_pitfalls": ["Mylenie growth equity z LBO (growth equity to typically minority i unlevered)."],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 5, Reading 'Investments in Private Capital: Equity and Debt'",
+                  "AnalystPrep CFA Level 1 — Alternative Investments"
+                ],
+                "tags": ["pe-strategy"]
+              }
+            },
+            {
+              "id": "cfa090301-0007-4000-8000-000000000000",
+              "title": "Distressed Private Equity Strategy",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# Distressed Private Equity Strategy\n\n**LOS:** LOS 3.b\n**Difficulty:** 3 · **Estimated:** 0.25h\n\n## Opis\nInwestowanie w firmy near/in bankruptcy z planem restrukturyzacji (debt-for-equity swap, operational turnaround). Często loan-to-own. Wysokie ryzyko, wysoka asymetria informacji.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Mylenie distressed PE z distressed hedge fund strategy (HF trade publicznych obligacji, PE bierze kontrolę).\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 5, Reading 'Investments in Private Capital: Equity and Debt'\n- Mark Meldrum CFA L1 — Alternative Investments video series",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": ["3.b"],
+                "difficulty": 3,
+                "estimated_hours": 0.25,
+                "prerequisites": [],
+                "formulas": [],
+                "common_pitfalls": ["Mylenie distressed PE z distressed hedge fund strategy (HF trade publicznych obligacji, PE bierze kontrolę)."],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 5, Reading 'Investments in Private Capital: Equity and Debt'",
+                  "Mark Meldrum CFA L1 — Alternative Investments video series"
+                ],
+                "tags": ["pe-strategy", "distressed"]
+              }
+            }
+          ]
+        },
+        {
+          "id": "cfa090302-0000-4000-8000-000000000000",
+          "title": "PE Exit Strategies, Lifecycle, and Metrics",
+          "status": "not-started",
+          "type": "plan",
+          "notes": "# PE Exit Strategies, Lifecycle, and Metrics\n\nWyjścia z inwestycji PE, lifecycle funduszu (J-curve, capital calls, distributions), metryki MOIC/IRR/TVPI/DPI/RVPI.\n\n**Learning Modules:** 0 · **Egzamin weight (topic):** 8.5%",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {"section_index": "02"},
+          "children": [
+            {
+              "id": "cfa090302-0001-4000-8000-000000000000",
+              "title": "Exit Strategy: Initial Public Offering (IPO)",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# Exit Strategy: Initial Public Offering (IPO)\n\n**LOS:** LOS 3.c\n**Difficulty:** 2 · **Estimated:** 0.25h\n\n## Opis\nWyjście przez listing publiczny — najwyższe wyceny w bull markets. PE/VC sprzedaje akcje after lock-up. Wymaga skali, transparentności, audited financials.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Założenie pełnego exit przy IPO — typowo lock-up 180 dni i staged sell-down.\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 5, Reading 'Investments in Private Capital: Equity and Debt'\n- Schweser SchweserNotes Book 5, Alternative Investments, LM 3",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": ["3.c"],
+                "difficulty": 2,
+                "estimated_hours": 0.25,
+                "prerequisites": [],
+                "formulas": [],
+                "common_pitfalls": ["Założenie pełnego exit przy IPO — typowo lock-up 180 dni i staged sell-down."],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 5, Reading 'Investments in Private Capital: Equity and Debt'",
+                  "Schweser SchweserNotes Book 5, Alternative Investments, LM 3"
+                ],
+                "tags": ["exit", "ipo"]
+              }
+            },
+            {
+              "id": "cfa090302-0002-4000-8000-000000000000",
+              "title": "Exit Strategy: Secondary Sale (Trade Sale or Secondary Buyout)",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# Exit Strategy: Secondary Sale (Trade Sale or Secondary Buyout)\n\n**LOS:** LOS 3.c\n**Difficulty:** 2 · **Estimated:** 0.25h\n\n## Opis\nSprzedaż portfolio company innemu strategowi (trade sale) lub innemu PE (secondary buyout). Najczęstsza forma exit. Często szybsza i mniej discount niż IPO w bear markets.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Mylenie secondary sale (sprzedaż firmy) z secondary fund interest sale (sprzedaż LP commitment).\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 5, Reading 'Investments in Private Capital: Equity and Debt'\n- AnalystPrep CFA Level 1 — Alternative Investments",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": ["3.c"],
+                "difficulty": 2,
+                "estimated_hours": 0.25,
+                "prerequisites": [],
+                "formulas": [],
+                "common_pitfalls": ["Mylenie secondary sale (sprzedaż firmy) z secondary fund interest sale (sprzedaż LP commitment)."],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 5, Reading 'Investments in Private Capital: Equity and Debt'",
+                  "AnalystPrep CFA Level 1 — Alternative Investments"
+                ],
+                "tags": ["exit"]
+              }
+            },
+            {
+              "id": "cfa090302-0003-4000-8000-000000000000",
+              "title": "Exit Strategy: Dividend Recapitalization",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# Exit Strategy: Dividend Recapitalization\n\n**LOS:** LOS 3.c\n**Difficulty:** 3 · **Estimated:** 0.25h\n\n## Opis\nQuasi-exit: portfolio company zaciąga nowy dług, wypłaca special dividend do PE. Zwraca część kapitału inwestorom bez sprzedaży equity. Zwiększa leverage i ryzyko.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Traktowanie div recap jako bezryzykowego — zwiększa balance-sheet leverage i może uniemożliwić full exit.\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 5, Reading 'Investments in Private Capital: Equity and Debt'\n- Mark Meldrum CFA L1 — Alternative Investments video series",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": ["3.c"],
+                "difficulty": 3,
+                "estimated_hours": 0.25,
+                "prerequisites": [],
+                "formulas": [],
+                "common_pitfalls": ["Traktowanie div recap jako bezryzykowego — zwiększa balance-sheet leverage i może uniemożliwić full exit."],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 5, Reading 'Investments in Private Capital: Equity and Debt'",
+                  "Mark Meldrum CFA L1 — Alternative Investments video series"
+                ],
+                "tags": ["exit", "leverage"]
+              }
+            },
+            {
+              "id": "cfa090302-0004-4000-8000-000000000000",
+              "title": "Exit Strategy: Management Buyout (MBO)",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# Exit Strategy: Management Buyout (MBO)\n\n**LOS:** LOS 3.c\n**Difficulty:** 2 · **Estimated:** 0.25h\n\n## Opis\nManagement company kupuje firmę od PE, często z udziałem nowego sponsora finansowego. Continuity operacyjna, znana baza menedżerska.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Mylenie MBO (management kupuje) z MBI (zewnętrzni menedżerowie wchodzą).\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 5, Reading 'Investments in Private Capital: Equity and Debt'\n- Schweser SchweserNotes Book 5, Alternative Investments, LM 3",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": ["3.c"],
+                "difficulty": 2,
+                "estimated_hours": 0.25,
+                "prerequisites": [],
+                "formulas": [],
+                "common_pitfalls": ["Mylenie MBO (management kupuje) z MBI (zewnętrzni menedżerowie wchodzą)."],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 5, Reading 'Investments in Private Capital: Equity and Debt'",
+                  "Schweser SchweserNotes Book 5, Alternative Investments, LM 3"
+                ],
+                "tags": ["exit", "mbo"]
+              }
+            },
+            {
+              "id": "cfa090302-0005-4000-8000-000000000000",
+              "title": "Fund Lifecycle and J-Curve Effect",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# Fund Lifecycle and J-Curve Effect\n\n**LOS:** LOS 3.d\n**Difficulty:** 3 · **Estimated:** 0.5h\n\n## Opis\nLifecycle PE fund: investment period (lata 1-5), holding & value creation, harvest (lata 5-10). J-curve: wczesne lata generują negatywne IRR przez fees i mark-downs przed realized gains. Najgłębszy punkt zazwyczaj w roku 2-3.\n\n## Formuły / kluczowe relacje\n- IRR vintage_year(t) typowo ujemne dla t in [1..3], dodatnie po realizacjach\n\n## Prerequisites\n- Internal Rate of Return\n\n## Common pitfalls\n- Ocena funduszu po IRR w roku 2 — pozioma jest wprowadzająca w błąd przed harvest.\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 5, Reading 'Investments in Private Capital: Equity and Debt'\n- Schweser SchweserNotes Book 5, Alternative Investments, LM 3",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": ["3.d"],
+                "difficulty": 3,
+                "estimated_hours": 0.5,
+                "prerequisites": ["Internal Rate of Return"],
+                "formulas": ["IRR vintage_year(t) typowo ujemne dla t in [1..3], dodatnie po realizacjach"],
+                "common_pitfalls": ["Ocena funduszu po IRR w roku 2 — pozioma jest wprowadzająca w błąd przed harvest."],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 5, Reading 'Investments in Private Capital: Equity and Debt'",
+                  "Schweser SchweserNotes Book 5, Alternative Investments, LM 3"
+                ],
+                "tags": ["lifecycle", "j-curve"]
+              }
+            },
+            {
+              "id": "cfa090302-0006-4000-8000-000000000000",
+              "title": "Capital Calls (Drawdowns)",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# Capital Calls (Drawdowns)\n\n**LOS:** LOS 3.d\n**Difficulty:** 2 · **Estimated:** 0.25h\n\n## Opis\nGP wzywa LP do wpłaty części committed capital w miarę identyfikacji deals. LP musi mieć liquidity reserve. Default na call → penalty (utrata commitment, dilution).\n\n## Formuły / kluczowe relacje\n- Paid-In Capital = Σ capital calls do daty t\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- LP nie mający liquidity buffer i forced default na capital call.\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 5, Reading 'Investments in Private Capital: Equity and Debt'\n- AnalystPrep CFA Level 1 — Alternative Investments",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": ["3.d"],
+                "difficulty": 2,
+                "estimated_hours": 0.25,
+                "prerequisites": [],
+                "formulas": ["Paid-In Capital = Σ capital calls do daty t"],
+                "common_pitfalls": ["LP nie mający liquidity buffer i forced default na capital call."],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 5, Reading 'Investments in Private Capital: Equity and Debt'",
+                  "AnalystPrep CFA Level 1 — Alternative Investments"
+                ],
+                "tags": ["lifecycle", "drawdown"]
+              }
+            },
+            {
+              "id": "cfa090302-0007-4000-8000-000000000000",
+              "title": "Distributions and Waterfall (American vs European)",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# Distributions and Waterfall (American vs European)\n\n**LOS:** LOS 3.d\n**Difficulty:** 3 · **Estimated:** 0.75h\n\n## Opis\nWaterfall = sekwencja podziału cash flow między LP i GP. European (whole-of-fund): GP carry dopiero gdy cały fundusz przekroczył hurdle. American (deal-by-deal): GP carry per deal — bardziej GP-friendly. Catch-up i claw-back regulują końcowe wyrównania.\n\n## Formuły / kluczowe relacje\n- LP gets ROC → preferred return (hurdle, e.g. 8%) → GP catch-up → 80/20 split (carry)\n\n## Prerequisites\n- Internal Rate of Return, Time Value of Money\n\n## Common pitfalls\n- Mylenie kolejności: ROC zawsze pierwszy, carry tylko po hurdle.\n- Ignorowanie claw-back przy American waterfall — GP może zwracać nadpłacone carry.\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 5, Reading 'Investments in Private Capital: Equity and Debt'\n- Schweser SchweserNotes Book 5, Alternative Investments, LM 3",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": ["3.d"],
+                "difficulty": 3,
+                "estimated_hours": 0.75,
+                "prerequisites": ["Internal Rate of Return", "Time Value of Money"],
+                "formulas": ["LP gets ROC → preferred return (hurdle, e.g. 8%) → GP catch-up → 80/20 split (carry)"],
+                "common_pitfalls": [
+                  "Mylenie kolejności: ROC zawsze pierwszy, carry tylko po hurdle.",
+                  "Ignorowanie claw-back przy American waterfall — GP może zwracać nadpłacone carry."
+                ],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 5, Reading 'Investments in Private Capital: Equity and Debt'",
+                  "Schweser SchweserNotes Book 5, Alternative Investments, LM 3"
+                ],
+                "tags": ["waterfall", "fees"]
+              }
+            },
+            {
+              "id": "cfa090302-0008-4000-8000-000000000000",
+              "title": "PE Metric: Multiple of Invested Capital (MOIC)",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# PE Metric: Multiple of Invested Capital (MOIC)\n\n**LOS:** LOS 3.e\n**Difficulty:** 2 · **Estimated:** 0.25h\n\n## Opis\nMOIC = (Realized Value + Unrealized Value) / Invested Capital. Money multiple — ile razy zwrócono kapitał. Nie uwzględnia czasu ani TVM.\n\n## Formuły / kluczowe relacje\n- MOIC = (Realized + Unrealized) / Invested Capital\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Porównywanie MOIC funduszy o różnym vintage bez korekty na duration → 2x w 5 lat ≠ 2x w 10 lat.\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 5, Reading 'Investments in Private Capital: Equity and Debt'\n- AnalystPrep CFA Level 1 — Alternative Investments",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": ["3.e"],
+                "difficulty": 2,
+                "estimated_hours": 0.25,
+                "prerequisites": [],
+                "formulas": ["MOIC = (Realized + Unrealized) / Invested Capital"],
+                "common_pitfalls": ["Porównywanie MOIC funduszy o różnym vintage bez korekty na duration → 2x w 5 lat ≠ 2x w 10 lat."],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 5, Reading 'Investments in Private Capital: Equity and Debt'",
+                  "AnalystPrep CFA Level 1 — Alternative Investments"
+                ],
+                "tags": ["metric", "pe"]
+              }
+            },
+            {
+              "id": "cfa090302-0009-4000-8000-000000000000",
+              "title": "PE Metric: Internal Rate of Return (IRR)",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# PE Metric: Internal Rate of Return (IRR)\n\n**LOS:** LOS 3.e\n**Difficulty:** 3 · **Estimated:** 0.5h\n\n## Opis\nIRR = stopa dyskontowa, dla której NPV cashflowów (calls + distributions + ending NAV) = 0. Money-weighted, sensitive na timing. Standard PE benchmark obok MOIC. Wymaga reinvestment assumption = IRR.\n\n## Formuły / kluczowe relacje\n- 0 = Σ CF_t / (1 + IRR)^t\n\n## Prerequisites\n- Time Value of Money, Internal Rate of Return\n\n## Common pitfalls\n- Ignorowanie reinvestment assumption — IRR zakłada reinvestment przy IRR (często nierealistyczne).\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 5, Reading 'Investments in Private Capital: Equity and Debt'\n- Schweser SchweserNotes Book 5, Alternative Investments, LM 3",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": ["3.e"],
+                "difficulty": 3,
+                "estimated_hours": 0.5,
+                "prerequisites": ["Time Value of Money", "Internal Rate of Return"],
+                "formulas": ["0 = Σ CF_t / (1 + IRR)^t"],
+                "common_pitfalls": ["Ignorowanie reinvestment assumption — IRR zakłada reinvestment przy IRR (często nierealistyczne)."],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 5, Reading 'Investments in Private Capital: Equity and Debt'",
+                  "Schweser SchweserNotes Book 5, Alternative Investments, LM 3"
+                ],
+                "tags": ["metric", "pe", "irr"]
+              }
+            },
+            {
+              "id": "cfa090302-0010-4000-8000-000000000000",
+              "title": "PE Metric: Total Value to Paid-In (TVPI)",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# PE Metric: Total Value to Paid-In (TVPI)\n\n**LOS:** LOS 3.e\n**Difficulty:** 2 · **Estimated:** 0.25h\n\n## Opis\nTVPI = (Distributions + Residual NAV) / Paid-In Capital. Total return multiple = DPI + RVPI. Pokazuje pełny zwrot, ale bez czasu.\n\n## Formuły / kluczowe relacje\n- TVPI = DPI + RVPI = (Distributions + Residual Value) / Paid-In Capital\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Porównywanie TVPI bez rozbicia na DPI vs RVPI — RVPI zależy od subiektywnego NAV markings.\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 5, Reading 'Investments in Private Capital: Equity and Debt'\n- AnalystPrep CFA Level 1 — Alternative Investments",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": ["3.e"],
+                "difficulty": 2,
+                "estimated_hours": 0.25,
+                "prerequisites": [],
+                "formulas": ["TVPI = DPI + RVPI = (Distributions + Residual Value) / Paid-In Capital"],
+                "common_pitfalls": ["Porównywanie TVPI bez rozbicia na DPI vs RVPI — RVPI zależy od subiektywnego NAV markings."],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 5, Reading 'Investments in Private Capital: Equity and Debt'",
+                  "AnalystPrep CFA Level 1 — Alternative Investments"
+                ],
+                "tags": ["metric", "pe", "tvpi"]
+              }
+            },
+            {
+              "id": "cfa090302-0011-4000-8000-000000000000",
+              "title": "PE Metric: Distributed to Paid-In (DPI)",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# PE Metric: Distributed to Paid-In (DPI)\n\n**LOS:** LOS 3.e\n**Difficulty:** 2 · **Estimated:** 0.25h\n\n## Opis\nDPI = Distributions / Paid-In Capital. Realized multiple — ile cash już wrócił do LP. Najmniej manipulowalna metryka (oparta na faktycznym cashflow).\n\n## Formuły / kluczowe relacje\n- DPI = Cumulative Distributions / Paid-In Capital\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Mylenie DPI > 1 z full payback — DPI > 1 oznacza profit po realizacji, ale fundusz może mieć jeszcze RVPI.\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 5, Reading 'Investments in Private Capital: Equity and Debt'\n- Schweser SchweserNotes Book 5, Alternative Investments, LM 3",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": ["3.e"],
+                "difficulty": 2,
+                "estimated_hours": 0.25,
+                "prerequisites": [],
+                "formulas": ["DPI = Cumulative Distributions / Paid-In Capital"],
+                "common_pitfalls": ["Mylenie DPI > 1 z full payback — DPI > 1 oznacza profit po realizacji, ale fundusz może mieć jeszcze RVPI."],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 5, Reading 'Investments in Private Capital: Equity and Debt'",
+                  "Schweser SchweserNotes Book 5, Alternative Investments, LM 3"
+                ],
+                "tags": ["metric", "pe", "dpi"]
+              }
+            },
+            {
+              "id": "cfa090302-0012-4000-8000-000000000000",
+              "title": "PE Metric: Residual Value to Paid-In (RVPI)",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# PE Metric: Residual Value to Paid-In (RVPI)\n\n**LOS:** LOS 3.e\n**Difficulty:** 2 · **Estimated:** 0.25h\n\n## Opis\nRVPI = Residual NAV / Paid-In Capital. Unrealized multiple — wartość pozostała w funduszu wg estymacji GP. Subiektywna, oparta na fair-value markings.\n\n## Formuły / kluczowe relacje\n- RVPI = Residual NAV / Paid-In Capital; TVPI = DPI + RVPI\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Branie RVPI dosłownie — to estymacja GP, podatna na conflict-of-interest i smoothing.\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 5, Reading 'Investments in Private Capital: Equity and Debt'\n- AnalystPrep CFA Level 1 — Alternative Investments",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": ["3.e"],
+                "difficulty": 2,
+                "estimated_hours": 0.25,
+                "prerequisites": [],
+                "formulas": ["RVPI = Residual NAV / Paid-In Capital; TVPI = DPI + RVPI"],
+                "common_pitfalls": ["Branie RVPI dosłownie — to estymacja GP, podatna na conflict-of-interest i smoothing."],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 5, Reading 'Investments in Private Capital: Equity and Debt'",
+                  "Schweser SchweserNotes Book 5, Alternative Investments, LM 3"
+                ],
+                "tags": ["metric", "pe", "rvpi"]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

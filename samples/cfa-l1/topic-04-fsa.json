@@ -1,0 +1,2754 @@
+{
+  "id": "cfa040000-0000-4000-8000-000000000000",
+  "title": "Financial Statement Analysis",
+  "status": "not-started",
+  "type": "milestone",
+  "notes": "# Financial Statement Analysis\n\nNajwiększy obszar egzaminu CFA Level I: konstrukcja i analiza balance sheet, income statement i cash flow statement; ratio analysis; wybór polityk rachunkowości (inventories, long-lived assets, income taxes, long-term liabilities); jakość sprawozdań finansowych. Stanowi fundament dla equity, fixed income i corporate issuers.\n\n**Exam weight (mid-point):** 12.5%\n**Learning Modules:** 6\n**Estimated study time:** 50-70h\n",
+  "createdAt": "2026-05-06T00:00:00Z",
+  "updatedAt": "2026-05-06T00:00:00Z",
+  "metadata": {
+    "topic_number": "04",
+    "topic_name": "Financial Statement Analysis",
+    "exam_weight_share": 12.5,
+    "lm_count": 6,
+    "estimated_hours_total": 26
+  },
+  "children": [
+    {
+      "id": "cfa040100-0000-4000-8000-000000000000",
+      "title": "Introduction to Financial Statement Analysis",
+      "status": "not-started",
+      "type": "phase",
+      "notes": "# Introduction to Financial Statement Analysis\n\nWprowadzenie do FSA: cele sprawozdawczości, standard setterzy, regulatorzy, opinie audytora i framework analizy.\n\n**Learning Modules:** 1 · **Egzamin weight (topic):** 12.5%\n",
+      "createdAt": "2026-05-06T00:00:00Z",
+      "updatedAt": "2026-05-06T00:00:00Z",
+      "metadata": {
+        "lm_index": "01",
+        "lm_name_canonical": "Introduction to Financial Statement Analysis",
+        "los_count": 6,
+        "topic": "Financial Statement Analysis"
+      },
+      "children": [
+        {
+          "id": "cfa040100-0001-4000-8000-000000000000",
+          "title": "Role and scope of financial reporting",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# Role and scope of financial reporting\n\n**LOS:** LOS 1.a\n**Difficulty:** 1 · **Estimated:** 0.25h\n\n## Opis\nSprawozdawczość finansowa dostarcza informacji ekonomicznych użytkownikom zewnętrznym. Analyst używa tych danych do oceny wyników, ryzyka i wartości.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Mylenie financial reporting (proces) z financial statement analysis (output)\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 3, Reading 'Introduction to Financial Statement Analysis'\n- Schweser SchweserNotes Book 3, Study Sessions 6-8\n- Mark Meldrum CFA L1 — Financial Statement Analysis videos\n",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": [
+              "1.a"
+            ],
+            "difficulty": 1,
+            "estimated_hours": 0.25,
+            "prerequisites": [],
+            "formulas": [],
+            "common_pitfalls": [
+              "Mylenie financial reporting (proces) z financial statement analysis (output)"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 3, Reading 'Introduction to Financial Statement Analysis'",
+              "Schweser SchweserNotes Book 3, Study Sessions 6-8",
+              "Mark Meldrum CFA L1 — Financial Statement Analysis videos"
+            ],
+            "tags": [
+              "concept"
+            ]
+          },
+          "children": []
+        },
+        {
+          "id": "cfa040100-0002-4000-8000-000000000000",
+          "title": "Primary financial statements (BS, IS, CF, equity, notes)",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# Primary financial statements (BS, IS, CF, equity, notes)\n\n**LOS:** LOS 1.a\n**Difficulty:** 1 · **Estimated:** 0.25h\n\n## Opis\nPełen zestaw: balance sheet, income statement, statement of comprehensive income, statement of changes in equity, statement of cash flows oraz notes.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Pomijanie notes — często zawierają najważniejsze ujawnienia dot. polityk rachunkowości\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 3, Reading 'Introduction to Financial Statement Analysis'\n- Schweser SchweserNotes Book 3, Study Sessions 6-8\n- Mark Meldrum CFA L1 — Financial Statement Analysis videos\n",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": [
+              "1.a"
+            ],
+            "difficulty": 1,
+            "estimated_hours": 0.25,
+            "prerequisites": [],
+            "formulas": [],
+            "common_pitfalls": [
+              "Pomijanie notes — często zawierają najważniejsze ujawnienia dot. polityk rachunkowości"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 3, Reading 'Introduction to Financial Statement Analysis'",
+              "Schweser SchweserNotes Book 3, Study Sessions 6-8",
+              "Mark Meldrum CFA L1 — Financial Statement Analysis videos"
+            ],
+            "tags": [
+              "concept"
+            ]
+          },
+          "children": []
+        },
+        {
+          "id": "cfa040100-0003-4000-8000-000000000000",
+          "title": "Standard setter — IASB (IFRS Foundation)",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# Standard setter — IASB (IFRS Foundation)\n\n**LOS:** LOS 1.b\n**Difficulty:** 1 · **Estimated:** 0.25h\n\n## Opis\nInternational Accounting Standards Board ustanawia IFRS. Działa pod IFRS Foundation; nie ma władzy egzekwowania.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Mylenie IASB (standard setter) z IOSCO (regulator)\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 3, Reading 'Introduction to Financial Statement Analysis'\n- Schweser SchweserNotes Book 3, Study Sessions 6-8\n- Mark Meldrum CFA L1 — Financial Statement Analysis videos\n",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": [
+              "1.b"
+            ],
+            "difficulty": 1,
+            "estimated_hours": 0.25,
+            "prerequisites": [],
+            "formulas": [],
+            "common_pitfalls": [
+              "Mylenie IASB (standard setter) z IOSCO (regulator)"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 3, Reading 'Introduction to Financial Statement Analysis'",
+              "Schweser SchweserNotes Book 3, Study Sessions 6-8",
+              "Mark Meldrum CFA L1 — Financial Statement Analysis videos"
+            ],
+            "tags": [
+              "standard"
+            ]
+          },
+          "children": []
+        },
+        {
+          "id": "cfa040100-0004-4000-8000-000000000000",
+          "title": "Standard setter — FASB",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# Standard setter — FASB\n\n**LOS:** LOS 1.b\n**Difficulty:** 1 · **Estimated:** 0.25h\n\n## Opis\nFinancial Accounting Standards Board tworzy US GAAP. SEC deleguje to uprawnienie do FASB dla spółek publicznych.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Mylenie FASB z SEC — FASB tworzy GAAP, SEC egzekwuje\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 3, Reading 'Introduction to Financial Statement Analysis'\n- Schweser SchweserNotes Book 3, Study Sessions 6-8\n- Mark Meldrum CFA L1 — Financial Statement Analysis videos\n",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": [
+              "1.b"
+            ],
+            "difficulty": 1,
+            "estimated_hours": 0.25,
+            "prerequisites": [],
+            "formulas": [],
+            "common_pitfalls": [
+              "Mylenie FASB z SEC — FASB tworzy GAAP, SEC egzekwuje"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 3, Reading 'Introduction to Financial Statement Analysis'",
+              "Schweser SchweserNotes Book 3, Study Sessions 6-8",
+              "Mark Meldrum CFA L1 — Financial Statement Analysis videos"
+            ],
+            "tags": [
+              "standard"
+            ]
+          },
+          "children": []
+        },
+        {
+          "id": "cfa040100-0005-4000-8000-000000000000",
+          "title": "Regulatory authority — SEC",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# Regulatory authority — SEC\n\n**LOS:** LOS 1.b\n**Difficulty:** 1 · **Estimated:** 0.25h\n\n## Opis\nSEC egzekwuje sprawozdawczość spółek publicznych w USA — Forms 10-K, 10-Q, 8-K, S-1, DEF 14A.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Mylenie roli SEC ze standard setterem\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 3, Reading 'Introduction to Financial Statement Analysis'\n- Schweser SchweserNotes Book 3, Study Sessions 6-8\n- Mark Meldrum CFA L1 — Financial Statement Analysis videos\n",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": [
+              "1.b"
+            ],
+            "difficulty": 1,
+            "estimated_hours": 0.25,
+            "prerequisites": [],
+            "formulas": [],
+            "common_pitfalls": [
+              "Mylenie roli SEC ze standard setterem"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 3, Reading 'Introduction to Financial Statement Analysis'",
+              "Schweser SchweserNotes Book 3, Study Sessions 6-8",
+              "Mark Meldrum CFA L1 — Financial Statement Analysis videos"
+            ],
+            "tags": [
+              "regulator"
+            ]
+          },
+          "children": []
+        },
+        {
+          "id": "cfa040100-0006-4000-8000-000000000000",
+          "title": "Regulatory authority — ESMA",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# Regulatory authority — ESMA\n\n**LOS:** LOS 1.b\n**Difficulty:** 1 · **Estimated:** 0.25h\n\n## Opis\nEuropean Securities and Markets Authority koordynuje nadzór rynków UE; egzekwowanie pozostaje na poziomie krajowym.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Mylenie ESMA z lokalnymi regulatorami państw członkowskich\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 3, Reading 'Introduction to Financial Statement Analysis'\n- Schweser SchweserNotes Book 3, Study Sessions 6-8\n- Mark Meldrum CFA L1 — Financial Statement Analysis videos\n",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": [
+              "1.b"
+            ],
+            "difficulty": 1,
+            "estimated_hours": 0.25,
+            "prerequisites": [],
+            "formulas": [],
+            "common_pitfalls": [
+              "Mylenie ESMA z lokalnymi regulatorami państw członkowskich"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 3, Reading 'Introduction to Financial Statement Analysis'",
+              "Schweser SchweserNotes Book 3, Study Sessions 6-8",
+              "Mark Meldrum CFA L1 — Financial Statement Analysis videos"
+            ],
+            "tags": [
+              "regulator"
+            ]
+          },
+          "children": []
+        },
+        {
+          "id": "cfa040100-0007-4000-8000-000000000000",
+          "title": "Regulatory authority — IOSCO",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# Regulatory authority — IOSCO\n\n**LOS:** LOS 1.b\n**Difficulty:** 1 · **Estimated:** 0.25h\n\n## Opis\nIOSCO zrzesza regulatorów rynków kapitałowych globalnie; promuje konwergencję IFRS.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Traktowanie IOSCO jako standard settera — to forum regulatorów\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 3, Reading 'Introduction to Financial Statement Analysis'\n- Schweser SchweserNotes Book 3, Study Sessions 6-8\n- Mark Meldrum CFA L1 — Financial Statement Analysis videos\n",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": [
+              "1.b"
+            ],
+            "difficulty": 1,
+            "estimated_hours": 0.25,
+            "prerequisites": [],
+            "formulas": [],
+            "common_pitfalls": [
+              "Traktowanie IOSCO jako standard settera — to forum regulatorów"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 3, Reading 'Introduction to Financial Statement Analysis'",
+              "Schweser SchweserNotes Book 3, Study Sessions 6-8",
+              "Mark Meldrum CFA L1 — Financial Statement Analysis videos"
+            ],
+            "tags": [
+              "regulator"
+            ]
+          },
+          "children": []
+        },
+        {
+          "id": "cfa040100-0008-4000-8000-000000000000",
+          "title": "Financial statement audit — purpose and scope",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# Financial statement audit — purpose and scope\n\n**LOS:** LOS 1.c\n**Difficulty:** 2 · **Estimated:** 0.25h\n\n## Opis\nNiezależny biegły rewident wydaje opinię, czy sprawozdania są zgodne z standardami i wolne od istotnych zniekształceń.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Mylenie audytu z gwarancją braku oszustwa — to reasonable assurance, nie absolute\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 3, Reading 'Introduction to Financial Statement Analysis'\n- Schweser SchweserNotes Book 3, Study Sessions 6-8\n- Mark Meldrum CFA L1 — Financial Statement Analysis videos\n",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": [
+              "1.c"
+            ],
+            "difficulty": 2,
+            "estimated_hours": 0.25,
+            "prerequisites": [],
+            "formulas": [],
+            "common_pitfalls": [
+              "Mylenie audytu z gwarancją braku oszustwa — to reasonable assurance, nie absolute"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 3, Reading 'Introduction to Financial Statement Analysis'",
+              "Schweser SchweserNotes Book 3, Study Sessions 6-8",
+              "Mark Meldrum CFA L1 — Financial Statement Analysis videos"
+            ],
+            "tags": [
+              "audit"
+            ]
+          },
+          "children": []
+        },
+        {
+          "id": "cfa040100-0009-4000-8000-000000000000",
+          "title": "Audit report — Unqualified (clean) opinion",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# Audit report — Unqualified (clean) opinion\n\n**LOS:** LOS 1.c\n**Difficulty:** 1 · **Estimated:** 0.25h\n\n## Opis\nNajlepszy typ opinii: sprawozdania we wszystkich istotnych aspektach prezentują wiernie sytuację finansową.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Pomijanie 'emphasis-of-matter paragraph' w unqualified — może wskazywać ryzyka\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 3, Reading 'Introduction to Financial Statement Analysis'\n- Schweser SchweserNotes Book 3, Study Sessions 6-8\n- Mark Meldrum CFA L1 — Financial Statement Analysis videos\n",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": [
+              "1.c"
+            ],
+            "difficulty": 1,
+            "estimated_hours": 0.25,
+            "prerequisites": [],
+            "formulas": [],
+            "common_pitfalls": [
+              "Pomijanie 'emphasis-of-matter paragraph' w unqualified — może wskazywać ryzyka"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 3, Reading 'Introduction to Financial Statement Analysis'",
+              "Schweser SchweserNotes Book 3, Study Sessions 6-8",
+              "Mark Meldrum CFA L1 — Financial Statement Analysis videos"
+            ],
+            "tags": [
+              "audit"
+            ]
+          },
+          "children": []
+        },
+        {
+          "id": "cfa040100-0010-4000-8000-000000000000",
+          "title": "Audit report — Qualified opinion",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# Audit report — Qualified opinion\n\n**LOS:** LOS 1.c\n**Difficulty:** 2 · **Estimated:** 0.25h\n\n## Opis\nIstotne, ale nie wszechobecne zniekształcenia lub ograniczenie zakresu. Zawiera frazę 'except for'.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Mylenie qualified z adverse — qualified to 'except for', adverse to 'do not present fairly'\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 3, Reading 'Introduction to Financial Statement Analysis'\n- Schweser SchweserNotes Book 3, Study Sessions 6-8\n- Mark Meldrum CFA L1 — Financial Statement Analysis videos\n",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": [
+              "1.c"
+            ],
+            "difficulty": 2,
+            "estimated_hours": 0.25,
+            "prerequisites": [],
+            "formulas": [],
+            "common_pitfalls": [
+              "Mylenie qualified z adverse — qualified to 'except for', adverse to 'do not present fairly'"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 3, Reading 'Introduction to Financial Statement Analysis'",
+              "Schweser SchweserNotes Book 3, Study Sessions 6-8",
+              "Mark Meldrum CFA L1 — Financial Statement Analysis videos"
+            ],
+            "tags": [
+              "audit"
+            ]
+          },
+          "children": []
+        },
+        {
+          "id": "cfa040100-0011-4000-8000-000000000000",
+          "title": "Audit report — Adverse opinion",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# Audit report — Adverse opinion\n\n**LOS:** LOS 1.c\n**Difficulty:** 2 · **Estimated:** 0.25h\n\n## Opis\nZniekształcenia są istotne i wszechobecne; sprawozdania nie prezentują wiernie sytuacji.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Adverse oznacza, że sprawozdania znacząco wprowadzają w błąd\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 3, Reading 'Introduction to Financial Statement Analysis'\n- Schweser SchweserNotes Book 3, Study Sessions 6-8\n- Mark Meldrum CFA L1 — Financial Statement Analysis videos\n",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": [
+              "1.c"
+            ],
+            "difficulty": 2,
+            "estimated_hours": 0.25,
+            "prerequisites": [],
+            "formulas": [],
+            "common_pitfalls": [
+              "Adverse oznacza, że sprawozdania znacząco wprowadzają w błąd"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 3, Reading 'Introduction to Financial Statement Analysis'",
+              "Schweser SchweserNotes Book 3, Study Sessions 6-8",
+              "Mark Meldrum CFA L1 — Financial Statement Analysis videos"
+            ],
+            "tags": [
+              "audit"
+            ]
+          },
+          "children": []
+        },
+        {
+          "id": "cfa040100-0012-4000-8000-000000000000",
+          "title": "Audit report — Disclaimer of opinion",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# Audit report — Disclaimer of opinion\n\n**LOS:** LOS 1.c\n**Difficulty:** 2 · **Estimated:** 0.25h\n\n## Opis\nAudytor nie zebrał wystarczających dowodów (np. ogromne ograniczenia zakresu, going concern); odmawia opinii.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Mylenie disclaimer z qualified — disclaimer to BRAK opinii\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 3, Reading 'Introduction to Financial Statement Analysis'\n- Schweser SchweserNotes Book 3, Study Sessions 6-8\n- Mark Meldrum CFA L1 — Financial Statement Analysis videos\n",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": [
+              "1.c"
+            ],
+            "difficulty": 2,
+            "estimated_hours": 0.25,
+            "prerequisites": [],
+            "formulas": [],
+            "common_pitfalls": [
+              "Mylenie disclaimer z qualified — disclaimer to BRAK opinii"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 3, Reading 'Introduction to Financial Statement Analysis'",
+              "Schweser SchweserNotes Book 3, Study Sessions 6-8",
+              "Mark Meldrum CFA L1 — Financial Statement Analysis videos"
+            ],
+            "tags": [
+              "audit"
+            ]
+          },
+          "children": []
+        },
+        {
+          "id": "cfa040100-0013-4000-8000-000000000000",
+          "title": "Internal controls and management's report",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# Internal controls and management's report\n\n**LOS:** LOS 1.c\n**Difficulty:** 2 · **Estimated:** 0.25h\n\n## Opis\nManagement odpowiada za system kontroli nad sprawozdawczością. SOX 302/404 wymaga certyfikacji CEO/CFO i opinii audytora.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Pomijanie SOX 404 — wymaga oceny ICFR przez management i audytora dla US issuers\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 3, Reading 'Introduction to Financial Statement Analysis'\n- Schweser SchweserNotes Book 3, Study Sessions 6-8\n- Mark Meldrum CFA L1 — Financial Statement Analysis videos\n",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": [
+              "1.c"
+            ],
+            "difficulty": 2,
+            "estimated_hours": 0.25,
+            "prerequisites": [],
+            "formulas": [],
+            "common_pitfalls": [
+              "Pomijanie SOX 404 — wymaga oceny ICFR przez management i audytora dla US issuers"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 3, Reading 'Introduction to Financial Statement Analysis'",
+              "Schweser SchweserNotes Book 3, Study Sessions 6-8",
+              "Mark Meldrum CFA L1 — Financial Statement Analysis videos"
+            ],
+            "tags": [
+              "audit",
+              "standard"
+            ]
+          },
+          "children": []
+        },
+        {
+          "id": "cfa040100-0014-4000-8000-000000000000",
+          "title": "Other information sources — MD&A, proxy, press releases",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# Other information sources — MD&A, proxy, press releases\n\n**LOS:** LOS 1.d\n**Difficulty:** 1 · **Estimated:** 0.25h\n\n## Opis\nMD&A, proxy statement, prasy i konferencje analityków uzupełniają obraz.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Skupianie się tylko na sprawozdaniach — MD&A często zawiera forward-looking informacje\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 3, Reading 'Introduction to Financial Statement Analysis'\n- Schweser SchweserNotes Book 3, Study Sessions 6-8\n- Mark Meldrum CFA L1 — Financial Statement Analysis videos\n",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": [
+              "1.d"
+            ],
+            "difficulty": 1,
+            "estimated_hours": 0.25,
+            "prerequisites": [],
+            "formulas": [],
+            "common_pitfalls": [
+              "Skupianie się tylko na sprawozdaniach — MD&A często zawiera forward-looking informacje"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 3, Reading 'Introduction to Financial Statement Analysis'",
+              "Schweser SchweserNotes Book 3, Study Sessions 6-8",
+              "Mark Meldrum CFA L1 — Financial Statement Analysis videos"
+            ],
+            "tags": [
+              "analysis"
+            ]
+          },
+          "children": []
+        },
+        {
+          "id": "cfa040100-0015-4000-8000-000000000000",
+          "title": "Financial statement analysis framework — six steps",
+          "status": "not-started",
+          "type": "task",
+          "notes": "# Financial statement analysis framework — six steps\n\n**LOS:** LOS 1.e\n**Difficulty:** 2 · **Estimated:** 0.5h\n\n## Opis\nSześć kroków: (1) define purpose, (2) collect data, (3) process, (4) analyze, (5) conclusions, (6) follow-up.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Pomijanie kroku define purpose — zła kalibracja celu prowadzi do złej analizy\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 3, Reading 'Introduction to Financial Statement Analysis'\n- Schweser SchweserNotes Book 3, Study Sessions 6-8\n- Mark Meldrum CFA L1 — Financial Statement Analysis videos\n",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "los_codes": [
+              "1.e"
+            ],
+            "difficulty": 2,
+            "estimated_hours": 0.5,
+            "prerequisites": [],
+            "formulas": [],
+            "common_pitfalls": [
+              "Pomijanie kroku define purpose — zła kalibracja celu prowadzi do złej analizy"
+            ],
+            "suggested_resources": [
+              "CFA Institute Curriculum 2026, Volume 3, Reading 'Introduction to Financial Statement Analysis'",
+              "Schweser SchweserNotes Book 3, Study Sessions 6-8",
+              "Mark Meldrum CFA L1 — Financial Statement Analysis videos"
+            ],
+            "tags": [
+              "framework"
+            ]
+          },
+          "children": []
+        }
+      ]
+    },
+    {
+      "id": "cfa040200-0000-4000-8000-000000000000",
+      "title": "Analyzing Income Statements",
+      "status": "not-started",
+      "type": "phase",
+      "notes": "# Analyzing Income Statements\n\nAnaliza rachunku zysków i strat: revenue recognition (IFRS 15 / ASC 606), expense recognition, non-recurring items, EPS oraz comprehensive income.\n\n**Learning Modules:** 1 · **Egzamin weight (topic):** 12.5%\n",
+      "createdAt": "2026-05-06T00:00:00Z",
+      "updatedAt": "2026-05-06T00:00:00Z",
+      "metadata": {
+        "lm_index": "02",
+        "lm_name_canonical": "Analyzing Income Statements",
+        "los_count": 7,
+        "topic": "Financial Statement Analysis"
+      },
+      "children": [
+        {
+          "id": "cfa040201-0000-4000-8000-000000000000",
+          "title": "Revenue recognition (IFRS 15 / ASC 606)",
+          "status": "not-started",
+          "type": "plan",
+          "notes": "# Revenue recognition (IFRS 15 / ASC 606)\n\nPięcio-stopniowy model rozpoznania przychodu wg IFRS 15 i ASC 606.\n",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "section_index": "01"
+          },
+          "children": [
+            {
+              "id": "cfa040201-0001-4000-8000-000000000000",
+              "title": "IFRS 15 / ASC 606 — overview & convergence",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# IFRS 15 / ASC 606 — overview & convergence\n\n**LOS:** LOS 2.a\n**Difficulty:** 2 · **Estimated:** 0.5h\n\n## Opis\nWspólny standard IFRS 15 / ASC 606 zastąpił rozproszone wcześniej zasady; cel — rozpoznać przychód odzwierciedlający transfer kontroli nad goods/services za oczekiwane wynagrodzenie.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Założenie, że IFRS 15 i ASC 606 są identyczne — drobne różnice w licensing, shipping, collectibility\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 3, Reading 'Analyzing Income Statements'\n- Schweser SchweserNotes Book 3, Study Sessions 6-8\n- Mark Meldrum CFA L1 — Financial Statement Analysis videos\n",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": [
+                  "2.a"
+                ],
+                "difficulty": 2,
+                "estimated_hours": 0.5,
+                "prerequisites": [],
+                "formulas": [],
+                "common_pitfalls": [
+                  "Założenie, że IFRS 15 i ASC 606 są identyczne — drobne różnice w licensing, shipping, collectibility"
+                ],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 3, Reading 'Analyzing Income Statements'",
+                  "Schweser SchweserNotes Book 3, Study Sessions 6-8",
+                  "Mark Meldrum CFA L1 — Financial Statement Analysis videos"
+                ],
+                "tags": [
+                  "standard",
+                  "ifrs-gaap-diff"
+                ]
+              },
+              "children": []
+            },
+            {
+              "id": "cfa040201-0002-4000-8000-000000000000",
+              "title": "Step 1 — Identify the contract with a customer",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# Step 1 — Identify the contract with a customer\n\n**LOS:** LOS 2.a\n**Difficulty:** 2 · **Estimated:** 0.25h\n\n## Opis\nKontrakt: enforceable agreement, zatwierdzony, identyfikuje rights/payment terms, ma commercial substance, wpłata jest probable.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Zakładanie, że ustny porozumienie nie jest kontraktem — może być, jeśli enforceable\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 3, Reading 'Analyzing Income Statements'\n- Schweser SchweserNotes Book 3, Study Sessions 6-8\n- Mark Meldrum CFA L1 — Financial Statement Analysis videos\n",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": [
+                  "2.a"
+                ],
+                "difficulty": 2,
+                "estimated_hours": 0.25,
+                "prerequisites": [],
+                "formulas": [],
+                "common_pitfalls": [
+                  "Zakładanie, że ustny porozumienie nie jest kontraktem — może być, jeśli enforceable"
+                ],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 3, Reading 'Analyzing Income Statements'",
+                  "Schweser SchweserNotes Book 3, Study Sessions 6-8",
+                  "Mark Meldrum CFA L1 — Financial Statement Analysis videos"
+                ],
+                "tags": [
+                  "standard"
+                ]
+              },
+              "children": []
+            },
+            {
+              "id": "cfa040201-0003-4000-8000-000000000000",
+              "title": "Step 2 — Identify the performance obligations",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# Step 2 — Identify the performance obligations\n\n**LOS:** LOS 2.a\n**Difficulty:** 3 · **Estimated:** 0.5h\n\n## Opis\nPerformance obligation = przyrzeczenie dostarczenia distinct good/service. Distinct: klient może z niego korzystać samodzielnie i jest osobno identyfikowalne w kontrakcie.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Niepoprawne grupowanie — distinct goods/services muszą być oddzielnymi PO\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 3, Reading 'Analyzing Income Statements'\n- Schweser SchweserNotes Book 3, Study Sessions 6-8\n- Mark Meldrum CFA L1 — Financial Statement Analysis videos\n",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": [
+                  "2.a"
+                ],
+                "difficulty": 3,
+                "estimated_hours": 0.5,
+                "prerequisites": [],
+                "formulas": [],
+                "common_pitfalls": [
+                  "Niepoprawne grupowanie — distinct goods/services muszą być oddzielnymi PO"
+                ],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 3, Reading 'Analyzing Income Statements'",
+                  "Schweser SchweserNotes Book 3, Study Sessions 6-8",
+                  "Mark Meldrum CFA L1 — Financial Statement Analysis videos"
+                ],
+                "tags": [
+                  "standard"
+                ]
+              },
+              "children": []
+            },
+            {
+              "id": "cfa040201-0004-4000-8000-000000000000",
+              "title": "Step 3 — Determine the transaction price",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# Step 3 — Determine the transaction price\n\n**LOS:** LOS 2.a\n**Difficulty:** 3 · **Estimated:** 0.5h\n\n## Opis\nKwota wynagrodzenia oczekiwanego za dostarczenie goods/services. Zawiera variable consideration (z ograniczeniem), significant financing component, non-cash.\n\n## Formuły / kluczowe relacje\n- Transaction price = fixed + variable consideration (constrained) + non-cash + consideration payable to customer\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Pomijanie variable consideration — należy oszacować i ograniczyć\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 3, Reading 'Analyzing Income Statements'\n- Schweser SchweserNotes Book 3, Study Sessions 6-8\n- Mark Meldrum CFA L1 — Financial Statement Analysis videos\n",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": [
+                  "2.a"
+                ],
+                "difficulty": 3,
+                "estimated_hours": 0.5,
+                "prerequisites": [],
+                "formulas": [
+                  "Transaction price = fixed + variable consideration (constrained) + non-cash + consideration payable to customer"
+                ],
+                "common_pitfalls": [
+                  "Pomijanie variable consideration — należy oszacować i ograniczyć"
+                ],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 3, Reading 'Analyzing Income Statements'",
+                  "Schweser SchweserNotes Book 3, Study Sessions 6-8",
+                  "Mark Meldrum CFA L1 — Financial Statement Analysis videos"
+                ],
+                "tags": [
+                  "standard"
+                ]
+              },
+              "children": []
+            },
+            {
+              "id": "cfa040201-0005-4000-8000-000000000000",
+              "title": "Step 4 — Allocate the transaction price to performance obligations",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# Step 4 — Allocate the transaction price to performance obligations\n\n**LOS:** LOS 2.a\n**Difficulty:** 3 · **Estimated:** 0.5h\n\n## Opis\nAlokacja w oparciu o relative standalone selling prices każdego PO. Jeśli SSP nieobserwowalne — estymowane (adjusted market, expected cost plus margin, residual).\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Stosowanie cen kontraktowych zamiast standalone selling prices (SSP)\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 3, Reading 'Analyzing Income Statements'\n- Schweser SchweserNotes Book 3, Study Sessions 6-8\n- Mark Meldrum CFA L1 — Financial Statement Analysis videos\n",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": [
+                  "2.a"
+                ],
+                "difficulty": 3,
+                "estimated_hours": 0.5,
+                "prerequisites": [],
+                "formulas": [],
+                "common_pitfalls": [
+                  "Stosowanie cen kontraktowych zamiast standalone selling prices (SSP)"
+                ],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 3, Reading 'Analyzing Income Statements'",
+                  "Schweser SchweserNotes Book 3, Study Sessions 6-8",
+                  "Mark Meldrum CFA L1 — Financial Statement Analysis videos"
+                ],
+                "tags": [
+                  "standard"
+                ]
+              },
+              "children": []
+            },
+            {
+              "id": "cfa040201-0006-4000-8000-000000000000",
+              "title": "Step 5 — Recognize revenue when (or as) performance obligation is satisfied",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# Step 5 — Recognize revenue when (or as) performance obligation is satisfied\n\n**LOS:** LOS 2.a\n**Difficulty:** 3 · **Estimated:** 0.5h\n\n## Opis\nRevenue rozpoznawane gdy kontrola przechodzi na klienta. Over-time gdy spełnione kryteria (klient otrzymuje benefits w trakcie, asset has no alternative use, etc.).\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Mylenie point-in-time z over-time — kryteria over-time muszą być ściśle spełnione\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 3, Reading 'Analyzing Income Statements'\n- Schweser SchweserNotes Book 3, Study Sessions 6-8\n- Mark Meldrum CFA L1 — Financial Statement Analysis videos\n",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": [
+                  "2.a"
+                ],
+                "difficulty": 3,
+                "estimated_hours": 0.5,
+                "prerequisites": [],
+                "formulas": [],
+                "common_pitfalls": [
+                  "Mylenie point-in-time z over-time — kryteria over-time muszą być ściśle spełnione"
+                ],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 3, Reading 'Analyzing Income Statements'",
+                  "Schweser SchweserNotes Book 3, Study Sessions 6-8",
+                  "Mark Meldrum CFA L1 — Financial Statement Analysis videos"
+                ],
+                "tags": [
+                  "standard"
+                ]
+              },
+              "children": []
+            },
+            {
+              "id": "cfa040201-0007-4000-8000-000000000000",
+              "title": "Disclosures required by IFRS 15 / ASC 606",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# Disclosures required by IFRS 15 / ASC 606\n\n**LOS:** LOS 2.a\n**Difficulty:** 2 · **Estimated:** 0.25h\n\n## Opis\nWymagane: disaggregation of revenue, contract balances, performance obligations, significant judgments, costs to obtain/fulfill contracts.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Pomijanie disaggregation — istotne dla analizy segmentów i typów kontraktów\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 3, Reading 'Analyzing Income Statements'\n- Schweser SchweserNotes Book 3, Study Sessions 6-8\n- Mark Meldrum CFA L1 — Financial Statement Analysis videos\n",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": [
+                  "2.a"
+                ],
+                "difficulty": 2,
+                "estimated_hours": 0.25,
+                "prerequisites": [],
+                "formulas": [],
+                "common_pitfalls": [
+                  "Pomijanie disaggregation — istotne dla analizy segmentów i typów kontraktów"
+                ],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 3, Reading 'Analyzing Income Statements'",
+                  "Schweser SchweserNotes Book 3, Study Sessions 6-8",
+                  "Mark Meldrum CFA L1 — Financial Statement Analysis videos"
+                ],
+                "tags": [
+                  "standard",
+                  "disclosure"
+                ]
+              },
+              "children": []
+            }
+          ]
+        },
+        {
+          "id": "cfa040202-0000-4000-8000-000000000000",
+          "title": "Expense recognition",
+          "status": "not-started",
+          "type": "plan",
+          "notes": "# Expense recognition\n\nZasady ujmowania kosztów: matching, capitalize vs expense, oraz szacunki.\n",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "section_index": "02"
+          },
+          "children": [
+            {
+              "id": "cfa040202-0001-4000-8000-000000000000",
+              "title": "Expense recognition / matching principle",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# Expense recognition / matching principle\n\n**LOS:** LOS 2.b\n**Difficulty:** 2 · **Estimated:** 0.25h\n\n## Opis\nKoszty bezpośrednio związane z przychodem ujmuje się w tym samym okresie (matching). Pozostałe — gdy poniesione (period costs).\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Mylenie matching z cash-basis — koszty matchowane do okresu przychodów, nie do daty płatności\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 3, Reading 'Analyzing Income Statements'\n- Schweser SchweserNotes Book 3, Study Sessions 6-8\n- Mark Meldrum CFA L1 — Financial Statement Analysis videos\n",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": [
+                  "2.b"
+                ],
+                "difficulty": 2,
+                "estimated_hours": 0.25,
+                "prerequisites": [],
+                "formulas": [],
+                "common_pitfalls": [
+                  "Mylenie matching z cash-basis — koszty matchowane do okresu przychodów, nie do daty płatności"
+                ],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 3, Reading 'Analyzing Income Statements'",
+                  "Schweser SchweserNotes Book 3, Study Sessions 6-8",
+                  "Mark Meldrum CFA L1 — Financial Statement Analysis videos"
+                ],
+                "tags": [
+                  "concept"
+                ]
+              },
+              "children": []
+            },
+            {
+              "id": "cfa040202-0002-4000-8000-000000000000",
+              "title": "Capitalizing vs expensing — decision and impact",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# Capitalizing vs expensing — decision and impact\n\n**LOS:** LOS 2.c\n**Difficulty:** 3 · **Estimated:** 0.5h\n\n## Opis\nCapitalize: wydatek staje się aktywem, koszt rozliczany przez useful life. Expense: pełny koszt w bieżącym okresie. Wpływ: na earnings, CFO vs CFI, leverage, ROA.\n\n## Formuły / kluczowe relacje\n- Capitalize → asset on BS, depreciation/amortization expense over life\n- Expense → full hit to current period earnings\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Niedocenianie wpływu na trendy zysków: capitalize wygładza, expense w pełni obciąża okres\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 3, Reading 'Analyzing Income Statements'\n- Schweser SchweserNotes Book 3, Study Sessions 6-8\n- Mark Meldrum CFA L1 — Financial Statement Analysis videos\n",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": [
+                  "2.c"
+                ],
+                "difficulty": 3,
+                "estimated_hours": 0.5,
+                "prerequisites": [],
+                "formulas": [
+                  "Capitalize → asset on BS, depreciation/amortization expense over life",
+                  "Expense → full hit to current period earnings"
+                ],
+                "common_pitfalls": [
+                  "Niedocenianie wpływu na trendy zysków: capitalize wygładza, expense w pełni obciąża okres"
+                ],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 3, Reading 'Analyzing Income Statements'",
+                  "Schweser SchweserNotes Book 3, Study Sessions 6-8",
+                  "Mark Meldrum CFA L1 — Financial Statement Analysis videos"
+                ],
+                "tags": [
+                  "concept"
+                ]
+              },
+              "children": []
+            },
+            {
+              "id": "cfa040202-0003-4000-8000-000000000000",
+              "title": "Capitalized interest",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# Capitalized interest\n\n**LOS:** LOS 2.c\n**Difficulty:** 3 · **Estimated:** 0.5h\n\n## Opis\nOdsetki od pożyczek finansujących budowę kwalifikującego się aktywa są kapitalizowane do kosztu wytworzenia (zarówno IFRS jak US GAAP).\n\n## Formuły / kluczowe relacje\n- Capitalized interest = average accumulated expenditures × interest rate\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Stosowanie wszystkich odsetek — kapitalizuje się tylko tę część związaną z aktywem w trakcie jego budowy\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 3, Reading 'Analyzing Income Statements'\n- Schweser SchweserNotes Book 3, Study Sessions 6-8\n- Mark Meldrum CFA L1 — Financial Statement Analysis videos\n",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": [
+                  "2.c"
+                ],
+                "difficulty": 3,
+                "estimated_hours": 0.5,
+                "prerequisites": [],
+                "formulas": [
+                  "Capitalized interest = average accumulated expenditures × interest rate"
+                ],
+                "common_pitfalls": [
+                  "Stosowanie wszystkich odsetek — kapitalizuje się tylko tę część związaną z aktywem w trakcie jego budowy"
+                ],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 3, Reading 'Analyzing Income Statements'",
+                  "Schweser SchweserNotes Book 3, Study Sessions 6-8",
+                  "Mark Meldrum CFA L1 — Financial Statement Analysis videos"
+                ],
+                "tags": [
+                  "formula"
+                ]
+              },
+              "children": []
+            },
+            {
+              "id": "cfa040202-0004-4000-8000-000000000000",
+              "title": "Accounting estimates — useful life, residual value, bad debts, warranty",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# Accounting estimates — useful life, residual value, bad debts, warranty\n\n**LOS:** LOS 2.b\n**Difficulty:** 2 · **Estimated:** 0.25h\n\n## Opis\nSprawozdania wymagają licznych szacunków: useful life, salvage value, doubtful accounts, warranty, pension assumptions. Ujawnienia w notes — kluczowe dla quality of earnings.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Niedocenianie subiektywności — agresywne szacunki zawyżają zyski\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 3, Reading 'Analyzing Income Statements'\n- Schweser SchweserNotes Book 3, Study Sessions 6-8\n- Mark Meldrum CFA L1 — Financial Statement Analysis videos\n",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": [
+                  "2.b"
+                ],
+                "difficulty": 2,
+                "estimated_hours": 0.25,
+                "prerequisites": [],
+                "formulas": [],
+                "common_pitfalls": [
+                  "Niedocenianie subiektywności — agresywne szacunki zawyżają zyski"
+                ],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 3, Reading 'Analyzing Income Statements'",
+                  "Schweser SchweserNotes Book 3, Study Sessions 6-8",
+                  "Mark Meldrum CFA L1 — Financial Statement Analysis videos"
+                ],
+                "tags": [
+                  "concept",
+                  "quality"
+                ]
+              },
+              "children": []
+            }
+          ]
+        },
+        {
+          "id": "cfa040203-0000-4000-8000-000000000000",
+          "title": "Non-recurring items",
+          "status": "not-started",
+          "type": "plan",
+          "notes": "# Non-recurring items\n\nDiscontinued operations, unusual items i ich rola w analizie.\n",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "section_index": "03"
+          },
+          "children": [
+            {
+              "id": "cfa040203-0001-4000-8000-000000000000",
+              "title": "Non-recurring items — concept and analytical treatment",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# Non-recurring items — concept and analytical treatment\n\n**LOS:** LOS 2.d\n**Difficulty:** 2 · **Estimated:** 0.25h\n\n## Opis\nPozycje nieoperacyjne lub nietypowe (gains/losses on disposal, restructuring, impairments) — analityk separuje od core earnings dla forecastu i wyceny.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Włączanie non-recurring do bazy ekstrapolacji — zniekształca forecast\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 3, Reading 'Analyzing Income Statements'\n- Schweser SchweserNotes Book 3, Study Sessions 6-8\n- Mark Meldrum CFA L1 — Financial Statement Analysis videos\n",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": [
+                  "2.d"
+                ],
+                "difficulty": 2,
+                "estimated_hours": 0.25,
+                "prerequisites": [],
+                "formulas": [],
+                "common_pitfalls": [
+                  "Włączanie non-recurring do bazy ekstrapolacji — zniekształca forecast"
+                ],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 3, Reading 'Analyzing Income Statements'",
+                  "Schweser SchweserNotes Book 3, Study Sessions 6-8",
+                  "Mark Meldrum CFA L1 — Financial Statement Analysis videos"
+                ],
+                "tags": [
+                  "concept"
+                ]
+              },
+              "children": []
+            },
+            {
+              "id": "cfa040203-0002-4000-8000-000000000000",
+              "title": "Discontinued operations",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# Discontinued operations\n\n**LOS:** LOS 2.d\n**Difficulty:** 2 · **Estimated:** 0.25h\n\n## Opis\nCzęść biznesu sprzedana lub przeznaczona do sprzedaży, prezentowana oddzielnie poniżej linii continuing operations, net of tax. Comparative periods restated.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Ujmowanie discontinued ops w continuing earnings\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 3, Reading 'Analyzing Income Statements'\n- Schweser SchweserNotes Book 3, Study Sessions 6-8\n- Mark Meldrum CFA L1 — Financial Statement Analysis videos\n",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": [
+                  "2.d"
+                ],
+                "difficulty": 2,
+                "estimated_hours": 0.25,
+                "prerequisites": [],
+                "formulas": [],
+                "common_pitfalls": [
+                  "Ujmowanie discontinued ops w continuing earnings"
+                ],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 3, Reading 'Analyzing Income Statements'",
+                  "Schweser SchweserNotes Book 3, Study Sessions 6-8",
+                  "Mark Meldrum CFA L1 — Financial Statement Analysis videos"
+                ],
+                "tags": [
+                  "concept"
+                ]
+              },
+              "children": []
+            },
+            {
+              "id": "cfa040203-0003-4000-8000-000000000000",
+              "title": "Unusual or infrequent items",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# Unusual or infrequent items\n\n**LOS:** LOS 2.d\n**Difficulty:** 2 · **Estimated:** 0.25h\n\n## Opis\nRare/unusual albo infrequent (od 2015 brak kategorii 'extraordinary' w US GAAP). Ujawniane oddzielnie w continuing operations, gross of tax.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Założenie, że jednorazowe — często pojawiają się rok do roku w zmodyfikowanej formie\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 3, Reading 'Analyzing Income Statements'\n- Schweser SchweserNotes Book 3, Study Sessions 6-8\n- Mark Meldrum CFA L1 — Financial Statement Analysis videos\n",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": [
+                  "2.d"
+                ],
+                "difficulty": 2,
+                "estimated_hours": 0.25,
+                "prerequisites": [],
+                "formulas": [],
+                "common_pitfalls": [
+                  "Założenie, że jednorazowe — często pojawiają się rok do roku w zmodyfikowanej formie"
+                ],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 3, Reading 'Analyzing Income Statements'",
+                  "Schweser SchweserNotes Book 3, Study Sessions 6-8",
+                  "Mark Meldrum CFA L1 — Financial Statement Analysis videos"
+                ],
+                "tags": [
+                  "concept"
+                ]
+              },
+              "children": []
+            },
+            {
+              "id": "cfa040203-0004-4000-8000-000000000000",
+              "title": "Changes in accounting policy, estimate, errors",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# Changes in accounting policy, estimate, errors\n\n**LOS:** LOS 2.d\n**Difficulty:** 3 · **Estimated:** 0.5h\n\n## Opis\nChange in policy: retrospective restatement. Change in estimate: prospective. Error: retrospective restatement of prior periods.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Mylenie change in policy (retrospective) z change in estimate (prospective)\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 3, Reading 'Analyzing Income Statements'\n- Schweser SchweserNotes Book 3, Study Sessions 6-8\n- Mark Meldrum CFA L1 — Financial Statement Analysis videos\n",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": [
+                  "2.d"
+                ],
+                "difficulty": 3,
+                "estimated_hours": 0.5,
+                "prerequisites": [],
+                "formulas": [],
+                "common_pitfalls": [
+                  "Mylenie change in policy (retrospective) z change in estimate (prospective)"
+                ],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 3, Reading 'Analyzing Income Statements'",
+                  "Schweser SchweserNotes Book 3, Study Sessions 6-8",
+                  "Mark Meldrum CFA L1 — Financial Statement Analysis videos"
+                ],
+                "tags": [
+                  "concept",
+                  "standard"
+                ]
+              },
+              "children": []
+            }
+          ]
+        },
+        {
+          "id": "cfa040204-0000-4000-8000-000000000000",
+          "title": "Earnings per share",
+          "status": "not-started",
+          "type": "plan",
+          "notes": "# Earnings per share\n\nEPS basic, diluted (treasury stock method, if-converted), oraz interpretacja.\n",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "section_index": "04"
+          },
+          "children": [
+            {
+              "id": "cfa040204-0001-4000-8000-000000000000",
+              "title": "Capital structure — simple vs complex",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# Capital structure — simple vs complex\n\n**LOS:** LOS 2.e\n**Difficulty:** 2 · **Estimated:** 0.25h\n\n## Opis\nSimple: tylko common stock i non-convertible preferred. Complex: ma dilutive securities (options, warrants, convertibles) — wymaga diluted EPS.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Założenie, że spółka bez warrantów ma simple structure — convertible debt też komplikuje\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 3, Reading 'Analyzing Income Statements'\n- Schweser SchweserNotes Book 3, Study Sessions 6-8\n- Mark Meldrum CFA L1 — Financial Statement Analysis videos\n",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": [
+                  "2.e"
+                ],
+                "difficulty": 2,
+                "estimated_hours": 0.25,
+                "prerequisites": [],
+                "formulas": [],
+                "common_pitfalls": [
+                  "Założenie, że spółka bez warrantów ma simple structure — convertible debt też komplikuje"
+                ],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 3, Reading 'Analyzing Income Statements'",
+                  "Schweser SchweserNotes Book 3, Study Sessions 6-8",
+                  "Mark Meldrum CFA L1 — Financial Statement Analysis videos"
+                ],
+                "tags": [
+                  "concept"
+                ]
+              },
+              "children": []
+            },
+            {
+              "id": "cfa040204-0002-4000-8000-000000000000",
+              "title": "Basic EPS",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# Basic EPS\n\n**LOS:** LOS 2.e\n**Difficulty:** 2 · **Estimated:** 0.25h\n\n## Opis\nWymagane do prezentacji na IS. Preferred dividends odejmowane bez względu na declaration jeśli cumulative.\n\n## Formuły / kluczowe relacje\n- Basic EPS = (Net income − Preferred dividends) / Weighted average common shares outstanding\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Pomijanie preferred dividends w liczniku\n- Niepoprawne ważenie shares przez okres\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 3, Reading 'Analyzing Income Statements'\n- Schweser SchweserNotes Book 3, Study Sessions 6-8\n- Mark Meldrum CFA L1 — Financial Statement Analysis videos\n",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": [
+                  "2.e"
+                ],
+                "difficulty": 2,
+                "estimated_hours": 0.25,
+                "prerequisites": [],
+                "formulas": [
+                  "Basic EPS = (Net income − Preferred dividends) / Weighted average common shares outstanding"
+                ],
+                "common_pitfalls": [
+                  "Pomijanie preferred dividends w liczniku",
+                  "Niepoprawne ważenie shares przez okres"
+                ],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 3, Reading 'Analyzing Income Statements'",
+                  "Schweser SchweserNotes Book 3, Study Sessions 6-8",
+                  "Mark Meldrum CFA L1 — Financial Statement Analysis videos"
+                ],
+                "tags": [
+                  "formula",
+                  "ratio"
+                ]
+              },
+              "children": []
+            },
+            {
+              "id": "cfa040204-0003-4000-8000-000000000000",
+              "title": "Diluted EPS — treasury stock method (options & warrants)",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# Diluted EPS — treasury stock method (options & warrants)\n\n**LOS:** LOS 2.e\n**Difficulty:** 3 · **Estimated:** 0.5h\n\n## Opis\nTreasury stock method: zakłada wykonanie opcji za exercise price, a wpływy użyte do odkupu akcji po average market price. Net incremental shares dodawane do mianownika.\n\n## Formuły / kluczowe relacje\n- Incremental shares = N × (1 − exercise price / avg market price)\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Stosowanie wszystkich opcji — tylko in-the-money są dilutive\n- Pomijanie warunku 'dilutive' — anti-dilutive opcji nie wlicza się\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 3, Reading 'Analyzing Income Statements'\n- Schweser SchweserNotes Book 3, Study Sessions 6-8\n- Mark Meldrum CFA L1 — Financial Statement Analysis videos\n",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": [
+                  "2.e"
+                ],
+                "difficulty": 3,
+                "estimated_hours": 0.5,
+                "prerequisites": [],
+                "formulas": [
+                  "Incremental shares = N × (1 − exercise price / avg market price)"
+                ],
+                "common_pitfalls": [
+                  "Stosowanie wszystkich opcji — tylko in-the-money są dilutive",
+                  "Pomijanie warunku 'dilutive' — anti-dilutive opcji nie wlicza się"
+                ],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 3, Reading 'Analyzing Income Statements'",
+                  "Schweser SchweserNotes Book 3, Study Sessions 6-8",
+                  "Mark Meldrum CFA L1 — Financial Statement Analysis videos"
+                ],
+                "tags": [
+                  "formula",
+                  "ratio"
+                ]
+              },
+              "children": []
+            },
+            {
+              "id": "cfa040204-0004-4000-8000-000000000000",
+              "title": "Diluted EPS — if-converted method (convertible debt)",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# Diluted EPS — if-converted method (convertible debt)\n\n**LOS:** LOS 2.e\n**Difficulty:** 3 · **Estimated:** 0.5h\n\n## Opis\nKonwertowalny dług: zakładamy konwersję, dodajemy odsetki po podatku do licznika i nowe akcje do mianownika. Stosujemy tylko jeśli wynik jest dilutive.\n\n## Formuły / kluczowe relacje\n- Diluted EPS (conv debt) = (NI − Pref div + Interest × (1 − t)) / (WASO + Conv shares)\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Pomijanie tax effect na interest add-back\n- Stosowanie nawet gdy anti-dilutive\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 3, Reading 'Analyzing Income Statements'\n- Schweser SchweserNotes Book 3, Study Sessions 6-8\n- Mark Meldrum CFA L1 — Financial Statement Analysis videos\n",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": [
+                  "2.e"
+                ],
+                "difficulty": 3,
+                "estimated_hours": 0.5,
+                "prerequisites": [],
+                "formulas": [
+                  "Diluted EPS (conv debt) = (NI − Pref div + Interest × (1 − t)) / (WASO + Conv shares)"
+                ],
+                "common_pitfalls": [
+                  "Pomijanie tax effect na interest add-back",
+                  "Stosowanie nawet gdy anti-dilutive"
+                ],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 3, Reading 'Analyzing Income Statements'",
+                  "Schweser SchweserNotes Book 3, Study Sessions 6-8",
+                  "Mark Meldrum CFA L1 — Financial Statement Analysis videos"
+                ],
+                "tags": [
+                  "formula",
+                  "ratio"
+                ]
+              },
+              "children": []
+            },
+            {
+              "id": "cfa040204-0005-4000-8000-000000000000",
+              "title": "Diluted EPS — if-converted method (convertible preferred)",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# Diluted EPS — if-converted method (convertible preferred)\n\n**LOS:** LOS 2.e\n**Difficulty:** 3 · **Estimated:** 0.5h\n\n## Opis\nKonwertowalne preferred: licznik = NI (nie odejmujemy preferred dividend), mianownik powiększony o akcje z konwersji. Tylko jeśli dilutive.\n\n## Formuły / kluczowe relacje\n- Diluted EPS (conv pref) = NI / (WASO + Conv shares from preferred)\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Zapominanie o dodaniu z powrotem preferred dividend do licznika\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 3, Reading 'Analyzing Income Statements'\n- Schweser SchweserNotes Book 3, Study Sessions 6-8\n- Mark Meldrum CFA L1 — Financial Statement Analysis videos\n",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": [
+                  "2.e"
+                ],
+                "difficulty": 3,
+                "estimated_hours": 0.5,
+                "prerequisites": [],
+                "formulas": [
+                  "Diluted EPS (conv pref) = NI / (WASO + Conv shares from preferred)"
+                ],
+                "common_pitfalls": [
+                  "Zapominanie o dodaniu z powrotem preferred dividend do licznika"
+                ],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 3, Reading 'Analyzing Income Statements'",
+                  "Schweser SchweserNotes Book 3, Study Sessions 6-8",
+                  "Mark Meldrum CFA L1 — Financial Statement Analysis videos"
+                ],
+                "tags": [
+                  "formula",
+                  "ratio"
+                ]
+              },
+              "children": []
+            },
+            {
+              "id": "cfa040204-0006-4000-8000-000000000000",
+              "title": "Anti-dilutive securities — exclusion rule",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# Anti-dilutive securities — exclusion rule\n\n**LOS:** LOS 2.e\n**Difficulty:** 2 · **Estimated:** 0.25h\n\n## Opis\nSecurity jest anti-dilutive jeśli włączenie zwiększa EPS lub zmniejsza loss per share. Wykluczamy z diluted EPS calculation.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Mechaniczne dodawanie wszystkich convertibles bez sprawdzenia, czy zwiększają EPS\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 3, Reading 'Analyzing Income Statements'\n- Schweser SchweserNotes Book 3, Study Sessions 6-8\n- Mark Meldrum CFA L1 — Financial Statement Analysis videos\n",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": [
+                  "2.e"
+                ],
+                "difficulty": 2,
+                "estimated_hours": 0.25,
+                "prerequisites": [],
+                "formulas": [],
+                "common_pitfalls": [
+                  "Mechaniczne dodawanie wszystkich convertibles bez sprawdzenia, czy zwiększają EPS"
+                ],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 3, Reading 'Analyzing Income Statements'",
+                  "Schweser SchweserNotes Book 3, Study Sessions 6-8",
+                  "Mark Meldrum CFA L1 — Financial Statement Analysis videos"
+                ],
+                "tags": [
+                  "concept"
+                ]
+              },
+              "children": []
+            }
+          ]
+        },
+        {
+          "id": "cfa040205-0000-4000-8000-000000000000",
+          "title": "Common-size income statement and comprehensive income",
+          "status": "not-started",
+          "type": "plan",
+          "notes": "# Common-size income statement and comprehensive income\n\nCommon-size analysis IS, OCI i comprehensive income.\n",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "section_index": "05"
+          },
+          "children": [
+            {
+              "id": "cfa040205-0001-4000-8000-000000000000",
+              "title": "Common-size income statement",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# Common-size income statement\n\n**LOS:** LOS 2.f\n**Difficulty:** 1 · **Estimated:** 0.25h\n\n## Opis\nKażda pozycja IS jako % przychodów — pozwala porównywać firmy o różnej skali i analizować trendy marż.\n\n## Formuły / kluczowe relacje\n- Each line item / Revenue\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Mylenie horizontal (% change YoY) z vertical (% of revenue)\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 3, Reading 'Analyzing Income Statements'\n- Schweser SchweserNotes Book 3, Study Sessions 6-8\n- Mark Meldrum CFA L1 — Financial Statement Analysis videos\n",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": [
+                  "2.f"
+                ],
+                "difficulty": 1,
+                "estimated_hours": 0.25,
+                "prerequisites": [],
+                "formulas": [
+                  "Each line item / Revenue"
+                ],
+                "common_pitfalls": [
+                  "Mylenie horizontal (% change YoY) z vertical (% of revenue)"
+                ],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 3, Reading 'Analyzing Income Statements'",
+                  "Schweser SchweserNotes Book 3, Study Sessions 6-8",
+                  "Mark Meldrum CFA L1 — Financial Statement Analysis videos"
+                ],
+                "tags": [
+                  "analysis"
+                ]
+              },
+              "children": []
+            },
+            {
+              "id": "cfa040205-0002-4000-8000-000000000000",
+              "title": "Comprehensive income vs net income",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# Comprehensive income vs net income\n\n**LOS:** LOS 2.g\n**Difficulty:** 2 · **Estimated:** 0.25h\n\n## Opis\nNet income + OCI = comprehensive income. Pełen obraz zmian w equity z wyłączeniem transakcji z właścicielami.\n\n## Formuły / kluczowe relacje\n- Comprehensive income = Net income + Other comprehensive income (OCI)\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Pomijanie OCI przy ROE — comprehensive equity może istotnie różnić się od retained earnings\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 3, Reading 'Analyzing Income Statements'\n- Schweser SchweserNotes Book 3, Study Sessions 6-8\n- Mark Meldrum CFA L1 — Financial Statement Analysis videos\n",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": [
+                  "2.g"
+                ],
+                "difficulty": 2,
+                "estimated_hours": 0.25,
+                "prerequisites": [],
+                "formulas": [
+                  "Comprehensive income = Net income + Other comprehensive income (OCI)"
+                ],
+                "common_pitfalls": [
+                  "Pomijanie OCI przy ROE — comprehensive equity może istotnie różnić się od retained earnings"
+                ],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 3, Reading 'Analyzing Income Statements'",
+                  "Schweser SchweserNotes Book 3, Study Sessions 6-8",
+                  "Mark Meldrum CFA L1 — Financial Statement Analysis videos"
+                ],
+                "tags": [
+                  "concept"
+                ]
+              },
+              "children": []
+            },
+            {
+              "id": "cfa040205-0003-4000-8000-000000000000",
+              "title": "OCI components",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# OCI components\n\n**LOS:** LOS 2.g\n**Difficulty:** 2 · **Estimated:** 0.25h\n\n## Opis\nOCI: foreign currency translation, cash flow hedge gains/losses, gains/losses on debt securities at FVOCI, defined benefit pension remeasurements, IFRS revaluation surplus.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Mylenie 'recyclable' (FX, hedging) z 'non-recyclable' (revaluation, pension remeasurements)\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 3, Reading 'Analyzing Income Statements'\n- Schweser SchweserNotes Book 3, Study Sessions 6-8\n- Mark Meldrum CFA L1 — Financial Statement Analysis videos\n",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": [
+                  "2.g"
+                ],
+                "difficulty": 2,
+                "estimated_hours": 0.25,
+                "prerequisites": [],
+                "formulas": [],
+                "common_pitfalls": [
+                  "Mylenie 'recyclable' (FX, hedging) z 'non-recyclable' (revaluation, pension remeasurements)"
+                ],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 3, Reading 'Analyzing Income Statements'",
+                  "Schweser SchweserNotes Book 3, Study Sessions 6-8",
+                  "Mark Meldrum CFA L1 — Financial Statement Analysis videos"
+                ],
+                "tags": [
+                  "concept",
+                  "standard"
+                ]
+              },
+              "children": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "cfa040300-0000-4000-8000-000000000000",
+      "title": "Analyzing Balance Sheets",
+      "status": "not-started",
+      "type": "phase",
+      "notes": "# Analyzing Balance Sheets\n\nAnaliza bilansu: klasyfikacja aktywów/pasywów, wycena, equity, common-size BS, ratios bilansowe.\n\n**Learning Modules:** 1 · **Egzamin weight (topic):** 12.5%\n",
+      "createdAt": "2026-05-06T00:00:00Z",
+      "updatedAt": "2026-05-06T00:00:00Z",
+      "metadata": {
+        "lm_index": "03",
+        "lm_name_canonical": "Analyzing Balance Sheets",
+        "los_count": 6,
+        "topic": "Financial Statement Analysis"
+      },
+      "children": [
+        {
+          "id": "cfa040301-0000-4000-8000-000000000000",
+          "title": "Asset classification and valuation",
+          "status": "not-started",
+          "type": "plan",
+          "notes": "# Asset classification and valuation\n\nKlasyfikacja current vs non-current i metody wyceny aktywów.\n",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "section_index": "01"
+          },
+          "children": [
+            {
+              "id": "cfa040301-0001-4000-8000-000000000000",
+              "title": "Current vs non-current asset classification",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# Current vs non-current asset classification\n\n**LOS:** LOS 3.a\n**Difficulty:** 1 · **Estimated:** 0.25h\n\n## Opis\nCurrent asset: oczekiwany do realizacji/konsumpcji w cyklu operacyjnym lub 12 miesięcy. Pozostałe — non-current.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Mylenie kryterium 12 months z operating cycle — używamy dłuższego z dwóch\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 3, Reading 'Analyzing Balance Sheets'\n- Schweser SchweserNotes Book 3, Study Sessions 6-8\n- Mark Meldrum CFA L1 — Financial Statement Analysis videos\n",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": [
+                  "3.a"
+                ],
+                "difficulty": 1,
+                "estimated_hours": 0.25,
+                "prerequisites": [],
+                "formulas": [],
+                "common_pitfalls": [
+                  "Mylenie kryterium 12 months z operating cycle — używamy dłuższego z dwóch"
+                ],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 3, Reading 'Analyzing Balance Sheets'",
+                  "Schweser SchweserNotes Book 3, Study Sessions 6-8",
+                  "Mark Meldrum CFA L1 — Financial Statement Analysis videos"
+                ],
+                "tags": [
+                  "concept"
+                ]
+              },
+              "children": []
+            },
+            {
+              "id": "cfa040301-0002-4000-8000-000000000000",
+              "title": "Asset valuation — historical cost",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# Asset valuation — historical cost\n\n**LOS:** LOS 3.b\n**Difficulty:** 2 · **Estimated:** 0.25h\n\n## Opis\nHistorical cost = cena nabycia plus koszty doprowadzenia do użytku. Default dla PP&E i intangibles z określonym życiem (US GAAP), początkowo również w IFRS.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Założenie, że historical cost = obecna wartość rynkowa\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 3, Reading 'Analyzing Balance Sheets'\n- Schweser SchweserNotes Book 3, Study Sessions 6-8\n- Mark Meldrum CFA L1 — Financial Statement Analysis videos\n",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": [
+                  "3.b"
+                ],
+                "difficulty": 2,
+                "estimated_hours": 0.25,
+                "prerequisites": [],
+                "formulas": [],
+                "common_pitfalls": [
+                  "Założenie, że historical cost = obecna wartość rynkowa"
+                ],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 3, Reading 'Analyzing Balance Sheets'",
+                  "Schweser SchweserNotes Book 3, Study Sessions 6-8",
+                  "Mark Meldrum CFA L1 — Financial Statement Analysis videos"
+                ],
+                "tags": [
+                  "concept"
+                ]
+              },
+              "children": []
+            },
+            {
+              "id": "cfa040301-0003-4000-8000-000000000000",
+              "title": "Asset valuation — fair value",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# Asset valuation — fair value\n\n**LOS:** LOS 3.b\n**Difficulty:** 2 · **Estimated:** 0.25h\n\n## Opis\nFair value (IFRS 13 / ASC 820): cena, którą otrzymano by za sprzedaż aktywa w transakcji rynkowej między uczestnikami rynku. Hierarchia poziomów 1/2/3.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Mylenie fair value z replacement cost\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 3, Reading 'Analyzing Balance Sheets'\n- Schweser SchweserNotes Book 3, Study Sessions 6-8\n- Mark Meldrum CFA L1 — Financial Statement Analysis videos\n",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": [
+                  "3.b"
+                ],
+                "difficulty": 2,
+                "estimated_hours": 0.25,
+                "prerequisites": [],
+                "formulas": [],
+                "common_pitfalls": [
+                  "Mylenie fair value z replacement cost"
+                ],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 3, Reading 'Analyzing Balance Sheets'",
+                  "Schweser SchweserNotes Book 3, Study Sessions 6-8",
+                  "Mark Meldrum CFA L1 — Financial Statement Analysis videos"
+                ],
+                "tags": [
+                  "concept",
+                  "standard"
+                ]
+              },
+              "children": []
+            },
+            {
+              "id": "cfa040301-0004-4000-8000-000000000000",
+              "title": "Asset valuation — present value",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# Asset valuation — present value\n\n**LOS:** LOS 3.b\n**Difficulty:** 2 · **Estimated:** 0.25h\n\n## Opis\nWycena oparta na zdyskontowanych przyszłych przepływach pieniężnych. Stosowana m.in. do leasingu, zobowiązań długoterminowych, aktywów emerytalnych.\n\n## Formuły / kluczowe relacje\n- PV = future cash flows / (1 + r)^n\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Pomijanie wpływu zmian stóp dyskontowych na wartość bieżącą\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 3, Reading 'Analyzing Balance Sheets'\n- Schweser SchweserNotes Book 3, Study Sessions 6-8\n- Mark Meldrum CFA L1 — Financial Statement Analysis videos\n",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": [
+                  "3.b"
+                ],
+                "difficulty": 2,
+                "estimated_hours": 0.25,
+                "prerequisites": [],
+                "formulas": [
+                  "PV = future cash flows / (1 + r)^n"
+                ],
+                "common_pitfalls": [
+                  "Pomijanie wpływu zmian stóp dyskontowych na wartość bieżącą"
+                ],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 3, Reading 'Analyzing Balance Sheets'",
+                  "Schweser SchweserNotes Book 3, Study Sessions 6-8",
+                  "Mark Meldrum CFA L1 — Financial Statement Analysis videos"
+                ],
+                "tags": [
+                  "concept"
+                ]
+              },
+              "children": []
+            }
+          ]
+        },
+        {
+          "id": "cfa040302-0000-4000-8000-000000000000",
+          "title": "Liability classification and equity",
+          "status": "not-started",
+          "type": "plan",
+          "notes": "# Liability classification and equity\n\nKlasyfikacja zobowiązań i komponenty equity.\n",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "section_index": "02"
+          },
+          "children": [
+            {
+              "id": "cfa040302-0001-4000-8000-000000000000",
+              "title": "Current vs non-current liability classification",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# Current vs non-current liability classification\n\n**LOS:** LOS 3.a\n**Difficulty:** 1 · **Estimated:** 0.25h\n\n## Opis\nCurrent liability: oczekiwana do uregulowania w cyklu operacyjnym lub 12 miesięcy. Pozostałe — non-current.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Pomijanie clauses przyspieszających wymagalność (covenant breach) — może przeklasyfikować non-current na current\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 3, Reading 'Analyzing Balance Sheets'\n- Schweser SchweserNotes Book 3, Study Sessions 6-8\n- Mark Meldrum CFA L1 — Financial Statement Analysis videos\n",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": [
+                  "3.a"
+                ],
+                "difficulty": 1,
+                "estimated_hours": 0.25,
+                "prerequisites": [],
+                "formulas": [],
+                "common_pitfalls": [
+                  "Pomijanie clauses przyspieszających wymagalność (covenant breach) — może przeklasyfikować non-current na current"
+                ],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 3, Reading 'Analyzing Balance Sheets'",
+                  "Schweser SchweserNotes Book 3, Study Sessions 6-8",
+                  "Mark Meldrum CFA L1 — Financial Statement Analysis videos"
+                ],
+                "tags": [
+                  "concept"
+                ]
+              },
+              "children": []
+            },
+            {
+              "id": "cfa040302-0002-4000-8000-000000000000",
+              "title": "Equity components",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# Equity components\n\n**LOS:** LOS 3.c\n**Difficulty:** 2 · **Estimated:** 0.5h\n\n## Opis\nKomponenty: contributed capital (common, preferred, APIC), retained earnings, treasury stock (kontra), accumulated OCI (AOCI), non-controlling interest (jeśli skonsolidowany).\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Mylenie treasury stock (kontra-equity) z retained earnings\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 3, Reading 'Analyzing Balance Sheets'\n- Schweser SchweserNotes Book 3, Study Sessions 6-8\n- Mark Meldrum CFA L1 — Financial Statement Analysis videos\n",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": [
+                  "3.c"
+                ],
+                "difficulty": 2,
+                "estimated_hours": 0.5,
+                "prerequisites": [],
+                "formulas": [],
+                "common_pitfalls": [
+                  "Mylenie treasury stock (kontra-equity) z retained earnings"
+                ],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 3, Reading 'Analyzing Balance Sheets'",
+                  "Schweser SchweserNotes Book 3, Study Sessions 6-8",
+                  "Mark Meldrum CFA L1 — Financial Statement Analysis videos"
+                ],
+                "tags": [
+                  "concept"
+                ]
+              },
+              "children": []
+            },
+            {
+              "id": "cfa040302-0003-4000-8000-000000000000",
+              "title": "Common-size balance sheet",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# Common-size balance sheet\n\n**LOS:** LOS 3.d\n**Difficulty:** 1 · **Estimated:** 0.25h\n\n## Opis\nKażda pozycja BS jako % total assets — ułatwia porównanie struktury aktywów/pasywów między firmami i okresami.\n\n## Formuły / kluczowe relacje\n- Each line item / Total assets\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Mylenie horizontal z vertical analysis BS\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 3, Reading 'Analyzing Balance Sheets'\n- Schweser SchweserNotes Book 3, Study Sessions 6-8\n- Mark Meldrum CFA L1 — Financial Statement Analysis videos\n",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": [
+                  "3.d"
+                ],
+                "difficulty": 1,
+                "estimated_hours": 0.25,
+                "prerequisites": [],
+                "formulas": [
+                  "Each line item / Total assets"
+                ],
+                "common_pitfalls": [
+                  "Mylenie horizontal z vertical analysis BS"
+                ],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 3, Reading 'Analyzing Balance Sheets'",
+                  "Schweser SchweserNotes Book 3, Study Sessions 6-8",
+                  "Mark Meldrum CFA L1 — Financial Statement Analysis videos"
+                ],
+                "tags": [
+                  "analysis"
+                ]
+              },
+              "children": []
+            }
+          ]
+        },
+        {
+          "id": "cfa040303-0000-4000-8000-000000000000",
+          "title": "Balance sheet ratios",
+          "status": "not-started",
+          "type": "plan",
+          "notes": "# Balance sheet ratios\n\nGłówne ratios liczenione bezpośrednio z BS.\n",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "section_index": "03"
+          },
+          "children": [
+            {
+              "id": "cfa040303-0001-4000-8000-000000000000",
+              "title": "Liquidity ratios from BS — overview",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# Liquidity ratios from BS — overview\n\n**LOS:** LOS 3.d\n**Difficulty:** 1 · **Estimated:** 0.25h\n\n## Opis\nWskaźniki liczone z BS: current ratio, quick ratio, cash ratio. Pełna analiza w LM Financial Analysis Techniques.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Założenie wysokiej liquidity bez analizy struktury current assets — inventory może być slow-moving\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 3, Reading 'Analyzing Balance Sheets'\n- Schweser SchweserNotes Book 3, Study Sessions 6-8\n- Mark Meldrum CFA L1 — Financial Statement Analysis videos\n",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": [
+                  "3.d"
+                ],
+                "difficulty": 1,
+                "estimated_hours": 0.25,
+                "prerequisites": [],
+                "formulas": [],
+                "common_pitfalls": [
+                  "Założenie wysokiej liquidity bez analizy struktury current assets — inventory może być slow-moving"
+                ],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 3, Reading 'Analyzing Balance Sheets'",
+                  "Schweser SchweserNotes Book 3, Study Sessions 6-8",
+                  "Mark Meldrum CFA L1 — Financial Statement Analysis videos"
+                ],
+                "tags": [
+                  "ratio"
+                ]
+              },
+              "children": []
+            },
+            {
+              "id": "cfa040303-0002-4000-8000-000000000000",
+              "title": "Solvency ratios from BS — overview",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# Solvency ratios from BS — overview\n\n**LOS:** LOS 3.d\n**Difficulty:** 1 · **Estimated:** 0.25h\n\n## Opis\nWskaźniki: debt-to-assets, debt-to-equity, financial leverage. Wszystkie z numerami z BS.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Pomijanie off-balance-sheet financing przy ocenie leverage\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 3, Reading 'Analyzing Balance Sheets'\n- Schweser SchweserNotes Book 3, Study Sessions 6-8\n- Mark Meldrum CFA L1 — Financial Statement Analysis videos\n",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": [
+                  "3.d"
+                ],
+                "difficulty": 1,
+                "estimated_hours": 0.25,
+                "prerequisites": [],
+                "formulas": [],
+                "common_pitfalls": [
+                  "Pomijanie off-balance-sheet financing przy ocenie leverage"
+                ],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 3, Reading 'Analyzing Balance Sheets'",
+                  "Schweser SchweserNotes Book 3, Study Sessions 6-8",
+                  "Mark Meldrum CFA L1 — Financial Statement Analysis videos"
+                ],
+                "tags": [
+                  "ratio"
+                ]
+              },
+              "children": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "cfa040400-0000-4000-8000-000000000000",
+      "title": "Analyzing Statements of Cash Flows I",
+      "status": "not-started",
+      "type": "phase",
+      "notes": "# Analyzing Statements of Cash Flows I\n\nKonstrukcja statement of cash flows: sekcje operacyjna/inwestycyjna/finansowa, metody direct i indirect, IFRS vs US GAAP.\n\n**Learning Modules:** 1 · **Egzamin weight (topic):** 12.5%\n",
+      "createdAt": "2026-05-06T00:00:00Z",
+      "updatedAt": "2026-05-06T00:00:00Z",
+      "metadata": {
+        "lm_index": "04",
+        "lm_name_canonical": "Analyzing Statements of Cash Flows I",
+        "los_count": 6,
+        "topic": "Financial Statement Analysis"
+      },
+      "children": [
+        {
+          "id": "cfa040401-0000-4000-8000-000000000000",
+          "title": "Cash flow sections",
+          "status": "not-started",
+          "type": "plan",
+          "notes": "# Cash flow sections\n\nTrzy sekcje statement of cash flows i ich zawartość.\n",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "section_index": "01"
+          },
+          "children": [
+            {
+              "id": "cfa040401-0001-4000-8000-000000000000",
+              "title": "Operating section (CFO)",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# Operating section (CFO)\n\n**LOS:** LOS 4.a\n**Difficulty:** 2 · **Estimated:** 0.25h\n\n## Opis\nCFO: przepływy z core działalności (sprzedaż, dostawy, płace, podatki). Najważniejsza sekcja dla oceny zdolności generowania gotówki.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Mylenie operating cash flow z net income\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 3, Reading 'Analyzing Statements of Cash Flows I'\n- Schweser SchweserNotes Book 3, Study Sessions 6-8\n- Mark Meldrum CFA L1 — Financial Statement Analysis videos\n",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": [
+                  "4.a"
+                ],
+                "difficulty": 2,
+                "estimated_hours": 0.25,
+                "prerequisites": [],
+                "formulas": [],
+                "common_pitfalls": [
+                  "Mylenie operating cash flow z net income"
+                ],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 3, Reading 'Analyzing Statements of Cash Flows I'",
+                  "Schweser SchweserNotes Book 3, Study Sessions 6-8",
+                  "Mark Meldrum CFA L1 — Financial Statement Analysis videos"
+                ],
+                "tags": [
+                  "concept"
+                ]
+              },
+              "children": []
+            },
+            {
+              "id": "cfa040401-0002-4000-8000-000000000000",
+              "title": "Investing section (CFI)",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# Investing section (CFI)\n\n**LOS:** LOS 4.a\n**Difficulty:** 2 · **Estimated:** 0.25h\n\n## Opis\nCFI: nabycie/sprzedaż long-lived assets (PP&E, intangibles), inwestycji w innych firmach, papierów (poza tradable). Capital expenditure (CapEx) tutaj.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Włączanie zakupów inventory do CFI — to operating\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 3, Reading 'Analyzing Statements of Cash Flows I'\n- Schweser SchweserNotes Book 3, Study Sessions 6-8\n- Mark Meldrum CFA L1 — Financial Statement Analysis videos\n",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": [
+                  "4.a"
+                ],
+                "difficulty": 2,
+                "estimated_hours": 0.25,
+                "prerequisites": [],
+                "formulas": [],
+                "common_pitfalls": [
+                  "Włączanie zakupów inventory do CFI — to operating"
+                ],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 3, Reading 'Analyzing Statements of Cash Flows I'",
+                  "Schweser SchweserNotes Book 3, Study Sessions 6-8",
+                  "Mark Meldrum CFA L1 — Financial Statement Analysis videos"
+                ],
+                "tags": [
+                  "concept"
+                ]
+              },
+              "children": []
+            },
+            {
+              "id": "cfa040401-0003-4000-8000-000000000000",
+              "title": "Financing section (CFF)",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# Financing section (CFF)\n\n**LOS:** LOS 4.a\n**Difficulty:** 2 · **Estimated:** 0.25h\n\n## Opis\nCFF: emisja/spłata długu, emisja/skup akcji, dywidendy wypłacone. Pokazuje, jak firma pozyskuje i zwraca kapitał.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Mylenie odsetek zapłaconych z financing — w US GAAP to CFO; IFRS daje wybór\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 3, Reading 'Analyzing Statements of Cash Flows I'\n- Schweser SchweserNotes Book 3, Study Sessions 6-8\n- Mark Meldrum CFA L1 — Financial Statement Analysis videos\n",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": [
+                  "4.a"
+                ],
+                "difficulty": 2,
+                "estimated_hours": 0.25,
+                "prerequisites": [],
+                "formulas": [],
+                "common_pitfalls": [
+                  "Mylenie odsetek zapłaconych z financing — w US GAAP to CFO; IFRS daje wybór"
+                ],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 3, Reading 'Analyzing Statements of Cash Flows I'",
+                  "Schweser SchweserNotes Book 3, Study Sessions 6-8",
+                  "Mark Meldrum CFA L1 — Financial Statement Analysis videos"
+                ],
+                "tags": [
+                  "concept"
+                ]
+              },
+              "children": []
+            }
+          ]
+        },
+        {
+          "id": "cfa040402-0000-4000-8000-000000000000",
+          "title": "Direct vs indirect method",
+          "status": "not-started",
+          "type": "plan",
+          "notes": "# Direct vs indirect method\n\nDwie metody prezentacji CFO.\n",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "section_index": "02"
+          },
+          "children": [
+            {
+              "id": "cfa040402-0001-4000-8000-000000000000",
+              "title": "Direct method",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# Direct method\n\n**LOS:** LOS 4.b\n**Difficulty:** 2 · **Estimated:** 0.5h\n\n## Opis\nBezpośrednio listuje cash inflows/outflows operacyjne (cash from customers, cash to suppliers). Preferowane przez analyst — bardziej informacyjne. IFRS i US GAAP zachęcają, ale rzadko stosowane.\n\n## Formuły / kluczowe relacje\n- Cash collected from customers = Revenue − ΔAR\n- Cash paid to suppliers = COGS + ΔInventory − ΔAP\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Mylenie revenue z cash collected from customers\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 3, Reading 'Analyzing Statements of Cash Flows I'\n- Schweser SchweserNotes Book 3, Study Sessions 6-8\n- Mark Meldrum CFA L1 — Financial Statement Analysis videos\n",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": [
+                  "4.b"
+                ],
+                "difficulty": 2,
+                "estimated_hours": 0.5,
+                "prerequisites": [],
+                "formulas": [
+                  "Cash collected from customers = Revenue − ΔAR",
+                  "Cash paid to suppliers = COGS + ΔInventory − ΔAP"
+                ],
+                "common_pitfalls": [
+                  "Mylenie revenue z cash collected from customers"
+                ],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 3, Reading 'Analyzing Statements of Cash Flows I'",
+                  "Schweser SchweserNotes Book 3, Study Sessions 6-8",
+                  "Mark Meldrum CFA L1 — Financial Statement Analysis videos"
+                ],
+                "tags": [
+                  "concept"
+                ]
+              },
+              "children": []
+            },
+            {
+              "id": "cfa040402-0002-4000-8000-000000000000",
+              "title": "Indirect method",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# Indirect method\n\n**LOS:** LOS 4.b\n**Difficulty:** 2 · **Estimated:** 0.5h\n\n## Opis\nZaczyna od net income i koryguje o non-cash items (D&A, gain/loss z aktywów) oraz zmiany w working capital. Najczęściej stosowana praktyka.\n\n## Formuły / kluczowe relacje\n- CFO = NI + non-cash charges (D&A) − gains + losses + changes in working capital (− ΔAR − ΔInv + ΔAP itp.)\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Niewłaściwy znak korekty — ΔAR↑ to use of cash, ΔAP↑ to source\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 3, Reading 'Analyzing Statements of Cash Flows I'\n- Schweser SchweserNotes Book 3, Study Sessions 6-8\n- Mark Meldrum CFA L1 — Financial Statement Analysis videos\n",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": [
+                  "4.b"
+                ],
+                "difficulty": 2,
+                "estimated_hours": 0.5,
+                "prerequisites": [],
+                "formulas": [
+                  "CFO = NI + non-cash charges (D&A) − gains + losses + changes in working capital (− ΔAR − ΔInv + ΔAP itp.)"
+                ],
+                "common_pitfalls": [
+                  "Niewłaściwy znak korekty — ΔAR↑ to use of cash, ΔAP↑ to source"
+                ],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 3, Reading 'Analyzing Statements of Cash Flows I'",
+                  "Schweser SchweserNotes Book 3, Study Sessions 6-8",
+                  "Mark Meldrum CFA L1 — Financial Statement Analysis videos"
+                ],
+                "tags": [
+                  "concept"
+                ]
+              },
+              "children": []
+            },
+            {
+              "id": "cfa040402-0003-4000-8000-000000000000",
+              "title": "Conversion from indirect to direct method",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# Conversion from indirect to direct method\n\n**LOS:** LOS 4.b\n**Difficulty:** 3 · **Estimated:** 0.5h\n\n## Opis\nKonwersja wymaga rozłożenia każdej linii IS na cash component przez korekty z working capital.\n\n## Formuły / kluczowe relacje\n- Cash collected from customers = Sales − ΔAR + ΔUnearned revenue\n- Cash paid to suppliers = −COGS − ΔInventory + ΔAP\n- Cash paid for SG&A = −SG&A + ΔPrepaid expenses + ΔAccrued liabilities\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Mylenie roli zmian working capital przy konwersji — działają w obu kierunkach\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 3, Reading 'Analyzing Statements of Cash Flows I'\n- Schweser SchweserNotes Book 3, Study Sessions 6-8\n- Mark Meldrum CFA L1 — Financial Statement Analysis videos\n",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": [
+                  "4.b"
+                ],
+                "difficulty": 3,
+                "estimated_hours": 0.5,
+                "prerequisites": [],
+                "formulas": [
+                  "Cash collected from customers = Sales − ΔAR + ΔUnearned revenue",
+                  "Cash paid to suppliers = −COGS − ΔInventory + ΔAP",
+                  "Cash paid for SG&A = −SG&A + ΔPrepaid expenses + ΔAccrued liabilities"
+                ],
+                "common_pitfalls": [
+                  "Mylenie roli zmian working capital przy konwersji — działają w obu kierunkach"
+                ],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 3, Reading 'Analyzing Statements of Cash Flows I'",
+                  "Schweser SchweserNotes Book 3, Study Sessions 6-8",
+                  "Mark Meldrum CFA L1 — Financial Statement Analysis videos"
+                ],
+                "tags": [
+                  "formula"
+                ]
+              },
+              "children": []
+            }
+          ]
+        },
+        {
+          "id": "cfa040403-0000-4000-8000-000000000000",
+          "title": "IFRS vs US GAAP — interest and dividends classification",
+          "status": "not-started",
+          "type": "plan",
+          "notes": "# IFRS vs US GAAP — interest and dividends classification\n\nKażda para interest/dividend paid/received jako oddzielny leaf IFRS-vs-GAAP difference.\n",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "section_index": "03"
+          },
+          "children": [
+            {
+              "id": "cfa040403-0001-4000-8000-000000000000",
+              "title": "Interest paid — IFRS vs US GAAP classification",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# Interest paid — IFRS vs US GAAP classification\n\n**LOS:** LOS 4.c\n**Difficulty:** 2 · **Estimated:** 0.25h\n\n## Opis\nUS GAAP: odsetki zapłacone w CFO. IFRS: wybór CFO lub CFF; preferencja — gdy uznaje się za koszt finansowania, w CFF.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Założenie, że klasyfikacja jest taka sama — IFRS daje wybór CFO/CFF, US GAAP wymaga CFO\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 3, Reading 'Analyzing Statements of Cash Flows I'\n- Schweser SchweserNotes Book 3, Study Sessions 6-8\n- Mark Meldrum CFA L1 — Financial Statement Analysis videos\n",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": [
+                  "4.c"
+                ],
+                "difficulty": 2,
+                "estimated_hours": 0.25,
+                "prerequisites": [],
+                "formulas": [],
+                "common_pitfalls": [
+                  "Założenie, że klasyfikacja jest taka sama — IFRS daje wybór CFO/CFF, US GAAP wymaga CFO"
+                ],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 3, Reading 'Analyzing Statements of Cash Flows I'",
+                  "Schweser SchweserNotes Book 3, Study Sessions 6-8",
+                  "Mark Meldrum CFA L1 — Financial Statement Analysis videos"
+                ],
+                "tags": [
+                  "ifrs-gaap-diff"
+                ]
+              },
+              "children": []
+            },
+            {
+              "id": "cfa040403-0002-4000-8000-000000000000",
+              "title": "Interest received — IFRS vs US GAAP classification",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# Interest received — IFRS vs US GAAP classification\n\n**LOS:** LOS 4.c\n**Difficulty:** 2 · **Estimated:** 0.25h\n\n## Opis\nUS GAAP: odsetki otrzymane w CFO. IFRS: wybór CFO lub CFI; często CFI gdy są zwrotem z inwestycji.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Symetryczne traktowanie z paid — w US GAAP też w CFO, ale logika ekonomiczna różna\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 3, Reading 'Analyzing Statements of Cash Flows I'\n- Schweser SchweserNotes Book 3, Study Sessions 6-8\n- Mark Meldrum CFA L1 — Financial Statement Analysis videos\n",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": [
+                  "4.c"
+                ],
+                "difficulty": 2,
+                "estimated_hours": 0.25,
+                "prerequisites": [],
+                "formulas": [],
+                "common_pitfalls": [
+                  "Symetryczne traktowanie z paid — w US GAAP też w CFO, ale logika ekonomiczna różna"
+                ],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 3, Reading 'Analyzing Statements of Cash Flows I'",
+                  "Schweser SchweserNotes Book 3, Study Sessions 6-8",
+                  "Mark Meldrum CFA L1 — Financial Statement Analysis videos"
+                ],
+                "tags": [
+                  "ifrs-gaap-diff"
+                ]
+              },
+              "children": []
+            },
+            {
+              "id": "cfa040403-0003-4000-8000-000000000000",
+              "title": "Dividends paid — IFRS vs US GAAP classification",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# Dividends paid — IFRS vs US GAAP classification\n\n**LOS:** LOS 4.c\n**Difficulty:** 2 · **Estimated:** 0.25h\n\n## Opis\nUS GAAP: dywidendy wypłacone w CFF. IFRS: wybór CFO lub CFF; CFF najczęściej.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Pomijanie tej różnicy — może istotnie zmienić CFO przy porównaniach cross-border\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 3, Reading 'Analyzing Statements of Cash Flows I'\n- Schweser SchweserNotes Book 3, Study Sessions 6-8\n- Mark Meldrum CFA L1 — Financial Statement Analysis videos\n",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": [
+                  "4.c"
+                ],
+                "difficulty": 2,
+                "estimated_hours": 0.25,
+                "prerequisites": [],
+                "formulas": [],
+                "common_pitfalls": [
+                  "Pomijanie tej różnicy — może istotnie zmienić CFO przy porównaniach cross-border"
+                ],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 3, Reading 'Analyzing Statements of Cash Flows I'",
+                  "Schweser SchweserNotes Book 3, Study Sessions 6-8",
+                  "Mark Meldrum CFA L1 — Financial Statement Analysis videos"
+                ],
+                "tags": [
+                  "ifrs-gaap-diff"
+                ]
+              },
+              "children": []
+            },
+            {
+              "id": "cfa040403-0004-4000-8000-000000000000",
+              "title": "Dividends received — IFRS vs US GAAP classification",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# Dividends received — IFRS vs US GAAP classification\n\n**LOS:** LOS 4.c\n**Difficulty:** 2 · **Estimated:** 0.25h\n\n## Opis\nUS GAAP: dywidendy otrzymane w CFO. IFRS: wybór CFO lub CFI.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Mylenie z dividends paid — kierunki ekonomiczne odwrotne\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 3, Reading 'Analyzing Statements of Cash Flows I'\n- Schweser SchweserNotes Book 3, Study Sessions 6-8\n- Mark Meldrum CFA L1 — Financial Statement Analysis videos\n",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": [
+                  "4.c"
+                ],
+                "difficulty": 2,
+                "estimated_hours": 0.25,
+                "prerequisites": [],
+                "formulas": [],
+                "common_pitfalls": [
+                  "Mylenie z dividends paid — kierunki ekonomiczne odwrotne"
+                ],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 3, Reading 'Analyzing Statements of Cash Flows I'",
+                  "Schweser SchweserNotes Book 3, Study Sessions 6-8",
+                  "Mark Meldrum CFA L1 — Financial Statement Analysis videos"
+                ],
+                "tags": [
+                  "ifrs-gaap-diff"
+                ]
+              },
+              "children": []
+            },
+            {
+              "id": "cfa040403-0005-4000-8000-000000000000",
+              "title": "Taxes paid — IFRS vs US GAAP classification",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# Taxes paid — IFRS vs US GAAP classification\n\n**LOS:** LOS 4.c\n**Difficulty:** 2 · **Estimated:** 0.25h\n\n## Opis\nUS GAAP: zawsze CFO. IFRS: zazwyczaj CFO; ale jeśli można specifically zidentyfikować z investing/financing — wtedy tam.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Pomijanie alternative klasyfikacji w IFRS\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 3, Reading 'Analyzing Statements of Cash Flows I'\n- Schweser SchweserNotes Book 3, Study Sessions 6-8\n- Mark Meldrum CFA L1 — Financial Statement Analysis videos\n",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": [
+                  "4.c"
+                ],
+                "difficulty": 2,
+                "estimated_hours": 0.25,
+                "prerequisites": [],
+                "formulas": [],
+                "common_pitfalls": [
+                  "Pomijanie alternative klasyfikacji w IFRS"
+                ],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 3, Reading 'Analyzing Statements of Cash Flows I'",
+                  "Schweser SchweserNotes Book 3, Study Sessions 6-8",
+                  "Mark Meldrum CFA L1 — Financial Statement Analysis videos"
+                ],
+                "tags": [
+                  "ifrs-gaap-diff"
+                ]
+              },
+              "children": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "cfa040500-0000-4000-8000-000000000000",
+      "title": "Analyzing Statements of Cash Flows II",
+      "status": "not-started",
+      "type": "phase",
+      "notes": "# Analyzing Statements of Cash Flows II\n\nAnaliza CF: free cash flow (FCFF, FCFE), cash flow ratios, common-size CF.\n\n**Learning Modules:** 1 · **Egzamin weight (topic):** 12.5%\n",
+      "createdAt": "2026-05-06T00:00:00Z",
+      "updatedAt": "2026-05-06T00:00:00Z",
+      "metadata": {
+        "lm_index": "05",
+        "lm_name_canonical": "Analyzing Statements of Cash Flows II",
+        "los_count": 5,
+        "topic": "Financial Statement Analysis"
+      },
+      "children": [
+        {
+          "id": "cfa040501-0000-4000-8000-000000000000",
+          "title": "Free cash flow",
+          "status": "not-started",
+          "type": "plan",
+          "notes": "# Free cash flow\n\nFCFF i FCFE liczone z CFO.\n",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "section_index": "01"
+          },
+          "children": [
+            {
+              "id": "cfa040501-0001-4000-8000-000000000000",
+              "title": "FCFF calculation from CFO",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# FCFF calculation from CFO\n\n**LOS:** LOS 5.a\n**Difficulty:** 3 · **Estimated:** 0.5h\n\n## Opis\nFree cash flow to firm: gotówka dostępna dla wszystkich kapitałodawców (debt + equity) po pokryciu CapEx i potrzeb operacyjnych. Punkt wyjścia DCF.\n\n## Formuły / kluczowe relacje\n- FCFF = CFO + Interest × (1 − t) − CapEx\n- (jeśli interest jest w CFO, jak w US GAAP)\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Pomijanie tax effect na interest add-back\n- Mylenie FCFF z CFO − CapEx (to nie jest FCFF, jeśli odsetki w CFO)\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 3, Reading 'Analyzing Statements of Cash Flows II'\n- Schweser SchweserNotes Book 3, Study Sessions 6-8\n- Mark Meldrum CFA L1 — Financial Statement Analysis videos\n",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": [
+                  "5.a"
+                ],
+                "difficulty": 3,
+                "estimated_hours": 0.5,
+                "prerequisites": [],
+                "formulas": [
+                  "FCFF = CFO + Interest × (1 − t) − CapEx",
+                  "(jeśli interest jest w CFO, jak w US GAAP)"
+                ],
+                "common_pitfalls": [
+                  "Pomijanie tax effect na interest add-back",
+                  "Mylenie FCFF z CFO − CapEx (to nie jest FCFF, jeśli odsetki w CFO)"
+                ],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 3, Reading 'Analyzing Statements of Cash Flows II'",
+                  "Schweser SchweserNotes Book 3, Study Sessions 6-8",
+                  "Mark Meldrum CFA L1 — Financial Statement Analysis videos"
+                ],
+                "tags": [
+                  "formula",
+                  "valuation"
+                ]
+              },
+              "children": []
+            },
+            {
+              "id": "cfa040501-0002-4000-8000-000000000000",
+              "title": "FCFE calculation from CFO",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# FCFE calculation from CFO\n\n**LOS:** LOS 5.a\n**Difficulty:** 3 · **Estimated:** 0.5h\n\n## Opis\nFree cash flow to equity: gotówka dostępna dla akcjonariuszy po pokryciu CapEx, opłaceniu kredytodawców i emisji/spłacie długu. Wykorzystywane w FCFE valuation model.\n\n## Formuły / kluczowe relacje\n- FCFE = CFO − CapEx + Net borrowing\n- FCFE = FCFF − Interest × (1 − t) + Net borrowing\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Pomijanie net borrowing — istotne źródło FCFE\n- Mylenie FCFE z dywidendami\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 3, Reading 'Analyzing Statements of Cash Flows II'\n- Schweser SchweserNotes Book 3, Study Sessions 6-8\n- Mark Meldrum CFA L1 — Financial Statement Analysis videos\n",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": [
+                  "5.a"
+                ],
+                "difficulty": 3,
+                "estimated_hours": 0.5,
+                "prerequisites": [],
+                "formulas": [
+                  "FCFE = CFO − CapEx + Net borrowing",
+                  "FCFE = FCFF − Interest × (1 − t) + Net borrowing"
+                ],
+                "common_pitfalls": [
+                  "Pomijanie net borrowing — istotne źródło FCFE",
+                  "Mylenie FCFE z dywidendami"
+                ],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 3, Reading 'Analyzing Statements of Cash Flows II'",
+                  "Schweser SchweserNotes Book 3, Study Sessions 6-8",
+                  "Mark Meldrum CFA L1 — Financial Statement Analysis videos"
+                ],
+                "tags": [
+                  "formula",
+                  "valuation"
+                ]
+              },
+              "children": []
+            }
+          ]
+        },
+        {
+          "id": "cfa040502-0000-4000-8000-000000000000",
+          "title": "Cash flow analysis and ratios",
+          "status": "not-started",
+          "type": "plan",
+          "notes": "# Cash flow analysis and ratios\n\nAnaliza CF i kluczowe wskaźniki.\n",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "section_index": "02"
+          },
+          "children": [
+            {
+              "id": "cfa040502-0001-4000-8000-000000000000",
+              "title": "Common-size statement of cash flows",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# Common-size statement of cash flows\n\n**LOS:** LOS 5.b\n**Difficulty:** 2 · **Estimated:** 0.25h\n\n## Opis\nCommon-size CF: każda pozycja jako % revenue lub jako % total inflows/outflows w danej sekcji. Pozwala porównać efektywność konwersji NI na CFO.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Stosowanie revenue jako baza dla wszystkich pozycji — niektóre lepiej do total inflows/outflows\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 3, Reading 'Analyzing Statements of Cash Flows II'\n- Schweser SchweserNotes Book 3, Study Sessions 6-8\n- Mark Meldrum CFA L1 — Financial Statement Analysis videos\n",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": [
+                  "5.b"
+                ],
+                "difficulty": 2,
+                "estimated_hours": 0.25,
+                "prerequisites": [],
+                "formulas": [],
+                "common_pitfalls": [
+                  "Stosowanie revenue jako baza dla wszystkich pozycji — niektóre lepiej do total inflows/outflows"
+                ],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 3, Reading 'Analyzing Statements of Cash Flows II'",
+                  "Schweser SchweserNotes Book 3, Study Sessions 6-8",
+                  "Mark Meldrum CFA L1 — Financial Statement Analysis videos"
+                ],
+                "tags": [
+                  "analysis"
+                ]
+              },
+              "children": []
+            },
+            {
+              "id": "cfa040502-0002-4000-8000-000000000000",
+              "title": "Cash flow ratios — performance",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# Cash flow ratios — performance\n\n**LOS:** LOS 5.b\n**Difficulty:** 2 · **Estimated:** 0.5h\n\n## Opis\nWskaźniki performance oparte na CFO są bardziej odporne na manipulacje niż oparte na NI.\n\n## Formuły / kluczowe relacje\n- Cash flow to revenue = CFO / Net revenue\n- Cash return on assets = CFO / Average total assets\n- Cash return on equity = CFO / Average shareholders equity\n- Cash flow per share = (CFO − Preferred dividends) / Weighted avg common shares\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Mylenie cash flow margin z net margin\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 3, Reading 'Analyzing Statements of Cash Flows II'\n- Schweser SchweserNotes Book 3, Study Sessions 6-8\n- Mark Meldrum CFA L1 — Financial Statement Analysis videos\n",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": [
+                  "5.b"
+                ],
+                "difficulty": 2,
+                "estimated_hours": 0.5,
+                "prerequisites": [],
+                "formulas": [
+                  "Cash flow to revenue = CFO / Net revenue",
+                  "Cash return on assets = CFO / Average total assets",
+                  "Cash return on equity = CFO / Average shareholders equity",
+                  "Cash flow per share = (CFO − Preferred dividends) / Weighted avg common shares"
+                ],
+                "common_pitfalls": [
+                  "Mylenie cash flow margin z net margin"
+                ],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 3, Reading 'Analyzing Statements of Cash Flows II'",
+                  "Schweser SchweserNotes Book 3, Study Sessions 6-8",
+                  "Mark Meldrum CFA L1 — Financial Statement Analysis videos"
+                ],
+                "tags": [
+                  "ratio"
+                ]
+              },
+              "children": []
+            },
+            {
+              "id": "cfa040502-0003-4000-8000-000000000000",
+              "title": "Cash flow ratios — coverage",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# Cash flow ratios — coverage\n\n**LOS:** LOS 5.b\n**Difficulty:** 2 · **Estimated:** 0.5h\n\n## Opis\nCoverage ratios mierzą zdolność CFO do pokrycia zobowiązań. Niski poziom — sygnał ostrzegawczy.\n\n## Formuły / kluczowe relacje\n- Debt coverage = CFO / Total debt\n- Interest coverage (CF) = (CFO + Interest paid + Taxes paid) / Interest paid\n- Reinvestment ratio = CFO / Cash paid for long-term assets\n- Dividend payment ratio (CF) = CFO / Dividends paid\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Pomijanie capex w ocenie wolnej gotówki\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 3, Reading 'Analyzing Statements of Cash Flows II'\n- Schweser SchweserNotes Book 3, Study Sessions 6-8\n- Mark Meldrum CFA L1 — Financial Statement Analysis videos\n",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": [
+                  "5.b"
+                ],
+                "difficulty": 2,
+                "estimated_hours": 0.5,
+                "prerequisites": [],
+                "formulas": [
+                  "Debt coverage = CFO / Total debt",
+                  "Interest coverage (CF) = (CFO + Interest paid + Taxes paid) / Interest paid",
+                  "Reinvestment ratio = CFO / Cash paid for long-term assets",
+                  "Dividend payment ratio (CF) = CFO / Dividends paid"
+                ],
+                "common_pitfalls": [
+                  "Pomijanie capex w ocenie wolnej gotówki"
+                ],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 3, Reading 'Analyzing Statements of Cash Flows II'",
+                  "Schweser SchweserNotes Book 3, Study Sessions 6-8",
+                  "Mark Meldrum CFA L1 — Financial Statement Analysis videos"
+                ],
+                "tags": [
+                  "ratio"
+                ]
+              },
+              "children": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "cfa040600-0000-4000-8000-000000000000",
+      "title": "Analysis of Inventories",
+      "status": "not-started",
+      "type": "phase",
+      "notes": "# Analysis of Inventories\n\nAnaliza zapasów (IAS 2 / ASC 330): metody kosztowe, LIFO reserve, LIFO liquidation, writedowns, IFRS-vs-GAAP.\n\n**Learning Modules:** 1 · **Egzamin weight (topic):** 12.5%\n",
+      "createdAt": "2026-05-06T00:00:00Z",
+      "updatedAt": "2026-05-06T00:00:00Z",
+      "metadata": {
+        "lm_index": "06",
+        "lm_name_canonical": "Analysis of Inventories",
+        "los_count": 6,
+        "topic": "Financial Statement Analysis"
+      },
+      "children": [
+        {
+          "id": "cfa040601-0000-4000-8000-000000000000",
+          "title": "Cost flow methods",
+          "status": "not-started",
+          "type": "plan",
+          "notes": "# Cost flow methods\n\nFIFO, LIFO, weighted average, specific identification.\n",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "section_index": "01"
+          },
+          "children": [
+            {
+              "id": "cfa040601-0001-4000-8000-000000000000",
+              "title": "FIFO (first-in, first-out)",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# FIFO (first-in, first-out)\n\n**LOS:** LOS 6.a\n**Difficulty:** 2 · **Estimated:** 0.5h\n\n## Opis\nFIFO: najstarsze koszty trafiają w COGS, najnowsze pozostają w ending inventory. W rosnących cenach: niższy COGS, wyższy zysk, wyższy ending inventory bliższy current cost.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Mylenie ze średnim kosztem — FIFO przypisuje konkretne ceny do konkretnych jednostek\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 3, Reading 'Analysis of Inventories'\n- Schweser SchweserNotes Book 3, Study Sessions 6-8\n- Mark Meldrum CFA L1 — Financial Statement Analysis videos\n",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": [
+                  "6.a"
+                ],
+                "difficulty": 2,
+                "estimated_hours": 0.5,
+                "prerequisites": [],
+                "formulas": [],
+                "common_pitfalls": [
+                  "Mylenie ze średnim kosztem — FIFO przypisuje konkretne ceny do konkretnych jednostek"
+                ],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 3, Reading 'Analysis of Inventories'",
+                  "Schweser SchweserNotes Book 3, Study Sessions 6-8",
+                  "Mark Meldrum CFA L1 — Financial Statement Analysis videos"
+                ],
+                "tags": [
+                  "concept",
+                  "standard"
+                ]
+              },
+              "children": []
+            },
+            {
+              "id": "cfa040601-0002-4000-8000-000000000000",
+              "title": "LIFO (last-in, first-out)",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# LIFO (last-in, first-out)\n\n**LOS:** LOS 6.a\n**Difficulty:** 2 · **Estimated:** 0.5h\n\n## Opis\nLIFO: najnowsze koszty w COGS, najstarsze w ending inventory. Dozwolone TYLKO w US GAAP. Korzystne podatkowo w okresach inflacji (LIFO conformity rule).\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Stosowanie LIFO pod IFRS — IFRS zakazuje LIFO\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 3, Reading 'Analysis of Inventories'\n- Schweser SchweserNotes Book 3, Study Sessions 6-8\n- Mark Meldrum CFA L1 — Financial Statement Analysis videos\n",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": [
+                  "6.a"
+                ],
+                "difficulty": 2,
+                "estimated_hours": 0.5,
+                "prerequisites": [],
+                "formulas": [],
+                "common_pitfalls": [
+                  "Stosowanie LIFO pod IFRS — IFRS zakazuje LIFO"
+                ],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 3, Reading 'Analysis of Inventories'",
+                  "Schweser SchweserNotes Book 3, Study Sessions 6-8",
+                  "Mark Meldrum CFA L1 — Financial Statement Analysis videos"
+                ],
+                "tags": [
+                  "concept",
+                  "standard",
+                  "ifrs-gaap-diff"
+                ]
+              },
+              "children": []
+            },
+            {
+              "id": "cfa040601-0003-4000-8000-000000000000",
+              "title": "Weighted average cost",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# Weighted average cost\n\n**LOS:** LOS 6.a\n**Difficulty:** 2 · **Estimated:** 0.5h\n\n## Opis\nŚredni koszt wszystkich jednostek dostępnych. Dozwolone pod IFRS i US GAAP. Wyniki pomiędzy FIFO a LIFO.\n\n## Formuły / kluczowe relacje\n- Weighted avg cost per unit = Total cost of goods available / Total units available\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Niewłaściwa kalkulacja przy systemie perpetual vs periodic\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 3, Reading 'Analysis of Inventories'\n- Schweser SchweserNotes Book 3, Study Sessions 6-8\n- Mark Meldrum CFA L1 — Financial Statement Analysis videos\n",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": [
+                  "6.a"
+                ],
+                "difficulty": 2,
+                "estimated_hours": 0.5,
+                "prerequisites": [],
+                "formulas": [
+                  "Weighted avg cost per unit = Total cost of goods available / Total units available"
+                ],
+                "common_pitfalls": [
+                  "Niewłaściwa kalkulacja przy systemie perpetual vs periodic"
+                ],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 3, Reading 'Analysis of Inventories'",
+                  "Schweser SchweserNotes Book 3, Study Sessions 6-8",
+                  "Mark Meldrum CFA L1 — Financial Statement Analysis videos"
+                ],
+                "tags": [
+                  "concept",
+                  "standard"
+                ]
+              },
+              "children": []
+            },
+            {
+              "id": "cfa040601-0004-4000-8000-000000000000",
+              "title": "Specific identification",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# Specific identification\n\n**LOS:** LOS 6.a\n**Difficulty:** 2 · **Estimated:** 0.25h\n\n## Opis\nKażda jednostka identyfikowana z konkretnym kosztem. Wymagane dla nie-wymiennych zapasów (np. samochody, biżuteria). Dozwolone pod IFRS i US GAAP.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Założenie, że jest praktyczne dla wszystkich firm — tylko dla wysokowartościowych unikatowych pozycji\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 3, Reading 'Analysis of Inventories'\n- Schweser SchweserNotes Book 3, Study Sessions 6-8\n- Mark Meldrum CFA L1 — Financial Statement Analysis videos\n",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": [
+                  "6.a"
+                ],
+                "difficulty": 2,
+                "estimated_hours": 0.25,
+                "prerequisites": [],
+                "formulas": [],
+                "common_pitfalls": [
+                  "Założenie, że jest praktyczne dla wszystkich firm — tylko dla wysokowartościowych unikatowych pozycji"
+                ],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 3, Reading 'Analysis of Inventories'",
+                  "Schweser SchweserNotes Book 3, Study Sessions 6-8",
+                  "Mark Meldrum CFA L1 — Financial Statement Analysis videos"
+                ],
+                "tags": [
+                  "concept",
+                  "standard"
+                ]
+              },
+              "children": []
+            }
+          ]
+        },
+        {
+          "id": "cfa040602-0000-4000-8000-000000000000",
+          "title": "Effect of method choice",
+          "status": "not-started",
+          "type": "plan",
+          "notes": "# Effect of method choice\n\nWpływ na COGS, gross margin, ending inventory pod różnymi cenami.\n",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "section_index": "02"
+          },
+          "children": [
+            {
+              "id": "cfa040602-0001-4000-8000-000000000000",
+              "title": "Effect on COGS — rising vs falling prices",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# Effect on COGS — rising vs falling prices\n\n**LOS:** LOS 6.b\n**Difficulty:** 3 · **Estimated:** 0.5h\n\n## Opis\nRosnące ceny: LIFO COGS > FIFO COGS. Spadające ceny: LIFO COGS < FIFO COGS. Weighted avg pomiędzy. W stabilnych cenach: identyczne.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Mylenie kierunku — w rosnących cenach LIFO ma WYŻSZY COGS niż FIFO\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 3, Reading 'Analysis of Inventories'\n- Schweser SchweserNotes Book 3, Study Sessions 6-8\n- Mark Meldrum CFA L1 — Financial Statement Analysis videos\n",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": [
+                  "6.b"
+                ],
+                "difficulty": 3,
+                "estimated_hours": 0.5,
+                "prerequisites": [],
+                "formulas": [],
+                "common_pitfalls": [
+                  "Mylenie kierunku — w rosnących cenach LIFO ma WYŻSZY COGS niż FIFO"
+                ],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 3, Reading 'Analysis of Inventories'",
+                  "Schweser SchweserNotes Book 3, Study Sessions 6-8",
+                  "Mark Meldrum CFA L1 — Financial Statement Analysis videos"
+                ],
+                "tags": [
+                  "concept"
+                ]
+              },
+              "children": []
+            },
+            {
+              "id": "cfa040602-0002-4000-8000-000000000000",
+              "title": "Effect on gross margin and earnings",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# Effect on gross margin and earnings\n\n**LOS:** LOS 6.b\n**Difficulty:** 3 · **Estimated:** 0.25h\n\n## Opis\nRosnące ceny: LIFO niższy gross margin, niższy NI, niższe podatki, wyższy CFO (oszczędności podatkowe). FIFO odwrotnie.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Niedocenianie efektu na podatkach — LIFO przy rosnących cenach daje niższy zysk i niższe podatki\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 3, Reading 'Analysis of Inventories'\n- Schweser SchweserNotes Book 3, Study Sessions 6-8\n- Mark Meldrum CFA L1 — Financial Statement Analysis videos\n",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": [
+                  "6.b"
+                ],
+                "difficulty": 3,
+                "estimated_hours": 0.25,
+                "prerequisites": [],
+                "formulas": [],
+                "common_pitfalls": [
+                  "Niedocenianie efektu na podatkach — LIFO przy rosnących cenach daje niższy zysk i niższe podatki"
+                ],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 3, Reading 'Analysis of Inventories'",
+                  "Schweser SchweserNotes Book 3, Study Sessions 6-8",
+                  "Mark Meldrum CFA L1 — Financial Statement Analysis videos"
+                ],
+                "tags": [
+                  "concept"
+                ]
+              },
+              "children": []
+            },
+            {
+              "id": "cfa040602-0003-4000-8000-000000000000",
+              "title": "Effect on ending inventory",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# Effect on ending inventory\n\n**LOS:** LOS 6.b\n**Difficulty:** 3 · **Estimated:** 0.25h\n\n## Opis\nRosnące ceny: LIFO ending inventory < FIFO (i < current cost — co zniekształca BS). FIFO ending inventory bliska current cost.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Założenie, że LIFO inventory na BS jest realistyczne — może być znacznie poniżej current cost\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 3, Reading 'Analysis of Inventories'\n- Schweser SchweserNotes Book 3, Study Sessions 6-8\n- Mark Meldrum CFA L1 — Financial Statement Analysis videos\n",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": [
+                  "6.b"
+                ],
+                "difficulty": 3,
+                "estimated_hours": 0.25,
+                "prerequisites": [],
+                "formulas": [],
+                "common_pitfalls": [
+                  "Założenie, że LIFO inventory na BS jest realistyczne — może być znacznie poniżej current cost"
+                ],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 3, Reading 'Analysis of Inventories'",
+                  "Schweser SchweserNotes Book 3, Study Sessions 6-8",
+                  "Mark Meldrum CFA L1 — Financial Statement Analysis videos"
+                ],
+                "tags": [
+                  "concept"
+                ]
+              },
+              "children": []
+            }
+          ]
+        },
+        {
+          "id": "cfa040603-0000-4000-8000-000000000000",
+          "title": "LIFO-specific issues",
+          "status": "not-started",
+          "type": "plan",
+          "notes": "# LIFO-specific issues\n\nLIFO reserve, liquidation, conversion.\n",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "section_index": "03"
+          },
+          "children": [
+            {
+              "id": "cfa040603-0001-4000-8000-000000000000",
+              "title": "LIFO reserve",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# LIFO reserve\n\n**LOS:** LOS 6.c\n**Difficulty:** 3 · **Estimated:** 0.5h\n\n## Opis\nRóżnica między wyceną zapasów FIFO a LIFO. Ujawniana w notes przez US GAAP companies. Używana do konwersji LIFO→FIFO dla porównań.\n\n## Formuły / kluczowe relacje\n- LIFO reserve = FIFO inventory − LIFO inventory\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Pomijanie tax effect przy konwersji\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 3, Reading 'Analysis of Inventories'\n- Schweser SchweserNotes Book 3, Study Sessions 6-8\n- Mark Meldrum CFA L1 — Financial Statement Analysis videos\n",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": [
+                  "6.c"
+                ],
+                "difficulty": 3,
+                "estimated_hours": 0.5,
+                "prerequisites": [],
+                "formulas": [
+                  "LIFO reserve = FIFO inventory − LIFO inventory"
+                ],
+                "common_pitfalls": [
+                  "Pomijanie tax effect przy konwersji"
+                ],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 3, Reading 'Analysis of Inventories'",
+                  "Schweser SchweserNotes Book 3, Study Sessions 6-8",
+                  "Mark Meldrum CFA L1 — Financial Statement Analysis videos"
+                ],
+                "tags": [
+                  "formula",
+                  "ifrs-gaap-diff"
+                ]
+              },
+              "children": []
+            },
+            {
+              "id": "cfa040603-0002-4000-8000-000000000000",
+              "title": "LIFO liquidation",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# LIFO liquidation\n\n**LOS:** LOS 6.c\n**Difficulty:** 4 · **Estimated:** 0.5h\n\n## Opis\nGdy LIFO firm sprzedaje więcej niż kupuje — stare, niskie koszty trafiają w COGS, sztucznie zawyżając gross margin i NI. Analyst korygował earnings o ten efekt.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Traktowanie zysku z liquidation jako sustainable — to jednorazowy efekt, nie core earnings\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 3, Reading 'Analysis of Inventories'\n- Schweser SchweserNotes Book 3, Study Sessions 6-8\n- Mark Meldrum CFA L1 — Financial Statement Analysis videos\n",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": [
+                  "6.c"
+                ],
+                "difficulty": 4,
+                "estimated_hours": 0.5,
+                "prerequisites": [],
+                "formulas": [],
+                "common_pitfalls": [
+                  "Traktowanie zysku z liquidation jako sustainable — to jednorazowy efekt, nie core earnings"
+                ],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 3, Reading 'Analysis of Inventories'",
+                  "Schweser SchweserNotes Book 3, Study Sessions 6-8",
+                  "Mark Meldrum CFA L1 — Financial Statement Analysis videos"
+                ],
+                "tags": [
+                  "concept"
+                ]
+              },
+              "children": []
+            },
+            {
+              "id": "cfa040603-0003-4000-8000-000000000000",
+              "title": "LIFO → FIFO conversion adjustment",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# LIFO → FIFO conversion adjustment\n\n**LOS:** LOS 6.c\n**Difficulty:** 3 · **Estimated:** 0.5h\n\n## Opis\nKonwersja LIFO firm na pseudo-FIFO dla porównania z konkurencją. Standardowy zestaw 4 korekt: inventory↑, COGS↓, RE↑, cash↓ (po tax).\n\n## Formuły / kluczowe relacje\n- FIFO inventory = LIFO inventory + LIFO reserve\n- FIFO COGS = LIFO COGS − ΔLIFO reserve\n- FIFO retained earnings = LIFO retained earnings + LIFO reserve × (1 − t)\n- FIFO cash = LIFO cash − LIFO reserve × t\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Pomijanie tax effect przy retained earnings\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 3, Reading 'Analysis of Inventories'\n- Schweser SchweserNotes Book 3, Study Sessions 6-8\n- Mark Meldrum CFA L1 — Financial Statement Analysis videos\n",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": [
+                  "6.c"
+                ],
+                "difficulty": 3,
+                "estimated_hours": 0.5,
+                "prerequisites": [],
+                "formulas": [
+                  "FIFO inventory = LIFO inventory + LIFO reserve",
+                  "FIFO COGS = LIFO COGS − ΔLIFO reserve",
+                  "FIFO retained earnings = LIFO retained earnings + LIFO reserve × (1 − t)",
+                  "FIFO cash = LIFO cash − LIFO reserve × t"
+                ],
+                "common_pitfalls": [
+                  "Pomijanie tax effect przy retained earnings"
+                ],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 3, Reading 'Analysis of Inventories'",
+                  "Schweser SchweserNotes Book 3, Study Sessions 6-8",
+                  "Mark Meldrum CFA L1 — Financial Statement Analysis videos"
+                ],
+                "tags": [
+                  "formula",
+                  "ifrs-gaap-diff"
+                ]
+              },
+              "children": []
+            }
+          ]
+        },
+        {
+          "id": "cfa040604-0000-4000-8000-000000000000",
+          "title": "Inventory writedowns",
+          "status": "not-started",
+          "type": "plan",
+          "notes": "# Inventory writedowns\n\nLCM, NRV i reversal.\n",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "section_index": "04"
+          },
+          "children": [
+            {
+              "id": "cfa040604-0001-4000-8000-000000000000",
+              "title": "Inventory writedown — LCM (US GAAP)",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# Inventory writedown — LCM (US GAAP)\n\n**LOS:** LOS 6.d\n**Difficulty:** 2 · **Estimated:** 0.25h\n\n## Opis\nPre-2015 US GAAP (i nadal LIFO/retail): Lower of Cost or Market, gdzie Market = replacement cost ograniczone do NRV (ceiling) i NRV − normal profit margin (floor). Odpis trwały.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Mylenie market w LCM (replacement cost ograniczone NRV i NRV − normal margin) z fair value\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 3, Reading 'Analysis of Inventories'\n- Schweser SchweserNotes Book 3, Study Sessions 6-8\n- Mark Meldrum CFA L1 — Financial Statement Analysis videos\n",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": [
+                  "6.d"
+                ],
+                "difficulty": 2,
+                "estimated_hours": 0.25,
+                "prerequisites": [],
+                "formulas": [],
+                "common_pitfalls": [
+                  "Mylenie market w LCM (replacement cost ograniczone NRV i NRV − normal margin) z fair value"
+                ],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 3, Reading 'Analysis of Inventories'",
+                  "Schweser SchweserNotes Book 3, Study Sessions 6-8",
+                  "Mark Meldrum CFA L1 — Financial Statement Analysis videos"
+                ],
+                "tags": [
+                  "standard",
+                  "ifrs-gaap-diff"
+                ]
+              },
+              "children": []
+            },
+            {
+              "id": "cfa040604-0002-4000-8000-000000000000",
+              "title": "Inventory writedown — NRV (IFRS and US GAAP non-LIFO)",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# Inventory writedown — NRV (IFRS and US GAAP non-LIFO)\n\n**LOS:** LOS 6.d\n**Difficulty:** 2 · **Estimated:** 0.25h\n\n## Opis\nIFRS oraz post-2015 US GAAP (poza LIFO/retail): Lower of Cost or NRV. Odpis na różnicę między cost a NRV.\n\n## Formuły / kluczowe relacje\n- NRV = estimated selling price − costs to complete − costs to sell\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Mylenie NRV z fair value — NRV uwzględnia cost to complete i sell\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 3, Reading 'Analysis of Inventories'\n- Schweser SchweserNotes Book 3, Study Sessions 6-8\n- Mark Meldrum CFA L1 — Financial Statement Analysis videos\n",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": [
+                  "6.d"
+                ],
+                "difficulty": 2,
+                "estimated_hours": 0.25,
+                "prerequisites": [],
+                "formulas": [
+                  "NRV = estimated selling price − costs to complete − costs to sell"
+                ],
+                "common_pitfalls": [
+                  "Mylenie NRV z fair value — NRV uwzględnia cost to complete i sell"
+                ],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 3, Reading 'Analysis of Inventories'",
+                  "Schweser SchweserNotes Book 3, Study Sessions 6-8",
+                  "Mark Meldrum CFA L1 — Financial Statement Analysis videos"
+                ],
+                "tags": [
+                  "standard",
+                  "ifrs-gaap-diff"
+                ]
+              },
+              "children": []
+            },
+            {
+              "id": "cfa040604-0003-4000-8000-000000000000",
+              "title": "Reversal of inventory writedown — IFRS vs US GAAP",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# Reversal of inventory writedown — IFRS vs US GAAP\n\n**LOS:** LOS 6.d\n**Difficulty:** 2 · **Estimated:** 0.25h\n\n## Opis\nIFRS: dozwolone odwrócenie odpisu (do pierwotnego kosztu) jeśli przyczyna ustąpiła. US GAAP: ZAKAZ odwrócenia — odpis trwały.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Założenie, że US GAAP też pozwala na reversal — to FAŁSZ\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 3, Reading 'Analysis of Inventories'\n- Schweser SchweserNotes Book 3, Study Sessions 6-8\n- Mark Meldrum CFA L1 — Financial Statement Analysis videos\n",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": [
+                  "6.d"
+                ],
+                "difficulty": 2,
+                "estimated_hours": 0.25,
+                "prerequisites": [],
+                "formulas": [],
+                "common_pitfalls": [
+                  "Założenie, że US GAAP też pozwala na reversal — to FAŁSZ"
+                ],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 3, Reading 'Analysis of Inventories'",
+                  "Schweser SchweserNotes Book 3, Study Sessions 6-8",
+                  "Mark Meldrum CFA L1 — Financial Statement Analysis videos"
+                ],
+                "tags": [
+                  "ifrs-gaap-diff"
+                ]
+              },
+              "children": []
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
