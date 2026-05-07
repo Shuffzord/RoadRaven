@@ -263,7 +263,7 @@ Wave structure (TDD mode — contract-first; ~18-22 tests total across the phase
 - **Wave 3** (parallel, execute): 06-05 + 06-06
 
 Plans:
-- [ ] 06-01-PLAN.md — Wave 0 (TDD): REQUIREMENTS PLUG-AGENT-* block + RoadmapRPCType.bun.requests.agentRequest + AppSettings.agentApi.enabled (D-18) + AgentErrorCode 13-code enum + tools/schemas.ts (12 Zod inputs) + tools/agentToolCallback helper. 5 contract tests (PLUG-AGENT-READ/CREATE/UPDATE/DELETE/FILE-* + SAFETY-01, SAFETY-03)
+- [x] 06-01-PLAN.md — Wave 0 (TDD): REQUIREMENTS PLUG-AGENT-* block + RoadmapRPCType.bun.requests.agentRequest + AppSettings.agentApi.enabled (D-18) + AgentErrorCode 13-code enum + tools/schemas.ts (12 Zod inputs) + tools/agentToolCallback helper. 5 contract tests (PLUG-AGENT-READ/CREATE/UPDATE/DELETE/FILE-* + SAFETY-01, SAFETY-03)
 - [ ] 06-02-PLAN.md — Wave 1 (TDD): wsClient.request() correlation + 30s timeout + close-cleanup + 3-way IncomingFrameSchema (HelloFrame | AgentRequest | EventFrame) + eventServer.ts type:'request' branch + index.ts onAgentRequest placeholder. 3 transport tests (PLUG-AGENT-TRANSPORT-01..02)
 - [ ] 06-03-PLAN.md — Wave 1 (TDD): packages/desktop/src/bun/agentRequestHandler.ts gates (kill-switch + path-allowlist + cross-ref-boundary + happy-path forward) + index.ts production wiring replaces 06-02 placeholder. 6 gate tests (PLUG-AGENT-TRANSPORT-01, SAFETY-01/03, FILE-02/03, DELETE-01)
 - [ ] 06-04-PLAN.md — Wave 2 (TDD): roadmapStore.moveNode action + agentRpcHandler.ts (18-case dispatcher with cycle/last-root/cascade gates + D-04 PATCH semantics + D-03 AND-filter + D-09 drawer audit) + rpc.ts handlers.requests.agentRequest. 7 tests (3 store + 4 dispatcher) covering PLUG-AGENT-READ-*, CREATE-*, UPDATE-*, DELETE-01, FILE-*, SAFETY-02
@@ -302,4 +302,4 @@ Plans:
 | 3. Full Editor | 0/6 | Planned | - |
 | 4. Event API | 6/6 | Complete | 2026-04-29 |
 | 5. Packaging & Distribution | 5/5 | Complete | 2026-05-05 |
-| 6. Agentic Roadmap Authoring | 0/6 | Planned (TDD replan 2026-05-05) | - |
+| 6. Agentic Roadmap Authoring | 1/6 | In Progress | - |

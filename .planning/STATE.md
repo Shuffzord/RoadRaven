@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Phase 06 context gathered
-last_updated: "2026-05-05T17:09:01.550Z"
-last_activity: 2026-05-05 -- Phase 6 planning complete
+stopped_at: Phase 06 Plan 01 (foundation contracts) complete
+last_updated: "2026-05-07T12:17:19Z"
+last_activity: 2026-05-07 -- Phase 6 Plan 01 GREEN
 progress:
   total_phases: 6
   completed_phases: 3
-  total_plans: 26
-  completed_plans: 26
+  total_plans: 27
+  completed_plans: 27
   percent: 100
 ---
 
@@ -61,6 +61,7 @@ Progress: [##########] 100% of Phase 04 plans (6/6)
 | Phase 04 P02 | 180 | 6 tasks | 20 files |
 | Phase 04 P04 | 90 | 4 tasks | 16 files |
 | Phase 04 P04-05 | 45 | 4 tasks | 13 files |
+| Phase 06 P01 | 5min | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -91,6 +92,9 @@ Recent decisions affecting current work:
 - [Phase 04]: Hello frame serialized as template literal to survive biome multi-line formatting — grep acceptance criteria requires type/source/version on one line
 - [Phase 04]: userData.test.ts uses node:path join() for expected paths — Windows backslash separator breaks literal forward-slash comparisons
 - [Phase 04]: vi.advanceTimersByTimeAsync(0) replaces non-existent vi.runAllMicrotasksAsync() in vitest 4.x
+- [Phase 06]: AGENT_ERROR_CODES is the single source of truth for the 13-code agent error taxonomy (RESEARCH §9); downstream Bun + renderer handlers MUST import — never redeclare
+- [Phase 06]: agentToolCallback distinguishes structured errors (have `code`, formatted directly) from transport failures (no `code`, sentinel-checked) — avoids spurious "app not running" messages when the Bun handler returns a known error
+- [Phase 06]: WsClientLike in agentToolCallback uses non-generic `Promise<unknown>` so test stubs don't have to restate generic constraints
 
 ### Pending Todos
 
