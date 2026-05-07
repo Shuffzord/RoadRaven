@@ -3,9 +3,9 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Phase 06 Plan 03 (Bun-side gate layer + RPC bridge) complete
-last_updated: "2026-05-07T14:42:00Z"
-last_activity: 2026-05-07 -- Phase 6 Plan 03 GREEN
+stopped_at: Phase 06 Plan 04 (renderer dispatcher + moveNode + drawer audit) complete
+last_updated: "2026-05-07T14:55:00Z"
+last_activity: 2026-05-07 -- Phase 6 Plan 04 GREEN
 progress:
   total_phases: 6
   completed_phases: 3
@@ -64,6 +64,7 @@ Progress: [##########] 100% of Phase 04 plans (6/6)
 | Phase 06 P01 | 5min | 2 tasks | 5 files |
 | Phase 06 P02 | 5min | 2 tasks | 9 files |
 | Phase 06 P03 | 7min | 2 tasks | 4 files |
+| Phase 06 P04 | 8min | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -105,6 +106,10 @@ Recent decisions affecting current work:
 - [Phase 06]: agentRequest belongs in RoadmapRPCType.webview.requests (Plan 06-03 corrected Plan 06-01's bun.requests placement) — Bun is the CALLER (`mainWindow.webview.rpc.request.agentRequest`), the renderer is the HANDLER. Same direction inversion as Electrobun's existing `webview.messages` (Bun pushes) vs `bun.messages` (renderer pushes) — pattern consistency across the type
 - [Phase 06]: Plan 06-03 Bun-side gates (kill-switch + path-allowlist + cross-ref) fail-fast in declared order BEFORE forwarding; renderer applies the remaining gates (no_file_loaded / node_not_found / cascade_required / move_would_create_cycle) — anti-pattern would have been double-implementing cascade at Bun (requires per-node child count which only the renderer knows)
 - [Phase 06]: TDD with strict pre-commit hook — RED commits use `it.fails(...)` so vitest treats them as expected-fail (passing); GREEN flips to `it(...)` and assertions enforce behaviour. Standing pattern from Plan 06-03 onward for any RoadRaven TDD plan whose RED tests live in packages/desktop (the Plan 06-02 plugins/claude-code path is excluded by the desktop vitest config and so escapes the hook naturally)
+- [Phase 06]: agentRpcHandler.ts is the renderer-side single switch on tool name (18 cases) — uniform shape (look up node → call store action → emit drawer event) means we test SHAPED behaviors (PATCH, AND-filter, dispatch routing, unknown_tool, live-overlay merge, openFile auto-flush) once each rather than 18 tests for each branch. TypeScript + the existing roadmapStore.mutations test suite cover per-action correctness.
+- [Phase 06]: D-09 drawer audit emits via `appendAgentDrawerEvent` per mutating tool — `source` hardcoded to `claude-code` in renderer (agents cannot spoof source via args); `nodeId="__lifecycle__"` for file-level ops (createRoadmap, saveFile, saveFileAs, openFile).
+- [Phase 06]: Plan 06-04's D-04 PATCH uses `for (const [k, v] of Object.entries(patch))` — own-enumerable iteration only; `__proto__`/`constructor` keys naturally NOT iterated, mitigating prototype-pollution at the metadata-merge boundary (T-06-04-04).
+- [Phase 06]: D-12 openFile auto-flush — when `hasUnsavedEdits()` is true, calls `triggerSave` then awaits a Promise that resolves when `useRoadmapStore.subscribe` sees `saveState === 'saved'` (or 5s reject). Edge-case: synchronous save flips to 'saved' before subscribe attaches → defensive re-check after subscribe completes.
 
 ### Pending Todos
 
