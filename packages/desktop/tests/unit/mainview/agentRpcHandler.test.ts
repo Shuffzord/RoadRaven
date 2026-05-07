@@ -59,7 +59,7 @@ describe("agentRpcHandler — dispatch + drawer audit (D-09 / PLUG-AGENT-SAFETY-
 		useEventLogStore.setState({ rows: [] });
 	});
 
-	it.fails("createNode dispatches to addChild AND emits a drawer event with source='claude-code' meta.tool='createNode'", async () => {
+	it("createNode dispatches to addChild AND emits a drawer event with source='claude-code' meta.tool='createNode'", async () => {
 		const result = await handleAgentRequest("createNode", {
 			parentId: "00000000-0000-0000-0000-000000000001",
 			title: "Token rotation",
@@ -93,7 +93,7 @@ describe("agentRpcHandler — updateNodeMetadata PATCH (D-04)", () => {
 		useEventLogStore.setState({ rows: [] });
 	});
 
-	it.fails("null patch value deletes the key; unlisted keys are preserved (D-04)", async () => {
+	it("null patch value deletes the key; unlisted keys are preserved (D-04)", async () => {
 		// Initial metadata: { priority: 'P0', owner: 'alice' }
 		// Patch: { owner: null, status: 'pinned' }  → expect { priority:'P0', status:'pinned' }
 		const result = await handleAgentRequest("updateNodeMetadata", {
@@ -121,7 +121,7 @@ describe("agentRpcHandler — findNodes AND-filter (D-03)", () => {
 		});
 	});
 
-	it.fails("AND-combines titleContains (case-insensitive) and status filters", async () => {
+	it("AND-combines titleContains (case-insensitive) and status filters", async () => {
 		// titleContains "log" matches "Login flow" and "Logout cleanup"
 		// status "in-progress" narrows to just "Login flow"
 		const result = await handleAgentRequest("findNodes", {
@@ -152,7 +152,7 @@ describe("agentRpcHandler — unknown tool", () => {
 		});
 	});
 
-	it.fails("returns code='unknown_tool' for an unrecognized method", async () => {
+	it("returns code='unknown_tool' for an unrecognized method", async () => {
 		const result = await handleAgentRequest("madeUpTool", {});
 		expect(result.ok).toBe(false);
 		const err = result as { ok: false; code: string; error: string };
@@ -173,7 +173,7 @@ describe("agentRpcHandler — D-07 live-overlay merge for findNodes", () => {
 		});
 	});
 
-	it.fails("findNodes finds nodes whose live overlay status is in-progress even when authored status differs (D-07)", async () => {
+	it("findNodes finds nodes whose live overlay status is in-progress even when authored status differs (D-07)", async () => {
 		// Node "Logout cleanup" has authored status not-started. Simulate Phase 4
 		// applyEventBatch landing an event for it: in-place mutate node.status to
 		// in-progress AND seed liveEventMeta with a recent timestamp (within 30s window).
@@ -219,7 +219,7 @@ describe("agentRpcHandler — D-12 openFile auto-flushes pending autosave", () =
 		vi.restoreAllMocks();
 	});
 
-	it.fails("openFile invokes triggerSave when hasUnsavedEdits is true and waits for saveState === saved before loading (D-12)", async () => {
+	it("openFile invokes triggerSave when hasUnsavedEdits is true and waits for saveState === saved before loading (D-12)", async () => {
 		// Force a dirty state: bump dataKey so hasUnsavedEdits() returns true
 		useRoadmapStore.setState({
 			dataKey: "999",

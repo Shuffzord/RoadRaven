@@ -63,7 +63,7 @@ describe("roadmapStore.moveNode (Phase 6 PLUG-AGENT-UPDATE-05)", () => {
 		});
 	});
 
-	it.fails("inserts at the given position when moving a node to a new parent", () => {
+	it("inserts at the given position when moving a node to a new parent", () => {
 		// Move "Child A1" under "Root B" at position 0 (before Child B1)
 		(
 			useRoadmapStore.getState() as unknown as {
@@ -88,7 +88,7 @@ describe("roadmapStore.moveNode (Phase 6 PLUG-AGENT-UPDATE-05)", () => {
 		expect(rootA.children!.length).toBe(0);
 	});
 
-	it.fails("is a no-op when newParentId does not exist", () => {
+	it("is a no-op when newParentId does not exist", () => {
 		const before = JSON.stringify(useRoadmapStore.getState().schema);
 		(
 			useRoadmapStore.getState() as unknown as {
@@ -108,7 +108,7 @@ describe("roadmapStore.moveNode (Phase 6 PLUG-AGENT-UPDATE-05)", () => {
 		).toBeTypeOf("function");
 	});
 
-	it.fails("is a no-op when nodeId does not exist", () => {
+	it("is a no-op when nodeId does not exist", () => {
 		const before = JSON.stringify(useRoadmapStore.getState().schema);
 		(
 			useRoadmapStore.getState() as unknown as {
