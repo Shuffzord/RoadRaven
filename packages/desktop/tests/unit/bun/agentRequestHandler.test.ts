@@ -68,11 +68,7 @@ describe("agentRequestHandler — kill-switch (RESEARCH §13)", () => {
 		vi.clearAllMocks();
 	});
 
-	// RED: it.fails() → test passes when implementation throws (the GREEN task in
-	// Plan 06-03 changes it.fails() back to it() and the assertions then enforce
-	// the real behaviour). This pattern lets the pre-commit vitest hook accept
-	// the RED commit without --no-verify; project policy is strict about hooks.
-	it.fails("returns agent_api_disabled when agentApi.enabled === false (T1)", async () => {
+	it("returns agent_api_disabled when agentApi.enabled === false (T1)", async () => {
 		vi.mocked(loadSettings).mockReturnValue({ agentApi: { enabled: false } });
 		const { ws, sent } = makeWs();
 		const mainWindow = makeMainWindow(async () => {
@@ -99,7 +95,7 @@ describe("agentRequestHandler — path-allowlist (D-13)", () => {
 		vi.clearAllMocks();
 	});
 
-	it.fails("saveFileAs returns path_not_permitted when isPathWithinMainDir is false (T2)", async () => {
+	it("saveFileAs returns path_not_permitted when isPathWithinMainDir is false (T2)", async () => {
 		vi.mocked(loadSettings).mockReturnValue({});
 		vi.mocked(isPathWithinMainDir).mockReturnValue(false);
 		const { ws, sent } = makeWs();
@@ -124,7 +120,7 @@ describe("agentRequestHandler — path-allowlist (D-13)", () => {
 		).not.toHaveBeenCalled();
 	});
 
-	it.fails("openFile returns path_not_permitted when isPathWithinMainDir is false (T3)", async () => {
+	it("openFile returns path_not_permitted when isPathWithinMainDir is false (T3)", async () => {
 		vi.mocked(loadSettings).mockReturnValue({});
 		vi.mocked(isPathWithinMainDir).mockReturnValue(false);
 		const { ws, sent } = makeWs();
@@ -151,7 +147,7 @@ describe("agentRequestHandler — cascade gate (D-11) end-to-end", () => {
 		vi.clearAllMocks();
 	});
 
-	it.fails("forwards deleteNode to renderer; renderer-returned cascade_required is sent back as ws envelope (T4)", async () => {
+	it("forwards deleteNode to renderer; renderer-returned cascade_required is sent back as ws envelope (T4)", async () => {
 		vi.mocked(loadSettings).mockReturnValue({});
 		const { ws, sent } = makeWs();
 		const mainWindow = makeMainWindow(async () => ({
@@ -185,7 +181,7 @@ describe("agentRequestHandler — happy path", () => {
 		vi.clearAllMocks();
 	});
 
-	it.fails("forwards method+params to mainWindow.webview.rpc.request.agentRequest and sends back result (T5)", async () => {
+	it("forwards method+params to mainWindow.webview.rpc.request.agentRequest and sends back result (T5)", async () => {
 		vi.mocked(loadSettings).mockReturnValue({});
 		const { ws, sent } = makeWs();
 		const mainWindow = makeMainWindow(async ({ tool, args }) => {
@@ -207,7 +203,7 @@ describe("agentRequestHandler — unknown method passthrough", () => {
 		vi.clearAllMocks();
 	});
 
-	it.fails("does NOT short-circuit unknown methods; renderer returns unknown_tool which Bun forwards (T6)", async () => {
+	it("does NOT short-circuit unknown methods; renderer returns unknown_tool which Bun forwards (T6)", async () => {
 		vi.mocked(loadSettings).mockReturnValue({});
 		const { ws, sent } = makeWs();
 		const mainWindow = makeMainWindow(async () => ({

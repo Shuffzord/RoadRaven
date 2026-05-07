@@ -121,10 +121,28 @@ export type RoadmapRPCType = {
 					errorMessage: string | null;
 				};
 			};
+		};
+		messages: {
+			nodeStatusUpdate: {
+				nodeId: string;
+				status: string;
+				meta?: Record<string, unknown>;
+			};
+			integrationEvent: { source: string; event: IntegrationEvent };
+			fileChanged: { path: string };
+		};
+	}>;
+	webview: RPCSchema<{
+		requests: {
 			/**
-			 * D-15/D-16: Phase 6 agent dispatcher. Bun forwards inbound WS `type:'request'` frames
-			 * here; the renderer routes the tool string to the appropriate roadmapStore action and
-			 * returns the structured result. Keeping ONE entry (vs 17) keeps RoadmapRPCType lean.
+			 * D-15/D-16: Phase 6 agent dispatcher. Bun's agentRequestHandler (Plan 06-03)
+			 * forwards POST-gates here; the renderer's agentRpcHandler (Plan 06-04) routes
+			 * the `tool` string to the appropriate roadmapStore action and returns the
+			 * structured result. Keeping ONE entry (vs 17) keeps RoadmapRPCType lean.
+			 *
+			 * NOTE: Plan 06-01 originally placed this in bun.requests; Plan 06-03 moved it
+			 * to webview.requests because Bun is the CALLER and the renderer is the
+			 * HANDLER (the renderer owns the Zustand store and applies the per-tool gates).
 			 */
 			agentRequest: {
 				params: {
@@ -142,18 +160,6 @@ export type RoadmapRPCType = {
 					  };
 			};
 		};
-		messages: {
-			nodeStatusUpdate: {
-				nodeId: string;
-				status: string;
-				meta?: Record<string, unknown>;
-			};
-			integrationEvent: { source: string; event: IntegrationEvent };
-			fileChanged: { path: string };
-		};
-	}>;
-	webview: RPCSchema<{
-		requests: Record<string, never>;
 		messages: {
 			pushStatusUpdate: {
 				// Batched shape per D-25 — emitted by the Bun producer (Plan 04-02)

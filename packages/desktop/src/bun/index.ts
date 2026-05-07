@@ -14,6 +14,7 @@ import type { RoadmapRPCType } from "../../../../shared/types.ts";
 // atomicWrite + splitSchemaByOwnership are consumed via saveFile.ts which owns
 // the saveFile/flushPending logic. Re-exported below so external callers (and
 // the Plan 04a acceptance grep) can see the persistence surface at a glance.
+import { agentRequestHandler } from "./agentRequestHandler";
 import { atomicWrite } from "./atomicWrite";
 import { markSelfWrite, stopAllWatchers, watchFile } from "./fileWatcher";
 import { bunLogger, setupBunLogging } from "./logging";
@@ -119,24 +120,12 @@ const eventServerResult = await startEventServer({
 			errorMessage: currentErrorMessage,
 		});
 	},
-	// Phase 6 Plan 06-02 — placeholder. Plan 06-03 will replace this body with
-	//   void agentRequestHandler(ws, request, mainWindow);
-	// For wave-1 ship-without-handler, respond with a structured internal_error
-	// so the transport is reachable and testable end-to-end. The transport
-	// correctness is asserted by wsClient.request.test.ts; the handler logic
-	// will be asserted by Plan 06-03's tests.
+	// Phase 6 Plan 06-03 — agentRequestHandler runs the gate sequence
+	// (kill-switch → path-allowlist → cross-ref boundary) BEFORE forwarding to
+	// the renderer's agentRpcHandler (Plan 06-04). The mainWindow binding is
+	// captured by closure; same pattern as onFlush/onEvent/onError above.
 	onAgentRequest: (ws, request) => {
-		ws.send(
-			JSON.stringify({
-				type: "response",
-				id: request.id,
-				error: {
-					code: "internal_error",
-					message: "agentRequestHandler not yet wired (Plan 06-03)",
-					hint: "Run wave 1 plan 06-03 to install the dispatcher",
-				},
-			}),
-		);
+		void agentRequestHandler(ws, request, mainWindow);
 	},
 });
 if (eventServerResult.ok) {
