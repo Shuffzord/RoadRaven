@@ -6,6 +6,7 @@ import {
 	FLUSH_MS_DEFAULT,
 } from "./eventCoalescer";
 import {
+	type AgentRequest,
 	type Allowlist,
 	classifyEventFrame,
 	type EventFrame,
@@ -50,6 +51,15 @@ export interface StartOptions {
 		detail?: string;
 	}) => void;
 	onConnectionChange: (connectedCount: number) => void;
+	/**
+	 * Phase 6 D-15 / PLUG-AGENT-TRANSPORT-01: agent request handler.
+	 * Routes inbound `type:'request'` frames BEFORE the EventCoalescer
+	 * (RESEARCH §Debounce-Bypass — agent reads/writes never enter the 100ms
+	 * event-batching path). The handler module body lands in Plan 06-03;
+	 * Plan 06-02 wires the callback through with a placeholder that responds
+	 * with `internal_error` so transport is reachable end-to-end.
+	 */
+	onAgentRequest: (ws: ServerWebSocket<WsData>, request: AgentRequest) => void;
 }
 
 function isEaddrinuse(err: unknown): boolean {
@@ -158,6 +168,13 @@ export async function startEventServer(
 							ws.data.version = frame.version;
 							ws.data.helloAt = Date.now();
 							serverLogger.info`Hello frame from source=${frame.source} version=${frame.version ?? "unset"}`;
+							return;
+						}
+
+						// Phase 6 PLUG-AGENT-TRANSPORT-01 — agent request frames
+						// bypass the coalescer (RESEARCH §Debounce-Bypass).
+						if ("type" in frame && frame.type === "request") {
+							opts.onAgentRequest(ws, frame as AgentRequest);
 							return;
 						}
 

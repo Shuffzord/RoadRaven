@@ -48,6 +48,9 @@ describe("eventServer EADDRINUSE regression (I-04)", () => {
 			onConnectionChange: () => {
 				/* noop */
 			},
+			onAgentRequest: () => {
+				/* Phase 6 Plan 06-02: required by StartOptions; not exercised here. */
+			},
 		});
 		expect(eventHandle.ok).toBe(true);
 		if (eventHandle.ok) {
@@ -71,6 +74,9 @@ describe("eventServer EADDRINUSE regression (I-04)", () => {
 			},
 			onConnectionChange: () => {
 				/* noop */
+			},
+			onAgentRequest: () => {
+				/* Phase 6 Plan 06-02: required by StartOptions; not exercised here. */
 			},
 		});
 		expect(result.ok).toBe(false);

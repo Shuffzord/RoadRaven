@@ -88,9 +88,14 @@ describe("WsClient.request transport (Phase 6 D-15)", () => {
 		ws.emit("open");
 
 		const promise = client.request("getRoadmap", {});
-		await vi.advanceTimersByTimeAsync(30_001);
+		// Attach a no-op rejection handler synchronously so Node does not flag
+		// the rejection as "handled asynchronously" (PromiseRejectionHandledWarning)
+		// when the test awaits expect(...).rejects.toThrow after the timer fires.
+		const assertion = expect(promise).rejects.toThrow(/timed out/i);
 
-		await expect(promise).rejects.toThrow(/timed out/i);
+		await vi.advanceTimersByTimeAsync(30_001);
+		await assertion;
+
 		vi.useRealTimers();
 		await client.close();
 	});

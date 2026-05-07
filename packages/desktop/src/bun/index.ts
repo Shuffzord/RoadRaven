@@ -119,6 +119,25 @@ const eventServerResult = await startEventServer({
 			errorMessage: currentErrorMessage,
 		});
 	},
+	// Phase 6 Plan 06-02 — placeholder. Plan 06-03 will replace this body with
+	//   void agentRequestHandler(ws, request, mainWindow);
+	// For wave-1 ship-without-handler, respond with a structured internal_error
+	// so the transport is reachable and testable end-to-end. The transport
+	// correctness is asserted by wsClient.request.test.ts; the handler logic
+	// will be asserted by Plan 06-03's tests.
+	onAgentRequest: (ws, request) => {
+		ws.send(
+			JSON.stringify({
+				type: "response",
+				id: request.id,
+				error: {
+					code: "internal_error",
+					message: "agentRequestHandler not yet wired (Plan 06-03)",
+					hint: "Run wave 1 plan 06-03 to install the dispatcher",
+				},
+			}),
+		);
+	},
 });
 if (eventServerResult.ok) {
 	eventServerHandle = eventServerResult.handle;

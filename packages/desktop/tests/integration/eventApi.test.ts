@@ -21,6 +21,12 @@ const NO_OP = {
 	onConnectionChange: () => {
 		/* noop */
 	},
+	// Phase 6 Plan 06-02: StartOptions now requires onAgentRequest. Integration
+	// tests here exercise event-frame routing only; agent-request routing is
+	// covered separately by Plan 06-03's tests.
+	onAgentRequest: () => {
+		/* noop */
+	},
 };
 
 describe("Event API integration", () => {

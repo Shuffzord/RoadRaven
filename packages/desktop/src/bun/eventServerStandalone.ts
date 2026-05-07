@@ -37,6 +37,11 @@ const result = await startEventServer({
 	onConnectionChange: () => {
 		/* no renderer */
 	},
+	// Phase 6 Plan 06-02: StartOptions requires onAgentRequest. Headless E2E
+	// runner does not exercise the agent transport — Plan 06-03 owns that path.
+	onAgentRequest: () => {
+		/* no renderer */
+	},
 });
 
 if (!result.ok) {
