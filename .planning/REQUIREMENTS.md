@@ -101,8 +101,8 @@
 - [x] **PLUG-AGENT-FILE-01**: `saveFile()` flushes the autosave debounce immediately (Phase 3 EDIT-13 force-flush) — *contract surface defined Plan 01; dispatch in Plan 04*
 - [x] **PLUG-AGENT-FILE-02**: `saveFileAs({path})` saves to a new path; subject to the Phase 3 path-traversal allowlist (D-13 — same `isPathWithinMainDir` + `pushDialogAllowlistPath` plumbing) — *contract defined Plan 01 (SaveFileAsInputSchema); allowlist gate in Plan 03*
 - [x] **PLUG-AGENT-FILE-03**: `openFile({path})` flushes pending autosave (D-12) then loads a roadmap by path; subject to the same path-allowlist as saveFileAs (D-13) — *contract defined Plan 01 (OpenFileInputSchema); flush + allowlist in Plan 03*
-- [ ] **PLUG-AGENT-TRANSPORT-01**: Bun WebSocket server accepts inbound `{type:"request", id, method, params}` frames and routes them via `agentRequestHandler` BEFORE the EventCoalescer (D-15 — agent traffic bypasses the 100ms coalescer)
-- [ ] **PLUG-AGENT-TRANSPORT-02**: `wsClient.request(method, params): Promise<T>` correlates by id, times out at 30s, and rejects all pending requests when the WebSocket closes (D-15)
+- [x] **PLUG-AGENT-TRANSPORT-01**: Bun WebSocket server accepts inbound `{type:"request", id, method, params}` frames and routes them via `agentRequestHandler` BEFORE the EventCoalescer (D-15 — agent traffic bypasses the 100ms coalescer) — *transport branch + onAgentRequest callback wired Plan 02; real handler module in Plan 03 (placeholder responds with `internal_error` until 03 lands)*
+- [x] **PLUG-AGENT-TRANSPORT-02**: `wsClient.request(method, params): Promise<T>` correlates by id, times out at 30s, and rejects all pending requests when the WebSocket closes (D-15) — *implemented Plan 02 (3/3 transport tests passing: resolve, timeout, disconnect)*
 - [x] **PLUG-AGENT-SAFETY-01**: All gate checks (kill-switch, path-allowlist, no-file-loaded, node-not-found, cascade, cycle, last-root, cross-ref, file-read, save) return one of 13 string error codes; messages match the published taxonomy — *13-code AGENT_ERROR_CODES tuple + AgentErrorCode type defined Plan 01 (test 1); per-gate enforcement in Plans 03/04*
 - [ ] **PLUG-AGENT-SAFETY-02**: Every mutating tool call writes a synthetic IntegrationEvent into `eventLogStore` with `source="claude-code"` and `meta.tool`/`meta.args`/`meta.label` — visible in the Ctrl+Shift+L drawer (D-09)
 - [x] **PLUG-AGENT-SAFETY-03**: `agentApi.enabled === false` in `.roadmap-settings.json` short-circuits with `agent_api_disabled` BEFORE any tool dispatch (RESEARCH §13 — kill-switch); applies to read AND mutation tools — *AppSettings.agentApi.enabled type contract defined Plan 01; check enforcement in Plan 03*
@@ -193,7 +193,7 @@
 | EDIT-01 to EDIT-17 | Phase 3 | Pending |
 | PLUG-01 to PLUG-09 | Phase 4 | Pending |
 | PACK-01 to PACK-06 | Phase 5 | Pending |
-| PLUG-AGENT-READ-01..06, CREATE-01..02, UPDATE-01..06, DELETE-01, FILE-01..03, TRANSPORT-01..02, SAFETY-01..03 | Phase 6 | Pending |
+| PLUG-AGENT-READ-01..06, CREATE-01..02, UPDATE-01..06, DELETE-01, FILE-01..03, TRANSPORT-01..02, SAFETY-01..03 | Phase 6 | In Progress (TRANSPORT-01..02 complete Plan 02; READ/CREATE/UPDATE/DELETE/FILE/SAFETY contracts complete Plan 01; per-tool dispatch in Plans 03/04/05) |
 
 **Coverage:**
 - v1 requirements: 84 total (61 + 23 PLUG-AGENT)
