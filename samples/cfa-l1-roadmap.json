@@ -119,6 +119,20 @@
           "status": "not-started",
           "type": "milestone",
           "$ref": "./cfa-l1/topic-08-derivatives.json"
+        },
+        {
+          "id": "10000000-0000-4000-8000-000000000009",
+          "title": "Alternative Investments (8.5%)",
+          "status": "not-started",
+          "type": "milestone",
+          "$ref": "./cfa-l1/topic-09-alts.json"
+        },
+        {
+          "id": "10000000-0000-4000-8000-00000000000a",
+          "title": "Portfolio Management (10.0%)",
+          "status": "not-started",
+          "type": "milestone",
+          "$ref": "./cfa-l1/topic-10-pm.json"
         }
       ]
     }

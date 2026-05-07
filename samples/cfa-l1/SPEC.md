@@ -1132,3 +1132,219 @@ Arbitrage relationships:
 **Difficulty calibration:** most leaves 2-3. Swap valuation between
 dates 4. Option strategies (multi-leg) 3. Binomial pricing 3.
 Greeks interpretation 3.
+
+## 19. Coverage floor — Topic 09 Alternative Investments
+
+**Hour budget (informational):** sum of leaf `estimated_hours` ∈ [15, 25].
+
+**Learning Modules (typically 4-7 phase nodes, canonical 2026 names):**
+- Alternative Investment Features, Methods, and Structures
+- Alternative Investment Performance and Returns
+- Investments in Private Capital: Equity and Debt
+- Real Estate and Infrastructure
+- Natural Resources
+- Hedge Funds
+- Introduction to Digital Assets
+
+(Trim/group LMs to actual 2026 LM count.)
+
+**Coverage floor (each item = its own task leaf):**
+
+Definitions and characteristics:
+- Definition of alternative investments (vs traditional)
+- Low correlation to traditional asset classes
+- Low liquidity, High fees, Regulatory restrictions
+- Accredited investor / qualified purchaser requirements
+  (each as separate leaf or grouped 2 leaves)
+
+Hedge funds:
+- Hedge fund overview / structure (LP/GP)
+- Equity hedge strategies (3 separate leaves): Long/short equity,
+  Market neutral, Dedicated short bias
+- Event-driven strategies (3 separate leaves): Merger arbitrage,
+  Distressed/restructuring, Activist
+- Relative value strategies (2 separate leaves): Fixed-income arbitrage,
+  Convertible arbitrage
+- Global macro, Multi-strategy / multi-manager (separate leaves)
+- Fund of funds (single leaf), Single-manager funds
+- Fee structure (4 separate fee-mechanic leaves): 2-and-20 base,
+  Hurdle rate, High-water mark, Claw-back provision
+- Liquidity restrictions (3 separate leaves): Lock-up period, Gates,
+  Side pockets
+
+Private equity:
+- Private equity overview / structure
+- Strategy: Leveraged buyout (LBO)
+- Strategy: Venture capital — Seed, Early stage, Growth stage
+  (3 separate VC stage leaves)
+- Strategy: Growth equity, Strategy: Distressed
+  (3 separate leaves on PE strategies beyond VC)
+- Exit strategies (4 separate leaves): IPO, Secondary sale,
+  Dividend recapitalization, Management buyout
+- Fund lifecycle, J-curve effect, Capital calls,
+  Distributions / waterfall (4 separate leaves)
+- PE performance metrics (5 separate leaves): MOIC, IRR, TVPI, DPI, RVPI
+
+Real estate:
+- Direct ownership, REIT, RELP (3 separate leaves on ownership form)
+- Equity REITs vs Mortgage REITs (separate leaves)
+- Real estate valuation (4 separate leaves): Cost approach,
+  Sales comparison, Income approach — Direct capitalization,
+  Income approach — DCF
+- Cap rate (capitalization rate), Net Operating Income (NOI),
+  Funds From Operations (FFO),
+  Adjusted Funds From Operations (AFFO) (each its own leaf)
+
+Commodities:
+- Spot pricing, Commodity futures pricing
+- Roll yield, Contango (commodities context),
+  Backwardation (commodities context) (3 separate leaves)
+- Convenience yield, Theory of storage
+- Commodity total return = spot + roll + collateral
+- Commodity index investing
+
+Infrastructure:
+- Brownfield infrastructure, Greenfield infrastructure (separate leaves)
+- Regulated vs unregulated assets, Infrastructure investment vehicles
+
+Digital assets / cryptocurrencies (in 2026 curriculum):
+- Distributed ledger technology / blockchain
+- Bitcoin, Ethereum and smart contracts
+- Tokens (utility, security, NFT — separate leaves)
+- Wallet types (hot, cold, custodial, non-custodial — at least 2 leaves)
+- Custody considerations
+- Investment vehicles (3 separate leaves): Spot crypto, Crypto futures,
+  Crypto ETFs
+- Stablecoins (overview)
+
+Performance reporting and due diligence:
+- Performance reporting for alternatives (smoothed returns,
+  illiquidity premium)
+- Due diligence framework
+- Survivorship bias / backfill bias / selection bias
+  (in alternative indices) — at least 2 separate leaves
+
+**Cross-topic prerequisites:**
+- IRR and MOIC for PE depend on TVM (QM)
+- DCF and direct capitalization for real estate depend on TVM (QM)
+- Roll yield concept depends on contango/backwardation in DER
+
+**Difficulty calibration:** most leaves 2-3. PE waterfall mechanics 3.
+Roll yield interpretation 3. FFO/AFFO adjustments 3. Crypto fundamentals 2.
+
+## 20. Coverage floor — Topic 10 Portfolio Management
+
+**Hour budget (informational):** sum of leaf `estimated_hours` ∈ [25, 35].
+
+**Learning Modules (typically 7-9 phase nodes, canonical 2026 names):**
+- Portfolio Risk and Return: Part I
+- Portfolio Risk and Return: Part II (CAPM and APT)
+- Portfolio Management: An Overview
+- Basics of Portfolio Planning and Construction
+- The Behavioral Biases of Individuals
+- Introduction to Risk Management
+- Technical Analysis (overview if in 2026)
+- Fintech in Investment Management
+
+(Trim/group LMs to actual 2026 LM count.)
+
+**Coverage floor (each item = its own task leaf):**
+
+Portfolio fundamentals:
+- Portfolio approach to investing (vs single-security)
+- Diversification benefit / pooling principle
+- Risk-return trade-off
+- Portfolio process (3 separate leaves): planning, execution, feedback
+- Mutual funds vs ETFs vs separately managed accounts
+  (each its own leaf)
+
+Modern Portfolio Theory:
+- Efficient frontier, Capital Allocation Line (CAL),
+  Capital Market Line (CML) (3 separate leaves)
+- Two-fund separation theorem
+- Optimal risky portfolio (tangency portfolio)
+- Investor's optimal portfolio (utility-tangent CAL)
+
+Risk and return measures:
+- Portfolio expected return formula
+- Two-asset portfolio variance formula,
+  N-asset portfolio variance formula (separate leaves)
+- Correlation impact on portfolio variance
+- Minimum variance portfolio
+- Diversifiable vs systematic risk (separate leaves)
+- Markowitz mean-variance optimization
+
+CAPM and beta:
+- CAPM assumptions
+- Security Market Line (SML)
+- Difference between SML and CML (separate leaf)
+- Beta calculation via regression
+- Beta interpretation
+- Systematic risk vs unsystematic risk (separate leaves)
+
+Performance measures — EACH as own leaf:
+- Sharpe ratio, Treynor ratio, M-squared (M²), Jensen's alpha,
+  Information ratio
+
+Multifactor models (overview):
+- Arbitrage Pricing Theory (APT) — overview
+- Fama-French three-factor model — overview
+- Fama-French five-factor model — overview
+- Carhart four-factor (momentum overview)
+
+Investment Policy Statement (IPS):
+- IPS structure overview
+- Return objectives (3 separate leaves): absolute, relative,
+  required vs desired
+- Risk objectives (2 separate leaves): ability to take risk,
+  willingness to take risk
+- Constraints (5 separate leaves): Liquidity, Time horizon,
+  Tax considerations, Legal and regulatory, Unique circumstances
+
+Asset allocation:
+- Strategic asset allocation, Tactical asset allocation (separate leaves)
+- Rebalancing methods (calendar, percentage-of-portfolio)
+- Risk budgeting / risk parity overview
+
+Portfolio risk management:
+- Risk identification, Risk measurement, Risk monitoring
+  (3 separate process leaves)
+- Value at Risk (VaR) — Parametric/variance-covariance,
+  VaR — Historical simulation, VaR — Monte Carlo simulation
+  (3 separate VaR leaves)
+- Conditional VaR / Expected Shortfall
+- Stress testing, Scenario analysis, Sensitivity analysis
+  (each its own leaf)
+
+Behavioral finance for PM:
+- Cognitive errors vs emotional biases (separate leaves)
+- Goals-based investing, Mental accounting in PM context
+
+Investor types (each institutional type with its typical IPS profile):
+- Individual investors — Life-cycle stages (≥2 leaves: foundation,
+  accumulation, maintenance, distribution / spending)
+- Pension funds: Defined benefit, Defined contribution (separate leaves)
+- Endowments, Foundations (separate leaves)
+- Insurance companies: Life insurance, Property/casualty (separate leaves)
+- Banks (asset/liability management focus)
+- Sovereign wealth funds
+
+Fintech in investment management:
+- Robo-advisors, Algorithmic trading basics
+- High-frequency trading overview
+- Big data sources for investment
+- Artificial Intelligence applications
+- Distributed ledger technology in PM
+
+Trading and execution costs (if in 2026 LM list): explicit vs implicit
+costs, market impact, slippage.
+
+**Cross-topic prerequisites:**
+- Mean-variance optimization depends on descriptive statistics (QM)
+- CAPM depends on regression for beta (QM)
+- VaR (parametric) depends on the normal distribution (QM)
+- Time-weighted vs money-weighted return ties to GIPS (Ethics)
+
+**Difficulty calibration:** most leaves 2-3. CML vs SML distinction 3.
+VaR Monte Carlo interpretation 3-4. Multifactor model interpretation 3-4.
+Pension DB IPS 3.
