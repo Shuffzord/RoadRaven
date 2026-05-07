@@ -193,7 +193,7 @@
 | EDIT-01 to EDIT-17 | Phase 3 | Pending |
 | PLUG-01 to PLUG-09 | Phase 4 | Pending |
 | PACK-01 to PACK-06 | Phase 5 | Pending |
-| PLUG-AGENT-READ-01..06, CREATE-01..02, UPDATE-01..06, DELETE-01, FILE-01..03, TRANSPORT-01..02, SAFETY-01..03 | Phase 6 | In Progress (TRANSPORT-01..02 complete Plan 02; READ/CREATE/UPDATE/DELETE/FILE/SAFETY contracts complete Plan 01; per-tool dispatch in Plans 03/04/05) |
+| PLUG-AGENT-READ-01..06, CREATE-01..02, UPDATE-01..06, DELETE-01, FILE-01..03, TRANSPORT-01..02, SAFETY-01..03 | Phase 6 | In Progress (TRANSPORT-01..02 complete Plan 02; READ/CREATE/UPDATE/DELETE/FILE/SAFETY contracts complete Plan 01; SAFETY-01/03 + FILE-02/03 + DELETE-01 (cascade gate forwarded) Bun-side gates complete Plan 03; renderer per-tool dispatch in Plans 04/05) |
 
 **Coverage:**
 - v1 requirements: 84 total (61 + 23 PLUG-AGENT)
@@ -203,4 +203,4 @@
 ---
 
 *Requirements defined: 2026-04-12*
-*Last updated: 2026-05-05 — Phase 6 PLUG-AGENT-* block added during plan creation (replan in TDD mode)*
+*Last updated: 2026-05-07 — Phase 6 Plan 03 GREEN; Bun-side gate layer (kill-switch + path-allowlist + cross-ref) wired to production*
