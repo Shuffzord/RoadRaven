@@ -3,9 +3,9 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Phase 06 Plan 04 (renderer dispatcher + moveNode + drawer audit) complete
-last_updated: "2026-05-07T14:55:00Z"
-last_activity: 2026-05-07 -- Phase 6 Plan 04 GREEN
+stopped_at: Phase 06 Plan 05 (MCP tool registration — 19 tools) complete
+last_updated: "2026-05-07T15:05:00Z"
+last_activity: 2026-05-07 -- Phase 6 Plan 05 COMPLETE
 progress:
   total_phases: 6
   completed_phases: 3
@@ -65,6 +65,7 @@ Progress: [##########] 100% of Phase 04 plans (6/6)
 | Phase 06 P02 | 5min | 2 tasks | 9 files |
 | Phase 06 P03 | 7min | 2 tasks | 4 files |
 | Phase 06 P04 | 8min | 2 tasks | 5 files |
+| Phase 06 P05 | 3min | 1 task | 1 file |
 
 ## Accumulated Context
 
@@ -110,6 +111,8 @@ Recent decisions affecting current work:
 - [Phase 06]: D-09 drawer audit emits via `appendAgentDrawerEvent` per mutating tool — `source` hardcoded to `claude-code` in renderer (agents cannot spoof source via args); `nodeId="__lifecycle__"` for file-level ops (createRoadmap, saveFile, saveFileAs, openFile).
 - [Phase 06]: Plan 06-04's D-04 PATCH uses `for (const [k, v] of Object.entries(patch))` — own-enumerable iteration only; `__proto__`/`constructor` keys naturally NOT iterated, mitigating prototype-pollution at the metadata-merge boundary (T-06-04-04).
 - [Phase 06]: D-12 openFile auto-flush — when `hasUnsavedEdits()` is true, calls `triggerSave` then awaits a Promise that resolves when `useRoadmapStore.subscribe` sees `saveState === 'saved'` (or 5s reject). Edge-case: synchronous save flips to 'saved' before subscribe attaches → defensive re-check after subscribe completes.
+- [Phase 06]: Plan 05 is pure delegation — 17 net-new server.registerTool calls + updateNodeStatus reroute, every callback = `agentToolCallback(name, wsClient)`. Anti-sprawl: one helper tested once (Plan 06-01 test 5) covers all 17. updateNodeStatus reroute is mandatory for D-09 drawer audit (the old direct wsClient.send bypassed the renderer dispatcher). getEventApiStatus stays inline because it's a meta-status tool that must work even when the agent dispatcher is unreachable.
+- [Phase 06]: Grep-asserted invariant for future PRs — `agentToolCallback(` count must equal `server.registerTool` count minus 1 (getEventApiStatus is the only documented exemption). T-06-05-03 mitigation: prevents future tools from bypassing the gate layer.
 
 ### Pending Todos
 
@@ -124,8 +127,8 @@ Recent decisions affecting current work:
 
 ## Session Continuity
 
-Last session: 2026-05-05T16:02:05.496Z
-Stopped at: Phase 06 context gathered
+Last session: 2026-05-07T15:05:00Z
+Stopped at: Phase 06 Plan 05 complete — MCP tool registration (19 tools) — Plan 06 (UAT scaffold) is the final Phase 6 plan
 
 ### Wave 1 recovery context (READ FIRST on resume)
 

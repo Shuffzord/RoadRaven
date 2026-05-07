@@ -267,7 +267,7 @@ Plans:
 - [x] 06-02-PLAN.md — Wave 1 (TDD): wsClient.request() correlation + 30s timeout + close-cleanup + 3-way IncomingFrameSchema (HelloFrame | AgentRequest | EventFrame) + eventServer.ts type:'request' branch + index.ts onAgentRequest placeholder. 3 transport tests (PLUG-AGENT-TRANSPORT-01..02)
 - [x] 06-03-PLAN.md — Wave 1 (TDD): packages/desktop/src/bun/agentRequestHandler.ts gates (kill-switch + path-allowlist + cross-ref-boundary + happy-path forward) + index.ts production wiring replaces 06-02 placeholder. 6 gate tests (PLUG-AGENT-TRANSPORT-01, SAFETY-01/03, FILE-02/03, DELETE-01)
 - [x] 06-04-PLAN.md — Wave 2 (TDD): roadmapStore.moveNode action + agentRpcHandler.ts (18-case dispatcher with cycle/last-root/cascade gates + D-04 PATCH semantics + D-03 AND-filter + D-09 drawer audit + D-07 live-overlay merge + D-12 openFile auto-flush) + rpc.ts handlers.requests.agentRequest. 9 tests (3 store + 6 dispatcher) covering PLUG-AGENT-READ-*, CREATE-*, UPDATE-*, DELETE-01, FILE-*, SAFETY-02
-- [ ] 06-05-PLAN.md — Wave 3 (execute): plugins/claude-code/src/server.ts gains 17 net-new server.registerTool calls via agentToolCallback helper + updateNodeStatus rerouted (D-09 audit). 19 tools total. No new tests — pure delegation through the contract-tested layers
+- [x] 06-05-PLAN.md — Wave 3 (execute): plugins/claude-code/src/server.ts gains 17 net-new server.registerTool calls via agentToolCallback helper + updateNodeStatus rerouted (D-09 audit). 19 tools total. No new tests — pure delegation through the contract-tested layers
 - [ ] 06-06-PLAN.md — Wave 3 (execute + UAT): scaffold.e2e.test.ts (1 connectivity-check end-to-end test) + plugins/claude-code/README.md (19-tool catalog + 13 codes + kill-switch + security model) + 06-HUMAN-UAT.md (7 scenarios) + manual UAT human checkpoint
 
 **Scope sketch (refine in planning):**
@@ -302,4 +302,4 @@ Plans:
 | 3. Full Editor | 0/6 | Planned | - |
 | 4. Event API | 6/6 | Complete | 2026-04-29 |
 | 5. Packaging & Distribution | 5/5 | Complete | 2026-05-05 |
-| 6. Agentic Roadmap Authoring | 4/6 | In Progress | - |
+| 6. Agentic Roadmap Authoring | 5/6 | In Progress | - |
