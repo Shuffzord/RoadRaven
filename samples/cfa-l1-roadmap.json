@@ -62,7 +62,7 @@
       "type": "project",
       "notes": "# CFA Level I 2026\n\nKompletna roadmapa nauki do egzaminu CFA Level I 2026. 10 obszarów tematycznych, 93 Learning Modules, 365 Learning Outcome Statements. Łączny czas nauki: 300-400h.",
       "createdAt": "2026-05-06T00:00:00Z",
-      "updatedAt": "2026-05-06T00:00:00Z",
+      "updatedAt": "2026-05-07T08:39:14.810Z",
       "children": [
         {
           "id": "10000000-0000-4000-8000-000000000001",
@@ -77,6 +77,20 @@
           "status": "not-started",
           "type": "milestone",
           "$ref": "./cfa-l1/topic-02-quant.json"
+        },
+        {
+          "id": "10000000-0000-4000-8000-000000000003",
+          "title": "Economics (7.5%)",
+          "status": "not-started",
+          "type": "milestone",
+          "$ref": "./cfa-l1/topic-03-economics.json"
+        },
+        {
+          "id": "10000000-0000-4000-8000-000000000004",
+          "title": "Financial Statement Analysis (12.5%)",
+          "status": "not-started",
+          "type": "milestone",
+          "$ref": "./cfa-l1/topic-04-fsa.json"
         }
       ]
     }

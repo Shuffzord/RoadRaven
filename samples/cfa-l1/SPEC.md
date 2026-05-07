@@ -485,3 +485,428 @@ Regression assumption violations 3-4. Hypothesis testing nuances 3.
 Your only side effect is writing one JSON file at the path above. Your
 returned message is a short status report (file path, counts, any caveats).
 No prose explaining what CFA is. No re-stating instructions.
+
+## 13. Coverage floor — Topic 03 Economics
+
+**Hour budget (informational):** sum of leaf `estimated_hours` ∈ [25, 35].
+
+**Learning Modules (8-10 phase nodes, canonical 2026 names):**
+- The Firm and Market Structures
+- Aggregate Output, Prices, and Economic Growth
+- Understanding Business Cycles
+- Monetary and Fiscal Policy
+- Introduction to Geopolitics
+- International Trade
+- Capital Flows and the FX Market
+- Exchange Rate Calculations
+
+**Coverage floor (each item = its own task leaf):**
+
+Microeconomics:
+- Demand function, Supply function, Equilibrium price/quantity
+- Price elasticity of demand, Income elasticity of demand,
+  Cross-price elasticity
+- Consumer surplus, Producer surplus
+- Consumer choice theory (utility maximization), Indifference curves,
+  Budget constraint, Substitution effect, Income effect
+- Production function, Returns to scale, Marginal product of labor,
+  Marginal product of capital
+- Cost curves: Fixed cost, Variable cost (separate leaves),
+  Marginal cost, Average total cost, Average variable cost
+- Profit maximization (MR=MC)
+- Market structures (each as own leaf): Perfect competition,
+  Monopolistic competition, Oligopoly (Cournot/Bertrand/Stackelberg
+  may be one leaf), Monopoly
+- Long-run vs short-run equilibrium per structure, Pricing power
+- Game theory: Dominant strategy, Nash equilibrium, Prisoner's dilemma
+
+Macroeconomics:
+- GDP measurement: Expenditure approach, Income approach,
+  Value-added approach (3 separate leaves)
+- Nominal vs real GDP, GDP deflator
+- Aggregate demand (short-run, long-run), Aggregate supply
+  (short-run, long-run), AD-AS shifts
+- IS-LM model
+- Business cycle phases (expansion/peak/contraction/trough),
+  Leading/coincident/lagging indicators
+- Inflation: CPI, PPI, Headline vs core inflation, Demand-pull,
+  Cost-push, Hyperinflation, Deflation/disinflation
+- Unemployment types (frictional/structural/cyclical — separate leaves),
+  NAIRU/natural rate
+- Phillips curve (short-run), Phillips curve (long-run / vertical)
+- Monetary policy tools: Open market operations, Reserve requirements,
+  Discount rate / policy rate, Transmission mechanism, Neutral rate,
+  Taylor rule
+- Fiscal policy: Automatic stabilizers, Discretionary fiscal policy,
+  Fiscal multiplier, Crowding-out effect
+
+International economics:
+- Foreign exchange: Spot rate, Forward rate, Cross rate,
+  Bid-ask spread (FX), Triangular arbitrage
+- Covered interest rate parity, Uncovered interest rate parity,
+  Purchasing power parity (absolute), PPP (relative),
+  International Fisher effect
+- Exchange rate regimes (≥3 of: fixed, floating, managed float,
+  currency board, dollarization)
+- Balance of payments (current account, capital and financial account)
+- International trade theory: Absolute advantage, Comparative advantage,
+  Heckscher-Ohlin
+- Trade restrictions: Tariffs, Quotas, Voluntary export restraints,
+  Subsidies
+
+Economic growth:
+- Sources of economic growth, Total factor productivity,
+  Solow growth model basics, Convergence hypothesis (absolute /
+  conditional / club may be 1-3 leaves)
+
+Influence of economic growth on equity markets (1 leaf if in 2026 LM list).
+
+Geopolitics LM: geopolitical risk types, impact on investments
+(1-3 leaves).
+
+**Cross-topic prerequisites:**
+- FX parity conditions → currency hedging in Equity, FI
+- Monetary policy → yield-curve theories in FI
+
+**Difficulty calibration:** most leaves 2-3. Solow / Phillips / Taylor /
+Nash / oligopoly modeled at 3.
+
+## 14. Coverage floor — Topic 04 Financial Statement Analysis (LARGEST)
+
+**Hour budget (informational):** sum of leaf `estimated_hours` ∈ [50, 70].
+This is the largest topic in CFA L1.
+
+**Learning Modules (typically 12-17 phase nodes):**
+- Introduction to Financial Statement Analysis
+- Analyzing Income Statements
+- Analyzing Balance Sheets
+- Analyzing Statements of Cash Flows I (preparation)
+- Analyzing Statements of Cash Flows II (analysis)
+- Analysis of Inventories
+- Analysis of Long-Term Assets
+- Analysis of Income Taxes
+- Analysis of Non-Current Liabilities
+- Financial Reporting Quality
+- Financial Analysis Techniques
+- Introduction to Financial Statement Modeling
+
+**Coverage floor (each item = its own task leaf):**
+
+Introduction to FSA:
+- Role and scope of financial reporting
+- Standard setters: IASB, FASB (separate leaves)
+- Regulatory authorities: SEC, ESMA, IOSCO (separate leaves)
+- Audit reports: Unqualified, Qualified, Adverse, Disclaimer (4 leaves)
+
+Balance sheet:
+- Current vs non-current asset classification
+- Current vs non-current liability classification
+- Asset valuation: Cost, Fair value, Present value (3 leaves)
+- Equity components, Common-size balance sheet
+
+Income statement (IFRS 15 / ASC 606):
+- 5-step revenue recognition: Identify contract, Identify performance
+  obligations, Determine transaction price, Allocate transaction price,
+  Recognize revenue (5 separate leaves)
+- Expense recognition / matching principle, Capitalizing vs expensing
+- Non-recurring items, Discontinued operations,
+  Unusual or infrequent items
+- EPS basic, EPS diluted (treasury stock method, if-converted method
+  as separate leaves)
+- Comprehensive income vs net income, OCI components
+
+Cash flow statement:
+- Operating, Investing, Financing sections (3 leaves)
+- Direct method, Indirect method (separate leaves)
+- Conversion indirect→direct
+- IFRS vs US GAAP classification of interest paid/received and dividends
+  paid/received (each as a separate IFRS-vs-GAAP-difference leaf)
+- FCFF calculation from CFO, FCFE calculation from CFO
+
+Financial ratios — EVERY named ratio is its OWN leaf:
+
+Activity:
+- Inventory turnover, Days of inventory on hand (DOH),
+  Receivables turnover, Days of sales outstanding (DSO),
+  Payables turnover, Days payables outstanding (DPO),
+  Working capital turnover, Fixed asset turnover, Total asset turnover
+
+Liquidity:
+- Current ratio, Quick ratio, Cash ratio,
+  Defensive interval ratio, Cash conversion cycle
+
+Solvency:
+- Debt-to-assets, Debt-to-capital, Debt-to-equity,
+  Financial leverage, Interest coverage, Fixed charge coverage
+
+Profitability:
+- Gross profit margin, Operating profit margin, Pretax profit margin,
+  Net profit margin, Return on assets (ROA), Operating ROA,
+  Return on equity (ROE), Return on common equity,
+  Return on total capital, Return on invested capital (ROIC)
+
+Valuation:
+- P/E (trailing, forward — separate leaves), P/B, P/S, P/CF,
+  Dividend yield
+
+DuPont:
+- 3-factor DuPont, 5-factor DuPont (2 separate leaves)
+
+Inventory (IAS 2 / ASC 330):
+- FIFO, LIFO, Weighted average cost, Specific identification (4 leaves)
+- Effect on COGS / gross margin / ending inventory under rising vs
+  falling prices
+- LIFO reserve, LIFO liquidation, LIFO→FIFO conversion adjustment
+- Inventory writedowns: LCM (US GAAP), NRV (IFRS) — separate leaves
+- Reversal of inventory writedown (IFRS-vs-GAAP own leaf)
+
+Long-lived assets (IAS 16, IAS 38, IAS 36, ASC 360, ASC 350):
+- Capitalization vs expensing, Capitalized interest
+- Depreciation: Straight-line, Double-declining balance,
+  Units of production (3 separate leaves)
+- Useful life and residual value
+- Component depreciation (IFRS-vs-GAAP own leaf)
+- Impairment under IFRS (one-step), Impairment under US GAAP (two-step)
+- Reversal of impairment for non-goodwill assets (IFRS-vs-GAAP own leaf)
+- Revaluation model under IFRS (IFRS-vs-GAAP own leaf)
+- Investment property under IFRS (IFRS-vs-GAAP own leaf)
+- Derecognition / gain-loss on sale
+- Intangible assets: finite life, indefinite life, goodwill
+- Goodwill impairment testing (IFRS-vs-GAAP own leaf)
+- Internally developed intangibles, R&D capitalization
+  (IFRS-vs-GAAP own leaf — IFRS allows development capitalization,
+  US GAAP expenses)
+
+Income taxes (IAS 12, ASC 740):
+- Permanent vs temporary differences
+- Origination and reversal of temporary differences
+- Deferred tax assets, Deferred tax liabilities
+- Valuation allowance (US GAAP own leaf)
+- Effective tax rate vs statutory tax rate reconciliation
+- Deferred tax classification (IFRS-vs-GAAP own leaf)
+
+Long-term liabilities:
+- Bonds payable: Issuance at par, Issuance at premium,
+  Issuance at discount (3 separate leaves)
+- Effective interest rate method amortization
+- Debt covenants
+- Leases under IFRS 16 (lessee single-model)
+- Leases under ASC 842 (finance vs operating — IFRS-vs-GAAP own leaf)
+- Lessor accounting
+- Defined contribution pension plan, Defined benefit pension plan basics
+- Off-balance-sheet financing
+
+Quality of financial reports:
+- Earnings quality, Cash flow quality, Balance sheet quality
+- Aggressive vs conservative accounting choices
+- Earnings management techniques (each as own leaf):
+  Revenue recognition manipulation, Expense capitalization,
+  Cookie jar reserves, Channel stuffing, Bill-and-hold transactions
+- Beneish M-score, Altman Z-score, Sloan accruals ratio
+
+IFRS vs US GAAP differences (each its OWN leaf, in addition to those
+already listed above):
+- LIFO permitted in US GAAP, prohibited under IFRS
+- Reversal of inventory writedowns
+- Revaluation model for PP&E
+- Investment property fair value option
+- Development costs capitalization
+- Impairment reversals (non-goodwill)
+- Goodwill impairment testing procedure
+- Deferred tax classification
+- Lease classification criteria
+- Component depreciation requirement
+- CFO classification of interest/dividends paid/received
+
+**Cross-topic prerequisites:**
+- Income statement → ratio analysis (used in Equity, Corporate Issuers)
+- Balance sheet → ratio analysis
+- Cash flow statement → FCFF/FCFE → equity DCF (Equity)
+
+**Difficulty calibration:** most leaves 2-3. LIFO→FIFO conversion 3.
+Pension nuances 3-4. IFRS-vs-GAAP differences mostly 2 (recognition is
+enough at L1). Deferred tax interpretation 3.
+
+## 15. Coverage floor — Topic 05 Corporate Issuers
+
+**Hour budget (informational):** sum of leaf `estimated_hours` ∈ [20, 30].
+
+**Learning Modules (typically 7-9 phase nodes):**
+- Organizational Forms, Corporate Issuer Features, and Ownership
+- Investors and Other Stakeholders / Corporate Governance
+- Working Capital and Liquidity
+- Capital Investments / Capital Allocation
+- Capital Structure
+- Cost of Capital — Foundational Topics
+- Business Models
+
+**Coverage floor (each item = its own task leaf):**
+
+Organization and ownership:
+- Goals of the firm
+- Legal forms (5 separate leaves): Sole proprietorship, General partnership,
+  Limited partnership, Corporation, Limited liability company
+- Public vs private company
+- Stakeholders (each as own leaf): Shareholders, Creditors,
+  Board of directors, Employees, Customers, Suppliers, Regulators, Community
+
+Principal-agent and governance:
+- Shareholder–manager principal-agent problem
+- Controlling vs minority shareholder conflict
+- Manager–creditor conflict
+- Shareholder–creditor conflict
+- Corporate governance overview
+- Board structure: One-tier vs two-tier (separate leaves)
+- Independent directors
+- Board committees (each as own leaf): Audit, Compensation,
+  Nominating, Risk
+- Shareholder rights (5 separate leaves): Voting rights, Proxy voting,
+  Cumulative voting, Statutory voting, Preemptive rights
+- Anti-takeover provisions (4 separate leaves): Poison pills,
+  Staggered boards, Supermajority voting, Golden parachutes
+- ESG considerations (Environmental, Social, Governance — at least 1 leaf,
+  ideally 3)
+
+Working capital:
+- Cash conversion cycle
+- Primary sources of liquidity, Secondary sources of liquidity
+- Drags on liquidity, Pulls on liquidity
+- Short-term financing instruments (commercial paper, line of credit,
+  factoring — separate leaves)
+
+Capital allocation:
+- NPV method, IRR method, Payback period, Discounted payback period,
+  Profitability index (5 separate leaves)
+- Conflicts between NPV and IRR (multiple IRRs, scale, timing)
+- Real options (4 separate leaves): Timing, Abandonment, Expansion,
+  Flexibility
+
+Cost of capital:
+- WACC formula, Marginal cost of capital, Optimal capital budget
+- Cost of debt: YTM approach, Cost of debt: Debt-rating approach
+  (separate leaves), After-tax cost of debt
+- Cost of preferred stock
+- Cost of equity: CAPM, Cost of equity: DDM approach,
+  Cost of equity: Bond-yield-plus-risk-premium (3 separate leaves)
+- Beta estimation: Regression method, Beta estimation: Pure-play method
+  (unlevered/relevered) — separate leaves
+- Country risk premium adjustment, Project beta vs company beta
+
+Capital structure:
+- Modigliani-Miller without taxes (Proposition I, Proposition II — separate)
+- Modigliani-Miller with taxes
+- Static trade-off theory, Pecking order theory
+- Bankruptcy costs (direct, indirect — separate leaves)
+- Optimal capital structure determinants
+- Business risk vs financial risk
+- DOL formula and interpretation, DFL formula and interpretation,
+  DTL (3 separate leaves)
+- Breakeven analysis (sales breakeven), Operating breakeven
+
+Dividends and share repurchases:
+- Dividend types (5 separate leaves): Cash, Stock dividend, Stock split,
+  Special, Liquidating
+- Dividend policy (3 separate leaves): Stable, Constant payout ratio,
+  Residual
+- Dividend chronology dates (4 separate leaves): Declaration,
+  Ex-dividend, Holder of record, Payment
+- Share repurchases vs cash dividends
+- Share repurchase methods (4 separate leaves): Open market,
+  Fixed-price tender offer, Dutch auction tender, Direct negotiation
+- Effects of repurchase on EPS and book value per share
+
+Business models:
+- Types of business models, revenue models, value creation/capture,
+  pricing strategies (1-3 leaves)
+
+**Cross-topic prerequisites:**
+- WACC depends on CAPM (CI) which depends on regression (QM)
+- NPV/DCF depends on TVM (QM)
+
+**Difficulty calibration:** most leaves 2-3. Pure-play beta 3.
+MM propositions 3. Real options 3.
+
+## 16. Coverage floor — Topic 06 Equity Investments
+
+**Hour budget (informational):** sum of leaf `estimated_hours` ∈ [35, 50].
+
+**Learning Modules (typically 8-10 phase nodes):**
+- Market Organization and Structure
+- Security Market Indexes
+- Market Efficiency
+- Overview of Equity Securities
+- Company Analysis: Past and Present
+- Industry and Competitive Analysis
+- Company Analysis: Forecasting
+- Equity Valuation: Concepts and Basic Tools
+
+**Coverage floor (each item = its own task leaf):**
+
+Equity security types:
+- Common stock
+- Preferred stock — Cumulative, Participating, Convertible, Callable,
+  Putable (5 separate preferred-stock leaves)
+- Private equity vs public equity
+- Depository receipts: ADR (sponsored vs unsponsored — 2 leaves), GDR
+
+Markets and trading:
+- Primary markets (3 separate leaves): IPO, Seasoned/follow-on,
+  Private placement
+- Secondary markets (4 separate leaves): Exchanges, OTC, ATS,
+  Dark pools
+- Order types (4 separate leaves): Market, Limit, Stop-loss, Stop-limit
+- Long position, Short position
+- Margin trading: Initial margin, Maintenance margin (separate leaves)
+- Margin call calculation, Short selling mechanics, Securities lending
+
+Market efficiency:
+- EMH — Weak form, Semi-strong form, Strong form (3 separate leaves)
+- Implications of each form for active vs passive management
+- Anomalies (≥5 separate leaves): Momentum effect, Value effect,
+  Size effect, Calendar effects, Post-earnings announcement drift
+
+Behavioral finance biases — EACH as own leaf:
+- Representativeness, Overconfidence, Loss aversion, Herding, Anchoring,
+  Framing, Mental accounting, Disposition effect, Confirmation bias,
+  Availability bias
+
+Indices:
+- Index methods (4 separate leaves): Price-weighted, Market-cap weighted,
+  Equal-weighted, Fundamental-weighted
+- Float-adjusted market cap, Rebalancing, Reconstitution, Tracking error
+
+Industry and company analysis:
+- Industry classification systems (3 separate leaves): GICS, ICB, NAICS
+- Industry life cycle (embryonic, growth, shakeout, mature, decline —
+  separate leaves or combined ≥3 leaves)
+- Porter's Five Forces (5 separate leaves): Threat of new entrants,
+  Bargaining power of suppliers, Bargaining power of buyers,
+  Threat of substitutes, Industry rivalry
+- PESTLE analysis
+- Company analysis framework
+
+Equity valuation models — EACH as own leaf:
+- DDM single-stage Gordon growth, DDM two-stage growth, DDM H-model,
+  DDM three-stage (4 separate leaves)
+- FCFF model, FCFE model
+- Residual income / EVA overview (if in 2026)
+- Multiplier models (each as own leaf): P/E trailing, P/E forward,
+  P/E justified, P/B, P/S, P/CF, EV/EBITDA, EV/Sales (8 separate leaves)
+- Asset-based valuation
+- Method of comparables vs method of forecasted fundamentals
+
+Required return / supporting concepts:
+- Sustainable growth rate (g = b × ROE)
+- Required return on equity via CAPM
+- Required return via multifactor models
+- Required return via build-up method
+- Justified P/E derivation from Gordon model
+
+**Cross-topic prerequisites:**
+- DCF and DDM depend on TVM (QM)
+- CAPM depends on regression (QM) and beta (Corp Issuers)
+- WACC for FCFF inputs comes from Corp Issuers
+- FCFE/FCFF reconstruction requires CFO from FSA
+
+**Difficulty calibration:** most leaves 2-3. H-model 3.
+EV/EBITDA adjustments 3. Justified P/E derivation 3-4.
