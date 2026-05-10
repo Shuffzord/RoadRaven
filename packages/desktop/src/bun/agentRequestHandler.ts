@@ -1,5 +1,6 @@
 import { getLogger } from "@logtape/logtape";
 import type { ServerWebSocket } from "bun";
+import { validateToolInput } from "./agentToolSchemas";
 import type { AgentRequest } from "./eventSchema";
 import { getOwnership, setOwnership } from "./refMap";
 import {
@@ -64,9 +65,10 @@ function sendError(
  *
  * Gate sequence (each fails fast and returns BEFORE the next):
  *   1. RESEARCH §13 kill-switch → agent_api_disabled
- *   2. D-13 path allowlist → path_not_permitted (openFile/saveFileAs only)
- *   3. RESEARCH §Risks L-08 cross-ref boundary → cross_ref_boundary (moveNode only)
- *   4. forward to renderer → renderer applies the remaining gates
+ *   2. WR-01 (06-REVIEW) per-tool input validation → invalid_input
+ *   3. D-13 path allowlist → path_not_permitted (openFile/saveFileAs only)
+ *   4. RESEARCH §Risks L-08 cross-ref boundary → cross_ref_boundary (moveNode only)
+ *   5. forward to renderer → renderer applies the remaining gates
  *      (no_file_loaded, node_not_found, cascade_required, move_would_create_cycle)
  *      and returns either {ok:true,data} or {ok:false,error,code,hint?,data?}.
  *
@@ -93,9 +95,26 @@ export async function agentRequestHandler(
 		return;
 	}
 
-	// GATE 2 — path-traversal allowlist (D-13, RESEARCH §Risks L-05)
+	// GATE 2 — per-tool input validation (WR-01 06-REVIEW). The frame envelope
+	// schema (eventSchema.ts AgentRequestSchema) only checks `params` is a
+	// Record<string, unknown>; it does not check tool-specific shapes. The
+	// renderer dispatcher casts args without runtime checks, so a direct WS
+	// client could ship malformed input (e.g. patch=null, position="first")
+	// and silently get internal_error / wrong placement. Validate here.
+	const validated = validateToolInput(request.method, request.params);
+	if (!validated.ok) {
+		agentLogger.warn`Agent request input validation failed tool=${request.method} error=${validated.error}`;
+		sendError(ws, request.id, validated.code, validated.error, validated.hint);
+		return;
+	}
+	// Replace request.params with the validated (and parsed) data so downstream
+	// consumers see the typed values. Zod stripping unknown fields also closes a
+	// minor surface where extra args could shadow real ones in handlers.
+	const validatedParams = validated.data;
+
+	// GATE 3 — path-traversal allowlist (D-13, RESEARCH §Risks L-05)
 	if (request.method === "openFile" || request.method === "saveFileAs") {
-		const path = (request.params as { path?: unknown }).path;
+		const path = (validatedParams as { path?: unknown }).path;
 		if (typeof path !== "string" || !isPathWithinMainDir(path)) {
 			agentLogger.warn`Agent path-allowlist denial tool=${request.method} path=${String(path)}`;
 			sendError(
@@ -122,7 +141,7 @@ export async function agentRequestHandler(
 	// drop the impossible | undefined | null cast; if a future refactor breaks
 	// the contract, fail loud rather than papering over.
 	if (request.method === "moveNode") {
-		const { nodeId, newParentId } = request.params as {
+		const { nodeId, newParentId } = validatedParams as {
 			nodeId?: unknown;
 			newParentId?: unknown;
 		};
@@ -165,7 +184,7 @@ export async function agentRequestHandler(
 		}
 		const result = await mainWindow.webview.rpc.request.agentRequest({
 			tool: request.method,
-			args: request.params,
+			args: validatedParams,
 		});
 		const durationMs = Date.now() - start;
 		if (result.ok) {
@@ -177,7 +196,7 @@ export async function agentRequestHandler(
 			// when no file is loaded, so cachedMainPath is non-null here in
 			// the non-test path — the null-guard below is for safety).
 			if (request.method === "createNode") {
-				const parentId = (request.params as { parentId?: unknown }).parentId;
+				const parentId = (validatedParams as { parentId?: unknown }).parentId;
 				const newId = (result.data as { nodeId?: unknown } | null | undefined)
 					?.nodeId;
 				if (typeof parentId === "string" && typeof newId === "string") {

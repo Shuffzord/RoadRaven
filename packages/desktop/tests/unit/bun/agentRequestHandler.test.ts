@@ -234,6 +234,117 @@ describe("agentRequestHandler — unknown method passthrough", () => {
 	});
 });
 
+// WR-01 (06-REVIEW): per-tool input validation rejects malformed args BEFORE
+// they reach the renderer. The frame envelope schema (eventSchema.ts) only
+// validates the wrapper; without per-tool checks a direct WS client could
+// silently corrupt state via patch=null, position="first", patch=42, etc.
+describe("agentRequestHandler — input validation (WR-01)", () => {
+	beforeEach(() => {
+		vi.clearAllMocks();
+	});
+
+	it("updateNodeMetadata({patch: null}) returns invalid_input (WR-01)", async () => {
+		vi.mocked(loadSettings).mockReturnValue({});
+		const { ws, sent } = makeWs();
+		const mainWindow = makeMainWindow(async () => ({
+			ok: true,
+			data: { ok: true },
+		}));
+		await agentRequestHandler(
+			ws,
+			makeRequest("updateNodeMetadata", {
+				nodeId: "00000000-0000-0000-0000-000000000000",
+				patch: null,
+			}),
+			mainWindow,
+		);
+		expect(
+			(
+				mainWindow as {
+					webview: { rpc: { request: { agentRequest: unknown } } };
+				}
+			).webview.rpc.request.agentRequest,
+		).not.toHaveBeenCalled();
+		const env = JSON.parse(sent[0]);
+		expect(env.error.code).toBe("invalid_input");
+		expect(env.error.message).toContain("patch");
+	});
+
+	it('moveNode({position: "first"}) returns invalid_input — string position rejected (WR-01)', async () => {
+		vi.mocked(loadSettings).mockReturnValue({});
+		const { ws, sent } = makeWs();
+		const mainWindow = makeMainWindow(async () => ({
+			ok: true,
+			data: { ok: true },
+		}));
+		await agentRequestHandler(
+			ws,
+			makeRequest("moveNode", {
+				nodeId: "00000000-0000-0000-0000-000000000001",
+				newParentId: "00000000-0000-0000-0000-000000000002",
+				position: "first",
+			}),
+			mainWindow,
+		);
+		expect(
+			(
+				mainWindow as {
+					webview: { rpc: { request: { agentRequest: unknown } } };
+				}
+			).webview.rpc.request.agentRequest,
+		).not.toHaveBeenCalled();
+		const env = JSON.parse(sent[0]);
+		expect(env.error.code).toBe("invalid_input");
+	});
+
+	it("createNode without title returns invalid_input (WR-01)", async () => {
+		vi.mocked(loadSettings).mockReturnValue({});
+		const { ws, sent } = makeWs();
+		const mainWindow = makeMainWindow(async () => ({
+			ok: true,
+			data: { nodeId: "x" },
+		}));
+		await agentRequestHandler(
+			ws,
+			makeRequest("createNode", {
+				parentId: "00000000-0000-0000-0000-000000000001",
+				// missing title
+			}),
+			mainWindow,
+		);
+		expect(
+			(
+				mainWindow as {
+					webview: { rpc: { request: { agentRequest: unknown } } };
+				}
+			).webview.rpc.request.agentRequest,
+		).not.toHaveBeenCalled();
+		const env = JSON.parse(sent[0]);
+		expect(env.error.code).toBe("invalid_input");
+	});
+
+	// WR-01 forward-compat: tools not in the schema registry pass through
+	// (lets new plugin versions ship tools the desktop hasn't seen yet —
+	// the renderer returns unknown_tool for genuinely unknown methods).
+	it("unknown method passes input validation (forward compat)", async () => {
+		vi.mocked(loadSettings).mockReturnValue({});
+		const { ws, sent } = makeWs();
+		const mainWindow = makeMainWindow(async () => ({
+			ok: false,
+			error: "Unknown agent tool: 'futureTool'.",
+			code: "unknown_tool",
+		}));
+		await agentRequestHandler(
+			ws,
+			makeRequest("futureTool", { whatever: 42 }),
+			mainWindow,
+		);
+		// Validation passed (forward-compat); renderer rejected.
+		const env = JSON.parse(sent[0]);
+		expect(env.error.code).toBe("unknown_tool");
+	});
+});
+
 // CR-03 (06-REVIEW): cross-ref boundary gate must NOT fail open for nodes
 // missing from the ownership map. The original code returned silently when
 // either side's owner was undefined; the fix records ownership on createNode
