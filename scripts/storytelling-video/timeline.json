@@ -174,14 +174,6 @@
         "meta": { "source": "claude-code", "task": "auto-update channel wiring" }
       },
       "narratorBeat": "You don't touch anything. You just open the app, and the current state of your project is right there."
-    },
-    {
-      "act": 4,
-      "at_ms": 60500,
-      "op": "cameraFitView",
-      "args": {},
-      "narratorBeat": "Your plan. Watching itself.",
-      "comment": "Pull-back camera move (Prereq 2). Walks nodePositionsRef, computes bounding box, animates zoom + pan via animatePanTo() at 900ms ease."
     }
   ]
 }

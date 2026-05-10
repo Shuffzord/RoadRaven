@@ -109,6 +109,23 @@ function sanitizeArgsForAudit(
 	return truncated;
 }
 
+/**
+ * Mark a node as recently touched by an agent so the in-canvas live pulse +
+ * plugin glyph fire for ANY agent-driven mutation, not just updateNodeStatus.
+ * Source defaults to "claude-code" (this plugin's identity) but is overridden
+ * by `args.meta.source` when the caller specifies it (e.g., the storytelling
+ * runner sets "github-actions" on Tier-2-style mutations).
+ */
+function recordAgentLive(
+	nodeId: string,
+	args: Record<string, unknown>,
+	store: RoadmapStoreState,
+): void {
+	const meta = (args.meta ?? {}) as Record<string, unknown>;
+	const source = typeof meta.source === "string" ? meta.source : "claude-code";
+	store.recordLiveSource(nodeId, source, meta);
+}
+
 function appendAgentDrawerEvent(
 	tool: string,
 	nodeId: string,
@@ -387,6 +404,7 @@ export async function handleAgentRequest(
 					args.metadata as Record<string, unknown>,
 				);
 			}
+			recordAgentLive(newId, args, store);
 			appendAgentDrawerEvent("createNode", newId, args, store, eventLog);
 			return { ok: true, data: { nodeId: newId } };
 		}
@@ -466,6 +484,7 @@ export async function handleAgentRequest(
 				};
 			}
 			store.renameNode(nodeId, args.title as string);
+			recordAgentLive(nodeId, args, store);
 			appendAgentDrawerEvent("renameNode", nodeId, args, store, eventLog);
 			return { ok: true, data: { ok: true } };
 		}
@@ -480,6 +499,7 @@ export async function handleAgentRequest(
 				};
 			}
 			store.updateNodeStatus(nodeId, args.status as string);
+			recordAgentLive(nodeId, args, store);
 			appendAgentDrawerEvent("updateNodeStatus", nodeId, args, store, eventLog);
 			return { ok: true, data: { ok: true } };
 		}
@@ -494,6 +514,7 @@ export async function handleAgentRequest(
 				};
 			}
 			store.updateNodeType(nodeId, args.type as string);
+			recordAgentLive(nodeId, args, store);
 			appendAgentDrawerEvent("updateNodeType", nodeId, args, store, eventLog);
 			return { ok: true, data: { ok: true } };
 		}
@@ -508,6 +529,7 @@ export async function handleAgentRequest(
 				};
 			}
 			store.updateNodeNotes(nodeId, args.notes as string);
+			recordAgentLive(nodeId, args, store);
 			appendAgentDrawerEvent("updateNodeNotes", nodeId, args, store, eventLog);
 			return { ok: true, data: { ok: true } };
 		}
@@ -531,6 +553,7 @@ export async function handleAgentRequest(
 				else next[k] = v;
 			}
 			store.updateNodeMetadata(nodeId, next);
+			recordAgentLive(nodeId, args, store);
 			appendAgentDrawerEvent(
 				"updateNodeMetadata",
 				nodeId,
@@ -579,6 +602,7 @@ export async function handleAgentRequest(
 				};
 			}
 			store.moveNode(nodeId, newParentId, args.position as number | undefined);
+			recordAgentLive(nodeId, args, store);
 			appendAgentDrawerEvent("moveNode", nodeId, args, store, eventLog);
 			return { ok: true, data: { ok: true } };
 		}

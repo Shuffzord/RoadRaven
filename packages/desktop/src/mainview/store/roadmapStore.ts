@@ -308,6 +308,15 @@ interface RoadmapState {
 	bumpLiveTick: () => void;
 	/** Selector: true iff a live event was received for nodeId within the last 30s. */
 	isNodeLive: (nodeId: string) => boolean;
+	/** Record a live event source/meta for nodeId without changing status.
+	 *  Used by the agent dispatcher so every agent-driven mutation lights the
+	 *  in-canvas pulse + plugin glyph (not just status changes). No-ops when
+	 *  the node doesn't exist (e.g., after a delete). */
+	recordLiveSource: (
+		nodeId: string,
+		source: string | undefined,
+		meta?: Record<string, unknown>,
+	) => void;
 }
 
 export const INITIAL_STATE = {
@@ -927,6 +936,22 @@ export const useRoadmapStore = create<RoadmapState>((set, get) => {
 			const meta = get().liveEventMeta[nodeId];
 			if (!meta) return false;
 			return Date.now() - meta.lastEventAt < LIVE_WINDOW_MS;
+		},
+
+		recordLiveSource: (nodeId, source, meta) => {
+			const state = get();
+			if (!state.nodeIndex.get(nodeId)) return;
+			set({
+				liveEventMeta: {
+					...state.liveEventMeta,
+					[nodeId]: {
+						lastEventAt: Date.now(),
+						source,
+						meta,
+					},
+				},
+				statusTick: state.statusTick + 1,
+			});
 		},
 	};
 });
