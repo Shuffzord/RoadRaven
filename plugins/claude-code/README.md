@@ -85,7 +85,7 @@ The Roadmap Viewer desktop app must be running. The plugin discovers the app via
 
 - `getEventApiStatus()` — return the Event API URL, PID, and `startedAt` from the sentinel file
 
-## Error Taxonomy (13 codes)
+## Error Taxonomy (15 codes)
 
 Errors are returned as MCP `isError: true` results with `Error (<code>): <message>. <hint?>` text:
 
@@ -98,12 +98,14 @@ Errors are returned as MCP `isError: true` results with `Error (<code>): <messag
 | `cannot_delete_last_root` | `deleteNode` would leave the schema with zero root nodes |
 | `path_not_permitted` | `openFile`/`saveFileAs` path outside the allowlist (loaded directory or recently picked paths) |
 | `cross_ref_boundary` | `moveNode` target parent is in a different `$ref` file (Phase 3 EDIT-16) |
-| `move_would_create_cycle` | `moveNode` target parent is a descendant of the node being moved |
+| `move_would_create_cycle` | `moveNode` target parent is a descendant of the node being moved (or the node itself) |
 | `file_read_error` | `openFile` failed at the OS layer (file missing, permission denied) |
 | `save_error` | `saveFile`/`saveFileAs` atomic write failed |
 | `agent_api_disabled` | The user has set `agentApi.enabled: false` in their settings (kill-switch) |
 | `unknown_tool` | The plugin sent a tool name the desktop app does not recognize (version mismatch) |
 | `internal_error` | Unhandled exception — check the desktop app's logs |
+| `invalid_input` | Tool input failed Bun-side Zod validation (wrong type, missing required field, malformed UUID) |
+| `autosave_timeout` | `openFile` could not flush a pending autosave within the timeout — call `saveFile` first |
 
 ## Kill-Switch
 

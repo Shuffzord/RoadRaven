@@ -10,8 +10,8 @@ import {
 	UpdateNodeMetadataInputSchema,
 } from "../src/tools/schemas";
 
-describe("AgentErrorCode enum (RESEARCH §9 / D-11/D-12/D-13)", () => {
-	it("contains exactly the 13 RESEARCH-defined codes, no more, no less", () => {
+describe("AgentErrorCode enum (RESEARCH §9 / D-11/D-12/D-13 + WR-01/WR-04)", () => {
+	it("contains exactly 15 codes: 13 originals + invalid_input (WR-01) + autosave_timeout (WR-04)", () => {
 		const expected = new Set<AgentErrorCode>([
 			"app_not_running",
 			"no_file_loaded",
@@ -26,9 +26,11 @@ describe("AgentErrorCode enum (RESEARCH §9 / D-11/D-12/D-13)", () => {
 			"agent_api_disabled",
 			"unknown_tool",
 			"internal_error",
+			"invalid_input",
+			"autosave_timeout",
 		] as const);
 		expect(new Set(AGENT_ERROR_CODES)).toEqual(expected);
-		expect(AGENT_ERROR_CODES.length).toBe(13);
+		expect(AGENT_ERROR_CODES.length).toBe(15);
 	});
 });
 

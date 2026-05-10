@@ -302,4 +302,4 @@ Plans:
 | 3. Full Editor | 0/6 | Planned | - |
 | 4. Event API | 6/6 | Complete | 2026-04-29 |
 | 5. Packaging & Distribution | 5/5 | Complete | 2026-05-05 |
-| 6. Agentic Roadmap Authoring | 5/6 | In Progress | - |
+| 6. Agentic Roadmap Authoring | 6/6 | Complete | 2026-05-10 |
