@@ -12,13 +12,19 @@ vi.mock("../../../src/bun/settings", () => ({
 vi.mock("../../../src/bun/saveFile", () => ({
 	isPathWithinMainDir: vi.fn(() => true),
 	pushDialogAllowlistPath: vi.fn(),
+	getCachedMainPath: vi.fn(() => null), // default: no main file → no fallback
 }));
 vi.mock("../../../src/bun/refMap", () => ({
-	getOwnership: vi.fn(() => undefined), // default: no $ref ownership constraint
+	getOwnership: vi.fn(() => new Map<string, string>()), // CR-03: real Map default
+	setOwnership: vi.fn(),
 }));
 
 import { agentRequestHandler } from "../../../src/bun/agentRequestHandler";
-import { isPathWithinMainDir } from "../../../src/bun/saveFile";
+import { getOwnership, setOwnership } from "../../../src/bun/refMap";
+import {
+	getCachedMainPath,
+	isPathWithinMainDir,
+} from "../../../src/bun/saveFile";
 import { loadSettings } from "../../../src/bun/settings";
 
 function makeWs() {
@@ -225,5 +231,106 @@ describe("agentRequestHandler — unknown method passthrough", () => {
 		});
 		const env = JSON.parse(sent[0]);
 		expect(env.error.code).toBe("unknown_tool");
+	});
+});
+
+// CR-03 (06-REVIEW): cross-ref boundary gate must NOT fail open for nodes
+// missing from the ownership map. The original code returned silently when
+// either side's owner was undefined; the fix records ownership on createNode
+// and defaults missing entries to the cached main file when checking moveNode.
+describe("agentRequestHandler — cross-ref boundary gate (CR-03)", () => {
+	beforeEach(() => {
+		vi.clearAllMocks();
+	});
+
+	it("createNode: records ownership for the new node inheriting parent's owner (CR-03)", async () => {
+		vi.mocked(loadSettings).mockReturnValue({});
+		// Parent is owned by /main.json. Render-side returns a new id.
+		const ownership = new Map<string, string>([["parent-A", "/main.json"]]);
+		vi.mocked(getOwnership).mockReturnValue(ownership);
+		vi.mocked(getCachedMainPath).mockReturnValue("/main.json");
+		const { ws, sent } = makeWs();
+		const mainWindow = makeMainWindow(async () => ({
+			ok: true,
+			data: { nodeId: "new-child-1" },
+		}));
+		await agentRequestHandler(
+			ws,
+			makeRequest("createNode", { parentId: "parent-A", title: "Child" }),
+			mainWindow,
+		);
+		// Successful response forwarded to client.
+		const env = JSON.parse(sent[0]);
+		expect(env.result).toEqual({ nodeId: "new-child-1" });
+		// AND the new node's ownership has been recorded as the parent's owner.
+		expect(setOwnership).toHaveBeenCalledWith("new-child-1", "/main.json");
+	});
+
+	it("moveNode: rejects cross-boundary move where one side lacks explicit ownership (CR-03 fail-open closed)", async () => {
+		vi.mocked(loadSettings).mockReturnValue({});
+		// Setup: target node is owned by a $ref file, but the source node
+		// (e.g. agent-created moments ago) has no entry in the map. Old code
+		// would skip the gate; new code defaults source to cachedMainPath
+		// and rejects with cross_ref_boundary because main.json !== ref.json.
+		const ownership = new Map<string, string>([
+			["dest-parent", "/refs/foo.json"],
+		]);
+		vi.mocked(getOwnership).mockReturnValue(ownership);
+		vi.mocked(getCachedMainPath).mockReturnValue("/main.json");
+		const { ws, sent } = makeWs();
+		const mainWindow = makeMainWindow(async () => ({
+			ok: true,
+			data: {},
+		}));
+		await agentRequestHandler(
+			ws,
+			makeRequest("moveNode", {
+				nodeId: "agent-created", // not in map
+				newParentId: "dest-parent", // owned by /refs/foo.json
+			}),
+			mainWindow,
+		);
+		expect(
+			(
+				mainWindow as {
+					webview: { rpc: { request: { agentRequest: unknown } } };
+				}
+			).webview.rpc.request.agentRequest,
+		).not.toHaveBeenCalled();
+		const env = JSON.parse(sent[0]);
+		expect(env.error.code).toBe("cross_ref_boundary");
+	});
+
+	it("moveNode: allows in-main-file move when both sides default to cachedMainPath (CR-03 fail-closed false-positive guard)", async () => {
+		vi.mocked(loadSettings).mockReturnValue({});
+		// No explicit ownership entries; both sides fall back to cachedMainPath.
+		// Without a valid fallback the gate would over-reject; verify it allows.
+		const ownership = new Map<string, string>();
+		vi.mocked(getOwnership).mockReturnValue(ownership);
+		vi.mocked(getCachedMainPath).mockReturnValue("/main.json");
+		const { ws, sent } = makeWs();
+		const mainWindow = makeMainWindow(async () => ({
+			ok: true,
+			data: { ok: true },
+		}));
+		await agentRequestHandler(
+			ws,
+			makeRequest("moveNode", {
+				nodeId: "node-A",
+				newParentId: "node-B",
+			}),
+			mainWindow,
+		);
+		// Forwarded to renderer (gate passed because both sides default to /main.json).
+		expect(
+			(
+				mainWindow as {
+					webview: { rpc: { request: { agentRequest: unknown } } };
+				}
+			).webview.rpc.request.agentRequest,
+		).toHaveBeenCalledOnce();
+		const env = JSON.parse(sent[0]);
+		expect(env.error).toBeUndefined();
+		expect(env.result).toEqual({ ok: true });
 	});
 });

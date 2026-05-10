@@ -1,8 +1,12 @@
 import { getLogger } from "@logtape/logtape";
 import type { ServerWebSocket } from "bun";
 import type { AgentRequest } from "./eventSchema";
-import { getOwnership } from "./refMap";
-import { isPathWithinMainDir, pushDialogAllowlistPath } from "./saveFile";
+import { getOwnership, setOwnership } from "./refMap";
+import {
+	getCachedMainPath,
+	isPathWithinMainDir,
+	pushDialogAllowlistPath,
+} from "./saveFile";
 import { loadSettings } from "./settings";
 
 const agentLogger = getLogger(["roadraven", "agent"]);
@@ -107,21 +111,33 @@ export async function agentRequestHandler(
 		pushDialogAllowlistPath(path);
 	}
 
-	// GATE 3 — cross-ref boundary check for moveNode (RESEARCH §Risks L-08)
+	// GATE 3 — cross-ref boundary check for moveNode (RESEARCH §Risks L-08).
+	//
+	// CR-03 (Phase 6 06-REVIEW): the prior `owner1 && owner2 && owner1 !== owner2`
+	// guard failed OPEN for any node missing from the ownership map. Agent-created
+	// nodes were never propagated to the map (setOwnership only ran during
+	// loadFile / resolveRefs), so the gate silently skipped after `createNode` →
+	// `moveNode`, violating Phase 3 EDIT-16. Fix: default missing entries to the
+	// current main file. WR-07 follow-on: getOwnership() always returns a Map —
+	// drop the impossible | undefined | null cast; if a future refactor breaks
+	// the contract, fail loud rather than papering over.
 	if (request.method === "moveNode") {
 		const { nodeId, newParentId } = request.params as {
 			nodeId?: unknown;
 			newParentId?: unknown;
 		};
 		if (typeof nodeId === "string" && typeof newParentId === "string") {
-			const ownershipMap = getOwnership() as
-				| Map<string, string>
-				| undefined
-				| null;
-			const owner1 = ownershipMap?.get(nodeId);
-			const owner2 = ownershipMap?.get(newParentId);
+			const ownershipMap = getOwnership();
+			const cachedMain = getCachedMainPath();
+			// Default to the current main file when ownership is unknown. This
+			// closes the "agent created node, then moved it across boundary"
+			// hole: the new node is treated as belonging to the main file, so a
+			// move into a $ref-owned subtree (whose ancestors do have explicit
+			// ownership) trips the gate as expected.
+			const owner1 = ownershipMap.get(nodeId) ?? cachedMain;
+			const owner2 = ownershipMap.get(newParentId) ?? cachedMain;
 			if (owner1 && owner2 && owner1 !== owner2) {
-				agentLogger.warn`Agent cross-ref move denied nodeId=${nodeId} newParentId=${newParentId}`;
+				agentLogger.warn`Agent cross-ref move denied nodeId=${nodeId} newParentId=${newParentId} owner1=${owner1} owner2=${owner2}`;
 				sendError(
 					ws,
 					request.id,
@@ -153,6 +169,26 @@ export async function agentRequestHandler(
 		});
 		const durationMs = Date.now() - start;
 		if (result.ok) {
+			// CR-03 (Phase 6 06-REVIEW): record ownership for newly-created nodes
+			// so the cross-ref boundary gate (above) has a valid entry for the
+			// next moveNode. The new node inherits its parent's owner; if the
+			// parent has no explicit ownership, fall back to the cached main
+			// path (the renderer's no_file_loaded gate prevents createNode
+			// when no file is loaded, so cachedMainPath is non-null here in
+			// the non-test path — the null-guard below is for safety).
+			if (request.method === "createNode") {
+				const parentId = (request.params as { parentId?: unknown }).parentId;
+				const newId = (result.data as { nodeId?: unknown } | null | undefined)
+					?.nodeId;
+				if (typeof parentId === "string" && typeof newId === "string") {
+					const ownershipMap = getOwnership();
+					const cachedMain = getCachedMainPath();
+					const inherited = ownershipMap.get(parentId) ?? cachedMain;
+					if (inherited) {
+						setOwnership(newId, inherited);
+					}
+				}
+			}
 			agentLogger.info`Agent tool ok tool=${request.method} durationMs=${durationMs}`;
 			sendResponse(ws, request.id, result.data);
 		} else {

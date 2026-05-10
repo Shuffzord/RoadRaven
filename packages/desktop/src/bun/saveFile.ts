@@ -73,6 +73,18 @@ export function clearCachedMainPath(): void {
 }
 
 /**
+ * CR-03 (Phase 6 06-REVIEW): expose the current cached main path so the agent
+ * cross-ref boundary gate can default unknown-ownership nodes (e.g.,
+ * agent-created nodes that haven't been propagated to the ownership map yet)
+ * to "owned by the main file." Returning null when no file is loaded is
+ * acceptable — the renderer's `no_file_loaded` gate fires before the
+ * ownership check matters.
+ */
+export function getCachedMainPath(): string | null {
+	return cachedMainPath;
+}
+
+/**
  * True when `absolutePath` resolves inside the directory of the currently
  * loaded main file. Used by the resolveRef RPC to block traversal outside
  * the roadmap's own directory tree (mirrors the guard already inside
