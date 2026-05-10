@@ -744,14 +744,117 @@
                   "id": "a0000000-4102-4000-8000-000000000000",
                   "title": "Add child/sibling node",
                   "status": "not-started",
-                  "type": "task"
+                  "type": "task",
+                  "children": [
+                    {
+                      "id": "047290bd-c70a-400f-87a0-3cd131e6a8fc",
+                      "title": "Untitled",
+                      "status": "not-started",
+                      "createdAt": "2026-05-04T14:29:12.113Z",
+                      "updatedAt": "2026-05-04T14:29:13.779Z",
+                      "children": [
+                        {
+                          "id": "d9f90abd-373c-4d55-93fa-352decf9f0b7",
+                          "title": "Untitled",
+                          "status": "not-started",
+                          "createdAt": "2026-05-04T14:42:52.720Z",
+                          "updatedAt": "2026-05-04T14:42:52.878Z",
+                          "children": [
+                            {
+                              "id": "46f3208b-1d53-4b12-a0ce-7c396975336f",
+                              "title": "123",
+                              "status": "not-started",
+                              "createdAt": "2026-05-04T14:42:54.671Z",
+                              "updatedAt": "2026-05-04T14:42:55.368Z"
+                            },
+                            {
+                              "id": "0d1797bb-47d6-461a-88de-6dd5474cd921",
+                              "title": "123",
+                              "status": "not-started",
+                              "createdAt": "2026-05-04T14:42:56.400Z",
+                              "updatedAt": "2026-05-04T14:42:57.470Z",
+                              "children": [
+                                {
+                                  "id": "aabad75d-e255-4427-8b5c-0e150bf3f9e7",
+                                  "title": "123",
+                                  "status": "not-started",
+                                  "createdAt": "2026-05-04T14:53:51.483Z",
+                                  "updatedAt": "2026-05-04T14:53:52.343Z"
+                                },
+                                {
+                                  "id": "c2d6b0e1-e14a-4a72-b843-ea8068fde5e3",
+                                  "title": "123",
+                                  "status": "not-started",
+                                  "createdAt": "2026-05-04T14:54:29.181Z",
+                                  "updatedAt": "2026-05-04T14:54:30.383Z"
+                                },
+                                {
+                                  "id": "b54be4ee-714b-4603-9cca-39cba70b00d6",
+                                  "title": "123  123",
+                                  "status": "in-progress",
+                                  "createdAt": "2026-05-04T14:53:54.993Z",
+                                  "updatedAt": "2026-05-04T14:53:57.808Z"
+                                },
+                                {
+                                  "id": "833426d7-e13e-46f4-89b1-831c2fb212a5",
+                                  "title": "Claude Integration",
+                                  "status": "completed",
+                                  "createdAt": "2026-05-04T14:54:09.095Z",
+                                  "updatedAt": "2026-05-04T15:08:20.173Z"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "id": "ebf8b1b5-372f-4d50-8e52-f753e61e231a",
+                          "title": "123",
+                          "status": "not-started",
+                          "createdAt": "2026-05-04T14:45:26.555Z",
+                          "updatedAt": "2026-05-04T14:45:27.751Z",
+                          "children": [
+                            {
+                              "id": "f23e0ef0-2b4e-4528-ab45-ec7136a9f2c7",
+                              "title": "56565",
+                              "status": "not-started",
+                              "createdAt": "2026-05-04T15:16:14.834Z",
+                              "updatedAt": "2026-05-04T15:16:17.016Z"
+                            },
+                            {
+                              "id": "888a078d-4611-4eb0-ae66-503676ee73f8",
+                              "title": "hgjhgjh",
+                              "status": "completed",
+                              "createdAt": "2026-05-04T15:16:18.734Z",
+                              "updatedAt": "2026-05-04T15:16:20.134Z"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
                 },
                 {
                   "id": "a0000000-4103-4000-8000-000000000000",
                   "title": "Delete node with confirmation dialog",
                   "status": "not-started",
                   "type": "task",
-                  "notes": "Non-leaf delete shows confirmation dialog with child count. Leaf nodes delete immediately."
+                  "notes": "Non-leaf delete shows confirmation dialog with child count. Leaf nodes delete immediately.",
+                  "children": [
+                    {
+                      "id": "e67f8040-c9d5-48ee-b0af-7073bb37b32a",
+                      "title": "123123",
+                      "status": "not-started",
+                      "createdAt": "2026-05-04T14:28:44.949Z",
+                      "updatedAt": "2026-05-04T14:28:47.740Z"
+                    },
+                    {
+                      "id": "5d0c3bf5-77f2-40ab-b2f7-8392f8bc1f87",
+                      "title": "Untitled",
+                      "status": "not-started",
+                      "createdAt": "2026-05-04T14:28:50.734Z",
+                      "updatedAt": "2026-05-04T14:28:50.734Z"
+                    }
+                  ]
                 },
                 {
                   "id": "a0000000-4104-4000-8000-000000000000",
@@ -802,7 +905,16 @@
                   "title": "Native context menu implementation",
                   "status": "not-started",
                   "type": "task",
-                  "notes": "Right-click triggers native context menu via Electrobun `ContextMenu.showContextMenu()`. Must appear within 50ms."
+                  "notes": "Right-click triggers native context menu via Electrobun `ContextMenu.showContextMenu()`. Must appear within 50ms.",
+                  "children": [
+                    {
+                      "id": "7ddcf45f-2b52-4dc9-a63b-36c07e74330d",
+                      "title": "123",
+                      "status": "not-started",
+                      "createdAt": "2026-05-04T14:55:20.852Z",
+                      "updatedAt": "2026-05-04T14:55:21.699Z"
+                    }
+                  ]
                 },
                 {
                   "id": "a0000000-4202-4000-8000-000000000000",
@@ -1310,7 +1422,23 @@
                   "title": "Write plugin development guide",
                   "status": "not-started",
                   "type": "task",
-                  "notes": "Guide for creating Event API producers. WebSocket contract, MCP wrapper pattern, example plugin."
+                  "notes": "Guide for creating Event API producers. WebSocket contract, MCP wrapper pattern, example plugin.",
+                  "children": [
+                    {
+                      "id": "3bc12898-289e-4fca-8bde-a148f757d18a",
+                      "title": "123132",
+                      "status": "not-started",
+                      "createdAt": "2026-05-04T15:19:31.126Z",
+                      "updatedAt": "2026-05-07T08:37:08.557Z"
+                    },
+                    {
+                      "id": "2c343be4-dfe0-4c09-a528-2fdca68a686e",
+                      "title": "Something",
+                      "status": "in-progress",
+                      "createdAt": "2026-05-07T08:37:15.718Z",
+                      "updatedAt": "2026-05-07T08:37:17.785Z"
+                    }
+                  ]
                 }
               ]
             }

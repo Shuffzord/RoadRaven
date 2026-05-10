@@ -6,7 +6,16 @@ import { useRoadmapStore } from "./store/roadmapStore";
 const rpc = Electroview.defineRPC<RoadmapRPCType>({
 	maxRequestTime: 120_000, // 2 min — native file dialogs block until user picks a file
 	handlers: {
-		requests: {},
+		requests: {
+			// Phase 6 PLUG-AGENT-* — Bun forwards inbound type:'request' frames here
+			// (Plan 06-03 agentRequestHandler → mainWindow.webview.rpc.request.agentRequest).
+			// Renderer dispatcher (Plan 06-04) routes to roadmapStore actions and emits
+			// drawer audit events for every mutating tool (D-09).
+			agentRequest: async ({ tool, args }) => {
+				const { handleAgentRequest } = await import("./rpc/agentRpcHandler");
+				return handleAgentRequest(tool, args);
+			},
+		},
 		messages: {
 			pushFileChanged: (msg) => {
 				import("./rpcHandlers").then(({ handlePushFileChanged }) => {

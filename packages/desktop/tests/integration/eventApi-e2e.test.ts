@@ -84,4 +84,45 @@ describe("Event API end-to-end", () => {
 		// All assertions passed: port was assigned, WS connected
 		expect(ready.port).toBeGreaterThan(0);
 	}, 12000); // 12s timeout for process spawn + WS connect
+
+	// WR-06 (06-REVIEW): standalone must FAIL FAST on invalid
+	// ROADRAVEN_EVENT_PORT instead of silently falling back to the default.
+	// Previously, exec fell through to `requestedPort = envPort ??
+	// DEFAULT_PORT` after logging, so a typo'd env var let the server bind
+	// 47921 and parent tests could not distinguish that from a healthy boot.
+	it("exits non-zero on invalid ROADRAVEN_EVENT_PORT (WR-06)", async () => {
+		const standaloneEntry = join(
+			__dirname,
+			"../../src/bun/eventServerStandalone.ts",
+		);
+
+		const child = spawn("bun", ["run", standaloneEntry], {
+			env: { ...process.env, ROADRAVEN_EVENT_PORT: "not-a-number" },
+			stdio: ["ignore", "pipe", "pipe"],
+		});
+
+		const result = await new Promise<{ code: number | null; stderr: string }>(
+			(resolve, reject) => {
+				let stderrBuf = "";
+				const timer = setTimeout(
+					() => reject(new Error("standalone did not exit within 5s")),
+					5000,
+				);
+				child.stderr!.on("data", (chunk: Buffer) => {
+					stderrBuf += chunk.toString();
+				});
+				child.on("exit", (code) => {
+					clearTimeout(timer);
+					resolve({ code, stderr: stderrBuf });
+				});
+				child.on("error", (err) => {
+					clearTimeout(timer);
+					reject(err);
+				});
+			},
+		);
+
+		expect(result.code).toBe(1);
+		expect(result.stderr).toContain("invalid_port");
+	}, 8000);
 });

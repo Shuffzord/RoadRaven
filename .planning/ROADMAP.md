@@ -120,6 +120,8 @@ Plans:
 
 **Goal:** A complete roadmap can be created, edited, and saved without touching JSON directly — with full keyboard control, autosave, atomic writes, and correct `$ref` write-back.
 
+**Goal:** A complete roadmap can be created, edited, and saved without touching JSON directly — with full keyboard control, autosave, atomic writes, and correct `$ref` write-back.
+
 **Depends on:** Phase 2
 
 **Requirements covered:** EDIT-01, EDIT-02, EDIT-03, EDIT-04, EDIT-05, EDIT-06, EDIT-07, EDIT-08, EDIT-09, EDIT-10, EDIT-11, EDIT-12, EDIT-13, EDIT-14, EDIT-15, EDIT-16, EDIT-17, EDIT-18
@@ -250,12 +252,23 @@ Plans:
 
 **Depends on:** Phase 4 (Event API / MCP wrapper foundation). Can ship before, after, or alongside Phase 5 (Packaging) — the two are independent.
 
-**Requirements**: TBD (extend PLUG-09 plugin/subscribe scaffolding into a working bidirectional contract; new requirements to be derived during planning)
+**Requirements covered:** PLUG-AGENT-READ-01..06, PLUG-AGENT-CREATE-01..02, PLUG-AGENT-UPDATE-01..06, PLUG-AGENT-DELETE-01, PLUG-AGENT-FILE-01..03, PLUG-AGENT-TRANSPORT-01..02, PLUG-AGENT-SAFETY-01..03 (23 IDs)
 
-**Plans:** 0 plans
+**Plans:** 6 plans
+
+Wave structure (TDD mode — contract-first; ~18-22 tests total across the phase):
+- **Wave 0** (foundation contracts, TDD): 06-01
+- **Wave 1** (parallel, TDD): 06-02 + 06-03
+- **Wave 2** (TDD): 06-04
+- **Wave 3** (parallel, execute): 06-05 + 06-06
 
 Plans:
-- [ ] TBD (run /gsd-plan-phase 6 to break down)
+- [x] 06-01-PLAN.md — Wave 0 (TDD): REQUIREMENTS PLUG-AGENT-* block + RoadmapRPCType.bun.requests.agentRequest + AppSettings.agentApi.enabled (D-18) + AgentErrorCode 13-code enum + tools/schemas.ts (12 Zod inputs) + tools/agentToolCallback helper. 5 contract tests (PLUG-AGENT-READ/CREATE/UPDATE/DELETE/FILE-* + SAFETY-01, SAFETY-03)
+- [x] 06-02-PLAN.md — Wave 1 (TDD): wsClient.request() correlation + 30s timeout + close-cleanup + 3-way IncomingFrameSchema (HelloFrame | AgentRequest | EventFrame) + eventServer.ts type:'request' branch + index.ts onAgentRequest placeholder. 3 transport tests (PLUG-AGENT-TRANSPORT-01..02)
+- [x] 06-03-PLAN.md — Wave 1 (TDD): packages/desktop/src/bun/agentRequestHandler.ts gates (kill-switch + path-allowlist + cross-ref-boundary + happy-path forward) + index.ts production wiring replaces 06-02 placeholder. 6 gate tests (PLUG-AGENT-TRANSPORT-01, SAFETY-01/03, FILE-02/03, DELETE-01)
+- [x] 06-04-PLAN.md — Wave 2 (TDD): roadmapStore.moveNode action + agentRpcHandler.ts (18-case dispatcher with cycle/last-root/cascade gates + D-04 PATCH semantics + D-03 AND-filter + D-09 drawer audit + D-07 live-overlay merge + D-12 openFile auto-flush) + rpc.ts handlers.requests.agentRequest. 9 tests (3 store + 6 dispatcher) covering PLUG-AGENT-READ-*, CREATE-*, UPDATE-*, DELETE-01, FILE-*, SAFETY-02
+- [x] 06-05-PLAN.md — Wave 3 (execute): plugins/claude-code/src/server.ts gains 17 net-new server.registerTool calls via agentToolCallback helper + updateNodeStatus rerouted (D-09 audit). 19 tools total. No new tests — pure delegation through the contract-tested layers
+- [x] 06-06-PLAN.md — Wave 3 (execute + UAT): scaffold.e2e.test.ts (1 connectivity-check end-to-end test) + plugins/claude-code/README.md (19-tool catalog + 13 codes + kill-switch + security model) + 06-HUMAN-UAT.md (7 scenarios) + manual UAT human checkpoint
 
 **Scope sketch (refine in planning):**
 
@@ -289,3 +302,4 @@ Plans:
 | 3. Full Editor | 0/6 | Planned | - |
 | 4. Event API | 6/6 | Complete | 2026-04-29 |
 | 5. Packaging & Distribution | 5/5 | Complete | 2026-05-05 |
+| 6. Agentic Roadmap Authoring | 6/6 | Complete | 2026-05-10 |

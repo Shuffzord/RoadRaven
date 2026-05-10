@@ -9,7 +9,7 @@ allowed-tools:
   - Bash
   - Glob
   - Grep
-  - Task
+  - Agent
   - AskUserQuestion
 argument-instructions: |
   Parse the argument as a phase number (integer, decimal, or letter-suffix), plus optional free-text instructions.
@@ -36,6 +36,6 @@ Phase: $ARGUMENTS
 </context>
 
 <process>
-Execute the add-tests workflow from @C:/Work/RoadRaven/.claude/get-shit-done/workflows/add-tests.md end-to-end.
+Execute end-to-end.
 Preserve all workflow gates (classification approval, test plan approval, RED-GREEN verification, gap reporting).
 </process>

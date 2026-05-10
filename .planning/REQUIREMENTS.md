@@ -79,6 +79,34 @@
 - [x] **PLUG-08**: Claude Code MCP wrapper ships as the reference Event Producer — wraps the event contract as MCP tools callable by Claude; connects to the app's WebSocket and pushes `{ nodeId, status, meta }` events
 - [x] **PLUG-09**: `plugin` and `subscribe` blocks in node JSON are parsed and stored by the Zod schema validator in v1 but not acted on — fields are reserved for the v1.1 plugin system; unknown `plugin.id` values are silently accepted (no warning in v1)
 
+### Agent API (PLUG-AGENT)
+
+> **Scope note:** Phase 6 turns Phase 4's one-way Event API into a bidirectional MCP contract. Adds 17 net-new MCP tools to the existing `@roadraven/plugin-claude-code` so any MCP-capable LLM can read, create, edit, move, delete, and persist roadmap nodes. Localhost-only, single-user, no auth (Phase 4 D-01/D-03 inherited). Mutations route through the renderer Zustand store and the Phase 3 autosave pipeline — no direct disk writes. Phase 6 D-01 through D-18 in `.planning/phases/06-agentic-roadmap-authoring/06-CONTEXT.md` are the locked decisions for these requirements.
+
+- [x] **PLUG-AGENT-READ-01**: `getRoadmap` MCP tool returns the full schema tree with live-merged statuses (Phase 4 D-14 30s window applies) — *contract surface defined Phase 6 Plan 01; renderer dispatch lands in Plan 04*
+- [x] **PLUG-AGENT-READ-02**: `getNode` MCP tool returns a node + parentId + ancestorIds, status reflects the live overlay if recent — *contract defined Plan 01 (GetNodeInputSchema); dispatch in Plan 04*
+- [x] **PLUG-AGENT-READ-03**: `findNodes` MCP tool accepts a structured filter `{titleContains?, status?, type?, metaKey?, metaValue?, parentId?}` AND-combined; titleContains is case-insensitive substring (D-03) — *contract defined Plan 01 (FindNodesInputSchema, test 2); dispatch in Plan 04*
+- [x] **PLUG-AGENT-READ-04**: `getStatusConfig` MCP tool returns the schema's statusConfig array — *contract surface defined Plan 01; dispatch in Plan 04*
+- [x] **PLUG-AGENT-READ-05**: `getTypeConfig` MCP tool returns the schema's typeConfig array — *contract surface defined Plan 01; dispatch in Plan 04*
+- [x] **PLUG-AGENT-READ-06**: `getOpenFile` MCP tool returns filePath, isUntitled, title, nodeCount — *contract surface defined Plan 01; dispatch in Plan 04*
+- [x] **PLUG-AGENT-CREATE-01**: `createNode({parentId, title, type?, status?, notes?, metadata?})` returns the new node UUID; mirrors `roadmapStore.addChild` plus optional in-place setters (D-01) — *contract defined Plan 01 (CreateNodeInputSchema); dispatch in Plan 04*
+- [x] **PLUG-AGENT-CREATE-02**: `createRoadmap({title?, statusConfig?, typeConfig?})` invokes `newUntitledSchema` (mirrors File > New); agent must call `saveFileAs` to persist (D-01) — *contract defined Plan 01 (CreateRoadmapInputSchema); dispatch in Plan 04*
+- [x] **PLUG-AGENT-UPDATE-01**: `renameNode({nodeId, title})` updates node.title via roadmapStore.renameNode — *contract defined Plan 01 (RenameNodeInputSchema); dispatch in Plan 04*
+- [x] **PLUG-AGENT-UPDATE-02**: `updateNodeType({nodeId, type})` updates node.type via roadmapStore.updateNodeType — *contract defined Plan 01 (UpdateNodeTypeInputSchema); dispatch in Plan 04*
+- [x] **PLUG-AGENT-UPDATE-03**: `updateNodeNotes({nodeId, notes})` replaces node.notes (REPLACE semantics, not patch) — *contract defined Plan 01 (UpdateNodeNotesInputSchema); dispatch in Plan 04*
+- [x] **PLUG-AGENT-UPDATE-04**: `updateNodeMetadata({nodeId, patch})` shallow-merges patch into node.metadata; null values delete keys; unlisted keys preserved (D-04) — *contract defined Plan 01 (UpdateNodeMetadataInputSchema, test 3); dispatch in Plan 04*
+- [x] **PLUG-AGENT-UPDATE-05**: `moveNode({nodeId, newParentId, position?})` re-parents the node, blocking cycles (`move_would_create_cycle`) and cross-$ref boundaries (`cross_ref_boundary`) — *contract defined Plan 01 (MoveNodeInputSchema); store action + cycle gate in Plan 04*
+- [x] **PLUG-AGENT-UPDATE-06**: `updateNodeStatus` (Phase 4 carry-forward) is rewritten to flow through the agent dispatcher so it writes a synthetic IntegrationEvent into the drawer (D-09) — *contract surface defined Plan 01; rewire in Plan 05*
+- [x] **PLUG-AGENT-DELETE-01**: `deleteNode({nodeId, cascade?})` requires cascade:true for non-leaf nodes (`cascade_required`, returns childCount); blocks last-root delete (`cannot_delete_last_root`) (D-11) — *contract defined Plan 01 (DeleteNodeInputSchema, test 4); cascade gate in Plan 03/04*
+- [x] **PLUG-AGENT-FILE-01**: `saveFile()` flushes the autosave debounce immediately (Phase 3 EDIT-13 force-flush) — *contract surface defined Plan 01; dispatch in Plan 04*
+- [x] **PLUG-AGENT-FILE-02**: `saveFileAs({path})` saves to a new path; subject to the Phase 3 path-traversal allowlist (D-13 — same `isPathWithinMainDir` + `pushDialogAllowlistPath` plumbing) — *contract defined Plan 01 (SaveFileAsInputSchema); allowlist gate in Plan 03*
+- [x] **PLUG-AGENT-FILE-03**: `openFile({path})` flushes pending autosave (D-12) then loads a roadmap by path; subject to the same path-allowlist as saveFileAs (D-13) — *contract defined Plan 01 (OpenFileInputSchema); flush + allowlist in Plan 03*
+- [x] **PLUG-AGENT-TRANSPORT-01**: Bun WebSocket server accepts inbound `{type:"request", id, method, params}` frames and routes them via `agentRequestHandler` BEFORE the EventCoalescer (D-15 — agent traffic bypasses the 100ms coalescer) — *transport branch + onAgentRequest callback wired Plan 02; real handler module in Plan 03 (placeholder responds with `internal_error` until 03 lands)*
+- [x] **PLUG-AGENT-TRANSPORT-02**: `wsClient.request(method, params): Promise<T>` correlates by id, times out at 30s, and rejects all pending requests when the WebSocket closes (D-15) — *implemented Plan 02 (3/3 transport tests passing: resolve, timeout, disconnect)*
+- [x] **PLUG-AGENT-SAFETY-01**: All gate checks (kill-switch, path-allowlist, no-file-loaded, node-not-found, cascade, cycle, last-root, cross-ref, file-read, save) return one of 13 string error codes; messages match the published taxonomy — *13-code AGENT_ERROR_CODES tuple + AgentErrorCode type defined Plan 01 (test 1); per-gate enforcement in Plans 03/04*
+- [x] **PLUG-AGENT-SAFETY-02**: Every mutating tool call writes a synthetic IntegrationEvent into `eventLogStore` with `source="claude-code"` and `meta.tool`/`meta.args`/`meta.label` — visible in the Ctrl+Shift+L drawer (D-09) — *renderer dispatcher emits drawer audit events via `appendAgentDrawerEvent` for every mutating tool branch in Plan 04*
+- [x] **PLUG-AGENT-SAFETY-03**: `agentApi.enabled === false` in the app's `settings.json` (platform userData dir — Windows `%LOCALAPPDATA%\RoadRaven\settings.json`, macOS `~/Library/Application Support/RoadRaven/settings.json`, Linux `~/.config/RoadRaven/settings.json`) short-circuits with `agent_api_disabled` BEFORE any tool dispatch (RESEARCH §13 — kill-switch); applies to read AND mutation tools — *AppSettings.agentApi.enabled type contract defined Plan 01; check enforcement in Plan 03; filename corrected from `.roadmap-settings.json` to `settings.json` in commit 5198a08*
+
 ### Packaging (PACK)
 
 - [ ] **PACK-01**: Native installers: Windows `.exe` (distributed inside `{channel}-win-x64-RoadRaven-Setup-{channel}.zip`) and Linux `.tar.gz` (Electrobun-native self-extracting bundle, `{channel}-linux-x64-RoadRavenSetup-{channel}.tar.gz`). macOS `.dmg` deferred to v1.1. Linux `.deb` deferred to v1.1 alongside GPG signing + apt repo.
@@ -119,6 +147,17 @@
 - **PLUG-V2-08**: Dynamic runtime plugin loading from local `plugins/` directory
 - **PLUG-V2-09**: Custom plugin UI in side panel (component injection) — requires iframe sandbox or dynamic loader
 
+### Agent API Enhancements (v1.1+)
+
+- **PLUG-AGENT-V2-01**: `importSubtree({parentId, schema})` atomic bulk import — explicitly rejected for v1 (Phase 6 D-02). Revisit if agent latency under big scaffolds becomes a real complaint.
+- **PLUG-AGENT-V2-02**: Pulse animation on agent-mutated nodes — explicitly rejected for v1 (D-09 tail). Revisit if user feedback is "I can't tell when Claude touched my tree."
+- **PLUG-AGENT-V2-03**: Conflict UI / queue / lock for agent + human concurrent edits — last-write-wins is the v1 model (D-08).
+- **PLUG-AGENT-V2-04**: Idempotency keys for create operations — agent retry on partial scaffolds is acceptable in v1; revisit if real-world.
+- **PLUG-AGENT-V2-05**: Disk-direct read fallback when app is off — v1 returns `app_not_running` always (D-05).
+- **PLUG-AGENT-V2-06**: Auto-launching the desktop app from a tool call — v1 returns `app_not_running` and asks the user.
+- **PLUG-AGENT-V2-07**: Per-tool settings toggles (`agentApi.confirmDelete`, etc.) — only the global kill-switch ships in v1 (D-11/D-18).
+- **PLUG-AGENT-V2-08**: Multi-agent / agent identity beyond `source` — v1 is single-agent.
+
 ### Visualisation
 
 - **VIS-V2-01**: Radial / mindmap layout mode — requires different layout algorithm
@@ -154,13 +193,14 @@
 | EDIT-01 to EDIT-17 | Phase 3 | Pending |
 | PLUG-01 to PLUG-09 | Phase 4 | Pending |
 | PACK-01 to PACK-06 | Phase 5 | Pending |
+| PLUG-AGENT-READ-01..06, CREATE-01..02, UPDATE-01..06, DELETE-01, FILE-01..03, TRANSPORT-01..02, SAFETY-01..03 | Phase 6 | In Progress (TRANSPORT-01..02 complete Plan 02; READ/CREATE/UPDATE/DELETE/FILE/SAFETY contracts complete Plan 01; SAFETY-01/03 + FILE-02/03 + DELETE-01 (cascade gate forwarded) Bun-side gates complete Plan 03; renderer per-tool dispatch complete Plan 04; MCP tool registration (19 tools) complete Plan 05; UAT scaffold pending Plan 06) |
 
 **Coverage:**
-- v1 requirements: 61 total
-- Mapped to phases: 61
+- v1 requirements: 84 total (61 + 23 PLUG-AGENT)
+- Mapped to phases: 84
 - Unmapped: 0 ✓
 
 ---
 
 *Requirements defined: 2026-04-12*
-*Last updated: 2026-04-12 after initial definition from SPEC.md v0.3 + research review*
+*Last updated: 2026-05-07 — Phase 6 Plan 03 GREEN; Bun-side gate layer (kill-switch + path-allowlist + cross-ref) wired to production*

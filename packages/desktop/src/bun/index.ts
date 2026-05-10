@@ -14,6 +14,7 @@ import type { RoadmapRPCType } from "../../../../shared/types.ts";
 // atomicWrite + splitSchemaByOwnership are consumed via saveFile.ts which owns
 // the saveFile/flushPending logic. Re-exported below so external callers (and
 // the Plan 04a acceptance grep) can see the persistence surface at a glance.
+import { agentRequestHandler } from "./agentRequestHandler";
 import { atomicWrite } from "./atomicWrite";
 import { markSelfWrite, stopAllWatchers, watchFile } from "./fileWatcher";
 import { bunLogger, setupBunLogging } from "./logging";
@@ -118,6 +119,13 @@ const eventServerResult = await startEventServer({
 			connectedCount: count,
 			errorMessage: currentErrorMessage,
 		});
+	},
+	// Phase 6 Plan 06-03 — agentRequestHandler runs the gate sequence
+	// (kill-switch → path-allowlist → cross-ref boundary) BEFORE forwarding to
+	// the renderer's agentRpcHandler (Plan 06-04). The mainWindow binding is
+	// captured by closure; same pattern as onFlush/onEvent/onError above.
+	onAgentRequest: (ws, request) => {
+		void agentRequestHandler(ws, request, mainWindow);
 	},
 });
 if (eventServerResult.ok) {

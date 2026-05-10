@@ -16,6 +16,14 @@
             "command": "bash .claude/hooks/gsd-session-state.sh"
           }
         ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"C:/nvm4w/nodejs/node.exe\" \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/gsd-update-banner.js"
+          }
+        ]
       }
     ],
     "PostToolUse": [

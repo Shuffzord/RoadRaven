@@ -26,7 +26,26 @@ const EventFrameSchema = z.object({
 	source: z.string().max(64).optional(),
 });
 
-const IncomingFrameSchema = z.union([HelloFrameSchema, EventFrameSchema]);
+/**
+ * Phase 6 D-15: Bidirectional WS request envelope from the Phase 4 plugin.
+ * Routed by eventServer.ts message handler to opts.onAgentRequest BEFORE the
+ * 100ms EventCoalescer (RESEARCH §Debounce-Bypass — agent reads/writes never
+ * participate in the event-batching path).
+ */
+export const AgentRequestSchema = z.object({
+	type: z.literal("request"),
+	id: z.string().min(1),
+	method: z.string().min(1),
+	params: z.record(z.string(), z.unknown()),
+});
+
+export type AgentRequest = z.infer<typeof AgentRequestSchema>;
+
+const IncomingFrameSchema = z.union([
+	HelloFrameSchema,
+	AgentRequestSchema,
+	EventFrameSchema,
+]);
 
 export type HelloFrame = z.infer<typeof HelloFrameSchema>;
 export type EventFrame = z.infer<typeof EventFrameSchema>;
@@ -53,7 +72,7 @@ export function classifyEventFrame(
 export function parseIncoming(
 	raw: string,
 ):
-	| { ok: true; frame: HelloFrame | EventFrame }
+	| { ok: true; frame: HelloFrame | AgentRequest | EventFrame }
 	| { ok: false; error: "malformed" } {
 	let parsed: unknown;
 	try {

@@ -1,0 +1,2131 @@
+{
+  "version": "1.0",
+  "title": "CFA Level I 2026 — Roadmapa Egzaminacyjna",
+  "themeConfig": {
+    "statusColors": {
+      "not-started": "#6b7280",
+      "in-progress": "#3b82f6",
+      "completed": "#22c55e",
+      "blocked": "#ef4444"
+    },
+    "nodeRadius": 8
+  },
+  "statusConfig": [
+    {
+      "id": "not-started",
+      "label": "Nie zaczęte",
+      "color": "#6b7280"
+    },
+    {
+      "id": "in-progress",
+      "label": "W trakcie",
+      "color": "#3b82f6"
+    },
+    {
+      "id": "completed",
+      "label": "Ukończone",
+      "color": "#22c55e"
+    },
+    {
+      "id": "blocked",
+      "label": "Zablokowane",
+      "color": "#ef4444"
+    }
+  ],
+  "typeConfig": [
+    {
+      "id": "project",
+      "label": "Exam"
+    },
+    {
+      "id": "milestone",
+      "label": "Topic Area"
+    },
+    {
+      "id": "phase",
+      "label": "Learning Module"
+    },
+    {
+      "id": "plan",
+      "label": "Sub-section"
+    },
+    {
+      "id": "task",
+      "label": "Concept / Formula"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "cfa01000-0000-4000-8000-000000000000",
+      "title": "Ethics & Professional Standards",
+      "status": "not-started",
+      "type": "milestone",
+      "notes": "# Ethics & Professional Standards\n\nFundament etyczny CFA Level I — Code of Ethics, Standards of Professional Conduct (I-VII), Guidance, GIPS oraz Ethics Application. Topic ten ma najwyższą wagę egzaminacyjną (~17.5%, ~32-37 z 180 pytań) i jest często decydujący dla osiągnięcia minimum passing score, ponieważ CFA Institute stosuje 'ethics adjustment' dla kandydatów na granicy zdania.\n\n**Exam weight (mid-point):** 17.5%\n**Learning Modules:** 5\n**Estimated study time:** 35-50h",
+      "createdAt": "2026-05-06T00:00:00Z",
+      "updatedAt": "2026-05-06T00:00:00Z",
+      "metadata": {
+        "topic_number": "01",
+        "topic_name": "Ethics & Professional Standards",
+        "exam_weight_share": 17.5,
+        "lm_count": 5,
+        "estimated_hours_total": 45.5,
+        "legacy_id": "cfa010000-0000-4000-8000-000000000000",
+        "previous_uuid": "4533a3f0-837b-408e-aedc-0b1eb6fd3977"
+      },
+      "children": [
+        {
+          "id": "cfa01010-0000-4000-8000-000000000000",
+          "title": "Ethics and Trust in the Investment Profession",
+          "status": "not-started",
+          "type": "phase",
+          "notes": "# Ethics and Trust in the Investment Profession\n\nWprowadzenie do roli etyki w branży inwestycyjnej, znaczenia zaufania klientów oraz różnicy między etyką a prawem. Obejmuje też framework podejmowania decyzji etycznych oraz pojęcie 'investment industry's profession of ethics'.\n\n**Learning Modules:** 1 · **Egzamin weight (topic):** 17.5%",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "lm_index": "01",
+            "lm_name_canonical": "Ethics and Trust in the Investment Profession",
+            "los_count": 5,
+            "topic": "Ethics & Professional Standards",
+            "legacy_id": "cfa010100-0000-4000-8000-000000000000",
+            "previous_uuid": "82202e8c-6455-425b-b36a-d4cf479f23b9"
+          },
+          "children": [
+            {
+              "id": "cfa01011-0001-4000-8000-000000000000",
+              "title": "Ethics, Society, and the Capital Markets",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# Ethics, Society, and the Capital Markets\n\n**LOS:** 1.a\n**Difficulty:** 2 · **Estimated:** 0.75h\n\n## Opis\nDefinicja etyki jako zbioru zasad moralnych kierujących zachowaniem oraz analiza relacji między etyką, prawem i zaufaniem na rynku kapitałowym. Etyczne zachowanie profesjonalistów inwestycyjnych jest fundamentem efektywnej alokacji kapitału i ochrony interesu publicznego.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Mylenie zachowań legalnych z etycznymi — coś legalnego nadal może naruszać Standardy CFA\n- Zapominanie, że spadek zaufania społecznego do branży zwiększa koszty regulacyjne wszystkich uczestników rynku\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Ethics and Trust in the Investment Profession'\n- CFA Institute Standards of Practice Handbook (12th edition)\n- Schweser SchweserNotes 2026, Book 1 (Ethics), Study Sessions 1-2\n",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": [
+                  "1.a"
+                ],
+                "difficulty": 2,
+                "estimated_hours": 0.75,
+                "prerequisites": [],
+                "formulas": [],
+                "common_pitfalls": [
+                  "Mylenie zachowań legalnych z etycznymi — coś legalnego nadal może naruszać Standardy CFA",
+                  "Zapominanie, że spadek zaufania społecznego do branży zwiększa koszty regulacyjne wszystkich uczestników rynku"
+                ],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 1, Reading 'Ethics and Trust in the Investment Profession'",
+                  "CFA Institute Standards of Practice Handbook (12th edition)",
+                  "Schweser SchweserNotes 2026, Book 1 (Ethics), Study Sessions 1-2"
+                ],
+                "tags": [
+                  "standard"
+                ],
+                "legacy_id": "cfa010101-0001-4000-8000-000000000000",
+                "previous_uuid": "8b2dcaaa-d2c0-479f-86a8-98a4186dffaf"
+              },
+              "children": []
+            },
+            {
+              "id": "cfa01011-0002-4000-8000-000000000000",
+              "title": "Challenges to Ethical Behavior",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# Challenges to Ethical Behavior\n\n**LOS:** 1.b\n**Difficulty:** 2 · **Estimated:** 0.5h\n\n## Opis\nIdentyfikacja typowych przeszkód w etycznym postępowaniu: nadmierna pewność siebie (overconfidence bias), presja sytuacyjna, kultura organizacyjna premiująca wyniki kosztem zasad oraz tendencja do racjonalizacji nieetycznych zachowań.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Niedoszacowanie wpływu otoczenia pracy ('everyone does it') na własne decyzje\n- Założenie, że samo posiadanie kodeksu etycznego wystarczy bez kultury wsparcia\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Ethics and Trust in the Investment Profession'\n- CFA Institute Standards of Practice Handbook (12th edition)\n- AnalystPrep CFA Level I — Ethical and Professional Standards\n",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": [
+                  "1.b"
+                ],
+                "difficulty": 2,
+                "estimated_hours": 0.5,
+                "prerequisites": [],
+                "formulas": [],
+                "common_pitfalls": [
+                  "Niedoszacowanie wpływu otoczenia pracy ('everyone does it') na własne decyzje",
+                  "Założenie, że samo posiadanie kodeksu etycznego wystarczy bez kultury wsparcia"
+                ],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 1, Reading 'Ethics and Trust in the Investment Profession'",
+                  "CFA Institute Standards of Practice Handbook (12th edition)",
+                  "AnalystPrep CFA Level I — Ethical and Professional Standards"
+                ],
+                "tags": [
+                  "standard"
+                ],
+                "legacy_id": "cfa010101-0002-4000-8000-000000000000",
+                "previous_uuid": "3d35e21f-4e4e-4d64-bc97-6ee6d0e3652b"
+              },
+              "children": []
+            },
+            {
+              "id": "cfa01011-0003-4000-8000-000000000000",
+              "title": "The Investment Industry's Profession of Ethics",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# The Investment Industry's Profession of Ethics\n\n**LOS:** 1.c\n**Difficulty:** 2 · **Estimated:** 0.5h\n\n## Opis\nPojęcie zawodu (profession) opartego na specjalistycznej wiedzy, służbie publicznej i samoregulacji. CFA Institute pełni rolę profesjonalnego ciała wyznaczającego standardy etyczne dla globalnej społeczności inwestycyjnej.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Mylenie 'profession' z 'occupation' — zawód wymaga zobowiązania do służby publicznej\n- Pomijanie roli samoregulacji branżowej obok regulacji ustawowej\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Ethics and Trust in the Investment Profession'\n- CFA Institute Standards of Practice Handbook (12th edition)\n- Mark Meldrum CFA L1 2026 — Ethics videos\n",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": [
+                  "1.c"
+                ],
+                "difficulty": 2,
+                "estimated_hours": 0.5,
+                "prerequisites": [],
+                "formulas": [],
+                "common_pitfalls": [
+                  "Mylenie 'profession' z 'occupation' — zawód wymaga zobowiązania do służby publicznej",
+                  "Pomijanie roli samoregulacji branżowej obok regulacji ustawowej"
+                ],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 1, Reading 'Ethics and Trust in the Investment Profession'",
+                  "CFA Institute Standards of Practice Handbook (12th edition)",
+                  "Mark Meldrum CFA L1 2026 — Ethics videos"
+                ],
+                "tags": [
+                  "standard"
+                ],
+                "legacy_id": "cfa010101-0003-4000-8000-000000000000",
+                "previous_uuid": "506aa23f-ebaa-4ee4-8b75-c94bdf7b0113"
+              },
+              "children": []
+            },
+            {
+              "id": "cfa01011-0004-4000-8000-000000000000",
+              "title": "Ethical vs. Legal Standards",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# Ethical vs. Legal Standards\n\n**LOS:** 1.d\n**Difficulty:** 2 · **Estimated:** 0.5h\n\n## Opis\nRozróżnienie między obowiązkami prawnymi a etycznymi — Standardy CFA często wymagają zachowań wykraczających poza minimum prawne. Tam gdzie prawo jest mniej rygorystyczne niż Standardy lub Kodeks, członek musi przestrzegać surowszego z obu.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Stosowanie najmniej restrykcyjnego prawa lokalnego, gdy Standardy są surowsze\n- Zakładanie, że brak naruszenia prawa = brak naruszenia etyki\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Ethics and Trust in the Investment Profession'\n- CFA Institute Standards of Practice Handbook (12th edition)\n- Schweser SchweserNotes 2026, Book 1 (Ethics), Study Sessions 1-2\n",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": [
+                  "1.d"
+                ],
+                "difficulty": 2,
+                "estimated_hours": 0.5,
+                "prerequisites": [],
+                "formulas": [],
+                "common_pitfalls": [
+                  "Stosowanie najmniej restrykcyjnego prawa lokalnego, gdy Standardy są surowsze",
+                  "Zakładanie, że brak naruszenia prawa = brak naruszenia etyki"
+                ],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 1, Reading 'Ethics and Trust in the Investment Profession'",
+                  "CFA Institute Standards of Practice Handbook (12th edition)",
+                  "Schweser SchweserNotes 2026, Book 1 (Ethics), Study Sessions 1-2"
+                ],
+                "tags": [
+                  "standard"
+                ],
+                "legacy_id": "cfa010101-0004-4000-8000-000000000000",
+                "previous_uuid": "cc652ef8-fb5e-4de6-b524-e1c975f8a427"
+              },
+              "children": []
+            },
+            {
+              "id": "cfa01011-0005-4000-8000-000000000000",
+              "title": "Ethical Decision-Making Framework",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# Ethical Decision-Making Framework\n\n**LOS:** 1.e\n**Difficulty:** 2 · **Estimated:** 1h\n\n## Opis\nStrukturyzowany proces podejmowania decyzji etycznych: (1) identyfikacja istotnych faktów, stakeholderów i obowiązków, (2) rozważenie alternatyw i konsekwencji, (3) konsultacja z kolegami / compliance, (4) podjęcie decyzji i refleksja po fakcie. Framework pomaga unikać impulsywnych racjonalizacji.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Pomijanie etapu refleksji po decyzji — uczenie się z przeszłych przypadków\n- Konsultowanie się tylko z osobami popierającymi już podjętą decyzję (confirmation bias)\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Ethics and Trust in the Investment Profession'\n- CFA Institute Standards of Practice Handbook (12th edition)\n- AnalystPrep CFA Level I — Ethical and Professional Standards\n",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": [
+                  "1.e"
+                ],
+                "difficulty": 2,
+                "estimated_hours": 1,
+                "prerequisites": [],
+                "formulas": [],
+                "common_pitfalls": [
+                  "Pomijanie etapu refleksji po decyzji — uczenie się z przeszłych przypadków",
+                  "Konsultowanie się tylko z osobami popierającymi już podjętą decyzję (confirmation bias)"
+                ],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 1, Reading 'Ethics and Trust in the Investment Profession'",
+                  "CFA Institute Standards of Practice Handbook (12th edition)",
+                  "AnalystPrep CFA Level I — Ethical and Professional Standards"
+                ],
+                "tags": [
+                  "framework",
+                  "decision-making"
+                ],
+                "legacy_id": "cfa010101-0005-4000-8000-000000000000",
+                "previous_uuid": "b31fe73c-433b-4f1c-bde5-dc62f7944820"
+              },
+              "children": []
+            }
+          ]
+        },
+        {
+          "id": "cfa01020-0000-4000-8000-000000000000",
+          "title": "Code of Ethics and Standards of Professional Conduct",
+          "status": "not-started",
+          "type": "phase",
+          "notes": "# Code of Ethics and Standards of Professional Conduct\n\nPełna treść Kodeksu Etyki (6 zasad) oraz Standardów Profesjonalnego Postępowania I-VII (22 sub-letters). Najważniejszy LM w topic — bezpośrednio źródło ~70% pytań etycznych na egzaminie.\n\n**Learning Modules:** 1 · **Egzamin weight (topic):** 17.5%",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "lm_index": "02",
+            "lm_name_canonical": "Code of Ethics and Standards of Professional Conduct",
+            "los_count": 7,
+            "topic": "Ethics & Professional Standards",
+            "legacy_id": "cfa010200-0000-4000-8000-000000000000",
+            "previous_uuid": "e494425c-ccb6-4bdf-bf3b-93dbd41be86c"
+          },
+          "children": [
+            {
+              "id": "cfa01021-0000-4000-8000-000000000000",
+              "title": "Code of Ethics — Six Principles",
+              "status": "not-started",
+              "type": "plan",
+              "notes": "# Code of Ethics — Six Principles\n\nSześć zasad Kodeksu Etyki CFA Institute. Każda jako osobny leaf, ponieważ stanowią fundament zachowań zawodowych i często są bezpośrednio testowane.\n\n**Learning Modules:** 1 (sub-section) · **Egzamin weight (topic):** 17.5%",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "section_index": "01",
+                "legacy_id": "cfa010201-0000-4000-8000-000000000000",
+                "previous_uuid": "7c179e70-419c-4744-81d9-1162d4ed3a10"
+              },
+              "children": [
+                {
+                  "id": "cfa01021-0001-4000-8000-000000000000",
+                  "title": "Code of Ethics — Principle 1: Act with Integrity, Competence, Diligence, and Respect",
+                  "status": "not-started",
+                  "type": "task",
+                  "notes": "# Code of Ethics — Principle 1: Act with Integrity, Competence, Diligence, and Respect\n\n**LOS:** 2.a\n**Difficulty:** 2 · **Estimated:** 0.5h\n\n## Opis\nObowiązek działania z uczciwością, kompetencją, należytą starannością i szacunkiem wobec społeczeństwa, klientów, pracodawców i innych profesjonalistów. To pierwsza i najszersza zasada Kodeksu — fundament dla wszystkich pozostałych obowiązków.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Mylenie 'competence' z samym certyfikatem — kompetencja wymaga ciągłego rozwoju\n- Brak szacunku wobec konkurentów lub byłych pracodawców (np. negatywne komentarze publiczne)\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Code of Ethics and Standards of Professional Conduct'\n- CFA Institute Standards of Practice Handbook (12th edition)\n- Schweser SchweserNotes 2026, Book 1 (Ethics), Study Sessions 1-2\n",
+                  "createdAt": "2026-05-06T00:00:00Z",
+                  "updatedAt": "2026-05-06T00:00:00Z",
+                  "metadata": {
+                    "los_codes": [
+                      "2.a"
+                    ],
+                    "difficulty": 2,
+                    "estimated_hours": 0.5,
+                    "prerequisites": [],
+                    "formulas": [],
+                    "common_pitfalls": [
+                      "Mylenie 'competence' z samym certyfikatem — kompetencja wymaga ciągłego rozwoju",
+                      "Brak szacunku wobec konkurentów lub byłych pracodawców (np. negatywne komentarze publiczne)"
+                    ],
+                    "suggested_resources": [
+                      "CFA Institute Curriculum 2026, Volume 1, Reading 'Code of Ethics and Standards of Professional Conduct'",
+                      "CFA Institute Standards of Practice Handbook (12th edition)",
+                      "Schweser SchweserNotes 2026, Book 1 (Ethics), Study Sessions 1-2"
+                    ],
+                    "tags": [
+                      "code-of-ethics",
+                      "principle"
+                    ],
+                    "legacy_id": "cfa010201-0001-4000-8000-000000000000",
+                    "previous_uuid": "18889438-9860-44c4-9db5-01bd2a78fd44"
+                  },
+                  "children": []
+                },
+                {
+                  "id": "cfa01021-0002-4000-8000-000000000000",
+                  "title": "Code of Ethics — Principle 2: Place Client and Employer Interests Above Personal Interests",
+                  "status": "not-started",
+                  "type": "task",
+                  "notes": "# Code of Ethics — Principle 2: Place Client and Employer Interests Above Personal Interests\n\n**LOS:** 2.a\n**Difficulty:** 2 · **Estimated:** 0.5h\n\n## Opis\nObowiązek przedkładania integralności zawodu, interesów klientów i pracodawcy ponad własny interes osobisty. To nie 'wyłącznie interes klienta' — Kodeks wprost wymaga uwzględnienia integralności zawodu.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Pomijanie integralności zawodu w hierarchii (zawód > klient > własny interes)\n- Wykorzystywanie informacji o transakcjach klienta dla osobistych korzyści\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Code of Ethics and Standards of Professional Conduct'\n- CFA Institute Standards of Practice Handbook (12th edition)\n- Schweser SchweserNotes 2026, Book 1 (Ethics), Study Sessions 1-2\n",
+                  "createdAt": "2026-05-06T00:00:00Z",
+                  "updatedAt": "2026-05-06T00:00:00Z",
+                  "metadata": {
+                    "los_codes": [
+                      "2.a"
+                    ],
+                    "difficulty": 2,
+                    "estimated_hours": 0.5,
+                    "prerequisites": [],
+                    "formulas": [],
+                    "common_pitfalls": [
+                      "Pomijanie integralności zawodu w hierarchii (zawód > klient > własny interes)",
+                      "Wykorzystywanie informacji o transakcjach klienta dla osobistych korzyści"
+                    ],
+                    "suggested_resources": [
+                      "CFA Institute Curriculum 2026, Volume 1, Reading 'Code of Ethics and Standards of Professional Conduct'",
+                      "CFA Institute Standards of Practice Handbook (12th edition)",
+                      "Schweser SchweserNotes 2026, Book 1 (Ethics), Study Sessions 1-2"
+                    ],
+                    "tags": [
+                      "code-of-ethics",
+                      "principle"
+                    ],
+                    "legacy_id": "cfa010201-0002-4000-8000-000000000000",
+                    "previous_uuid": "e869ab76-e73f-4250-b795-9dcf01cd237c"
+                  },
+                  "children": []
+                },
+                {
+                  "id": "cfa01021-0003-4000-8000-000000000000",
+                  "title": "Code of Ethics — Principle 3: Use Reasonable Care and Exercise Independent Professional Judgment",
+                  "status": "not-started",
+                  "type": "task",
+                  "notes": "# Code of Ethics — Principle 3: Use Reasonable Care and Exercise Independent Professional Judgment\n\n**LOS:** 2.a\n**Difficulty:** 2 · **Estimated:** 0.5h\n\n## Opis\nWymóg racjonalnej staranności i niezależnego osądu zawodowego w działalności inwestycyjnej, analizie i rekomendacjach. Nie chroni to przed błędami, lecz wymaga procesu opartego na rzetelnej analizie.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Bezkrytyczne polegania na rekomendacjach kolegów lub firmy bez własnej weryfikacji\n- Akceptowanie prezentów lub zaproszeń, które mogą podważyć niezależność osądu\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Code of Ethics and Standards of Professional Conduct'\n- CFA Institute Standards of Practice Handbook (12th edition)\n- Schweser SchweserNotes 2026, Book 1 (Ethics), Study Sessions 1-2\n",
+                  "createdAt": "2026-05-06T00:00:00Z",
+                  "updatedAt": "2026-05-06T00:00:00Z",
+                  "metadata": {
+                    "los_codes": [
+                      "2.a"
+                    ],
+                    "difficulty": 2,
+                    "estimated_hours": 0.5,
+                    "prerequisites": [],
+                    "formulas": [],
+                    "common_pitfalls": [
+                      "Bezkrytyczne polegania na rekomendacjach kolegów lub firmy bez własnej weryfikacji",
+                      "Akceptowanie prezentów lub zaproszeń, które mogą podważyć niezależność osądu"
+                    ],
+                    "suggested_resources": [
+                      "CFA Institute Curriculum 2026, Volume 1, Reading 'Code of Ethics and Standards of Professional Conduct'",
+                      "CFA Institute Standards of Practice Handbook (12th edition)",
+                      "Schweser SchweserNotes 2026, Book 1 (Ethics), Study Sessions 1-2"
+                    ],
+                    "tags": [
+                      "code-of-ethics",
+                      "principle"
+                    ],
+                    "legacy_id": "cfa010201-0003-4000-8000-000000000000",
+                    "previous_uuid": "3b172ac0-aee9-44cf-be9b-d69436395a25"
+                  },
+                  "children": []
+                },
+                {
+                  "id": "cfa01021-0004-4000-8000-000000000000",
+                  "title": "Code of Ethics — Principle 4: Practice and Encourage Others to Practice in a Professional and Ethical Manner",
+                  "status": "not-started",
+                  "type": "task",
+                  "notes": "# Code of Ethics — Principle 4: Practice and Encourage Others to Practice in a Professional and Ethical Manner\n\n**LOS:** 2.a\n**Difficulty:** 2 · **Estimated:** 0.5h\n\n## Opis\nPozytywny obowiązek nie tylko własnego etycznego postępowania, ale też zachęcania kolegów i podwładnych do podobnego zachowania, co buduje reputację zawodu i CFA Institute.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Bierność wobec naruszeń kolegów ('to nie moja sprawa')\n- Ograniczanie obowiązku tylko do podwładnych — dotyczy także peerów i przełożonych\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Code of Ethics and Standards of Professional Conduct'\n- CFA Institute Standards of Practice Handbook (12th edition)\n- Schweser SchweserNotes 2026, Book 1 (Ethics), Study Sessions 1-2\n",
+                  "createdAt": "2026-05-06T00:00:00Z",
+                  "updatedAt": "2026-05-06T00:00:00Z",
+                  "metadata": {
+                    "los_codes": [
+                      "2.a"
+                    ],
+                    "difficulty": 2,
+                    "estimated_hours": 0.5,
+                    "prerequisites": [],
+                    "formulas": [],
+                    "common_pitfalls": [
+                      "Bierność wobec naruszeń kolegów ('to nie moja sprawa')",
+                      "Ograniczanie obowiązku tylko do podwładnych — dotyczy także peerów i przełożonych"
+                    ],
+                    "suggested_resources": [
+                      "CFA Institute Curriculum 2026, Volume 1, Reading 'Code of Ethics and Standards of Professional Conduct'",
+                      "CFA Institute Standards of Practice Handbook (12th edition)",
+                      "Schweser SchweserNotes 2026, Book 1 (Ethics), Study Sessions 1-2"
+                    ],
+                    "tags": [
+                      "code-of-ethics",
+                      "principle"
+                    ],
+                    "legacy_id": "cfa010201-0004-4000-8000-000000000000",
+                    "previous_uuid": "439af1de-b163-428d-9a53-12d6a4da8f13"
+                  },
+                  "children": []
+                },
+                {
+                  "id": "cfa01021-0005-4000-8000-000000000000",
+                  "title": "Code of Ethics — Principle 5: Promote the Integrity and Viability of the Global Capital Markets",
+                  "status": "not-started",
+                  "type": "task",
+                  "notes": "# Code of Ethics — Principle 5: Promote the Integrity and Viability of the Global Capital Markets\n\n**LOS:** 2.a\n**Difficulty:** 2 · **Estimated:** 0.5h\n\n## Opis\nObowiązek wspierania integralności i żywotności globalnych rynków kapitałowych dla dobra społeczeństwa. Obejmuje aktywny udział w samoregulacji, raportowanie naruszeń i przeciwdziałanie praktykom szkodzącym rynkom.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Patrzenie tylko na rynek lokalny — Kodeks mówi 'global capital markets'\n- Bagatelizowanie drobnych manipulacji jako 'praktyki branżowej'\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Code of Ethics and Standards of Professional Conduct'\n- CFA Institute Standards of Practice Handbook (12th edition)\n- Schweser SchweserNotes 2026, Book 1 (Ethics), Study Sessions 1-2\n",
+                  "createdAt": "2026-05-06T00:00:00Z",
+                  "updatedAt": "2026-05-06T00:00:00Z",
+                  "metadata": {
+                    "los_codes": [
+                      "2.a"
+                    ],
+                    "difficulty": 2,
+                    "estimated_hours": 0.5,
+                    "prerequisites": [],
+                    "formulas": [],
+                    "common_pitfalls": [
+                      "Patrzenie tylko na rynek lokalny — Kodeks mówi 'global capital markets'",
+                      "Bagatelizowanie drobnych manipulacji jako 'praktyki branżowej'"
+                    ],
+                    "suggested_resources": [
+                      "CFA Institute Curriculum 2026, Volume 1, Reading 'Code of Ethics and Standards of Professional Conduct'",
+                      "CFA Institute Standards of Practice Handbook (12th edition)",
+                      "Schweser SchweserNotes 2026, Book 1 (Ethics), Study Sessions 1-2"
+                    ],
+                    "tags": [
+                      "code-of-ethics",
+                      "principle"
+                    ],
+                    "legacy_id": "cfa010201-0005-4000-8000-000000000000",
+                    "previous_uuid": "147094c1-a348-4ff5-9c62-59335b9380f0"
+                  },
+                  "children": []
+                },
+                {
+                  "id": "cfa01021-0006-4000-8000-000000000000",
+                  "title": "Code of Ethics — Principle 6: Maintain and Improve Professional Competence",
+                  "status": "not-started",
+                  "type": "task",
+                  "notes": "# Code of Ethics — Principle 6: Maintain and Improve Professional Competence\n\n**LOS:** 2.a\n**Difficulty:** 2 · **Estimated:** 0.5h\n\n## Opis\nObowiązek utrzymywania i podnoszenia kompetencji zawodowych własnych oraz innych profesjonalistów inwestycyjnych — przez ciągłe kształcenie, lekturę publikacji i programy rozwojowe.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Założenie, że tytuł CFA = wystarczająca kompetencja na zawsze\n- Zaniedbywanie szkolenia podwładnych z nowych regulacji\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Code of Ethics and Standards of Professional Conduct'\n- CFA Institute Standards of Practice Handbook (12th edition)\n- Schweser SchweserNotes 2026, Book 1 (Ethics), Study Sessions 1-2\n",
+                  "createdAt": "2026-05-06T00:00:00Z",
+                  "updatedAt": "2026-05-06T00:00:00Z",
+                  "metadata": {
+                    "los_codes": [
+                      "2.a"
+                    ],
+                    "difficulty": 2,
+                    "estimated_hours": 0.5,
+                    "prerequisites": [],
+                    "formulas": [],
+                    "common_pitfalls": [
+                      "Założenie, że tytuł CFA = wystarczająca kompetencja na zawsze",
+                      "Zaniedbywanie szkolenia podwładnych z nowych regulacji"
+                    ],
+                    "suggested_resources": [
+                      "CFA Institute Curriculum 2026, Volume 1, Reading 'Code of Ethics and Standards of Professional Conduct'",
+                      "CFA Institute Standards of Practice Handbook (12th edition)",
+                      "Schweser SchweserNotes 2026, Book 1 (Ethics), Study Sessions 1-2"
+                    ],
+                    "tags": [
+                      "code-of-ethics",
+                      "principle"
+                    ],
+                    "legacy_id": "cfa010201-0006-4000-8000-000000000000",
+                    "previous_uuid": "7dda06ec-803f-4f80-a6c5-15a8518c3f64"
+                  },
+                  "children": []
+                }
+              ]
+            },
+            {
+              "id": "cfa01022-0000-4000-8000-000000000000",
+              "title": "Standards of Professional Conduct (I-VII)",
+              "status": "not-started",
+              "type": "plan",
+              "notes": "# Standards of Professional Conduct (I-VII)\n\nSiedem grup Standardów (I-VII) z 22 sub-letters. Każdy sub-letter to oddzielny leaf — pełna granularność wymagana przez egzamin.\n\n**Learning Modules:** 1 (sub-section) · **Egzamin weight (topic):** 17.5%",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "section_index": "02",
+                "legacy_id": "cfa010202-0000-4000-8000-000000000000",
+                "previous_uuid": "444e4fb4-0c88-4448-9e2a-1b6afbf769a3"
+              },
+              "children": [
+                {
+                  "id": "cfa01022-0001-4000-8000-000000000000",
+                  "title": "Standard I-A — Knowledge of the Law",
+                  "status": "not-started",
+                  "type": "task",
+                  "notes": "# Standard I-A — Knowledge of the Law\n\n**LOS:** 2.b\n**Difficulty:** 3 · **Estimated:** 1h\n\n## Opis\nCzłonkowie i kandydaci muszą rozumieć i przestrzegać wszystkich obowiązujących przepisów, regulacji i Standardów (w tym Kodeksu) regulujących ich działalność zawodową. Tam gdzie prawa się różnią, należy stosować bardziej restrykcyjne. Naruszenie powstaje przez aktywne złamanie prawa, świadome uczestnictwo w naruszeniu lub brak adekwatnej reakcji na znane naruszenia.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Wykorzystywanie luki 'mniej restrykcyjne prawo lokalne' w jurysdykcji obcej, gdy Standardy są surowsze\n- Pasywne ignorowanie naruszeń kolegów zamiast eskalacji do supervisora lub compliance\n- Brak weryfikacji zmian regulacyjnych po przeniesieniu się do nowej jurysdykcji\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Code of Ethics and Standards of Professional Conduct'\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Guidance for Standards I-VII'\n- CFA Institute Standards of Practice Handbook (12th edition)\n",
+                  "createdAt": "2026-05-06T00:00:00Z",
+                  "updatedAt": "2026-05-06T00:00:00Z",
+                  "metadata": {
+                    "los_codes": [
+                      "2.b"
+                    ],
+                    "difficulty": 3,
+                    "estimated_hours": 1,
+                    "prerequisites": [],
+                    "formulas": [],
+                    "common_pitfalls": [
+                      "Wykorzystywanie luki 'mniej restrykcyjne prawo lokalne' w jurysdykcji obcej, gdy Standardy są surowsze",
+                      "Pasywne ignorowanie naruszeń kolegów zamiast eskalacji do supervisora lub compliance",
+                      "Brak weryfikacji zmian regulacyjnych po przeniesieniu się do nowej jurysdykcji"
+                    ],
+                    "suggested_resources": [
+                      "CFA Institute Curriculum 2026, Volume 1, Reading 'Code of Ethics and Standards of Professional Conduct'",
+                      "CFA Institute Curriculum 2026, Volume 1, Reading 'Guidance for Standards I-VII'",
+                      "CFA Institute Standards of Practice Handbook (12th edition)"
+                    ],
+                    "tags": [
+                      "standard",
+                      "I-A"
+                    ],
+                    "legacy_id": "cfa010202-0001-4000-8000-000000000000",
+                    "previous_uuid": "8bcd1735-38a9-43de-9256-c850228c4ea1"
+                  },
+                  "children": []
+                },
+                {
+                  "id": "cfa01022-0002-4000-8000-000000000000",
+                  "title": "Standard I-B — Independence and Objectivity",
+                  "status": "not-started",
+                  "type": "task",
+                  "notes": "# Standard I-B — Independence and Objectivity\n\n**LOS:** 2.b\n**Difficulty:** 3 · **Estimated:** 1.25h\n\n## Opis\nCzłonkowie muszą używać racjonalnej staranności i osądu, aby zachować i bronić niezależność oraz obiektywność w działalności zawodowej. Nie wolno przyjmować ani oferować prezentów, korzyści, kompensacji lub gestów świadczeń, które mogą rozsądnie wpłynąć na niezależność osądu.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Akceptowanie luksusowych wycieczek 'edukacyjnych' opłacanych przez emitentów obligacji, których analizujemy\n- Pisanie pozytywnych raportów po naciskach bankowości inwestycyjnej (firewall failure)\n- Drobne prezenty od klientów — dopuszczalne, ale wymagają disclosure i limitów firmowych\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Code of Ethics and Standards of Professional Conduct'\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Guidance for Standards I-VII'\n- CFA Institute Standards of Practice Handbook (12th edition)\n",
+                  "createdAt": "2026-05-06T00:00:00Z",
+                  "updatedAt": "2026-05-06T00:00:00Z",
+                  "metadata": {
+                    "los_codes": [
+                      "2.b"
+                    ],
+                    "difficulty": 3,
+                    "estimated_hours": 1.25,
+                    "prerequisites": [],
+                    "formulas": [],
+                    "common_pitfalls": [
+                      "Akceptowanie luksusowych wycieczek 'edukacyjnych' opłacanych przez emitentów obligacji, których analizujemy",
+                      "Pisanie pozytywnych raportów po naciskach bankowości inwestycyjnej (firewall failure)",
+                      "Drobne prezenty od klientów — dopuszczalne, ale wymagają disclosure i limitów firmowych"
+                    ],
+                    "suggested_resources": [
+                      "CFA Institute Curriculum 2026, Volume 1, Reading 'Code of Ethics and Standards of Professional Conduct'",
+                      "CFA Institute Curriculum 2026, Volume 1, Reading 'Guidance for Standards I-VII'",
+                      "CFA Institute Standards of Practice Handbook (12th edition)"
+                    ],
+                    "tags": [
+                      "standard",
+                      "I-B"
+                    ],
+                    "legacy_id": "cfa010202-0002-4000-8000-000000000000",
+                    "previous_uuid": "baa9748a-2056-49a1-b30e-a4381a63be99"
+                  },
+                  "children": []
+                },
+                {
+                  "id": "cfa01022-0003-4000-8000-000000000000",
+                  "title": "Standard I-C — Misrepresentation",
+                  "status": "not-started",
+                  "type": "task",
+                  "notes": "# Standard I-C — Misrepresentation\n\n**LOS:** 2.b\n**Difficulty:** 2 · **Estimated:** 1h\n\n## Opis\nCzłonkowie nie mogą świadomie składać żadnych wprowadzających w błąd oświadczeń ani pomijać istotnych faktów w odniesieniu do analiz, rekomendacji, działań inwestycyjnych lub innych czynności zawodowych. Obejmuje plagiat, wprowadzające w błąd performance reporting i fałszywe poświadczenia kwalifikacji.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Plagiat: cytowanie analiz innych autorów bez atrybucji (nawet 'wewnętrznych' modeli zewnętrznego dostawcy)\n- Sugerowanie gwarancji zwrotów lub bezpieczeństwa kapitału w produktach inwestycyjnych\n- Używanie 'CFA Charterholder' przez kandydata, który zdał wszystkie poziomy ale nie spełnił work experience\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Code of Ethics and Standards of Professional Conduct'\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Guidance for Standards I-VII'\n- CFA Institute Standards of Practice Handbook (12th edition)\n",
+                  "createdAt": "2026-05-06T00:00:00Z",
+                  "updatedAt": "2026-05-06T00:00:00Z",
+                  "metadata": {
+                    "los_codes": [
+                      "2.b"
+                    ],
+                    "difficulty": 2,
+                    "estimated_hours": 1,
+                    "prerequisites": [],
+                    "formulas": [],
+                    "common_pitfalls": [
+                      "Plagiat: cytowanie analiz innych autorów bez atrybucji (nawet 'wewnętrznych' modeli zewnętrznego dostawcy)",
+                      "Sugerowanie gwarancji zwrotów lub bezpieczeństwa kapitału w produktach inwestycyjnych",
+                      "Używanie 'CFA Charterholder' przez kandydata, który zdał wszystkie poziomy ale nie spełnił work experience"
+                    ],
+                    "suggested_resources": [
+                      "CFA Institute Curriculum 2026, Volume 1, Reading 'Code of Ethics and Standards of Professional Conduct'",
+                      "CFA Institute Curriculum 2026, Volume 1, Reading 'Guidance for Standards I-VII'",
+                      "CFA Institute Standards of Practice Handbook (12th edition)"
+                    ],
+                    "tags": [
+                      "standard",
+                      "I-C"
+                    ],
+                    "legacy_id": "cfa010202-0003-4000-8000-000000000000",
+                    "previous_uuid": "77a74755-7095-4b3a-88e1-644971bc47e8"
+                  },
+                  "children": []
+                },
+                {
+                  "id": "cfa01022-0004-4000-8000-000000000000",
+                  "title": "Standard I-D — Misconduct",
+                  "status": "not-started",
+                  "type": "task",
+                  "notes": "# Standard I-D — Misconduct\n\n**LOS:** 2.b\n**Difficulty:** 2 · **Estimated:** 0.5h\n\n## Opis\nCzłonkowie nie mogą angażować się w postępowanie zawodowe, które obejmuje nieuczciwość, oszustwo lub świadome wprowadzanie w błąd, ani popełniać czynów odzwierciedlających niekorzystnie na ich zawodowej reputacji, integralności lub kompetencji. Obejmuje czyny pozazawodowe wpływające na reputację zawodową (np. wyroki za oszustwa).\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- Code of Ethics — Principle 1: Act with Integrity, Competence, Diligence, and Respect\n\n## Common pitfalls\n- Pijaństwo na służbowych eventach prowadzące do nieprofesjonalnego zachowania (związane z pracą)\n- Skazanie za oszustwo nawet poza kontekstem zawodowym narusza Standard I-D\n- Nadmierne rozszerzanie zakresu — drobne wykroczenia osobiste niezwiązane z reputacją zawodową nie są naruszeniem\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Code of Ethics and Standards of Professional Conduct'\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Guidance for Standards I-VII'\n- CFA Institute Standards of Practice Handbook (12th edition)\n",
+                  "createdAt": "2026-05-06T00:00:00Z",
+                  "updatedAt": "2026-05-06T00:00:00Z",
+                  "metadata": {
+                    "los_codes": [
+                      "2.b"
+                    ],
+                    "difficulty": 2,
+                    "estimated_hours": 0.5,
+                    "prerequisites": [
+                      "Code of Ethics — Principle 1: Act with Integrity, Competence, Diligence, and Respect"
+                    ],
+                    "formulas": [],
+                    "common_pitfalls": [
+                      "Pijaństwo na służbowych eventach prowadzące do nieprofesjonalnego zachowania (związane z pracą)",
+                      "Skazanie za oszustwo nawet poza kontekstem zawodowym narusza Standard I-D",
+                      "Nadmierne rozszerzanie zakresu — drobne wykroczenia osobiste niezwiązane z reputacją zawodową nie są naruszeniem"
+                    ],
+                    "suggested_resources": [
+                      "CFA Institute Curriculum 2026, Volume 1, Reading 'Code of Ethics and Standards of Professional Conduct'",
+                      "CFA Institute Curriculum 2026, Volume 1, Reading 'Guidance for Standards I-VII'",
+                      "CFA Institute Standards of Practice Handbook (12th edition)"
+                    ],
+                    "tags": [
+                      "standard",
+                      "I-D"
+                    ],
+                    "legacy_id": "cfa010202-0004-4000-8000-000000000000",
+                    "previous_uuid": "e5d289d7-8434-4411-8465-cca509e389d8"
+                  },
+                  "children": []
+                },
+                {
+                  "id": "cfa01022-0005-4000-8000-000000000000",
+                  "title": "Standard II-A — Material Nonpublic Information",
+                  "status": "not-started",
+                  "type": "task",
+                  "notes": "# Standard II-A — Material Nonpublic Information\n\n**LOS:** 2.b\n**Difficulty:** 3 · **Estimated:** 1.5h\n\n## Opis\nCzłonkowie posiadający istotne informacje niepubliczne (material nonpublic information, MNPI), które mogłyby wpłynąć na wartość inwestycji, nie mogą działać ani powodować, by inni działali, na podstawie tych informacji. Test 'mosaic theory' pozwala łączyć informacje publiczne i niematerialne niepubliczne w analityczne wnioski.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Trading na podstawie podsłuchanej rozmowy w korytarzu między analitykami innego działu (insider tipping)\n- Mylenie mosaic theory z bezpośrednim ujawnieniem MNPI przez insidera\n- Brak Chinese Wall procedur między bankowością inwestycyjną a research/trading\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Code of Ethics and Standards of Professional Conduct'\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Guidance for Standards I-VII'\n- CFA Institute Standards of Practice Handbook (12th edition)\n",
+                  "createdAt": "2026-05-06T00:00:00Z",
+                  "updatedAt": "2026-05-06T00:00:00Z",
+                  "metadata": {
+                    "los_codes": [
+                      "2.b"
+                    ],
+                    "difficulty": 3,
+                    "estimated_hours": 1.5,
+                    "prerequisites": [],
+                    "formulas": [],
+                    "common_pitfalls": [
+                      "Trading na podstawie podsłuchanej rozmowy w korytarzu między analitykami innego działu (insider tipping)",
+                      "Mylenie mosaic theory z bezpośrednim ujawnieniem MNPI przez insidera",
+                      "Brak Chinese Wall procedur między bankowością inwestycyjną a research/trading"
+                    ],
+                    "suggested_resources": [
+                      "CFA Institute Curriculum 2026, Volume 1, Reading 'Code of Ethics and Standards of Professional Conduct'",
+                      "CFA Institute Curriculum 2026, Volume 1, Reading 'Guidance for Standards I-VII'",
+                      "CFA Institute Standards of Practice Handbook (12th edition)"
+                    ],
+                    "tags": [
+                      "standard",
+                      "II-A"
+                    ],
+                    "legacy_id": "cfa010202-0005-4000-8000-000000000000",
+                    "previous_uuid": "6b3f85a8-062f-4b70-8456-fb7168cd129b"
+                  },
+                  "children": []
+                },
+                {
+                  "id": "cfa01022-0006-4000-8000-000000000000",
+                  "title": "Standard II-B — Market Manipulation",
+                  "status": "not-started",
+                  "type": "task",
+                  "notes": "# Standard II-B — Market Manipulation\n\n**LOS:** 2.b\n**Difficulty:** 3 · **Estimated:** 1h\n\n## Opis\nCzłonkowie nie mogą angażować się w praktyki zniekształcające ceny lub sztucznie zwyżające wolumeny obrotu w celu wprowadzenia w błąd uczestników rynku. Obejmuje to manipulacje informacyjne (np. spreading false rumors) oraz transakcyjne (np. pump-and-dump, painting the tape, churning).\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Pump-and-dump w mediach społecznościowych — promowanie spółki w którą weszliśmy, by sprzedać po wzroście\n- Wash trades / matched orders zwiększające pozorny wolumen bez ekonomicznej istoty\n- Mylenie legitymowanej market-making activity z manipulacją\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Code of Ethics and Standards of Professional Conduct'\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Guidance for Standards I-VII'\n- CFA Institute Standards of Practice Handbook (12th edition)\n",
+                  "createdAt": "2026-05-06T00:00:00Z",
+                  "updatedAt": "2026-05-06T00:00:00Z",
+                  "metadata": {
+                    "los_codes": [
+                      "2.b"
+                    ],
+                    "difficulty": 3,
+                    "estimated_hours": 1,
+                    "prerequisites": [],
+                    "formulas": [],
+                    "common_pitfalls": [
+                      "Pump-and-dump w mediach społecznościowych — promowanie spółki w którą weszliśmy, by sprzedać po wzroście",
+                      "Wash trades / matched orders zwiększające pozorny wolumen bez ekonomicznej istoty",
+                      "Mylenie legitymowanej market-making activity z manipulacją"
+                    ],
+                    "suggested_resources": [
+                      "CFA Institute Curriculum 2026, Volume 1, Reading 'Code of Ethics and Standards of Professional Conduct'",
+                      "CFA Institute Curriculum 2026, Volume 1, Reading 'Guidance for Standards I-VII'",
+                      "CFA Institute Standards of Practice Handbook (12th edition)"
+                    ],
+                    "tags": [
+                      "standard",
+                      "II-B"
+                    ],
+                    "legacy_id": "cfa010202-0006-4000-8000-000000000000",
+                    "previous_uuid": "2ff5a7c4-4598-4da5-bef0-47da800eb842"
+                  },
+                  "children": []
+                },
+                {
+                  "id": "cfa01022-0007-4000-8000-000000000000",
+                  "title": "Standard III-A — Loyalty, Prudence, and Care",
+                  "status": "not-started",
+                  "type": "task",
+                  "notes": "# Standard III-A — Loyalty, Prudence, and Care\n\n**LOS:** 2.b\n**Difficulty:** 3 · **Estimated:** 1.5h\n\n## Opis\nCzłonkowie mają obowiązek lojalności, ostrożności i troski wobec klientów oraz muszą stawiać interesy klientów ponad interesy pracodawcy oraz własne. Obejmuje to obowiązek powierniczy (fiduciary duty) tam gdzie ma zastosowanie oraz zarządzanie soft dollars wyłącznie dla korzyści klienta.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- Code of Ethics — Principle 2: Place Client and Employer Interests Above Personal Interests\n\n## Common pitfalls\n- Priorytetyzacja soft-dollar arrangements, które przynoszą korzyści brokerowi/firmie a nie bezpośrednio klientowi\n- Mylenie 'klient' z 'firma' przy konfliktach — Standard III-A zawsze stawia klienta wyżej w lojalności inwestycyjnej\n- Brak rozpoznania, kto jest beneficjentem (np. uczestnicy planu emerytalnego, nie sponsor)\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Code of Ethics and Standards of Professional Conduct'\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Guidance for Standards I-VII'\n- CFA Institute Standards of Practice Handbook (12th edition)\n",
+                  "createdAt": "2026-05-06T00:00:00Z",
+                  "updatedAt": "2026-05-06T00:00:00Z",
+                  "metadata": {
+                    "los_codes": [
+                      "2.b"
+                    ],
+                    "difficulty": 3,
+                    "estimated_hours": 1.5,
+                    "prerequisites": [
+                      "Code of Ethics — Principle 2: Place Client and Employer Interests Above Personal Interests"
+                    ],
+                    "formulas": [],
+                    "common_pitfalls": [
+                      "Priorytetyzacja soft-dollar arrangements, które przynoszą korzyści brokerowi/firmie a nie bezpośrednio klientowi",
+                      "Mylenie 'klient' z 'firma' przy konfliktach — Standard III-A zawsze stawia klienta wyżej w lojalności inwestycyjnej",
+                      "Brak rozpoznania, kto jest beneficjentem (np. uczestnicy planu emerytalnego, nie sponsor)"
+                    ],
+                    "suggested_resources": [
+                      "CFA Institute Curriculum 2026, Volume 1, Reading 'Code of Ethics and Standards of Professional Conduct'",
+                      "CFA Institute Curriculum 2026, Volume 1, Reading 'Guidance for Standards I-VII'",
+                      "CFA Institute Standards of Practice Handbook (12th edition)"
+                    ],
+                    "tags": [
+                      "standard",
+                      "III-A"
+                    ],
+                    "legacy_id": "cfa010202-0007-4000-8000-000000000000",
+                    "previous_uuid": "8ab4420d-c0bb-45f6-989e-0c0d3cd2cfd1"
+                  },
+                  "children": []
+                },
+                {
+                  "id": "cfa01022-0008-4000-8000-000000000000",
+                  "title": "Standard III-B — Fair Dealing",
+                  "status": "not-started",
+                  "type": "task",
+                  "notes": "# Standard III-B — Fair Dealing\n\n**LOS:** 2.b\n**Difficulty:** 3 · **Estimated:** 1h\n\n## Opis\nCzłonkowie muszą sprawiedliwie i obiektywnie traktować wszystkich klientów przy dostarczaniu analiz inwestycyjnych, formułowaniu rekomendacji, podejmowaniu działań inwestycyjnych lub angażowaniu się w inną działalność zawodową. 'Fairly' nie znaczy 'identically' — można różnicować poziom serwisu, ale nie traktowanie kluczowych okazji.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Powiadamianie premium clients o rekomendacji change'u przed retail clients — zamiast jednoczesnego komunikatu\n- Mylenie 'fair' (sprawiedliwe) z 'equal' (identyczne) — różne tiery serwisu są dozwolone\n- Stronniczość w alokacji IPO faworyzująca rachunki rodzinne lub firmowe\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Code of Ethics and Standards of Professional Conduct'\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Guidance for Standards I-VII'\n- CFA Institute Standards of Practice Handbook (12th edition)\n",
+                  "createdAt": "2026-05-06T00:00:00Z",
+                  "updatedAt": "2026-05-06T00:00:00Z",
+                  "metadata": {
+                    "los_codes": [
+                      "2.b"
+                    ],
+                    "difficulty": 3,
+                    "estimated_hours": 1,
+                    "prerequisites": [],
+                    "formulas": [],
+                    "common_pitfalls": [
+                      "Powiadamianie premium clients o rekomendacji change'u przed retail clients — zamiast jednoczesnego komunikatu",
+                      "Mylenie 'fair' (sprawiedliwe) z 'equal' (identyczne) — różne tiery serwisu są dozwolone",
+                      "Stronniczość w alokacji IPO faworyzująca rachunki rodzinne lub firmowe"
+                    ],
+                    "suggested_resources": [
+                      "CFA Institute Curriculum 2026, Volume 1, Reading 'Code of Ethics and Standards of Professional Conduct'",
+                      "CFA Institute Curriculum 2026, Volume 1, Reading 'Guidance for Standards I-VII'",
+                      "CFA Institute Standards of Practice Handbook (12th edition)"
+                    ],
+                    "tags": [
+                      "standard",
+                      "III-B"
+                    ],
+                    "legacy_id": "cfa010202-0008-4000-8000-000000000000",
+                    "previous_uuid": "182f5c27-7dc9-47e4-9797-2764bba40dff"
+                  },
+                  "children": []
+                },
+                {
+                  "id": "cfa01022-0009-4000-8000-000000000000",
+                  "title": "Standard III-C — Suitability",
+                  "status": "not-started",
+                  "type": "task",
+                  "notes": "# Standard III-C — Suitability\n\n**LOS:** 2.b\n**Difficulty:** 3 · **Estimated:** 1.25h\n\n## Opis\nW relacji doradczej członek musi: (1) przeprowadzić rozsądne dochodzenie sytuacji finansowej i celów klienta, (2) określić odpowiedniość rekomendacji do IPS klienta, (3) ocenić odpowiedniość w kontekście całego portfela. Dla zarządzania portfelem zgodnie z mandatem (np. fundusz indeksowy) — odpowiedniość mierzy się względem mandatu, nie indywidualnych klientów.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Sprzedaż produktów strukturyzowanych emerytom z konserwatywnym IPS bez dokumentacji odpowiedniości\n- Brak aktualizacji IPS po istotnej zmianie sytuacji życiowej klienta (rozwód, dziedziczenie)\n- Pomijanie testu 'kontekst całego portfela' — pozycja sama w sobie ryzykowna może być odpowiednia jako hedge\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Code of Ethics and Standards of Professional Conduct'\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Guidance for Standards I-VII'\n- CFA Institute Standards of Practice Handbook (12th edition)\n",
+                  "createdAt": "2026-05-06T00:00:00Z",
+                  "updatedAt": "2026-05-06T00:00:00Z",
+                  "metadata": {
+                    "los_codes": [
+                      "2.b"
+                    ],
+                    "difficulty": 3,
+                    "estimated_hours": 1.25,
+                    "prerequisites": [],
+                    "formulas": [],
+                    "common_pitfalls": [
+                      "Sprzedaż produktów strukturyzowanych emerytom z konserwatywnym IPS bez dokumentacji odpowiedniości",
+                      "Brak aktualizacji IPS po istotnej zmianie sytuacji życiowej klienta (rozwód, dziedziczenie)",
+                      "Pomijanie testu 'kontekst całego portfela' — pozycja sama w sobie ryzykowna może być odpowiednia jako hedge"
+                    ],
+                    "suggested_resources": [
+                      "CFA Institute Curriculum 2026, Volume 1, Reading 'Code of Ethics and Standards of Professional Conduct'",
+                      "CFA Institute Curriculum 2026, Volume 1, Reading 'Guidance for Standards I-VII'",
+                      "CFA Institute Standards of Practice Handbook (12th edition)"
+                    ],
+                    "tags": [
+                      "standard",
+                      "III-C"
+                    ],
+                    "legacy_id": "cfa010202-0009-4000-8000-000000000000",
+                    "previous_uuid": "834bbedb-ae3b-4785-b76c-235d79af4f01"
+                  },
+                  "children": []
+                },
+                {
+                  "id": "cfa01022-0010-4000-8000-000000000000",
+                  "title": "Standard III-D — Performance Presentation",
+                  "status": "not-started",
+                  "type": "task",
+                  "notes": "# Standard III-D — Performance Presentation\n\n**LOS:** 2.b\n**Difficulty:** 3 · **Estimated:** 1.5h\n\n## Opis\nPrzy komunikowaniu informacji o wynikach inwestycyjnych członkowie muszą zapewnić, że jest ona uczciwa, dokładna i kompletna. Compliance z GIPS jest zalecane, ale nie obowiązkowe — minimum to jednak nie pomijać istotnych faktów (np. wyników w trudnych okresach, zmian w metodologii).\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- Time-weighted vs Money-weighted return\n\n## Common pitfalls\n- Cherry-picking 'najlepszych' okresów lub portfeli do prezentacji bez ujawnienia metodologii\n- Pomijanie back-tested results bez wyraźnego oznaczenia jako hipotetyczne\n- Mylenie time-weighted (TWR) z money-weighted (MWR) w prezentacji — różnica wpływa na atrybucję skill vs. cash flow timing\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Code of Ethics and Standards of Professional Conduct'\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Guidance for Standards I-VII'\n- CFA Institute Standards of Practice Handbook (12th edition)\n",
+                  "createdAt": "2026-05-06T00:00:00Z",
+                  "updatedAt": "2026-05-06T00:00:00Z",
+                  "metadata": {
+                    "los_codes": [
+                      "2.b"
+                    ],
+                    "difficulty": 3,
+                    "estimated_hours": 1.5,
+                    "prerequisites": [
+                      "Time-weighted vs Money-weighted return"
+                    ],
+                    "formulas": [],
+                    "common_pitfalls": [
+                      "Cherry-picking 'najlepszych' okresów lub portfeli do prezentacji bez ujawnienia metodologii",
+                      "Pomijanie back-tested results bez wyraźnego oznaczenia jako hipotetyczne",
+                      "Mylenie time-weighted (TWR) z money-weighted (MWR) w prezentacji — różnica wpływa na atrybucję skill vs. cash flow timing"
+                    ],
+                    "suggested_resources": [
+                      "CFA Institute Curriculum 2026, Volume 1, Reading 'Code of Ethics and Standards of Professional Conduct'",
+                      "CFA Institute Curriculum 2026, Volume 1, Reading 'Guidance for Standards I-VII'",
+                      "CFA Institute Standards of Practice Handbook (12th edition)"
+                    ],
+                    "tags": [
+                      "standard",
+                      "III-D"
+                    ],
+                    "legacy_id": "cfa010202-0010-4000-8000-000000000000",
+                    "previous_uuid": "bc9d6101-ee0a-4be2-886b-92cce5b8f7a7"
+                  },
+                  "children": []
+                },
+                {
+                  "id": "cfa01022-0011-4000-8000-000000000000",
+                  "title": "Standard III-E — Preservation of Confidentiality",
+                  "status": "not-started",
+                  "type": "task",
+                  "notes": "# Standard III-E — Preservation of Confidentiality\n\n**LOS:** 2.b\n**Difficulty:** 2 · **Estimated:** 0.75h\n\n## Opis\nCzłonkowie muszą zachować poufność informacji o obecnych, byłych i potencjalnych klientach, chyba że: (1) informacja dotyczy nielegalnej działalności klienta, (2) ujawnienie wymagane prawem, (3) klient/potencjalny klient zezwala na ujawnienie. Obowiązek przeżywa zakończenie relacji.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Dyskutowanie 'anonimizowanych' case studies w sposób umożliwiający identyfikację klienta\n- Ujawnianie informacji byłemu pracodawcy 'dla kontynuacji obsługi klienta' bez zgody klienta\n- Mylenie obowiązku poufności z obowiązkiem raportowania nielegalnej działalności klienta — to drugie zwykle przeważa\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Code of Ethics and Standards of Professional Conduct'\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Guidance for Standards I-VII'\n- CFA Institute Standards of Practice Handbook (12th edition)\n",
+                  "createdAt": "2026-05-06T00:00:00Z",
+                  "updatedAt": "2026-05-06T00:00:00Z",
+                  "metadata": {
+                    "los_codes": [
+                      "2.b"
+                    ],
+                    "difficulty": 2,
+                    "estimated_hours": 0.75,
+                    "prerequisites": [],
+                    "formulas": [],
+                    "common_pitfalls": [
+                      "Dyskutowanie 'anonimizowanych' case studies w sposób umożliwiający identyfikację klienta",
+                      "Ujawnianie informacji byłemu pracodawcy 'dla kontynuacji obsługi klienta' bez zgody klienta",
+                      "Mylenie obowiązku poufności z obowiązkiem raportowania nielegalnej działalności klienta — to drugie zwykle przeważa"
+                    ],
+                    "suggested_resources": [
+                      "CFA Institute Curriculum 2026, Volume 1, Reading 'Code of Ethics and Standards of Professional Conduct'",
+                      "CFA Institute Curriculum 2026, Volume 1, Reading 'Guidance for Standards I-VII'",
+                      "CFA Institute Standards of Practice Handbook (12th edition)"
+                    ],
+                    "tags": [
+                      "standard",
+                      "III-E"
+                    ],
+                    "legacy_id": "cfa010202-0011-4000-8000-000000000000",
+                    "previous_uuid": "56414862-659b-4c13-a428-3c597ebe6dd8"
+                  },
+                  "children": []
+                },
+                {
+                  "id": "cfa01022-0012-4000-8000-000000000000",
+                  "title": "Standard IV-A — Loyalty (to Employer)",
+                  "status": "not-started",
+                  "type": "task",
+                  "notes": "# Standard IV-A — Loyalty (to Employer)\n\n**LOS:** 2.b\n**Difficulty:** 3 · **Estimated:** 1h\n\n## Opis\nDziałając w sprawach zawodowych, członkowie muszą działać dla korzyści swojego pracodawcy i nie pozbawiać pracodawcy korzyści ze swoich umiejętności i zdolności, ujawniać poufnych informacji ani powodować szkody pracodawcy. Po odejściu można korzystać z wiedzy ogólnej, ale nie z plików, list klientów ani materiałów chronionych.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Solicytowanie klientów aktualnego pracodawcy do nowej firmy przed zakończeniem zatrudnienia\n- Kopiowanie list kontaktów i modeli wycen przed odejściem\n- Mylenie 'whistleblowing' (chronione) z 'dezercją z poufnymi danymi' (naruszenie)\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Code of Ethics and Standards of Professional Conduct'\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Guidance for Standards I-VII'\n- CFA Institute Standards of Practice Handbook (12th edition)\n",
+                  "createdAt": "2026-05-06T00:00:00Z",
+                  "updatedAt": "2026-05-06T00:00:00Z",
+                  "metadata": {
+                    "los_codes": [
+                      "2.b"
+                    ],
+                    "difficulty": 3,
+                    "estimated_hours": 1,
+                    "prerequisites": [],
+                    "formulas": [],
+                    "common_pitfalls": [
+                      "Solicytowanie klientów aktualnego pracodawcy do nowej firmy przed zakończeniem zatrudnienia",
+                      "Kopiowanie list kontaktów i modeli wycen przed odejściem",
+                      "Mylenie 'whistleblowing' (chronione) z 'dezercją z poufnymi danymi' (naruszenie)"
+                    ],
+                    "suggested_resources": [
+                      "CFA Institute Curriculum 2026, Volume 1, Reading 'Code of Ethics and Standards of Professional Conduct'",
+                      "CFA Institute Curriculum 2026, Volume 1, Reading 'Guidance for Standards I-VII'",
+                      "CFA Institute Standards of Practice Handbook (12th edition)"
+                    ],
+                    "tags": [
+                      "standard",
+                      "IV-A"
+                    ],
+                    "legacy_id": "cfa010202-0012-4000-8000-000000000000",
+                    "previous_uuid": "da39847b-988e-40a8-8586-b6655c3c9c37"
+                  },
+                  "children": []
+                },
+                {
+                  "id": "cfa01022-0013-4000-8000-000000000000",
+                  "title": "Standard IV-B — Additional Compensation Arrangements",
+                  "status": "not-started",
+                  "type": "task",
+                  "notes": "# Standard IV-B — Additional Compensation Arrangements\n\n**LOS:** 2.b\n**Difficulty:** 2 · **Estimated:** 0.5h\n\n## Opis\nCzłonkowie nie mogą przyjmować prezentów, korzyści, wynagrodzenia lub kompensacji, które konkurują z lub mogą rozsądnie konkurować z interesem pracodawcy, chyba że uzyskają pisemną zgodę od wszystkich zainteresowanych stron.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Akceptowanie 'performance bonus' od klienta bez pisemnej zgody pracodawcy\n- Niezgłoszenie prywatnego doradztwa wykonywanego po godzinach\n- Założenie, że ustna zgoda przełożonego wystarczy — Standard wymaga formy pisemnej\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Code of Ethics and Standards of Professional Conduct'\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Guidance for Standards I-VII'\n- CFA Institute Standards of Practice Handbook (12th edition)\n",
+                  "createdAt": "2026-05-06T00:00:00Z",
+                  "updatedAt": "2026-05-06T00:00:00Z",
+                  "metadata": {
+                    "los_codes": [
+                      "2.b"
+                    ],
+                    "difficulty": 2,
+                    "estimated_hours": 0.5,
+                    "prerequisites": [],
+                    "formulas": [],
+                    "common_pitfalls": [
+                      "Akceptowanie 'performance bonus' od klienta bez pisemnej zgody pracodawcy",
+                      "Niezgłoszenie prywatnego doradztwa wykonywanego po godzinach",
+                      "Założenie, że ustna zgoda przełożonego wystarczy — Standard wymaga formy pisemnej"
+                    ],
+                    "suggested_resources": [
+                      "CFA Institute Curriculum 2026, Volume 1, Reading 'Code of Ethics and Standards of Professional Conduct'",
+                      "CFA Institute Curriculum 2026, Volume 1, Reading 'Guidance for Standards I-VII'",
+                      "CFA Institute Standards of Practice Handbook (12th edition)"
+                    ],
+                    "tags": [
+                      "standard",
+                      "IV-B"
+                    ],
+                    "legacy_id": "cfa010202-0013-4000-8000-000000000000",
+                    "previous_uuid": "8d386633-4b54-47c8-b1a5-0a556cbf2749"
+                  },
+                  "children": []
+                },
+                {
+                  "id": "cfa01022-0014-4000-8000-000000000000",
+                  "title": "Standard IV-C — Responsibilities of Supervisors",
+                  "status": "not-started",
+                  "type": "task",
+                  "notes": "# Standard IV-C — Responsibilities of Supervisors\n\n**LOS:** 2.b\n**Difficulty:** 3 · **Estimated:** 1h\n\n## Opis\nCzłonkowie pełniący funkcje nadzorcze muszą podejmować rozsądne działania w celu zapobiegania naruszeniom obowiązujących przepisów, regulacji i Standardów przez podwładnych. Obejmuje wdrożenie compliance procedur, edukację oraz mechanizmy detekcji i sankcji.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Akceptowanie roli nadzorcy bez adekwatnego compliance system — należy odmówić lub żądać zasobów\n- Reagowanie tylko na zgłoszone naruszenia bez aktywnej detekcji\n- Mylenie inadekwatności systemu z winą podwładnego — supervisor odpowiada za system\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Code of Ethics and Standards of Professional Conduct'\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Guidance for Standards I-VII'\n- CFA Institute Standards of Practice Handbook (12th edition)\n",
+                  "createdAt": "2026-05-06T00:00:00Z",
+                  "updatedAt": "2026-05-06T00:00:00Z",
+                  "metadata": {
+                    "los_codes": [
+                      "2.b"
+                    ],
+                    "difficulty": 3,
+                    "estimated_hours": 1,
+                    "prerequisites": [],
+                    "formulas": [],
+                    "common_pitfalls": [
+                      "Akceptowanie roli nadzorcy bez adekwatnego compliance system — należy odmówić lub żądać zasobów",
+                      "Reagowanie tylko na zgłoszone naruszenia bez aktywnej detekcji",
+                      "Mylenie inadekwatności systemu z winą podwładnego — supervisor odpowiada za system"
+                    ],
+                    "suggested_resources": [
+                      "CFA Institute Curriculum 2026, Volume 1, Reading 'Code of Ethics and Standards of Professional Conduct'",
+                      "CFA Institute Curriculum 2026, Volume 1, Reading 'Guidance for Standards I-VII'",
+                      "CFA Institute Standards of Practice Handbook (12th edition)"
+                    ],
+                    "tags": [
+                      "standard",
+                      "IV-C"
+                    ],
+                    "legacy_id": "cfa010202-0014-4000-8000-000000000000",
+                    "previous_uuid": "f8cac0d5-a560-43ab-ab0e-4f88e6e38e65"
+                  },
+                  "children": []
+                },
+                {
+                  "id": "cfa01022-0015-4000-8000-000000000000",
+                  "title": "Standard V-A — Diligence and Reasonable Basis",
+                  "status": "not-started",
+                  "type": "task",
+                  "notes": "# Standard V-A — Diligence and Reasonable Basis\n\n**LOS:** 2.b\n**Difficulty:** 3 · **Estimated:** 1.25h\n\n## Opis\nCzłonkowie muszą: (1) wykazać się starannością, niezależnością i dokładnością przy analizie inwestycji, formułowaniu rekomendacji i podejmowaniu działań inwestycyjnych, (2) mieć rozsądną i adekwatną podstawę, popartą odpowiednimi badaniami i dochodzeniem. Standard wymaga procesu, nie gwarancji wyników.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Bezkrytyczne polegania na third-party research bez własnej oceny wiarygodności źródła\n- Quantitatywne modele bez stress-testów lub zrozumienia założeń\n- Założenie, że 'reasonable basis' = 'pewność' — to jest rozsądna podstawa, nie gwarancja\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Code of Ethics and Standards of Professional Conduct'\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Guidance for Standards I-VII'\n- CFA Institute Standards of Practice Handbook (12th edition)\n",
+                  "createdAt": "2026-05-06T00:00:00Z",
+                  "updatedAt": "2026-05-06T00:00:00Z",
+                  "metadata": {
+                    "los_codes": [
+                      "2.b"
+                    ],
+                    "difficulty": 3,
+                    "estimated_hours": 1.25,
+                    "prerequisites": [],
+                    "formulas": [],
+                    "common_pitfalls": [
+                      "Bezkrytyczne polegania na third-party research bez własnej oceny wiarygodności źródła",
+                      "Quantitatywne modele bez stress-testów lub zrozumienia założeń",
+                      "Założenie, że 'reasonable basis' = 'pewność' — to jest rozsądna podstawa, nie gwarancja"
+                    ],
+                    "suggested_resources": [
+                      "CFA Institute Curriculum 2026, Volume 1, Reading 'Code of Ethics and Standards of Professional Conduct'",
+                      "CFA Institute Curriculum 2026, Volume 1, Reading 'Guidance for Standards I-VII'",
+                      "CFA Institute Standards of Practice Handbook (12th edition)"
+                    ],
+                    "tags": [
+                      "standard",
+                      "V-A"
+                    ],
+                    "legacy_id": "cfa010202-0015-4000-8000-000000000000",
+                    "previous_uuid": "5c57dbc4-d3e0-4d83-ac00-16a87f870baa"
+                  },
+                  "children": []
+                },
+                {
+                  "id": "cfa01022-0016-4000-8000-000000000000",
+                  "title": "Standard V-B — Communication with Clients and Prospective Clients",
+                  "status": "not-started",
+                  "type": "task",
+                  "notes": "# Standard V-B — Communication with Clients and Prospective Clients\n\n**LOS:** 2.b\n**Difficulty:** 2 · **Estimated:** 1h\n\n## Opis\nCzłonkowie muszą: (1) ujawniać klientom format i ogólne zasady procesu inwestycyjnego, (2) niezwłocznie ujawniać istotne zmiany, (3) odróżniać fakty od opinii, (4) komunikować istotne czynniki dla rekomendacji. Komunikacja musi być zrozumiała dla odbiorcy bez nadmiernego żargonu.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Brak rozróżnienia faktu (np. P/E = 15) od opinii (np. 'spółka jest niedowartościowana')\n- Niekomunikowanie istotnych zmian w procesie inwestycyjnym (np. nowe instrumenty pochodne w portfelu)\n- Używanie żargonu uniemożliwiającego klientowi zrozumienie strategii\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Code of Ethics and Standards of Professional Conduct'\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Guidance for Standards I-VII'\n- CFA Institute Standards of Practice Handbook (12th edition)\n",
+                  "createdAt": "2026-05-06T00:00:00Z",
+                  "updatedAt": "2026-05-06T00:00:00Z",
+                  "metadata": {
+                    "los_codes": [
+                      "2.b"
+                    ],
+                    "difficulty": 2,
+                    "estimated_hours": 1,
+                    "prerequisites": [],
+                    "formulas": [],
+                    "common_pitfalls": [
+                      "Brak rozróżnienia faktu (np. P/E = 15) od opinii (np. 'spółka jest niedowartościowana')",
+                      "Niekomunikowanie istotnych zmian w procesie inwestycyjnym (np. nowe instrumenty pochodne w portfelu)",
+                      "Używanie żargonu uniemożliwiającego klientowi zrozumienie strategii"
+                    ],
+                    "suggested_resources": [
+                      "CFA Institute Curriculum 2026, Volume 1, Reading 'Code of Ethics and Standards of Professional Conduct'",
+                      "CFA Institute Curriculum 2026, Volume 1, Reading 'Guidance for Standards I-VII'",
+                      "CFA Institute Standards of Practice Handbook (12th edition)"
+                    ],
+                    "tags": [
+                      "standard",
+                      "V-B"
+                    ],
+                    "legacy_id": "cfa010202-0016-4000-8000-000000000000",
+                    "previous_uuid": "a40febff-2ead-4d05-9194-0d78f61e671b"
+                  },
+                  "children": []
+                },
+                {
+                  "id": "cfa01022-0017-4000-8000-000000000000",
+                  "title": "Standard V-C — Record Retention",
+                  "status": "not-started",
+                  "type": "task",
+                  "notes": "# Standard V-C — Record Retention\n\n**LOS:** 2.b\n**Difficulty:** 2 · **Estimated:** 0.5h\n\n## Opis\nCzłonkowie muszą rozwijać i utrzymywać odpowiednie zapisy wspierające analizy inwestycyjne, rekomendacje, działania i komunikację z klientami i potencjalnymi klientami. CFA Institute rekomenduje minimum 7 lat retention w braku innych regulacji.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Założenie, że ustne notatki ze spotkań nie wymagają archiwizacji\n- Brak retention przy zmianie pracodawcy — zapisy są własnością firmy\n- Polegania wyłącznie na rekordach firmy bez własnej kopii roboczej (przy zmianie firmy istotne)\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Code of Ethics and Standards of Professional Conduct'\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Guidance for Standards I-VII'\n- CFA Institute Standards of Practice Handbook (12th edition)\n",
+                  "createdAt": "2026-05-06T00:00:00Z",
+                  "updatedAt": "2026-05-06T00:00:00Z",
+                  "metadata": {
+                    "los_codes": [
+                      "2.b"
+                    ],
+                    "difficulty": 2,
+                    "estimated_hours": 0.5,
+                    "prerequisites": [],
+                    "formulas": [],
+                    "common_pitfalls": [
+                      "Założenie, że ustne notatki ze spotkań nie wymagają archiwizacji",
+                      "Brak retention przy zmianie pracodawcy — zapisy są własnością firmy",
+                      "Polegania wyłącznie na rekordach firmy bez własnej kopii roboczej (przy zmianie firmy istotne)"
+                    ],
+                    "suggested_resources": [
+                      "CFA Institute Curriculum 2026, Volume 1, Reading 'Code of Ethics and Standards of Professional Conduct'",
+                      "CFA Institute Curriculum 2026, Volume 1, Reading 'Guidance for Standards I-VII'",
+                      "CFA Institute Standards of Practice Handbook (12th edition)"
+                    ],
+                    "tags": [
+                      "standard",
+                      "V-C"
+                    ],
+                    "legacy_id": "cfa010202-0017-4000-8000-000000000000",
+                    "previous_uuid": "b671230d-5314-4922-beb5-b1374f3c2ff3"
+                  },
+                  "children": []
+                },
+                {
+                  "id": "cfa01022-0018-4000-8000-000000000000",
+                  "title": "Standard VI-A — Disclosure of Conflicts",
+                  "status": "not-started",
+                  "type": "task",
+                  "notes": "# Standard VI-A — Disclosure of Conflicts\n\n**LOS:** 2.b\n**Difficulty:** 2 · **Estimated:** 1h\n\n## Opis\nCzłonkowie muszą w pełni i uczciwie ujawnić wszystkie sprawy, które rozsądnie można oczekiwać, że osłabią ich niezależność i obiektywność lub zakłócą ich obowiązki wobec klientów, potencjalnych klientów i pracodawcy. Disclosure musi być wyróżniony, jasny i zrozumiały dla odbiorcy.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Ukrywanie disclosure w drobnym druku lub na końcu długiego raportu\n- Niepełne ujawnienie — np. ujawnienie holdings analityka bez ujawnienia holdings firmy\n- Założenie, że samo disclosure rozwiązuje konflikt — niektóre konflikty wymagają eliminacji, nie ujawnienia\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Code of Ethics and Standards of Professional Conduct'\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Guidance for Standards I-VII'\n- CFA Institute Standards of Practice Handbook (12th edition)\n",
+                  "createdAt": "2026-05-06T00:00:00Z",
+                  "updatedAt": "2026-05-06T00:00:00Z",
+                  "metadata": {
+                    "los_codes": [
+                      "2.b"
+                    ],
+                    "difficulty": 2,
+                    "estimated_hours": 1,
+                    "prerequisites": [],
+                    "formulas": [],
+                    "common_pitfalls": [
+                      "Ukrywanie disclosure w drobnym druku lub na końcu długiego raportu",
+                      "Niepełne ujawnienie — np. ujawnienie holdings analityka bez ujawnienia holdings firmy",
+                      "Założenie, że samo disclosure rozwiązuje konflikt — niektóre konflikty wymagają eliminacji, nie ujawnienia"
+                    ],
+                    "suggested_resources": [
+                      "CFA Institute Curriculum 2026, Volume 1, Reading 'Code of Ethics and Standards of Professional Conduct'",
+                      "CFA Institute Curriculum 2026, Volume 1, Reading 'Guidance for Standards I-VII'",
+                      "CFA Institute Standards of Practice Handbook (12th edition)"
+                    ],
+                    "tags": [
+                      "standard",
+                      "VI-A"
+                    ],
+                    "legacy_id": "cfa010202-0018-4000-8000-000000000000",
+                    "previous_uuid": "8c248c8e-2213-438d-b297-968e0650ea51"
+                  },
+                  "children": []
+                },
+                {
+                  "id": "cfa01022-0019-4000-8000-000000000000",
+                  "title": "Standard VI-B — Priority of Transactions",
+                  "status": "not-started",
+                  "type": "task",
+                  "notes": "# Standard VI-B — Priority of Transactions\n\n**LOS:** 2.b\n**Difficulty:** 3 · **Estimated:** 1h\n\n## Opis\nTransakcje inwestycyjne dla klientów i pracodawcy muszą mieć priorytet nad transakcjami inwestycyjnymi, w których członek lub kandydat jest beneficial owner. Obejmuje to konta rodzinne, w których członek ma beneficial interest.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Front-running: kupno akcji na własny rachunek przed wykonaniem rekomendacji buy dla klienta\n- Mylenie 'rachunek rodzinny bez beneficial ownership' (traktowany jak klient) z 'beneficial ownership' (priorytet niższy)\n- Brak blackout period wokół rekomendacji firmowych dla osobistych transakcji\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Code of Ethics and Standards of Professional Conduct'\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Guidance for Standards I-VII'\n- CFA Institute Standards of Practice Handbook (12th edition)\n",
+                  "createdAt": "2026-05-06T00:00:00Z",
+                  "updatedAt": "2026-05-06T00:00:00Z",
+                  "metadata": {
+                    "los_codes": [
+                      "2.b"
+                    ],
+                    "difficulty": 3,
+                    "estimated_hours": 1,
+                    "prerequisites": [],
+                    "formulas": [],
+                    "common_pitfalls": [
+                      "Front-running: kupno akcji na własny rachunek przed wykonaniem rekomendacji buy dla klienta",
+                      "Mylenie 'rachunek rodzinny bez beneficial ownership' (traktowany jak klient) z 'beneficial ownership' (priorytet niższy)",
+                      "Brak blackout period wokół rekomendacji firmowych dla osobistych transakcji"
+                    ],
+                    "suggested_resources": [
+                      "CFA Institute Curriculum 2026, Volume 1, Reading 'Code of Ethics and Standards of Professional Conduct'",
+                      "CFA Institute Curriculum 2026, Volume 1, Reading 'Guidance for Standards I-VII'",
+                      "CFA Institute Standards of Practice Handbook (12th edition)"
+                    ],
+                    "tags": [
+                      "standard",
+                      "VI-B"
+                    ],
+                    "legacy_id": "cfa010202-0019-4000-8000-000000000000",
+                    "previous_uuid": "849e0d22-404b-4898-9f38-27db4e7a7b33"
+                  },
+                  "children": []
+                },
+                {
+                  "id": "cfa01022-0020-4000-8000-000000000000",
+                  "title": "Standard VI-C — Referral Fees",
+                  "status": "not-started",
+                  "type": "task",
+                  "notes": "# Standard VI-C — Referral Fees\n\n**LOS:** 2.b\n**Difficulty:** 2 · **Estimated:** 0.75h\n\n## Opis\nCzłonkowie muszą ujawniać swoim pracodawcom, klientom i potencjalnym klientom, w odpowiedni sposób, każdą rekompensatę, świadczenie lub korzyść otrzymaną lub zapłaconą innym w zamian za rekomendację produktów lub usług. Disclosure musi być przed rozpoczęciem relacji, aby klient mógł ocenić koszty i konflikty.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Ujawnienie referral fee dopiero przy zamknięciu transakcji, a nie przed jej rozpoczęciem\n- Pomijanie disclosure przy wewnętrznych referrals między działami tej samej firmy\n- Założenie, że ustne ujawnienie wystarczy — najlepsza praktyka to forma pisemna\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Code of Ethics and Standards of Professional Conduct'\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Guidance for Standards I-VII'\n- CFA Institute Standards of Practice Handbook (12th edition)\n",
+                  "createdAt": "2026-05-06T00:00:00Z",
+                  "updatedAt": "2026-05-06T00:00:00Z",
+                  "metadata": {
+                    "los_codes": [
+                      "2.b"
+                    ],
+                    "difficulty": 2,
+                    "estimated_hours": 0.75,
+                    "prerequisites": [],
+                    "formulas": [],
+                    "common_pitfalls": [
+                      "Ujawnienie referral fee dopiero przy zamknięciu transakcji, a nie przed jej rozpoczęciem",
+                      "Pomijanie disclosure przy wewnętrznych referrals między działami tej samej firmy",
+                      "Założenie, że ustne ujawnienie wystarczy — najlepsza praktyka to forma pisemna"
+                    ],
+                    "suggested_resources": [
+                      "CFA Institute Curriculum 2026, Volume 1, Reading 'Code of Ethics and Standards of Professional Conduct'",
+                      "CFA Institute Curriculum 2026, Volume 1, Reading 'Guidance for Standards I-VII'",
+                      "CFA Institute Standards of Practice Handbook (12th edition)"
+                    ],
+                    "tags": [
+                      "standard",
+                      "VI-C"
+                    ],
+                    "legacy_id": "cfa010202-0020-4000-8000-000000000000",
+                    "previous_uuid": "d842b096-5ec9-404d-9651-1ac0df4bb16e"
+                  },
+                  "children": []
+                },
+                {
+                  "id": "cfa01022-0021-4000-8000-000000000000",
+                  "title": "Standard VII-A — Conduct as Participants in CFA Programs",
+                  "status": "not-started",
+                  "type": "task",
+                  "notes": "# Standard VII-A — Conduct as Participants in CFA Programs\n\n**LOS:** 2.b\n**Difficulty:** 2 · **Estimated:** 0.5h\n\n## Opis\nCzłonkowie i kandydaci nie mogą angażować się w żadne postępowanie, które naruszałoby reputację lub integralność CFA Institute lub programu CFA, ani zakłócać poufności egzaminacyjnej (cheating, ujawnianie pytań egzaminacyjnych, naruszanie polityk testowych).\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Dyskutowanie konkretnych pytań egzaminacyjnych po zdaniu (naruszenie poufności)\n- Wnoszenie zakazanych materiałów na egzamin (kalkulator nieautoryzowany, notatki)\n- Mylenie ogólnej dyskusji o tematach z ujawnieniem konkretnych pytań — konkretne pytania zawsze poufne\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Code of Ethics and Standards of Professional Conduct'\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Guidance for Standards I-VII'\n- CFA Institute Standards of Practice Handbook (12th edition)\n",
+                  "createdAt": "2026-05-06T00:00:00Z",
+                  "updatedAt": "2026-05-06T00:00:00Z",
+                  "metadata": {
+                    "los_codes": [
+                      "2.b"
+                    ],
+                    "difficulty": 2,
+                    "estimated_hours": 0.5,
+                    "prerequisites": [],
+                    "formulas": [],
+                    "common_pitfalls": [
+                      "Dyskutowanie konkretnych pytań egzaminacyjnych po zdaniu (naruszenie poufności)",
+                      "Wnoszenie zakazanych materiałów na egzamin (kalkulator nieautoryzowany, notatki)",
+                      "Mylenie ogólnej dyskusji o tematach z ujawnieniem konkretnych pytań — konkretne pytania zawsze poufne"
+                    ],
+                    "suggested_resources": [
+                      "CFA Institute Curriculum 2026, Volume 1, Reading 'Code of Ethics and Standards of Professional Conduct'",
+                      "CFA Institute Curriculum 2026, Volume 1, Reading 'Guidance for Standards I-VII'",
+                      "CFA Institute Standards of Practice Handbook (12th edition)"
+                    ],
+                    "tags": [
+                      "standard",
+                      "VII-A"
+                    ],
+                    "legacy_id": "cfa010202-0021-4000-8000-000000000000",
+                    "previous_uuid": "554c709f-7198-4518-8311-13eb4da2f3ef"
+                  },
+                  "children": []
+                },
+                {
+                  "id": "cfa01022-0022-4000-8000-000000000000",
+                  "title": "Standard VII-B — Reference to CFA Institute, the CFA Designation, and the CFA Program",
+                  "status": "not-started",
+                  "type": "task",
+                  "notes": "# Standard VII-B — Reference to CFA Institute, the CFA Designation, and the CFA Program\n\n**LOS:** 2.b\n**Difficulty:** 2 · **Estimated:** 0.75h\n\n## Opis\nPrzy odwoływaniu się do członkostwa w CFA Institute, charteru CFA lub statusu kandydata członkowie muszą używać oznaczeń w sposób, który nie wprowadza w błąd co do ich znaczenia lub implikacji. Tytuł 'CFA Charterholder' — tylko po spełnieniu wszystkich wymagań (egzaminy + work experience + sponsorship + membership).\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Używanie 'CFA' jako rzeczownika ('I am a CFA') zamiast przymiotnika ('I am a CFA Charterholder')\n- Sugerowanie wyższych zwrotów lub przewagi konkurencyjnej tylko z powodu posiadania tytułu\n- Twierdzenie 'CFA candidate' bez aktualnej rejestracji na egzamin\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Code of Ethics and Standards of Professional Conduct'\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Guidance for Standards I-VII'\n- CFA Institute Standards of Practice Handbook (12th edition)\n",
+                  "createdAt": "2026-05-06T00:00:00Z",
+                  "updatedAt": "2026-05-06T00:00:00Z",
+                  "metadata": {
+                    "los_codes": [
+                      "2.b"
+                    ],
+                    "difficulty": 2,
+                    "estimated_hours": 0.75,
+                    "prerequisites": [],
+                    "formulas": [],
+                    "common_pitfalls": [
+                      "Używanie 'CFA' jako rzeczownika ('I am a CFA') zamiast przymiotnika ('I am a CFA Charterholder')",
+                      "Sugerowanie wyższych zwrotów lub przewagi konkurencyjnej tylko z powodu posiadania tytułu",
+                      "Twierdzenie 'CFA candidate' bez aktualnej rejestracji na egzamin"
+                    ],
+                    "suggested_resources": [
+                      "CFA Institute Curriculum 2026, Volume 1, Reading 'Code of Ethics and Standards of Professional Conduct'",
+                      "CFA Institute Curriculum 2026, Volume 1, Reading 'Guidance for Standards I-VII'",
+                      "CFA Institute Standards of Practice Handbook (12th edition)"
+                    ],
+                    "tags": [
+                      "standard",
+                      "VII-B"
+                    ],
+                    "legacy_id": "cfa010202-0022-4000-8000-000000000000",
+                    "previous_uuid": "305ea1df-202f-4904-a622-6c525aa0f623"
+                  },
+                  "children": []
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "cfa01030-0000-4000-8000-000000000000",
+          "title": "Guidance for Standards I-VII",
+          "status": "not-started",
+          "type": "phase",
+          "notes": "# Guidance for Standards I-VII\n\nSzczegółowy guidance CFA Institute dla każdej grupy Standardów oraz przykłady aplikacji do typowych sytuacji zawodowych. Krytyczny dla zrozumienia 'gray areas' niejednoznacznie rozstrzygniętych w samym tekście Standardu.\n\n**Learning Modules:** 1 · **Egzamin weight (topic):** 17.5%",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "lm_index": "03",
+            "lm_name_canonical": "Guidance for Standards I-VII",
+            "los_count": 2,
+            "topic": "Ethics & Professional Standards",
+            "legacy_id": "cfa010300-0000-4000-8000-000000000000",
+            "previous_uuid": "b566e02b-62f0-4e87-b0e1-c138844fa3ea"
+          },
+          "children": [
+            {
+              "id": "cfa01031-0000-4000-8000-000000000000",
+              "title": "Guidance for Standards I-VII",
+              "status": "not-started",
+              "type": "plan",
+              "notes": "# Guidance for Standards I-VII\n\nSzczegółowe wytyczne CFA Institute dla każdej z grup Standardów (I-VII). Guidance zawiera procedury rekomendowane, definicje materiality oraz testy compliance.\n\n**Learning Modules:** 1 (sub-section) · **Egzamin weight (topic):** 17.5%",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "section_index": "01",
+                "legacy_id": "cfa010301-0000-4000-8000-000000000000",
+                "previous_uuid": "0ec95edd-00ba-413a-8fa4-af699784a642"
+              },
+              "children": [
+                {
+                  "id": "cfa01031-0001-4000-8000-000000000000",
+                  "title": "Guidance for Standards I — Professionalism (Overview)",
+                  "status": "not-started",
+                  "type": "task",
+                  "notes": "# Guidance for Standards I — Professionalism (Overview)\n\n**LOS:** 3.a\n**Difficulty:** 2 · **Estimated:** 0.75h\n\n## Opis\nPrzegląd guidance dla Standardów I-A do I-D dotyczących profesjonalizmu. Obejmuje znajomość prawa, niezależność i obiektywność, misrepresentation oraz misconduct. Guidance dostarcza konkretne procedury compliance i przykłady aplikacji.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Czytanie tekstu Standardu bez guidance — wiele przypadków granicznych wyjaśnionych jest tylko w guidance\n- Mylenie 'recommended procedures' z 'required behavior' — guidance często rekomenduje, Standardy zobowiązują\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Guidance for Standards I-VII'\n- CFA Institute Standards of Practice Handbook (12th edition)\n- Schweser SchweserNotes 2026, Book 1 (Ethics), Study Sessions 1-2\n",
+                  "createdAt": "2026-05-06T00:00:00Z",
+                  "updatedAt": "2026-05-06T00:00:00Z",
+                  "metadata": {
+                    "los_codes": [
+                      "3.a"
+                    ],
+                    "difficulty": 2,
+                    "estimated_hours": 0.75,
+                    "prerequisites": [],
+                    "formulas": [],
+                    "common_pitfalls": [
+                      "Czytanie tekstu Standardu bez guidance — wiele przypadków granicznych wyjaśnionych jest tylko w guidance",
+                      "Mylenie 'recommended procedures' z 'required behavior' — guidance często rekomenduje, Standardy zobowiązują"
+                    ],
+                    "suggested_resources": [
+                      "CFA Institute Curriculum 2026, Volume 1, Reading 'Guidance for Standards I-VII'",
+                      "CFA Institute Standards of Practice Handbook (12th edition)",
+                      "Schweser SchweserNotes 2026, Book 1 (Ethics), Study Sessions 1-2"
+                    ],
+                    "tags": [
+                      "guidance",
+                      "overview"
+                    ],
+                    "legacy_id": "cfa010301-0001-4000-8000-000000000000",
+                    "previous_uuid": "9b5457f5-cedb-4842-99b9-f08b37c899a0"
+                  },
+                  "children": []
+                },
+                {
+                  "id": "cfa01031-0002-4000-8000-000000000000",
+                  "title": "Guidance for Standards II — Integrity of Capital Markets (Overview)",
+                  "status": "not-started",
+                  "type": "task",
+                  "notes": "# Guidance for Standards II — Integrity of Capital Markets (Overview)\n\n**LOS:** 3.a\n**Difficulty:** 2 · **Estimated:** 0.5h\n\n## Opis\nPrzegląd guidance dla Standardów II-A (MNPI) i II-B (Market Manipulation). Szczegółowo opisuje mosaic theory, Chinese Wall procedures oraz testy materiality i non-public.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Pomijanie firewall/Chinese Wall procedures jako 'tylko dla dużych firm' — wymóg dotyczy wszystkich\n- Niepoprawne rozumienie mosaic theory — wymaga publicznych + niematerialnych niepublicznych informacji\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Guidance for Standards I-VII'\n- CFA Institute Standards of Practice Handbook (12th edition)\n- AnalystPrep CFA Level I — Ethical and Professional Standards\n",
+                  "createdAt": "2026-05-06T00:00:00Z",
+                  "updatedAt": "2026-05-06T00:00:00Z",
+                  "metadata": {
+                    "los_codes": [
+                      "3.a"
+                    ],
+                    "difficulty": 2,
+                    "estimated_hours": 0.5,
+                    "prerequisites": [],
+                    "formulas": [],
+                    "common_pitfalls": [
+                      "Pomijanie firewall/Chinese Wall procedures jako 'tylko dla dużych firm' — wymóg dotyczy wszystkich",
+                      "Niepoprawne rozumienie mosaic theory — wymaga publicznych + niematerialnych niepublicznych informacji"
+                    ],
+                    "suggested_resources": [
+                      "CFA Institute Curriculum 2026, Volume 1, Reading 'Guidance for Standards I-VII'",
+                      "CFA Institute Standards of Practice Handbook (12th edition)",
+                      "AnalystPrep CFA Level I — Ethical and Professional Standards"
+                    ],
+                    "tags": [
+                      "guidance",
+                      "overview"
+                    ],
+                    "legacy_id": "cfa010301-0002-4000-8000-000000000000",
+                    "previous_uuid": "8b0a64d5-ac02-444d-9e81-eda02edf3885"
+                  },
+                  "children": []
+                },
+                {
+                  "id": "cfa01031-0003-4000-8000-000000000000",
+                  "title": "Guidance for Standards III — Duties to Clients (Overview)",
+                  "status": "not-started",
+                  "type": "task",
+                  "notes": "# Guidance for Standards III — Duties to Clients (Overview)\n\n**LOS:** 3.a\n**Difficulty:** 2 · **Estimated:** 0.75h\n\n## Opis\nPrzegląd guidance dla Standardów III-A do III-E. Obejmuje fiduciary duty, soft dollars, fair dealing procedures, suitability testing, performance presentation oraz confidentiality exceptions.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Mylenie soft dollars z kickbacks — soft dollars są dozwolone gdy korzyść trafia do klienta\n- Pomijanie 'whole portfolio context' przy ocenie suitability\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Guidance for Standards I-VII'\n- CFA Institute Standards of Practice Handbook (12th edition)\n- Schweser SchweserNotes 2026, Book 1 (Ethics), Study Sessions 1-2\n",
+                  "createdAt": "2026-05-06T00:00:00Z",
+                  "updatedAt": "2026-05-06T00:00:00Z",
+                  "metadata": {
+                    "los_codes": [
+                      "3.a"
+                    ],
+                    "difficulty": 2,
+                    "estimated_hours": 0.75,
+                    "prerequisites": [],
+                    "formulas": [],
+                    "common_pitfalls": [
+                      "Mylenie soft dollars z kickbacks — soft dollars są dozwolone gdy korzyść trafia do klienta",
+                      "Pomijanie 'whole portfolio context' przy ocenie suitability"
+                    ],
+                    "suggested_resources": [
+                      "CFA Institute Curriculum 2026, Volume 1, Reading 'Guidance for Standards I-VII'",
+                      "CFA Institute Standards of Practice Handbook (12th edition)",
+                      "Schweser SchweserNotes 2026, Book 1 (Ethics), Study Sessions 1-2"
+                    ],
+                    "tags": [
+                      "guidance",
+                      "overview"
+                    ],
+                    "legacy_id": "cfa010301-0003-4000-8000-000000000000",
+                    "previous_uuid": "06565283-90b3-4d6a-9f41-530a920b4180"
+                  },
+                  "children": []
+                },
+                {
+                  "id": "cfa01031-0004-4000-8000-000000000000",
+                  "title": "Guidance for Standards IV — Duties to Employers (Overview)",
+                  "status": "not-started",
+                  "type": "task",
+                  "notes": "# Guidance for Standards IV — Duties to Employers (Overview)\n\n**LOS:** 3.a\n**Difficulty:** 2 · **Estimated:** 0.5h\n\n## Opis\nPrzegląd guidance dla Standardów IV-A do IV-C. Obejmuje granice dopuszczalnej konkurencji po odejściu od pracodawcy, zasady additional compensation oraz odpowiedzialności supervisora.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Niejasne granice 'general knowledge' (dozwolone) vs. 'employer property' (zabronione) po zmianie pracy\n- Założenie, że bycie supervisorem 'nominalnym' bez resources zwalnia z odpowiedzialności\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Guidance for Standards I-VII'\n- CFA Institute Standards of Practice Handbook (12th edition)\n- AnalystPrep CFA Level I — Ethical and Professional Standards\n",
+                  "createdAt": "2026-05-06T00:00:00Z",
+                  "updatedAt": "2026-05-06T00:00:00Z",
+                  "metadata": {
+                    "los_codes": [
+                      "3.a"
+                    ],
+                    "difficulty": 2,
+                    "estimated_hours": 0.5,
+                    "prerequisites": [],
+                    "formulas": [],
+                    "common_pitfalls": [
+                      "Niejasne granice 'general knowledge' (dozwolone) vs. 'employer property' (zabronione) po zmianie pracy",
+                      "Założenie, że bycie supervisorem 'nominalnym' bez resources zwalnia z odpowiedzialności"
+                    ],
+                    "suggested_resources": [
+                      "CFA Institute Curriculum 2026, Volume 1, Reading 'Guidance for Standards I-VII'",
+                      "CFA Institute Standards of Practice Handbook (12th edition)",
+                      "AnalystPrep CFA Level I — Ethical and Professional Standards"
+                    ],
+                    "tags": [
+                      "guidance",
+                      "overview"
+                    ],
+                    "legacy_id": "cfa010301-0004-4000-8000-000000000000",
+                    "previous_uuid": "052e36c6-1a7c-42bd-b170-d8bf6319fafe"
+                  },
+                  "children": []
+                },
+                {
+                  "id": "cfa01031-0005-4000-8000-000000000000",
+                  "title": "Guidance for Standards V — Investment Analysis, Recommendations, and Actions (Overview)",
+                  "status": "not-started",
+                  "type": "task",
+                  "notes": "# Guidance for Standards V — Investment Analysis, Recommendations, and Actions (Overview)\n\n**LOS:** 3.a\n**Difficulty:** 2 · **Estimated:** 0.75h\n\n## Opis\nPrzegląd guidance dla Standardów V-A do V-C. Obejmuje wymóg reasonable basis (process-based, nie outcome-based), zasady jasnej komunikacji z klientem oraz best practices dla record retention (≥7 lat).\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Założenie, że complex quantitative model = automatyczny reasonable basis\n- Brak retention 'work papers' i drafts — guidance wymaga przechowywania też procesu, nie tylko wyników\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Guidance for Standards I-VII'\n- CFA Institute Standards of Practice Handbook (12th edition)\n- Schweser SchweserNotes 2026, Book 1 (Ethics), Study Sessions 1-2\n",
+                  "createdAt": "2026-05-06T00:00:00Z",
+                  "updatedAt": "2026-05-06T00:00:00Z",
+                  "metadata": {
+                    "los_codes": [
+                      "3.a"
+                    ],
+                    "difficulty": 2,
+                    "estimated_hours": 0.75,
+                    "prerequisites": [],
+                    "formulas": [],
+                    "common_pitfalls": [
+                      "Założenie, że complex quantitative model = automatyczny reasonable basis",
+                      "Brak retention 'work papers' i drafts — guidance wymaga przechowywania też procesu, nie tylko wyników"
+                    ],
+                    "suggested_resources": [
+                      "CFA Institute Curriculum 2026, Volume 1, Reading 'Guidance for Standards I-VII'",
+                      "CFA Institute Standards of Practice Handbook (12th edition)",
+                      "Schweser SchweserNotes 2026, Book 1 (Ethics), Study Sessions 1-2"
+                    ],
+                    "tags": [
+                      "guidance",
+                      "overview"
+                    ],
+                    "legacy_id": "cfa010301-0005-4000-8000-000000000000",
+                    "previous_uuid": "8f79b6a0-bf61-4785-913c-d89fab8fd731"
+                  },
+                  "children": []
+                },
+                {
+                  "id": "cfa01031-0006-4000-8000-000000000000",
+                  "title": "Guidance for Standards VI — Conflicts of Interest (Overview)",
+                  "status": "not-started",
+                  "type": "task",
+                  "notes": "# Guidance for Standards VI — Conflicts of Interest (Overview)\n\n**LOS:** 3.a\n**Difficulty:** 2 · **Estimated:** 0.5h\n\n## Opis\nPrzegląd guidance dla Standardów VI-A do VI-C. Obejmuje co stanowi materialny konflikt, jak skutecznie disclosować, blackout periods dla osobistych transakcji oraz timing referral fee disclosure.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Disclosure 'wedded' do produktu zamiast prominentnego, autonomicznego disclosure\n- Pomijanie konfliktów które 'wszyscy znają' — wymóg disclosure niezależny od domniemanej wiedzy odbiorcy\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Guidance for Standards I-VII'\n- CFA Institute Standards of Practice Handbook (12th edition)\n- AnalystPrep CFA Level I — Ethical and Professional Standards\n",
+                  "createdAt": "2026-05-06T00:00:00Z",
+                  "updatedAt": "2026-05-06T00:00:00Z",
+                  "metadata": {
+                    "los_codes": [
+                      "3.a"
+                    ],
+                    "difficulty": 2,
+                    "estimated_hours": 0.5,
+                    "prerequisites": [],
+                    "formulas": [],
+                    "common_pitfalls": [
+                      "Disclosure 'wedded' do produktu zamiast prominentnego, autonomicznego disclosure",
+                      "Pomijanie konfliktów które 'wszyscy znają' — wymóg disclosure niezależny od domniemanej wiedzy odbiorcy"
+                    ],
+                    "suggested_resources": [
+                      "CFA Institute Curriculum 2026, Volume 1, Reading 'Guidance for Standards I-VII'",
+                      "CFA Institute Standards of Practice Handbook (12th edition)",
+                      "AnalystPrep CFA Level I — Ethical and Professional Standards"
+                    ],
+                    "tags": [
+                      "guidance",
+                      "overview"
+                    ],
+                    "legacy_id": "cfa010301-0006-4000-8000-000000000000",
+                    "previous_uuid": "6cd6d5d7-8488-4b6e-a383-705586f8b6a8"
+                  },
+                  "children": []
+                },
+                {
+                  "id": "cfa01031-0007-4000-8000-000000000000",
+                  "title": "Guidance for Standards VII — Responsibilities as a CFA Institute Member or CFA Candidate (Overview)",
+                  "status": "not-started",
+                  "type": "task",
+                  "notes": "# Guidance for Standards VII — Responsibilities as a CFA Institute Member or CFA Candidate (Overview)\n\n**LOS:** 3.a\n**Difficulty:** 2 · **Estimated:** 0.5h\n\n## Opis\nPrzegląd guidance dla Standardów VII-A i VII-B. Obejmuje konkretne reguły używania oznaczeń CFA, status kandydata oraz zachowanie poufności egzaminacyjnej (czas po egzaminie i co konkretnie jest zabronione).\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Używanie 'CFA' wielką drukowaną zamiast 'CFA®' lub 'Chartered Financial Analyst®'\n- Posty 'thoughts post-exam' ujawniające konkretne pytania lub rozwiązania\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Guidance for Standards I-VII'\n- CFA Institute Standards of Practice Handbook (12th edition)\n- AnalystPrep CFA Level I — Ethical and Professional Standards\n",
+                  "createdAt": "2026-05-06T00:00:00Z",
+                  "updatedAt": "2026-05-06T00:00:00Z",
+                  "metadata": {
+                    "los_codes": [
+                      "3.a"
+                    ],
+                    "difficulty": 2,
+                    "estimated_hours": 0.5,
+                    "prerequisites": [],
+                    "formulas": [],
+                    "common_pitfalls": [
+                      "Używanie 'CFA' wielką drukowaną zamiast 'CFA®' lub 'Chartered Financial Analyst®'",
+                      "Posty 'thoughts post-exam' ujawniające konkretne pytania lub rozwiązania"
+                    ],
+                    "suggested_resources": [
+                      "CFA Institute Curriculum 2026, Volume 1, Reading 'Guidance for Standards I-VII'",
+                      "CFA Institute Standards of Practice Handbook (12th edition)",
+                      "AnalystPrep CFA Level I — Ethical and Professional Standards"
+                    ],
+                    "tags": [
+                      "guidance",
+                      "overview"
+                    ],
+                    "legacy_id": "cfa010301-0007-4000-8000-000000000000",
+                    "previous_uuid": "6d8ca231-2cfa-491b-91bd-55cc33da0531"
+                  },
+                  "children": []
+                }
+              ]
+            },
+            {
+              "id": "cfa01032-0000-4000-8000-000000000000",
+              "title": "Ethics Application — Case Studies",
+              "status": "not-started",
+              "type": "plan",
+              "notes": "# Ethics Application — Case Studies\n\nPrzykłady aplikacji Standardów do realistycznych scenariuszy zawodowych. Egzamin zawiera ~10-12 pytań case-based, więc trening na case studies jest krytyczny.\n\n**Learning Modules:** 1 (sub-section) · **Egzamin weight (topic):** 17.5%",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "section_index": "02",
+                "legacy_id": "cfa010302-0000-4000-8000-000000000000",
+                "previous_uuid": "697384e6-dcd6-444c-a355-a169476fe2ef"
+              },
+              "children": [
+                {
+                  "id": "cfa01032-0001-4000-8000-000000000000",
+                  "title": "Application Examples — Conflicts and Disclosures",
+                  "status": "not-started",
+                  "type": "task",
+                  "notes": "# Application Examples — Conflicts and Disclosures\n\n**LOS:** 3.b\n**Difficulty:** 3 · **Estimated:** 0.75h\n\n## Opis\nPraktyczne przykłady i case studies konfliktów interesów: research analyst posiadający akcje analizowanej spółki, IPO allocations, podwójne role (sales + research). Egzamin zawiera ~10-12 case-based pytań etycznych.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Wybieranie 'idealnej' odpowiedzi zamiast najlepszej z dostępnych — egzamin pyta 'what is most likely' nie 'what is perfect'\n- Pomijanie kontekstu mandate (np. fundusz indeksowy) przy ocenie suitability\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Ethics Application'\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Guidance for Standards I-VII'\n- AnalystPrep CFA Level I — Ethical and Professional Standards\n",
+                  "createdAt": "2026-05-06T00:00:00Z",
+                  "updatedAt": "2026-05-06T00:00:00Z",
+                  "metadata": {
+                    "los_codes": [
+                      "3.b"
+                    ],
+                    "difficulty": 3,
+                    "estimated_hours": 0.75,
+                    "prerequisites": [],
+                    "formulas": [],
+                    "common_pitfalls": [
+                      "Wybieranie 'idealnej' odpowiedzi zamiast najlepszej z dostępnych — egzamin pyta 'what is most likely' nie 'what is perfect'",
+                      "Pomijanie kontekstu mandate (np. fundusz indeksowy) przy ocenie suitability"
+                    ],
+                    "suggested_resources": [
+                      "CFA Institute Curriculum 2026, Volume 1, Reading 'Ethics Application'",
+                      "CFA Institute Curriculum 2026, Volume 1, Reading 'Guidance for Standards I-VII'",
+                      "AnalystPrep CFA Level I — Ethical and Professional Standards"
+                    ],
+                    "tags": [
+                      "application",
+                      "case-study"
+                    ],
+                    "legacy_id": "cfa010302-0001-4000-8000-000000000000",
+                    "previous_uuid": "fbbb8a02-d456-476b-848b-4dc09e434901"
+                  },
+                  "children": []
+                },
+                {
+                  "id": "cfa01032-0002-4000-8000-000000000000",
+                  "title": "Application Examples — Research, MNPI, and Soft Dollars",
+                  "status": "not-started",
+                  "type": "task",
+                  "notes": "# Application Examples — Research, MNPI, and Soft Dollars\n\n**LOS:** 3.b\n**Difficulty:** 3 · **Estimated:** 0.75h\n\n## Opis\nCase studies dotyczące materiałowych informacji niepublicznych, mosaic theory w praktyce oraz właściwego użycia soft-dollar arrangements zgodnie z CFA Institute Soft Dollar Standards.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Mylenie 'analyst's superior insight' z 'MNPI' — superior insight z public info jest legalna\n- Akceptowanie soft dollars na 'mixed-use' usługi bez allocation client/firm benefit\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Ethics Application'\n- CFA Institute Standards of Practice Handbook (12th edition)\n- Mark Meldrum CFA L1 2026 — Ethics videos\n",
+                  "createdAt": "2026-05-06T00:00:00Z",
+                  "updatedAt": "2026-05-06T00:00:00Z",
+                  "metadata": {
+                    "los_codes": [
+                      "3.b"
+                    ],
+                    "difficulty": 3,
+                    "estimated_hours": 0.75,
+                    "prerequisites": [],
+                    "formulas": [],
+                    "common_pitfalls": [
+                      "Mylenie 'analyst's superior insight' z 'MNPI' — superior insight z public info jest legalna",
+                      "Akceptowanie soft dollars na 'mixed-use' usługi bez allocation client/firm benefit"
+                    ],
+                    "suggested_resources": [
+                      "CFA Institute Curriculum 2026, Volume 1, Reading 'Ethics Application'",
+                      "CFA Institute Standards of Practice Handbook (12th edition)",
+                      "Mark Meldrum CFA L1 2026 — Ethics videos"
+                    ],
+                    "tags": [
+                      "application",
+                      "case-study"
+                    ],
+                    "legacy_id": "cfa010302-0002-4000-8000-000000000000",
+                    "previous_uuid": "10522468-298e-4148-867c-628b9f91d319"
+                  },
+                  "children": []
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "cfa01040-0000-4000-8000-000000000000",
+          "title": "Introduction to the Global Investment Performance Standards (GIPS)",
+          "status": "not-started",
+          "type": "phase",
+          "notes": "# Introduction to the Global Investment Performance Standards (GIPS)\n\nGIPS Standards 2020 — globalnie rozpoznawalny standard prezentacji wyników inwestycyjnych. Obejmuje fundamentals of compliance, scope, composite construction, calculation methodology (TWR/MWR), disclosure, presentation oraz verification.\n\n**Learning Modules:** 1 · **Egzamin weight (topic):** 17.5%",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "lm_index": "04",
+            "lm_name_canonical": "Introduction to the Global Investment Performance Standards",
+            "los_count": 8,
+            "topic": "Ethics & Professional Standards",
+            "legacy_id": "cfa010400-0000-4000-8000-000000000000",
+            "previous_uuid": "a423a312-2370-44b5-b63a-7ea6a3df85f1"
+          },
+          "children": [
+            {
+              "id": "cfa01041-0000-4000-8000-000000000000",
+              "title": "GIPS — Standards Overview",
+              "status": "not-started",
+              "type": "plan",
+              "notes": "# GIPS — Standards Overview\n\nWszystkie kluczowe sekcje GIPS Standards 2020 jako oddzielne leaves dla pełnego pokrycia egzaminacyjnego.\n\n**Learning Modules:** 1 · **Egzamin weight (topic):** 17.5%",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "section_index": "01",
+                "legacy_id": "cfa010401-0000-4000-8000-000000000000",
+                "previous_uuid": "a62fb650-10cc-478e-9abb-9fc38f4716d9"
+              },
+              "children": [
+                {
+                  "id": "cfa01041-0001-4000-8000-000000000000",
+                  "title": "GIPS — Why GIPS Standards Were Created",
+                  "status": "not-started",
+                  "type": "task",
+                  "notes": "# GIPS — Why GIPS Standards Were Created\n\n**LOS:** 4.a\n**Difficulty:** 1 · **Estimated:** 0.5h\n\n## Opis\nTło historyczne i cel powstania GIPS (Global Investment Performance Standards): potrzeba globalnie porównywalnych prezentacji wyników inwestycyjnych firm zarządzających aktywami. Eliminuje cherry-picking i niespójność metodologii między firmami i jurysdykcjami.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Założenie, że GIPS jest obowiązkowy prawnie — to standard dobrowolny, ale industry standard\n- Mylenie 'GIPS-compliant firm' z 'GIPS-verified firm' — verification jest opcjonalna\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Introduction to the Global Investment Performance Standards (GIPS)'\n- GIPS Standards 2020 Edition (CFA Institute)\n- Schweser SchweserNotes 2026, Book 1 (Ethics), Study Sessions 1-2\n",
+                  "createdAt": "2026-05-06T00:00:00Z",
+                  "updatedAt": "2026-05-06T00:00:00Z",
+                  "metadata": {
+                    "los_codes": [
+                      "4.a"
+                    ],
+                    "difficulty": 1,
+                    "estimated_hours": 0.5,
+                    "prerequisites": [],
+                    "formulas": [],
+                    "common_pitfalls": [
+                      "Założenie, że GIPS jest obowiązkowy prawnie — to standard dobrowolny, ale industry standard",
+                      "Mylenie 'GIPS-compliant firm' z 'GIPS-verified firm' — verification jest opcjonalna"
+                    ],
+                    "suggested_resources": [
+                      "CFA Institute Curriculum 2026, Volume 1, Reading 'Introduction to the Global Investment Performance Standards (GIPS)'",
+                      "GIPS Standards 2020 Edition (CFA Institute)",
+                      "Schweser SchweserNotes 2026, Book 1 (Ethics), Study Sessions 1-2"
+                    ],
+                    "tags": [
+                      "gips",
+                      "overview"
+                    ],
+                    "legacy_id": "cfa010401-0001-4000-8000-000000000000",
+                    "previous_uuid": "a5a810ac-5aca-4ba2-8d2f-6e9d7c2f4914"
+                  },
+                  "children": []
+                },
+                {
+                  "id": "cfa01041-0002-4000-8000-000000000000",
+                  "title": "GIPS — Fundamentals of Compliance",
+                  "status": "not-started",
+                  "type": "task",
+                  "notes": "# GIPS — Fundamentals of Compliance\n\n**LOS:** 4.b\n**Difficulty:** 2 · **Estimated:** 1h\n\n## Opis\nDziewięć fundamentalnych wymogów GIPS: definicja firmy, dokumentacja policies & procedures, błędy w zgłaszaniu compliance, traktowanie historycznych wyników, claim of compliance, distinct business entity, fair representation oraz pełne ujawnienie. Compliance dotyczy całej firmy, nie pojedynczego produktu.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- 'Selektywne' compliance dla wybranych composites — GIPS wymaga firm-wide compliance\n- Niewłaściwa definicja 'firm' — jednostka biznesowa musi mieć autonomię decyzyjną\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Introduction to the Global Investment Performance Standards (GIPS)'\n- GIPS Standards 2020 Edition (CFA Institute)\n- Schweser SchweserNotes 2026, Book 1 (Ethics), Study Sessions 1-2\n",
+                  "createdAt": "2026-05-06T00:00:00Z",
+                  "updatedAt": "2026-05-06T00:00:00Z",
+                  "metadata": {
+                    "los_codes": [
+                      "4.b"
+                    ],
+                    "difficulty": 2,
+                    "estimated_hours": 1,
+                    "prerequisites": [],
+                    "formulas": [],
+                    "common_pitfalls": [
+                      "'Selektywne' compliance dla wybranych composites — GIPS wymaga firm-wide compliance",
+                      "Niewłaściwa definicja 'firm' — jednostka biznesowa musi mieć autonomię decyzyjną"
+                    ],
+                    "suggested_resources": [
+                      "CFA Institute Curriculum 2026, Volume 1, Reading 'Introduction to the Global Investment Performance Standards (GIPS)'",
+                      "GIPS Standards 2020 Edition (CFA Institute)",
+                      "Schweser SchweserNotes 2026, Book 1 (Ethics), Study Sessions 1-2"
+                    ],
+                    "tags": [
+                      "gips",
+                      "fundamentals"
+                    ],
+                    "legacy_id": "cfa010401-0002-4000-8000-000000000000",
+                    "previous_uuid": "a6f6854d-4d29-4a8d-9807-d83eeac530d2"
+                  },
+                  "children": []
+                },
+                {
+                  "id": "cfa01041-0003-4000-8000-000000000000",
+                  "title": "GIPS — Scope and Definition of the Firm",
+                  "status": "not-started",
+                  "type": "task",
+                  "notes": "# GIPS — Scope and Definition of the Firm\n\n**LOS:** 4.c\n**Difficulty:** 2 · **Estimated:** 0.5h\n\n## Opis\nDefinicja zakresu firmy zgodnie z GIPS: investment firm, subsidiary, division pełniąca distinctive business function. Wszystkie discretionary fee-paying portfolios muszą być włączone do co najmniej jednego composite.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Pominięcie non-fee-paying lub non-discretionary portfolios w sposób wprowadzający w błąd\n- Zmiana definicji firmy retroactively dla 'lepszych' wyników historycznych\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Introduction to the Global Investment Performance Standards (GIPS)'\n- GIPS Standards 2020 Edition (CFA Institute)\n- AnalystPrep CFA Level I — Ethical and Professional Standards\n",
+                  "createdAt": "2026-05-06T00:00:00Z",
+                  "updatedAt": "2026-05-06T00:00:00Z",
+                  "metadata": {
+                    "los_codes": [
+                      "4.c"
+                    ],
+                    "difficulty": 2,
+                    "estimated_hours": 0.5,
+                    "prerequisites": [],
+                    "formulas": [],
+                    "common_pitfalls": [
+                      "Pominięcie non-fee-paying lub non-discretionary portfolios w sposób wprowadzający w błąd",
+                      "Zmiana definicji firmy retroactively dla 'lepszych' wyników historycznych"
+                    ],
+                    "suggested_resources": [
+                      "CFA Institute Curriculum 2026, Volume 1, Reading 'Introduction to the Global Investment Performance Standards (GIPS)'",
+                      "GIPS Standards 2020 Edition (CFA Institute)",
+                      "AnalystPrep CFA Level I — Ethical and Professional Standards"
+                    ],
+                    "tags": [
+                      "gips",
+                      "scope"
+                    ],
+                    "legacy_id": "cfa010401-0003-4000-8000-000000000000",
+                    "previous_uuid": "458ae6fd-253f-488f-abe0-4a21ee70236f"
+                  },
+                  "children": []
+                },
+                {
+                  "id": "cfa01041-0004-4000-8000-000000000000",
+                  "title": "GIPS — Composite Construction",
+                  "status": "not-started",
+                  "type": "task",
+                  "notes": "# GIPS — Composite Construction\n\n**LOS:** 4.d\n**Difficulty:** 3 · **Estimated:** 1.5h\n\n## Opis\nComposite to grupa portfeli zarządzanych według podobnej strategii inwestycyjnej. Reguły konstrukcji: każdy fee-paying discretionary portfel musi należeć do ≥1 composite; portfele dodawane/usuwane zgodnie z dokumentowanymi regułami; nie wolno cherry-pick w ramach composite.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Wykluczanie 'underperforming' portfela z composite poprzez retroactive zmianę strategii\n- Mylenie 'composite' z 'fund' — composite może obejmować wiele portfeli różnych klientów\n- Brak retention historii składu composite (wymagany dla audytu)\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Introduction to the Global Investment Performance Standards (GIPS)'\n- GIPS Standards 2020 Edition (CFA Institute)\n- Schweser SchweserNotes 2026, Book 1 (Ethics), Study Sessions 1-2\n",
+                  "createdAt": "2026-05-06T00:00:00Z",
+                  "updatedAt": "2026-05-06T00:00:00Z",
+                  "metadata": {
+                    "los_codes": [
+                      "4.d"
+                    ],
+                    "difficulty": 3,
+                    "estimated_hours": 1.5,
+                    "prerequisites": [],
+                    "formulas": [],
+                    "common_pitfalls": [
+                      "Wykluczanie 'underperforming' portfela z composite poprzez retroactive zmianę strategii",
+                      "Mylenie 'composite' z 'fund' — composite może obejmować wiele portfeli różnych klientów",
+                      "Brak retention historii składu composite (wymagany dla audytu)"
+                    ],
+                    "suggested_resources": [
+                      "CFA Institute Curriculum 2026, Volume 1, Reading 'Introduction to the Global Investment Performance Standards (GIPS)'",
+                      "GIPS Standards 2020 Edition (CFA Institute)",
+                      "Schweser SchweserNotes 2026, Book 1 (Ethics), Study Sessions 1-2"
+                    ],
+                    "tags": [
+                      "gips",
+                      "composite"
+                    ],
+                    "legacy_id": "cfa010401-0004-4000-8000-000000000000",
+                    "previous_uuid": "ebae751e-b4d7-4d17-94dd-db40ee1eb2ee"
+                  },
+                  "children": []
+                },
+                {
+                  "id": "cfa01041-0005-4000-8000-000000000000",
+                  "title": "GIPS — Calculation Methodology",
+                  "status": "not-started",
+                  "type": "task",
+                  "notes": "# GIPS — Calculation Methodology\n\n**LOS:** 4.e\n**Difficulty:** 4 · **Estimated:** 2h\n\n## Opis\nWymagana metodologia kalkulacji: time-weighted rate of return (TWR) eliminujący wpływ cash flows kontrolowanych przez klienta; geometric linking zamiast arithmetic; modified Dietz lub modified IRR dopuszczalne dla okresów między external cash flows. Money-weighted return (IRR) wymagany od 2020 dla closed-end funds (private equity, real estate).\n\n## Formuły / kluczowe relacje\n- TWR (geometric link) = product over sub-periods of (1 + r_i) − 1\n- Modified Dietz return = (EMV − BMV − CF) / (BMV + sum(w_i * CF_i))\n- MWR / IRR = r solving sum(CF_t / (1+r)^t) = 0\n\n## Prerequisites\n- Time-weighted vs Money-weighted return\n- Geometric mean return\n\n## Common pitfalls\n- Stosowanie arithmetic zamiast geometric linking dla wieloletnich periodów\n- Mylenie modified Dietz z time-weighted method — Dietz to przybliżenie\n- Pomijanie wymogu MWR dla private market strategies (od GIPS 2020)\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Introduction to the Global Investment Performance Standards (GIPS)'\n- GIPS Standards 2020 Edition (CFA Institute)\n- Schweser SchweserNotes 2026, Book 1 (Ethics), Study Sessions 1-2\n- Mark Meldrum CFA L1 2026 — Ethics videos\n",
+                  "createdAt": "2026-05-06T00:00:00Z",
+                  "updatedAt": "2026-05-06T00:00:00Z",
+                  "metadata": {
+                    "los_codes": [
+                      "4.e"
+                    ],
+                    "difficulty": 4,
+                    "estimated_hours": 2,
+                    "prerequisites": [
+                      "Time-weighted vs Money-weighted return",
+                      "Geometric mean return"
+                    ],
+                    "formulas": [
+                      "TWR (geometric link) = product over sub-periods of (1 + r_i) − 1",
+                      "Modified Dietz return = (EMV − BMV − CF) / (BMV + sum(w_i * CF_i))",
+                      "MWR / IRR = r solving sum(CF_t / (1+r)^t) = 0"
+                    ],
+                    "common_pitfalls": [
+                      "Stosowanie arithmetic zamiast geometric linking dla wieloletnich periodów",
+                      "Mylenie modified Dietz z time-weighted method — Dietz to przybliżenie",
+                      "Pomijanie wymogu MWR dla private market strategies (od GIPS 2020)"
+                    ],
+                    "suggested_resources": [
+                      "CFA Institute Curriculum 2026, Volume 1, Reading 'Introduction to the Global Investment Performance Standards (GIPS)'",
+                      "GIPS Standards 2020 Edition (CFA Institute)",
+                      "Schweser SchweserNotes 2026, Book 1 (Ethics), Study Sessions 1-2",
+                      "Mark Meldrum CFA L1 2026 — Ethics videos"
+                    ],
+                    "tags": [
+                      "gips",
+                      "calculation",
+                      "formula"
+                    ],
+                    "legacy_id": "cfa010401-0005-4000-8000-000000000000",
+                    "previous_uuid": "a51477d2-83a2-4206-bd06-aef08fed6658"
+                  },
+                  "children": []
+                },
+                {
+                  "id": "cfa01041-0006-4000-8000-000000000000",
+                  "title": "GIPS — Disclosure Requirements",
+                  "status": "not-started",
+                  "type": "task",
+                  "notes": "# GIPS — Disclosure Requirements\n\n**LOS:** 4.f\n**Difficulty:** 3 · **Estimated:** 1h\n\n## Opis\nGIPS wymaga ujawnienia: definicji firmy, listy composites z opisem, podstawowych założeń kalkulacji (gross/net of fees, currency), benchmarków, dispersion measure, treatment of withholding taxes, leverage/derivatives use oraz changes to firm/composite definitions.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Pomijanie zmian metodologii historycznej (must disclose minimum 1 year)\n- Brak wyjaśnienia różnic gross vs net of fees w prezentacji\n- Mylenie 'required' z 'recommended' disclosures\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Introduction to the Global Investment Performance Standards (GIPS)'\n- GIPS Standards 2020 Edition (CFA Institute)\n- AnalystPrep CFA Level I — Ethical and Professional Standards\n",
+                  "createdAt": "2026-05-06T00:00:00Z",
+                  "updatedAt": "2026-05-06T00:00:00Z",
+                  "metadata": {
+                    "los_codes": [
+                      "4.f"
+                    ],
+                    "difficulty": 3,
+                    "estimated_hours": 1,
+                    "prerequisites": [],
+                    "formulas": [],
+                    "common_pitfalls": [
+                      "Pomijanie zmian metodologii historycznej (must disclose minimum 1 year)",
+                      "Brak wyjaśnienia różnic gross vs net of fees w prezentacji",
+                      "Mylenie 'required' z 'recommended' disclosures"
+                    ],
+                    "suggested_resources": [
+                      "CFA Institute Curriculum 2026, Volume 1, Reading 'Introduction to the Global Investment Performance Standards (GIPS)'",
+                      "GIPS Standards 2020 Edition (CFA Institute)",
+                      "AnalystPrep CFA Level I — Ethical and Professional Standards"
+                    ],
+                    "tags": [
+                      "gips",
+                      "disclosure"
+                    ],
+                    "legacy_id": "cfa010401-0006-4000-8000-000000000000",
+                    "previous_uuid": "023fcc4d-7fb5-4605-9201-60e35d80ce33"
+                  },
+                  "children": []
+                },
+                {
+                  "id": "cfa01041-0007-4000-8000-000000000000",
+                  "title": "GIPS — Presentation and Reporting Requirements",
+                  "status": "not-started",
+                  "type": "task",
+                  "notes": "# GIPS — Presentation and Reporting Requirements\n\n**LOS:** 4.g\n**Difficulty:** 3 · **Estimated:** 1h\n\n## Opis\nGIPS Composite Report (kiedyś 'compliant presentation') musi zawierać minimum 5 lat wyników (lub od inception jeśli krótszy), narastająco do 10 lat. Wymagane: composite return, benchmark return, # portfeli, composite assets, total firm assets, dispersion (min. 6 portfeli), 3-year ex post standard deviation.\n\n## Formuły / kluczowe relacje\n- Asset-weighted standard deviation (composite dispersion) = weighted by portfolio market values\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Brak wymaganego dispersion measure (gdy ≥6 portfeli przez cały rok)\n- Pomijanie 3-year annualized ex post standard deviation (od 2011)\n- Prezentacja krótszego okresu niż 5 lat bez kwalifikującego oświadczenia\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Introduction to the Global Investment Performance Standards (GIPS)'\n- GIPS Standards 2020 Edition (CFA Institute)\n- Schweser SchweserNotes 2026, Book 1 (Ethics), Study Sessions 1-2\n",
+                  "createdAt": "2026-05-06T00:00:00Z",
+                  "updatedAt": "2026-05-06T00:00:00Z",
+                  "metadata": {
+                    "los_codes": [
+                      "4.g"
+                    ],
+                    "difficulty": 3,
+                    "estimated_hours": 1,
+                    "prerequisites": [],
+                    "formulas": [
+                      "Asset-weighted standard deviation (composite dispersion) = weighted by portfolio market values"
+                    ],
+                    "common_pitfalls": [
+                      "Brak wymaganego dispersion measure (gdy ≥6 portfeli przez cały rok)",
+                      "Pomijanie 3-year annualized ex post standard deviation (od 2011)",
+                      "Prezentacja krótszego okresu niż 5 lat bez kwalifikującego oświadczenia"
+                    ],
+                    "suggested_resources": [
+                      "CFA Institute Curriculum 2026, Volume 1, Reading 'Introduction to the Global Investment Performance Standards (GIPS)'",
+                      "GIPS Standards 2020 Edition (CFA Institute)",
+                      "Schweser SchweserNotes 2026, Book 1 (Ethics), Study Sessions 1-2"
+                    ],
+                    "tags": [
+                      "gips",
+                      "reporting"
+                    ],
+                    "legacy_id": "cfa010401-0007-4000-8000-000000000000",
+                    "previous_uuid": "5191ac54-74af-4db8-b3c5-48c0f4fe9b06"
+                  },
+                  "children": []
+                },
+                {
+                  "id": "cfa01041-0008-4000-8000-000000000000",
+                  "title": "GIPS — Verification",
+                  "status": "not-started",
+                  "type": "task",
+                  "notes": "# GIPS — Verification\n\n**LOS:** 4.h\n**Difficulty:** 2 · **Estimated:** 0.75h\n\n## Opis\nVerification to dobrowolny niezależny przegląd firmowo-szerokich procesów GIPS przez third-party. Verifier potwierdza: (1) firmowo-szerokie procedury obliczania performance są zgodne z GIPS, (2) policies dla composite construction są zgodne z GIPS. Verification NIE jest wymagana, ale jest zalecana i często oczekiwana przez instytucjonalnych klientów.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Mylenie verification (firm-wide) z performance examination (single composite)\n- Twierdzenie 'GIPS verified' bez aktualnego raportu verifier\n- Założenie, że verification gwarantuje accuracy każdego composite — verification jest na poziomie procesów\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Introduction to the Global Investment Performance Standards (GIPS)'\n- GIPS Standards 2020 Edition (CFA Institute)\n- AnalystPrep CFA Level I — Ethical and Professional Standards\n",
+                  "createdAt": "2026-05-06T00:00:00Z",
+                  "updatedAt": "2026-05-06T00:00:00Z",
+                  "metadata": {
+                    "los_codes": [
+                      "4.h"
+                    ],
+                    "difficulty": 2,
+                    "estimated_hours": 0.75,
+                    "prerequisites": [],
+                    "formulas": [],
+                    "common_pitfalls": [
+                      "Mylenie verification (firm-wide) z performance examination (single composite)",
+                      "Twierdzenie 'GIPS verified' bez aktualnego raportu verifier",
+                      "Założenie, że verification gwarantuje accuracy każdego composite — verification jest na poziomie procesów"
+                    ],
+                    "suggested_resources": [
+                      "CFA Institute Curriculum 2026, Volume 1, Reading 'Introduction to the Global Investment Performance Standards (GIPS)'",
+                      "GIPS Standards 2020 Edition (CFA Institute)",
+                      "AnalystPrep CFA Level I — Ethical and Professional Standards"
+                    ],
+                    "tags": [
+                      "gips",
+                      "verification"
+                    ],
+                    "legacy_id": "cfa010401-0008-4000-8000-000000000000",
+                    "previous_uuid": "742a67aa-b4e5-48d2-954b-89c95c8922fa"
+                  },
+                  "children": []
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "cfa01050-0000-4000-8000-000000000000",
+          "title": "Ethics Application",
+          "status": "not-started",
+          "type": "phase",
+          "notes": "# Ethics Application\n\nPraktyczne zastosowanie Kodeksu, Standardów i GIPS do realistycznych scenariuszy zawodowych. Obejmuje vignette practice oraz Asset Manager Code (AMC) overview. Najistotniejsze 'last-mile' przygotowanie do pytań etycznych na egzaminie.\n\n**Learning Modules:** 1 · **Egzamin weight (topic):** 17.5%",
+          "createdAt": "2026-05-06T00:00:00Z",
+          "updatedAt": "2026-05-06T00:00:00Z",
+          "metadata": {
+            "lm_index": "05",
+            "lm_name_canonical": "Ethics Application",
+            "los_count": 4,
+            "topic": "Ethics & Professional Standards",
+            "legacy_id": "cfa010500-0000-4000-8000-000000000000",
+            "previous_uuid": "77493e2d-6ed3-4354-aa57-5d64e2dbd409"
+          },
+          "children": [
+            {
+              "id": "cfa01050-0001-4000-8000-000000000000",
+              "title": "Ethics Application — Framework Walkthrough",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# Ethics Application — Framework Walkthrough\n\n**LOS:** 5.a\n**Difficulty:** 2 · **Estimated:** 1h\n\n## Opis\nPraktyczne zastosowanie Ethical Decision-Making Framework do realistycznych scenariuszy egzaminacyjnych. Dla każdego case: (1) identyfikuj odnośne Standardy, (2) określ obowiązki wobec stakeholders, (3) oceń alternatywy, (4) wskaż 'most likely violation' lub 'least likely violation'.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Wybieranie odpowiedzi opartej na 'gut feeling' bez systematycznego mappowania do konkretnych Standardów\n- Pomijanie multiple violations — pojedynczy scenariusz może naruszać kilka Standardów jednocześnie\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Ethics Application'\n- CFA Institute Standards of Practice Handbook (12th edition)\n- Mark Meldrum CFA L1 2026 — Ethics videos\n",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": [
+                  "5.a"
+                ],
+                "difficulty": 2,
+                "estimated_hours": 1,
+                "prerequisites": [],
+                "formulas": [],
+                "common_pitfalls": [
+                  "Wybieranie odpowiedzi opartej na 'gut feeling' bez systematycznego mappowania do konkretnych Standardów",
+                  "Pomijanie multiple violations — pojedynczy scenariusz może naruszać kilka Standardów jednocześnie"
+                ],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 1, Reading 'Ethics Application'",
+                  "CFA Institute Standards of Practice Handbook (12th edition)",
+                  "Mark Meldrum CFA L1 2026 — Ethics videos"
+                ],
+                "tags": [
+                  "application",
+                  "framework"
+                ],
+                "legacy_id": "cfa010500-0001-4000-8000-000000000000",
+                "previous_uuid": "f0e61848-8700-48ce-83a3-1f7cc89d3fac"
+              },
+              "children": []
+            },
+            {
+              "id": "cfa01050-0002-4000-8000-000000000000",
+              "title": "Ethics Application — Asset Manager Code of Professional Conduct (AMC) Overview",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# Ethics Application — Asset Manager Code of Professional Conduct (AMC) Overview\n\n**LOS:** 5.b\n**Difficulty:** 2 · **Estimated:** 1h\n\n## Opis\nAsset Manager Code (AMC) — wytyczne CFA Institute dla firm zarządzających aktywami (firmowy odpowiednik personalnego Kodeksu/Standardów). Sześć obszarów: Loyalty to Clients, Investment Process and Actions, Trading, Risk Management/Compliance/Support, Performance and Valuation, Disclosures. Adopcja przez firmę jest dobrowolna.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Mylenie AMC (firmowy code) z personalnym Code/Standards (dla individuals)\n- Założenie, że pracownik firmy AMC-compliant nie potrzebuje osobiście przestrzegać Standardów\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Ethics Application'\n- CFA Institute Asset Manager Code of Professional Conduct\n- CFA Institute Standards of Practice Handbook (12th edition)\n",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": [
+                  "5.b"
+                ],
+                "difficulty": 2,
+                "estimated_hours": 1,
+                "prerequisites": [],
+                "formulas": [],
+                "common_pitfalls": [
+                  "Mylenie AMC (firmowy code) z personalnym Code/Standards (dla individuals)",
+                  "Założenie, że pracownik firmy AMC-compliant nie potrzebuje osobiście przestrzegać Standardów"
+                ],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 1, Reading 'Ethics Application'",
+                  "CFA Institute Asset Manager Code of Professional Conduct",
+                  "CFA Institute Standards of Practice Handbook (12th edition)"
+                ],
+                "tags": [
+                  "application",
+                  "amc"
+                ],
+                "legacy_id": "cfa010500-0002-4000-8000-000000000000",
+                "previous_uuid": "c89be8c1-ea70-4a6d-84fc-bf1832b21705"
+              },
+              "children": []
+            },
+            {
+              "id": "cfa01050-0003-4000-8000-000000000000",
+              "title": "Ethics Application — Vignette Practice and Common Exam Patterns",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# Ethics Application — Vignette Practice and Common Exam Patterns\n\n**LOS:** 5.c\n**Difficulty:** 3 · **Estimated:** 1.0h\n\n## Opis\nTrening na typowych vignette egzaminacyjnych: scenariusze 200-400 słów z 3-4 pytaniami. Najczęściej testowane wzorce: I-B Independence (gifts/research), II-A MNPI (mosaic vs. tipping), III-A Loyalty (soft dollars/fiduciary), III-D Performance (cherry-picking), VI-A Disclosure (conflict). ~12 z 90 pytań egzaminu Ethics.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Czytanie vignette bez identyfikacji ról (analyst? supervisor? portfolio manager?) — rola determinuje obowiązki\n- Pomijanie subtelnych szczegółów (np. 'oral consent' vs 'written consent')\n- Mylenie 'no violation' z 'best practice' — czasem brak naruszenia mimo niedoskonałej praktyki\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Ethics Application'\n- Kaplan Schweser QBank — Ethics & Professional Standards\n- Mark Meldrum CFA L1 2026 — Ethics videos\n",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": [
+                  "5.c"
+                ],
+                "difficulty": 3,
+                "estimated_hours": 1,
+                "prerequisites": [],
+                "formulas": [],
+                "common_pitfalls": [
+                  "Czytanie vignette bez identyfikacji ról (analyst? supervisor? portfolio manager?) — rola determinuje obowiązki",
+                  "Pomijanie subtelnych szczegółów (np. 'oral consent' vs 'written consent')",
+                  "Mylenie 'no violation' z 'best practice' — czasem brak naruszenia mimo niedoskonałej praktyki"
+                ],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 1, Reading 'Ethics Application'",
+                  "Kaplan Schweser QBank — Ethics & Professional Standards",
+                  "Mark Meldrum CFA L1 2026 — Ethics videos"
+                ],
+                "tags": [
+                  "application",
+                  "exam-prep"
+                ],
+                "legacy_id": "cfa010500-0003-4000-8000-000000000000",
+                "previous_uuid": "938825df-c5bb-44f7-861e-c5f794ed0ace"
+              },
+              "children": []
+            },
+            {
+              "id": "cfa01050-0004-4000-8000-000000000000",
+              "title": "Ethics Application — Cross-Standard Conflicts and Hierarchy",
+              "status": "not-started",
+              "type": "task",
+              "notes": "# Ethics Application — Cross-Standard Conflicts and Hierarchy\n\n**LOS:** 5.d\n**Difficulty:** 3 · **Estimated:** 0.75h\n\n## Opis\nSytuacje gdzie wiele Standardów się przecina lub konfliktuje (np. III-A Loyalty to Client vs IV-A Loyalty to Employer; I-A Knowledge of Law vs I-D Misconduct). Hierarchia: zawsze najpierw najsurowszy applicable standard; gdy konflikt obowiązków — eskalacja do compliance/supervision.\n\n## Formuły / kluczowe relacje\n- —\n\n## Prerequisites\n- —\n\n## Common pitfalls\n- Założenie 'jeden scenariusz = jeden Standard' — wiele scenariuszy egzaminacyjnych ma 2-3 jednoczesne naruszenia\n- Wybieranie 'mniejszego zła' bez ujawnienia/eskalacji — Standardy często wymagają proaktywnej akcji\n\n## Suggested resources\n- CFA Institute Curriculum 2026, Volume 1, Reading 'Ethics Application'\n- CFA Institute Standards of Practice Handbook (12th edition)\n- AnalystPrep CFA Level I — Ethical and Professional Standards\n",
+              "createdAt": "2026-05-06T00:00:00Z",
+              "updatedAt": "2026-05-06T00:00:00Z",
+              "metadata": {
+                "los_codes": [
+                  "5.d"
+                ],
+                "difficulty": 3,
+                "estimated_hours": 0.75,
+                "prerequisites": [],
+                "formulas": [],
+                "common_pitfalls": [
+                  "Założenie 'jeden scenariusz = jeden Standard' — wiele scenariuszy egzaminacyjnych ma 2-3 jednoczesne naruszenia",
+                  "Wybieranie 'mniejszego zła' bez ujawnienia/eskalacji — Standardy często wymagają proaktywnej akcji"
+                ],
+                "suggested_resources": [
+                  "CFA Institute Curriculum 2026, Volume 1, Reading 'Ethics Application'",
+                  "CFA Institute Standards of Practice Handbook (12th edition)",
+                  "AnalystPrep CFA Level I — Ethical and Professional Standards"
+                ],
+                "tags": [
+                  "application",
+                  "cross-standard"
+                ],
+                "legacy_id": "cfa010500-0004-4000-8000-000000000000",
+                "previous_uuid": "b98696a4-a5f4-49b8-8167-8e8bb2388fa5"
+              },
+              "children": []
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

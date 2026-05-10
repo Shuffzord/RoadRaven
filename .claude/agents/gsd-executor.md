@@ -74,7 +74,7 @@ Extract from init JSON: `executor_model`, `commit_docs`, `sub_repos`, `phase_dir
 
 Also load planning state (position, decisions, blockers) via the SDK — **use `node` to invoke the CLI** (not `npx`):
 ```bash
-node ./node_modules/@gsd-build/sdk/dist/cli.js query state.load 2>/dev/null
+gsd-sdk query state.load 2>/dev/null
 ```
 If the SDK is not installed under `node_modules`, use the same `query state.load` argv with your local `gsd-sdk` CLI on `PATH`.
 
@@ -355,8 +355,70 @@ When the plan frontmatter has `type: tdd`, the entire plan follows the RED/GREEN
 If RED or GREEN gate commits are missing, add a warning to SUMMARY.md under a `## TDD Gate Compliance` section.
 </tdd_execution>
 
+## MVP+TDD Gate
+
+**When the orchestrator passes both `MVP_MODE=true` and `TDD_MODE=true`:** Before running the implementation step of any task with `tdd="true"`, run the runtime gate from `@C:/Work/RoadRaven/.claude/get-shit-done/references/execute-mvp-tdd.md`. If the gate trips, halt and report — do NOT proceed to the implementation step.
+
+**Halt-and-report protocol:**
+
+1. Stop. Do not run the task's implementation step.
+2. Emit the structured halt report defined in `references/execute-mvp-tdd.md` (header line, reason code, expected behavior, required next step).
+3. Update `STATE.md` with `last_gate_trip: {plan_id}/{task_id}`.
+4. Exit the current execution wave cleanly. Prior commits in the same wave stay — do not roll back.
+
+**Behavior-Adding Task detection** (the gate only fires when this predicate returns true): apply via the centralized verb instead of inlining the three checks:
+
+```bash
+IS_BEHAVIOR_ADDING=$(gsd-sdk query task.is-behavior-adding "$TASK_FILE" --pick is_behavior_adding)
+```
+
+The verb owns the canonical predicate (tdd="true" frontmatter AND `<behavior>` block AND non-test source files in `<files>`). Pure doc-only / config-only / test-only tasks return `false` and are exempt. Full result also exposes per-check breakdown (`checks.tdd_true`, `checks.has_behavior_block`, `checks.has_source_files`) and a human-readable `reason` — use these in the halt-and-report payload when the gate trips. See `references/execute-mvp-tdd.md` for halt protocol.
+
+**Mode is all-or-nothing per phase** (PRD decision Q1, inherited from Phase 1). The gate is either active for the whole phase or inactive for the whole phase — it cannot apply selectively to a subset of tasks within a phase.
+
 <task_commit_protocol>
 After each task completes (verification passed, done criteria met), commit immediately.
+
+**0a. cwd-drift assertion (worktree mode only, MANDATORY before staging — #3097):**
+A prior Bash call may have `cd`'d out of the worktree into the main repo. When that happens
+`[ -f .git ]` is false (main repo's `.git` is a directory), silently skipping all worktree guards.
+Capture the spawn-time toplevel via a sentinel on first commit, then verify on every subsequent commit:
+```bash
+WT_GIT_DIR=$(git rev-parse --git-dir 2>/dev/null)
+case "$WT_GIT_DIR" in
+  *.git/worktrees/*)
+      SENTINEL="$WT_GIT_DIR/gsd-spawn-toplevel"
+      [ ! -f "$SENTINEL" ] && git rev-parse --show-toplevel > "$SENTINEL" 2>/dev/null
+      EXPECTED_TL=$(cat "$SENTINEL" 2>/dev/null)
+      ACTUAL_TL=$(git rev-parse --show-toplevel 2>/dev/null)
+      if [ -n "$EXPECTED_TL" ] && [ "$ACTUAL_TL" != "$EXPECTED_TL" ]; then
+        echo "FATAL: cwd drifted from spawn-time worktree root (#3097)" >&2
+        echo "  Spawn-time: $EXPECTED_TL" >&2
+        echo "  Current:    $ACTUAL_TL" >&2
+        echo "RECOVERY: cd \"$EXPECTED_TL\" before staging, then re-run this commit." >&2
+        exit 1
+      fi
+    ;;
+esac
+```
+
+**0b. absolute-path safety (worktree mode only, MANDATORY before Edit/Write — #3099):**
+Before any Edit or Write call that uses an absolute path, verify the path resolves inside the
+current worktree. Absolute paths constructed from prior `pwd` output (orchestrator's cwd) will
+resolve to the **main repo**, not the worktree — silently writing files to the wrong location.
+```bash
+# Obtain the canonical worktree root
+WT_ROOT=$(git rev-parse --show-toplevel 2>/dev/null)
+[ -z "$WT_ROOT" ] && { echo "FATAL: could not determine worktree root" >&2; exit 1; }
+# Verify absolute path containment with boundary safety (not glob prefix which allows siblings)
+if [[ "$ABS_PATH" != "$WT_ROOT" && "$ABS_PATH" != "$WT_ROOT/"* ]]; then
+  echo "FATAL: $ABS_PATH is outside the worktree ($WT_ROOT) — use a relative path or recompute from WT_ROOT" >&2
+  exit 1
+fi
+```
+Prefer **relative paths** for all Edit/Write operations inside a worktree. When an absolute path
+is unavoidable, always derive it from `git rev-parse --show-toplevel` run inside the worktree,
+not from a `pwd` captured in the orchestrator context.
 
 **0. Pre-commit HEAD safety assertion (worktree mode only, MANDATORY before every commit — #2924):**
 When running inside a Claude Code worktree (`.git` is a file, not a directory), assert HEAD is on a per-agent branch BEFORE staging or committing. If HEAD has drifted onto a protected ref, HALT — never self-recover via `git update-ref refs/heads/<protected>`:

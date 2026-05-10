@@ -255,6 +255,7 @@ interface RoadmapState {
 	duplicateNode: (nodeId: string) => string | null;
 	moveNodeUp: (nodeId: string) => void;
 	moveNodeDown: (nodeId: string) => void;
+	moveNode: (nodeId: string, newParentId: string, position?: number) => void;
 	renameNode: (nodeId: string, title: string) => void;
 
 	// Actions -- in-place (no dataKey change)
@@ -647,6 +648,53 @@ export const useRoadmapStore = create<RoadmapState>((set, get) => {
 				return copy;
 			});
 			bumpStructural(nextNodes, { preserveNodeIndex: true });
+		},
+
+		// Phase 6 PLUG-AGENT-UPDATE-05: re-parent a node to a new parent at optional position.
+		// Cycle detection and cross-ref-boundary check are performed by callers
+		// (agentRpcHandler.ts cycle gate; agentRequestHandler.ts cross-ref gate); this action
+		// assumes those have already passed. No-op when nodeId or newParentId not found.
+		//
+		// CR-01 (06-REVIEW): explicit self-move guard inside the store action as
+		// defense-in-depth. Without it, moveNode(X, X) removed X from its parent
+		// then failed to re-insert (the second immutablyReplaceArray walks for X
+		// in the post-remove tree where X no longer exists, so the insertion
+		// callback is never invoked) — silently deleting X. The dispatcher in
+		// agentRpcHandler also rejects self-moves, but every caller-trusts-caller
+		// chain needs a self-protective base case.
+		moveNode: (nodeId, newParentId, position) => {
+			if (nodeId === newParentId) return;
+			const schema = get().schema;
+			if (!schema) return;
+			const nodes = schema.nodes;
+			const found = findParentAndIndex(nodes, nodeId);
+			if (!found) return;
+			if (!get().nodeIndex.get(newParentId)) return;
+			const node = found.parentArray[found.index];
+			const currentParentId = found.parent ? found.parent.id : null;
+			const nodesAfterRemove = immutablyReplaceArray(
+				nodes,
+				currentParentId,
+				(arr) => {
+					const copy = [...arr];
+					copy.splice(found.index, 1);
+					return copy;
+				},
+			);
+			const nextNodes = immutablyReplaceArray(
+				nodesAfterRemove,
+				newParentId,
+				(arr) => {
+					const copy = [...arr];
+					const pos =
+						position !== undefined
+							? Math.min(position, copy.length)
+							: copy.length;
+					copy.splice(pos, 0, node);
+					return copy;
+				},
+			);
+			bumpStructural(nextNodes);
 		},
 
 		renameNode: (nodeId, title) => {

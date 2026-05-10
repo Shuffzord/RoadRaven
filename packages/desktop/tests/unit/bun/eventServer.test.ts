@@ -20,6 +20,12 @@ const NO_OP_OPTS = {
 	onConnectionChange: () => {
 		/* noop */
 	},
+	// Phase 6 Plan 06-02: StartOptions now requires onAgentRequest. Tests in
+	// this file exercise the event-frame path only — agent-request routing is
+	// covered by future Plan 06-03 tests, so a no-op suffices here.
+	onAgentRequest: () => {
+		/* noop */
+	},
 };
 
 describe("EventServer (WebSocket lifecycle)", () => {

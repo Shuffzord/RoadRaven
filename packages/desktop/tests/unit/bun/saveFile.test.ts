@@ -37,6 +37,7 @@ import {
 	__resetSaveFileModuleForTests as reset,
 	saveFileHandler,
 	__setCachedMainPathForTests as setCachedMainPath,
+	setCachedMainPath as setCachedMainPathPublic,
 } from "../../../src/bun/saveFile";
 
 const uuid = (seed: string): string =>
@@ -222,5 +223,64 @@ describe("saveFile handler (T-03.04-01 + T-03.04-07)", () => {
 		} catch {
 			// ignore
 		}
+	});
+
+	// WR-02 (06-REVIEW): when the cached main path changes, the dialog
+	// allowlist must be cleared so paths the user "owned" while editing the
+	// previous roadmap don't survive into the new session — D-13 path-
+	// traversal mitigation must not degrade across opens.
+	it("#8 setCachedMainPath clears dialogAllowlist when path changes (WR-02)", async () => {
+		const dialogPath = resolve(join(tempDir, "picked-from-A.json"));
+		// Seed: main path A, plus a dialog-picked path the user "owns."
+		setCachedMainPathPublic(mainPath);
+		pushDialogAllowlist(dialogPath);
+
+		// Sanity: saving to the dialog-picked path while still on A is allowed.
+		const r1 = await saveFileHandler({
+			schema: validSchema(),
+			filePath: dialogPath,
+		});
+		expect(r1).toEqual({ ok: true });
+		atomicWriteSpy.mockClear();
+
+		// User opens roadmap B in a different directory.
+		const otherDir = mkdtempSync(join(tmpdir(), "rr-sf-other-"));
+		try {
+			const otherMain = resolve(join(otherDir, "main.roadmap.json"));
+			setCachedMainPathPublic(otherMain);
+
+			// The previously-allowlisted dialog path from session A must NOT
+			// be writable now — the allowlist was cleared.
+			const r2 = await saveFileHandler({
+				schema: validSchema(),
+				filePath: dialogPath,
+			});
+			expect(r2.ok).toBe(false);
+			expect((r2 as { ok: false; error: string }).error).toMatch(/allowlist/i);
+		} finally {
+			try {
+				rmSync(otherDir, { recursive: true, force: true });
+			} catch {
+				// ignore
+			}
+		}
+	});
+
+	// WR-02 follow-on: re-setting the SAME path (idempotent re-load) must NOT
+	// wipe paths added between calls (e.g. via saveFileAs).
+	it("#9 setCachedMainPath does NOT clear allowlist when path is unchanged (WR-02)", async () => {
+		const dialogPath = resolve(join(tempDir, "picked-during-A.json"));
+		setCachedMainPathPublic(mainPath);
+		pushDialogAllowlist(dialogPath);
+
+		// Re-set the SAME path (idempotent re-load).
+		setCachedMainPathPublic(mainPath);
+
+		// Allowlist still contains dialogPath → save succeeds.
+		const result = await saveFileHandler({
+			schema: validSchema(),
+			filePath: dialogPath,
+		});
+		expect(result).toEqual({ ok: true });
 	});
 });

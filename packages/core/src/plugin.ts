@@ -1,6 +1,27 @@
 /**
+ * Sentinel `nodeId` used by Phase 6 agent file-lifecycle drawer-audit rows
+ * (createRoadmap / saveFile / saveFileAs / openFile). These tools mutate
+ * file state, not a specific node, but the IntegrationEvent shape requires
+ * a non-empty nodeId.
+ *
+ * WR-08 (Phase 6 06-REVIEW): exported as a named constant so consumers that
+ * need to filter or skip lifecycle rows (e.g. "rows for selected node" UI
+ * filters) can compare against the symbol rather than re-deriving the
+ * literal. NOT a UUID — permissive ids in the schema (eventSchema.ts §2.1)
+ * allow user-authored nodes with this exact id, so this is a documented
+ * collision risk; future v1.1 work should add a `kind: 'lifecycle'|'node'`
+ * field on the drawer-audit subset of IntegrationEvent and remove the
+ * sentinel. v1: documented sentinel.
+ */
+export const LIFECYCLE_NODE_ID = "__lifecycle__";
+
+/**
  * Event emitted by integration plugins when external state changes.
  * Used by the plugin host to route updates to the correct node.
+ *
+ * Note: when `nodeId === LIFECYCLE_NODE_ID`, the row represents a Phase 6
+ * file-lifecycle agent action (no specific node). Filter-by-selected-node
+ * UIs should treat these rows specially or exclude them by default.
  */
 export interface IntegrationEvent {
 	nodeId: string;

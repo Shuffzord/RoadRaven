@@ -58,18 +58,48 @@ export function pushDialogAllowlistPath(absolutePath: string): void {
  * Called by the RPC loadFile handler after a successful load so subsequent
  * `saveFile({schema})` (no filePath) calls route back to the loaded file.
  * Accepts any string; resolves to absolute before caching.
+ *
+ * WR-02 (Phase 6 06-REVIEW): also clears the dialog allowlist when the main
+ * path actually changes so paths the user "owned" while editing the previous
+ * roadmap are not silently carried into the new session. Without this, a
+ * D-13 path-traversal mitigation degrades over time: an agent saveFile to a
+ * path the user picked while editing roadmap-A would pass isAllowlisted()
+ * even after the user moved on to roadmap-B in a different directory.
+ *
+ * The resolved-path comparison guarantees idempotency: re-loading the same
+ * file does not wipe paths added between loads (e.g. saveFileAs picks).
  */
 export function setCachedMainPath(absolutePath: string): void {
-	cachedMainPath = resolve(absolutePath);
+	const resolved = resolve(absolutePath);
+	if (cachedMainPath !== resolved) {
+		dialogAllowlist.clear();
+	}
+	cachedMainPath = resolved;
 }
 
 /**
  * Plan 03-04c: clear the cached main path. Used by the `newFile` RPC handler so
  * a freshly created in-memory schema does not silently overwrite the previously
  * loaded file when the next saveFile fires before saveFileAs picks a path.
+ *
+ * WR-02 (Phase 6 06-REVIEW): also clears the allowlist — once we have no main
+ * file, no previously-allowlisted path should remain accessible.
  */
 export function clearCachedMainPath(): void {
 	cachedMainPath = null;
+	dialogAllowlist.clear();
+}
+
+/**
+ * CR-03 (Phase 6 06-REVIEW): expose the current cached main path so the agent
+ * cross-ref boundary gate can default unknown-ownership nodes (e.g.,
+ * agent-created nodes that haven't been propagated to the ownership map yet)
+ * to "owned by the main file." Returning null when no file is loaded is
+ * acceptable — the renderer's `no_file_loaded` gate fires before the
+ * ownership check matters.
+ */
+export function getCachedMainPath(): string | null {
+	return cachedMainPath;
 }
 
 /**

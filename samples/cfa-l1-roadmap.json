@@ -1,0 +1,140 @@
+{
+  "version": "1.0",
+  "title": "CFA Level I 2026 — Roadmapa Egzaminacyjna",
+  "themeConfig": {
+    "statusColors": {
+      "not-started": "#6b7280",
+      "in-progress": "#3b82f6",
+      "completed": "#22c55e",
+      "blocked": "#ef4444"
+    },
+    "nodeRadius": 8
+  },
+  "statusConfig": [
+    {
+      "id": "not-started",
+      "label": "Nie zaczęte",
+      "color": "#6b7280"
+    },
+    {
+      "id": "in-progress",
+      "label": "W trakcie",
+      "color": "#3b82f6"
+    },
+    {
+      "id": "completed",
+      "label": "Ukończone",
+      "color": "#22c55e"
+    },
+    {
+      "id": "blocked",
+      "label": "Zablokowane",
+      "color": "#ef4444"
+    }
+  ],
+  "typeConfig": [
+    {
+      "id": "project",
+      "label": "Exam"
+    },
+    {
+      "id": "milestone",
+      "label": "Topic Area"
+    },
+    {
+      "id": "phase",
+      "label": "Learning Module"
+    },
+    {
+      "id": "plan",
+      "label": "Sub-section"
+    },
+    {
+      "id": "task",
+      "label": "Concept / Formula"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "10000000-0000-4000-8000-000000000000",
+      "title": "CFA Level I 2026",
+      "status": "not-started",
+      "type": "project",
+      "notes": "# CFA Level I 2026\n\nKompletna roadmapa nauki do egzaminu CFA Level I 2026. 10 obszarów tematycznych, 93 Learning Modules, 365 Learning Outcome Statements. Łączny czas nauki: 300-400h.",
+      "createdAt": "2026-05-06T00:00:00Z",
+      "updatedAt": "2026-05-07T08:39:14.810Z",
+      "children": [
+        {
+          "id": "10000000-0000-4000-8000-000000000001",
+          "title": "Ethics & Professional Standards (17.5%)",
+          "status": "not-started",
+          "type": "milestone",
+          "$ref": "./cfa-l1/topic-01-ethics.json"
+        },
+        {
+          "id": "10000000-0000-4000-8000-000000000002",
+          "title": "Quantitative Methods (7.5%)",
+          "status": "not-started",
+          "type": "milestone",
+          "$ref": "./cfa-l1/topic-02-quant.json"
+        },
+        {
+          "id": "10000000-0000-4000-8000-000000000003",
+          "title": "Economics (7.5%)",
+          "status": "not-started",
+          "type": "milestone",
+          "$ref": "./cfa-l1/topic-03-economics.json"
+        },
+        {
+          "id": "10000000-0000-4000-8000-000000000004",
+          "title": "Financial Statement Analysis (12.5%)",
+          "status": "not-started",
+          "type": "milestone",
+          "$ref": "./cfa-l1/topic-04-fsa.json"
+        },
+        {
+          "id": "10000000-0000-4000-8000-000000000005",
+          "title": "Corporate Issuers (7.5%)",
+          "status": "not-started",
+          "type": "milestone",
+          "$ref": "./cfa-l1/topic-05-corp-issuers.json"
+        },
+        {
+          "id": "10000000-0000-4000-8000-000000000006",
+          "title": "Equity Investments (12.5%)",
+          "status": "not-started",
+          "type": "milestone",
+          "$ref": "./cfa-l1/topic-06-equity.json"
+        },
+        {
+          "id": "10000000-0000-4000-8000-000000000007",
+          "title": "Fixed Income (12.5%)",
+          "status": "not-started",
+          "type": "milestone",
+          "$ref": "./cfa-l1/topic-07-fi.json"
+        },
+        {
+          "id": "10000000-0000-4000-8000-000000000008",
+          "title": "Derivatives (6.5%)",
+          "status": "not-started",
+          "type": "milestone",
+          "$ref": "./cfa-l1/topic-08-derivatives.json"
+        },
+        {
+          "id": "10000000-0000-4000-8000-000000000009",
+          "title": "Alternative Investments (8.5%)",
+          "status": "not-started",
+          "type": "milestone",
+          "$ref": "./cfa-l1/topic-09-alts.json"
+        },
+        {
+          "id": "10000000-0000-4000-8000-00000000000a",
+          "title": "Portfolio Management (10.0%)",
+          "status": "not-started",
+          "type": "milestone",
+          "$ref": "./cfa-l1/topic-10-pm.json"
+        }
+      ]
+    }
+  ]
+}
