@@ -163,6 +163,17 @@ Pre-condition: a roadmap with at least one non-root node `X` that has at least o
 - Scenario 2: original docs and runtime hint pointed at `.roadmap-settings.json`; the actual settings file is `settings.json` in the platform userData directory. Fixed in commit `5198a08` (agentRequestHandler error hint, README kill-switch section + troubleshooting, this UAT script). Confirmed working with `agent_api_disabled` returned and the corrected hint visible to the agent.
 - All other scenarios passed verbatim against the script.
 
+### Post-fix re-verification (2026-05-10)
+
+After the code-review pass landed 12 fixes (CR-01..03 + WR-01..09) touching `agentRequestHandler.ts`, `agentRpcHandler.ts`, `roadmapStore.ts`, and `saveFile.ts`, Scenarios 3 and 5 were re-run via direct MCP tool calls against the running app:
+
+- **Scenario 3** — `openFile("C:\Windows\System32\drivers\etc\hosts")` returned `path_not_permitted` with the corrected hint text. ✓
+- **Scenario 5** — `moveNode(X, X)` returned `move_would_create_cycle` and post-call `getRoadmap` confirmed node X and all 3 children still present (the CR-01 silent-delete bug is fixed). `moveNode(root, descendant)` also returned `move_would_create_cycle`. ✓
+
+Scenario 7 (drawer-audit truncation, WR-05) was not re-walked — its truncation logic is purely UI-display, exercised by the `sanitizeArgsForAudit` regression test in the +22 vitest suite, and a manual MCP call adds no incremental signal beyond the unit test.
+
+The other post-fix changes (Bun-side Zod validation WR-01, allowlist cleanup WR-02, immutable createRoadmap WR-03, autosave_timeout code WR-04, fail-fast invalid port WR-06, sentinel export WR-08, walkAndMerge short-circuit WR-09) are covered by the +23 regression tests added with the fixes.
+
 <!--
 If any scenario fails, document:
   - which scenario, what was expected vs. observed
