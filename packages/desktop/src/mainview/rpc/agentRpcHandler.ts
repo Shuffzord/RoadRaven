@@ -9,6 +9,7 @@
 // cascade_required (D-11), cannot_delete_last_root, move_would_create_cycle,
 // unknown_tool.
 import { z } from "zod";
+import { LIFECYCLE_NODE_ID } from "../../../../../packages/core/src/plugin";
 import type { RoadmapNode } from "../../../../../packages/core/src/schema";
 import {
 	StatusConfigSchema,
@@ -115,7 +116,8 @@ function appendAgentDrawerEvent(
 	store: RoadmapStoreState,
 	eventLogStore: LogStoreState,
 ): void {
-	const node = nodeId === "__lifecycle__" ? null : store.nodeIndex.get(nodeId);
+	const node =
+		nodeId === LIFECYCLE_NODE_ID ? null : store.nodeIndex.get(nodeId);
 	const event: IntegrationEvent = {
 		nodeId,
 		status: node?.status ?? "unknown",
@@ -430,7 +432,7 @@ export async function handleAgentRequest(
 			const post = useRoadmapStore.getState();
 			appendAgentDrawerEvent(
 				"createRoadmap",
-				"__lifecycle__",
+				LIFECYCLE_NODE_ID,
 				args,
 				post,
 				eventLog,
@@ -613,7 +615,7 @@ export async function handleAgentRequest(
 			store.triggerSave();
 			appendAgentDrawerEvent(
 				"saveFile",
-				"__lifecycle__",
+				LIFECYCLE_NODE_ID,
 				args,
 				store,
 				eventLog,
@@ -644,7 +646,7 @@ export async function handleAgentRequest(
 			const out = await electroview.rpc.request.saveFileAs({ schema });
 			appendAgentDrawerEvent(
 				"saveFileAs",
-				"__lifecycle__",
+				LIFECYCLE_NODE_ID,
 				args,
 				store,
 				eventLog,
@@ -717,7 +719,7 @@ export async function handleAgentRequest(
 			const out = await electroview.rpc.request.loadFile({ path });
 			appendAgentDrawerEvent(
 				"openFile",
-				"__lifecycle__",
+				LIFECYCLE_NODE_ID,
 				args,
 				store,
 				eventLog,

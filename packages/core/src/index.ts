@@ -1,4 +1,5 @@
 export type { IntegrationEvent, RoadmapPlugin } from "./plugin.ts";
+export { LIFECYCLE_NODE_ID } from "./plugin.ts";
 export type {
 	NodeStatus,
 	RoadmapNode,
