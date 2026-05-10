@@ -112,7 +112,14 @@ export async function agentRequestHandler(
 	// minor surface where extra args could shadow real ones in handlers.
 	const validatedParams = validated.data;
 
-	// GATE 3 — path-traversal allowlist (D-13, RESEARCH §Risks L-05)
+	// GATE 3 — path-traversal allowlist (D-13, RESEARCH §Risks L-05).
+	//
+	// WR-02 (06-REVIEW): only validate here; defer the pushDialogAllowlistPath
+	// side-effect until AFTER the renderer reports success. Doing it before
+	// would allowlist paths the agent never managed to actually open (file
+	// missing, JSON broken) — giving the agent quiet write access to those
+	// paths via later saveFile calls.
+	let pendingAllowlistPath: string | null = null;
 	if (request.method === "openFile" || request.method === "saveFileAs") {
 		const path = (validatedParams as { path?: unknown }).path;
 		if (typeof path !== "string" || !isPathWithinMainDir(path)) {
@@ -126,8 +133,8 @@ export async function agentRequestHandler(
 			);
 			return;
 		}
-		// Allowlist the path for subsequent saveFile calls within this session
-		pushDialogAllowlistPath(path);
+		// Defer push until renderer success (see post-success branch below).
+		pendingAllowlistPath = path;
 	}
 
 	// GATE 3 — cross-ref boundary check for moveNode (RESEARCH §Risks L-08).
@@ -188,6 +195,13 @@ export async function agentRequestHandler(
 		});
 		const durationMs = Date.now() - start;
 		if (result.ok) {
+			// WR-02 (06-REVIEW): allowlist the openFile/saveFileAs path NOW that
+			// the renderer reported success. Failed loads (missing file, broken
+			// JSON) no longer pollute the allowlist with paths the agent never
+			// actually opened.
+			if (pendingAllowlistPath !== null) {
+				pushDialogAllowlistPath(pendingAllowlistPath);
+			}
 			// CR-03 (Phase 6 06-REVIEW): record ownership for newly-created nodes
 			// so the cross-ref boundary gate (above) has a valid entry for the
 			// next moveNode. The new node inherits its parent's owner; if the

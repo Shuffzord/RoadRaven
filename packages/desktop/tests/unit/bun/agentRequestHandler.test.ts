@@ -13,6 +13,8 @@ vi.mock("../../../src/bun/saveFile", () => ({
 	isPathWithinMainDir: vi.fn(() => true),
 	pushDialogAllowlistPath: vi.fn(),
 	getCachedMainPath: vi.fn(() => null), // default: no main file → no fallback
+	setCachedMainPath: vi.fn(),
+	clearCachedMainPath: vi.fn(),
 }));
 vi.mock("../../../src/bun/refMap", () => ({
 	getOwnership: vi.fn(() => new Map<string, string>()), // CR-03: real Map default
@@ -24,6 +26,7 @@ import { getOwnership, setOwnership } from "../../../src/bun/refMap";
 import {
 	getCachedMainPath,
 	isPathWithinMainDir,
+	pushDialogAllowlistPath,
 } from "../../../src/bun/saveFile";
 import { loadSettings } from "../../../src/bun/settings";
 
@@ -231,6 +234,54 @@ describe("agentRequestHandler — unknown method passthrough", () => {
 		});
 		const env = JSON.parse(sent[0]);
 		expect(env.error.code).toBe("unknown_tool");
+	});
+});
+
+// WR-02 (06-REVIEW): pushDialogAllowlistPath must run only AFTER the renderer
+// reports success. Doing it during gate-check would pollute the allowlist with
+// paths the agent never managed to actually open (file missing, JSON broken),
+// giving the agent quiet write access via later saveFile calls.
+describe("agentRequestHandler — deferred path allowlist (WR-02)", () => {
+	beforeEach(() => {
+		vi.clearAllMocks();
+	});
+
+	it("openFile that fails (renderer returns ok:false) does NOT allowlist the path", async () => {
+		vi.mocked(loadSettings).mockReturnValue({});
+		vi.mocked(isPathWithinMainDir).mockReturnValue(true);
+		const { ws, sent } = makeWs();
+		const mainWindow = makeMainWindow(async () => ({
+			ok: false,
+			error: "Failed to read file.",
+			code: "file_read_error",
+		}));
+		await agentRequestHandler(
+			ws,
+			makeRequest("openFile", { path: "/main/missing.json" }),
+			mainWindow,
+		);
+		const env = JSON.parse(sent[0]);
+		expect(env.error.code).toBe("file_read_error");
+		// Critical: allowlist push did NOT happen on failed openFile.
+		expect(pushDialogAllowlistPath).not.toHaveBeenCalled();
+	});
+
+	it("openFile that succeeds DOES allowlist the path", async () => {
+		vi.mocked(loadSettings).mockReturnValue({});
+		vi.mocked(isPathWithinMainDir).mockReturnValue(true);
+		const { ws, sent } = makeWs();
+		const mainWindow = makeMainWindow(async () => ({
+			ok: true,
+			data: { filePath: "/main/ok.json" },
+		}));
+		await agentRequestHandler(
+			ws,
+			makeRequest("openFile", { path: "/main/ok.json" }),
+			mainWindow,
+		);
+		const env = JSON.parse(sent[0]);
+		expect(env.result).toEqual({ filePath: "/main/ok.json" });
+		expect(pushDialogAllowlistPath).toHaveBeenCalledWith("/main/ok.json");
 	});
 });
 
