@@ -654,7 +654,16 @@ export const useRoadmapStore = create<RoadmapState>((set, get) => {
 		// Cycle detection and cross-ref-boundary check are performed by callers
 		// (agentRpcHandler.ts cycle gate; agentRequestHandler.ts cross-ref gate); this action
 		// assumes those have already passed. No-op when nodeId or newParentId not found.
+		//
+		// CR-01 (06-REVIEW): explicit self-move guard inside the store action as
+		// defense-in-depth. Without it, moveNode(X, X) removed X from its parent
+		// then failed to re-insert (the second immutablyReplaceArray walks for X
+		// in the post-remove tree where X no longer exists, so the insertion
+		// callback is never invoked) — silently deleting X. The dispatcher in
+		// agentRpcHandler also rejects self-moves, but every caller-trusts-caller
+		// chain needs a self-protective base case.
 		moveNode: (nodeId, newParentId, position) => {
+			if (nodeId === newParentId) return;
 			const schema = get().schema;
 			if (!schema) return;
 			const nodes = schema.nodes;

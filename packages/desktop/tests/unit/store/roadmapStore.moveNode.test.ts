@@ -124,4 +124,28 @@ describe("roadmapStore.moveNode (Phase 6 PLUG-AGENT-UPDATE-05)", () => {
 			(useRoadmapStore.getState() as unknown as { moveNode: unknown }).moveNode,
 		).toBeTypeOf("function");
 	});
+
+	// CR-01 (06-REVIEW): self-move must be a no-op, NOT a silent delete.
+	// Bug: the previous code path removed the node from its parent on the
+	// first immutablyReplaceArray, then walked the post-remove tree looking
+	// for the same id to insert under — never found, callback never invoked,
+	// node lost. The store-level guard below is defense-in-depth; the
+	// dispatcher in agentRpcHandler.ts also rejects self-moves with code
+	// `move_would_create_cycle` (see agentRpcHandler regression test).
+	it("is a no-op when nodeId === newParentId (self-move; CR-01)", () => {
+		const before = JSON.stringify(useRoadmapStore.getState().schema);
+		const childAId = "00000000-0000-0000-0000-000000000002";
+		(
+			useRoadmapStore.getState() as unknown as {
+				moveNode: (a: string, b: string, c?: number) => void;
+			}
+		).moveNode(childAId, childAId);
+		const after = JSON.stringify(useRoadmapStore.getState().schema);
+		expect(after).toBe(before);
+		// And critically: the node still exists in nodeIndex (it was NOT
+		// silently deleted, which was the original CR-01 failure mode).
+		expect(useRoadmapStore.getState().nodeIndex.get(childAId)?.id).toBe(
+			childAId,
+		);
+	});
 });

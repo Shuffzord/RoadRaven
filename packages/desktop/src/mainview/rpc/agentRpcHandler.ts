@@ -15,11 +15,20 @@ export type AgentResult =
 	| { ok: true; data: unknown }
 	| { ok: false; error: string; code: string; hint?: string; data?: unknown };
 
+/**
+ * Returns true when `candidateId` is in the subtree rooted at `rootNodeId`,
+ * INCLUDING the root itself (a node is in its own subtree). This is the
+ * reflexive form — see CR-02 in 06-REVIEW.md: the previous form excluded the
+ * root and silently allowed `moveNode(X, X)` past the cycle gate, which then
+ * deleted X via the store action (CR-01). Reflexive coverage closes both
+ * defects in one helper.
+ */
 function isDescendantOf(
 	rootNodeId: string,
 	candidateId: string,
 	nodeIndex: Map<string, RoadmapNode>,
 ): boolean {
+	if (rootNodeId === candidateId) return true; // a node is in its own subtree
 	const root = nodeIndex.get(rootNodeId);
 	if (!root) return false;
 	const stack: RoadmapNode[] = [...(root.children ?? [])];
@@ -425,6 +434,19 @@ export async function handleAgentRequest(
 		case "moveNode": {
 			const nodeId = args.nodeId as string;
 			const newParentId = args.newParentId as string;
+			// CR-01 (06-REVIEW): explicit self-move short-circuit BEFORE the store
+			// call. Without this, moveNode({nodeId: X, newParentId: X}) silently
+			// deleted node X (the store removes the node first, then can't find a
+			// parent to insert under). Reflexive isDescendantOf (CR-02) catches the
+			// same case below; this guard is defense-in-depth and produces a
+			// clearer error path.
+			if (nodeId === newParentId) {
+				return {
+					ok: false,
+					error: "Cannot move a node onto itself.",
+					code: "move_would_create_cycle",
+				};
+			}
 			if (!store.nodeIndex.get(nodeId)) {
 				return {
 					ok: false,
