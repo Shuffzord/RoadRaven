@@ -16,6 +16,17 @@ if (envPortRaw && (envPortParsed === null || Number.isNaN(envPortParsed))) {
 	process.stderr.write(
 		`${JSON.stringify({ ok: false, error: "invalid_port", value: envPortRaw })}\n`,
 	);
+	// WR-06 (06-REVIEW): fail-fast in standalone mode. Without exit(1),
+	// execution fell through to `requestedPort = envPort ?? DEFAULT_PORT`
+	// (envPort is null because envPortParsed was NaN), so the server
+	// silently bound the default port 47921 instead of the user-requested
+	// invalid value. The parent E2E test cannot distinguish "invalid port
+	// → using default" from "invalid port → boot failed" — both end with
+	// the standalone listening on a port. Standalone mode is launched only
+	// from tests/scripts; refusing to boot on garbage input is the
+	// right tradeoff (production runs through bun/index.ts which logs and
+	// continues with the default — separate, intentional behaviour).
+	process.exit(1);
 }
 const envPort =
 	envPortParsed !== null && !Number.isNaN(envPortParsed) ? envPortParsed : null;
