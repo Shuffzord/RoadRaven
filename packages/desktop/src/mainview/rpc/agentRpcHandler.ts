@@ -53,6 +53,61 @@ type RoadmapStoreState = ReturnType<
 	typeof import("../store/roadmapStore").useRoadmapStore.getState
 >;
 
+// WR-05 (06-REVIEW): cap drawer-audit `meta.args` to 2KB. Without this, an
+// agent (or malicious WS client) can pin ~1000 megabytes of metadata in the
+// renderer by spamming `updateNodeNotes` with large payloads — the
+// EVENT_LOG_ROW_CAP is 1000, but each row was unbounded in size.
+//
+// We mirror the eventSchema.ts META_MAX_BYTES (8KB) but use a tighter 2KB
+// cap because (a) the drawer is a UI surface, not a transport buffer, and
+// (b) tool args are typically much smaller than the runtime metadata events
+// carry — 2KB covers create/update args comfortably and forces large notes
+// payloads to be summarised.
+const DRAWER_ARGS_MAX_BYTES = 2 * 1024;
+
+function sanitizeArgsForAudit(
+	args: Record<string, unknown>,
+): Record<string, unknown> {
+	let json: string;
+	try {
+		json = JSON.stringify(args);
+	} catch {
+		return { _truncated: true, reason: "non-serializable args" };
+	}
+	const byteLen = new TextEncoder().encode(json).byteLength;
+	if (byteLen <= DRAWER_ARGS_MAX_BYTES) return args;
+	// Pass 1: per-field replace large string values with a stub. This keeps
+	// the structure (and metadata keys) intact for filter/search.
+	const truncated: Record<string, unknown> = {};
+	for (const [k, v] of Object.entries(args)) {
+		if (typeof v === "string" && v.length > 256) {
+			truncated[k] = `[truncated ${v.length} chars]`;
+		} else if (
+			v !== null &&
+			typeof v === "object" &&
+			new TextEncoder().encode(JSON.stringify(v)).byteLength > 512
+		) {
+			truncated[k] = "[truncated object]";
+		} else {
+			truncated[k] = v;
+		}
+	}
+	truncated._truncated = true;
+	truncated._originalBytes = byteLen;
+	// Pass 2: if still too big, drop everything and keep just the marker.
+	const finalBytes = new TextEncoder().encode(
+		JSON.stringify(truncated),
+	).byteLength;
+	if (finalBytes > DRAWER_ARGS_MAX_BYTES) {
+		return {
+			_truncated: true,
+			_originalBytes: byteLen,
+			_reason: "args exceeded 2KB after per-field stubbing",
+		};
+	}
+	return truncated;
+}
+
 function appendAgentDrawerEvent(
 	tool: string,
 	nodeId: string,
@@ -68,7 +123,7 @@ function appendAgentDrawerEvent(
 		timestamp: new Date().toISOString(),
 		meta: {
 			tool,
-			args,
+			args: sanitizeArgsForAudit(args),
 			label: `Claude → ${tool}`,
 		},
 	};

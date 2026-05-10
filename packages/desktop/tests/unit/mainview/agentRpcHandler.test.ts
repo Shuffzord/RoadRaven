@@ -206,6 +206,61 @@ describe("agentRpcHandler — D-07 live-overlay merge for findNodes", () => {
 	});
 });
 
+// WR-05 (06-REVIEW): drawer-audit meta.args must be truncated when payload
+// exceeds the 2KB cap, so an agent (or malicious WS client) cannot pin ~1GB
+// of metadata in the renderer via 1000 oversized updateNodeNotes calls.
+describe("agentRpcHandler — drawer audit args truncation (WR-05)", () => {
+	beforeEach(() => {
+		useRoadmapStore.getState().loadSchema(makeSchema(), "/tmp/test.json");
+		useEventLogStore.setState({ rows: [] });
+	});
+	afterEach(() => {
+		useRoadmapStore.setState({
+			schema: null,
+			filePath: null,
+			nodeIndex: new Map(),
+		});
+		useEventLogStore.setState({ rows: [] });
+	});
+
+	it("updateNodeNotes with a multi-KB notes payload is truncated in the drawer row (WR-05)", async () => {
+		const bigNotes = "x".repeat(20_000); // 20KB raw
+		const result = await handleAgentRequest("updateNodeNotes", {
+			nodeId: "00000000-0000-0000-0000-000000000002",
+			notes: bigNotes,
+		});
+		expect(result.ok).toBe(true);
+		const row = useEventLogStore.getState().rows[0];
+		expect(row).toBeDefined();
+		const auditArgs = row.meta?.args as Record<string, unknown>;
+		// notes string must NOT be present in full.
+		expect(auditArgs.notes).not.toBe(bigNotes);
+		// And the truncation marker must be set.
+		expect(auditArgs._truncated).toBe(true);
+		// Final serialized payload must be within the 2KB cap.
+		const finalBytes = new TextEncoder().encode(
+			JSON.stringify(auditArgs),
+		).byteLength;
+		expect(finalBytes).toBeLessThanOrEqual(2 * 1024);
+	});
+
+	it("small payloads pass through unchanged (no truncation false-positive)", async () => {
+		const result = await handleAgentRequest("renameNode", {
+			nodeId: "00000000-0000-0000-0000-000000000002",
+			title: "Renamed",
+		});
+		expect(result.ok).toBe(true);
+		const row = useEventLogStore.getState().rows[0];
+		expect(row.meta?.args).toEqual({
+			nodeId: "00000000-0000-0000-0000-000000000002",
+			title: "Renamed",
+		});
+		expect(
+			(row.meta?.args as { _truncated?: unknown })._truncated,
+		).toBeUndefined();
+	});
+});
+
 // CR-01 / CR-02 (06-REVIEW): moveNode(X, X) must be rejected with
 // move_would_create_cycle, NOT silently delete X. Two layers must catch the
 // case: (a) the explicit self-move short-circuit in the dispatcher, and (b)
