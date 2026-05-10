@@ -160,6 +160,62 @@ describe("agentRpcHandler — unknown tool", () => {
 	});
 });
 
+// WR-09 (06-REVIEW): when no live-overlay entries exist, getRoadmap should
+// short-circuit the per-node clone and return the in-store schema.nodes
+// reference directly. mergeLiveStatus is documented as a no-op, so the
+// tree clone was pure garbage on every call.
+describe("agentRpcHandler — getRoadmap short-circuits when no live overlay (WR-09)", () => {
+	beforeEach(() => {
+		useRoadmapStore.getState().loadSchema(makeSchema(), "/tmp/test.json");
+		useRoadmapStore.setState({ liveEventMeta: {} });
+	});
+	afterEach(() => {
+		useRoadmapStore.setState({
+			schema: null,
+			filePath: null,
+			nodeIndex: new Map(),
+			liveEventMeta: {},
+		});
+	});
+
+	it("returns schema.nodes by reference (no clone) when liveEventMeta is empty", async () => {
+		const before = useRoadmapStore.getState().schema!.nodes;
+		const result = await handleAgentRequest("getRoadmap", {});
+		expect(result.ok).toBe(true);
+		const data = (
+			result as {
+				ok: true;
+				data: { schema: { nodes: unknown } };
+			}
+		).data;
+		// Reference equality proves no clone was performed.
+		expect(data.schema.nodes).toBe(before);
+	});
+
+	it("DOES clone when liveEventMeta has entries (regression — overlay still works)", async () => {
+		const before = useRoadmapStore.getState().schema!.nodes;
+		useRoadmapStore.setState({
+			liveEventMeta: {
+				"00000000-0000-0000-0000-000000000002": {
+					lastEventAt: Date.now(),
+					source: "ci",
+				},
+			},
+		});
+		const result = await handleAgentRequest("getRoadmap", {});
+		const data = (
+			result as {
+				ok: true;
+				data: { schema: { nodes: unknown[] } };
+			}
+		).data;
+		// With overlay entries present, the result is a fresh tree.
+		expect(data.schema.nodes).not.toBe(before);
+		// And the structure is preserved (regression on the merged path).
+		expect(data.schema.nodes.length).toBe(before.length);
+	});
+});
+
 describe("agentRpcHandler — D-07 live-overlay merge for findNodes", () => {
 	beforeEach(() => {
 		useRoadmapStore.getState().loadSchema(makeSchema(), "/tmp/test.json");

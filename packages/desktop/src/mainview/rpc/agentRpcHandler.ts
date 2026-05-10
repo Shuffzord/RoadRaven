@@ -279,10 +279,20 @@ export async function handleAgentRequest(
 		// -------- READ TOOLS (D-01, D-07 live-overlay merge) --------
 		case "getRoadmap": {
 			// D-07: walk the tree and apply live overlay (overlay wins within 30s window).
+			//
+			// WR-09 (06-REVIEW): mergeLiveStatus is a no-op (Phase 4's
+			// applyEventBatch already mutated node.status in place). When no
+			// live overlay entries exist we can skip the full top-down clone
+			// entirely and return schema.nodes directly. The clone runs only
+			// when liveEventMeta has at least one entry — same correctness as
+			// before, materially less garbage on every getRoadmap call.
+			const hasLiveOverlay = Object.keys(liveEventMeta).length > 0;
 			// biome-ignore lint/style/noNonNullAssertion: schema null-checked above
-			const mergedNodes = schema!.nodes.map((n) =>
-				walkAndMerge(n, liveEventMeta),
-			);
+			const mergedNodes = hasLiveOverlay
+				? // biome-ignore lint/style/noNonNullAssertion: schema null-checked above
+					schema!.nodes.map((n) => walkAndMerge(n, liveEventMeta))
+				: // biome-ignore lint/style/noNonNullAssertion: schema null-checked above
+					schema!.nodes;
 			const mergedSchema = { ...schema!, nodes: mergedNodes };
 			return {
 				ok: true,
