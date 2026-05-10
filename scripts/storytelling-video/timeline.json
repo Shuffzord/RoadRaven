@@ -1,0 +1,187 @@
+{
+  "version": "1.0",
+  "totalDurationMs": 75000,
+  "comment": "Choreographed cue list for the 75s storytelling video. The runner (run.ts) operates on the currently OPEN roadmap file — it does not create a new one. Operator opens a clean single-root file (e.g., pitch.json) before recording. Aliases (`@n_*`) are resolved from prior createNode/getRoadmap returns.",
+  "cues": [
+    {
+      "act": 1,
+      "at_ms": 0,
+      "op": "getRoadmap",
+      "args": {},
+      "captureRootAlias": "n_idea",
+      "comment": "Capture the existing root node id of the currently-open file into @n_idea. The runner fails fast if no file is open."
+    },
+    {
+      "act": 1,
+      "at_ms": 300,
+      "op": "renameNode",
+      "args": { "nodeId": "@n_idea", "title": "IDEA" },
+      "narratorBeat": "Imagine you have an idea."
+    },
+    {
+      "act": 1,
+      "at_ms": 3000,
+      "op": "renameNode",
+      "args": { "nodeId": "@n_idea", "title": "LEARN" },
+      "narratorBeat": "Maybe you want to learn something."
+    },
+    {
+      "act": 1,
+      "at_ms": 6000,
+      "op": "renameNode",
+      "args": { "nodeId": "@n_idea", "title": "BUILD" },
+      "narratorBeat": "Or build something."
+    },
+    {
+      "act": 1,
+      "at_ms": 9500,
+      "op": "renameNode",
+      "args": { "nodeId": "@n_idea", "title": "SHIP A PRODUCT" },
+      "narratorBeat": "Of course you want to build with AI. Everyone does. So let's say... you want to ship a product."
+    },
+    {
+      "act": 2,
+      "at_ms": 13000,
+      "op": "createNode",
+      "args": { "parentId": "@n_idea", "title": "web app" },
+      "alias": "n_web",
+      "narratorBeat": "A web app."
+    },
+    {
+      "act": 2,
+      "at_ms": 14500,
+      "op": "createNode",
+      "args": { "parentId": "@n_idea", "title": "native app" },
+      "alias": "n_native",
+      "narratorBeat": "A native app. Why not both?"
+    },
+    {
+      "act": 2,
+      "at_ms": 18500,
+      "op": "createNode",
+      "args": { "parentId": "@n_web", "title": "auth" },
+      "alias": "n_auth",
+      "narratorBeat": "You sketch the tree."
+    },
+    {
+      "act": 2,
+      "at_ms": 20000,
+      "op": "createNode",
+      "args": { "parentId": "@n_web", "title": "payments" },
+      "alias": "n_payments",
+      "narratorBeat": "You name the pieces."
+    },
+    {
+      "act": 2,
+      "at_ms": 21500,
+      "op": "createNode",
+      "args": { "parentId": "@n_web", "title": "landing" },
+      "alias": "n_landing"
+    },
+    {
+      "act": 2,
+      "at_ms": 24000,
+      "op": "createNode",
+      "args": { "parentId": "@n_native", "title": "iOS" },
+      "alias": "n_ios",
+      "narratorBeat": "The plan is yours — no sprints, no story points, no opinions baked in."
+    },
+    {
+      "act": 2,
+      "at_ms": 25500,
+      "op": "createNode",
+      "args": { "parentId": "@n_native", "title": "Android" },
+      "alias": "n_android"
+    },
+    {
+      "act": 2,
+      "at_ms": 27000,
+      "op": "createNode",
+      "args": { "parentId": "@n_native", "title": "auto-update" },
+      "alias": "n_auto"
+    },
+    {
+      "act": 3,
+      "at_ms": 36000,
+      "op": "updateNodeStatus",
+      "args": {
+        "nodeId": "@n_auth",
+        "status": "in-progress",
+        "meta": { "source": "claude-code", "task": "scaffold OAuth flow" }
+      },
+      "narratorBeat": "Now connect each node to something real. An AI agent."
+    },
+    {
+      "act": 3,
+      "at_ms": 40000,
+      "op": "updateNodeStatus",
+      "args": {
+        "nodeId": "@n_auth",
+        "status": "completed",
+        "meta": { "source": "claude-code", "task": "OAuth flow merged" }
+      },
+      "narratorBeat": "A CI pipeline. A local script. Anything that can send a message."
+    },
+    {
+      "act": 3,
+      "at_ms": 43000,
+      "op": "updateNodeStatus",
+      "args": {
+        "nodeId": "@n_payments",
+        "status": "in-progress",
+        "meta": { "source": "claude-code", "task": "stripe integration" }
+      }
+    },
+    {
+      "act": 3,
+      "at_ms": 47000,
+      "op": "updateNodeStatus",
+      "args": {
+        "nodeId": "@n_landing",
+        "status": "completed",
+        "meta": { "source": "github-actions", "ci_run_id": "actions:847291" }
+      },
+      "narratorBeat": "GitHub Actions finishes — the node turns green."
+    },
+    {
+      "act": 3,
+      "at_ms": 51000,
+      "op": "updateNodeStatus",
+      "args": {
+        "nodeId": "@n_ios",
+        "status": "completed",
+        "meta": { "source": "github-actions", "ci_run_id": "actions:847312" }
+      }
+    },
+    {
+      "act": 3,
+      "at_ms": 55000,
+      "op": "updateNodeStatus",
+      "args": {
+        "nodeId": "@n_android",
+        "status": "completed",
+        "meta": { "source": "github-actions", "ci_run_id": "actions:847338" }
+      },
+      "narratorBeat": "Claude Code completes a task — the node updates."
+    },
+    {
+      "act": 3,
+      "at_ms": 58000,
+      "op": "updateNodeStatus",
+      "args": {
+        "nodeId": "@n_auto",
+        "status": "in-progress",
+        "meta": { "source": "claude-code", "task": "auto-update channel wiring" }
+      },
+      "narratorBeat": "You don't touch anything. You just open the app, and the current state of your project is right there."
+    },
+    {
+      "act": 4,
+      "at_ms": 60500,
+      "op": "cameraFitView",
+      "args": {},
+      "narratorBeat": "Your plan. Watching itself.",
+      "comment": "Pull-back camera move (Prereq 2). Walks nodePositionsRef, computes bounding box, animates zoom + pan via animatePanTo() at 900ms ease."
+    }
+  ]
+}

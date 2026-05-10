@@ -31,6 +31,40 @@ export function formatStatus(status: string): string {
 		.join(" ");
 }
 
+// Plugin attribution glyph — small badge in the top-right of the node card.
+// Lit when node.plugin.id is set OR a recent live event carried a source within
+// the 30s pulse window (D-14). Known sources get a branded letter+color; unknown
+// sources fall back to the first letter on slate.
+const PLUGIN_GLYPH_STYLES: Record<
+	string,
+	{ letter: string; bg: string; label: string }
+> = {
+	"claude-code": {
+		letter: "C",
+		bg: "var(--rv-plugin-claude-code-bg)",
+		label: "Claude Code",
+	},
+	"github-actions": {
+		letter: "G",
+		bg: "var(--rv-plugin-github-actions-bg)",
+		label: "GitHub Actions",
+	},
+};
+
+function pluginGlyphFor(id: string): {
+	letter: string;
+	bg: string;
+	label: string;
+} {
+	return (
+		PLUGIN_GLYPH_STYLES[id] ?? {
+			letter: id.charAt(0).toUpperCase() || "?",
+			bg: "var(--rv-plugin-default-bg)",
+			label: id,
+		}
+	);
+}
+
 interface RoadmapNodeCardProps {
 	title: string;
 	status: NodeStatus;
@@ -107,6 +141,33 @@ export function RoadmapNodeCard({
 	// Re-evaluates on every 1Hz liveTick bump from App.tsx setInterval.
 	const isLive = useIsNodeLive(nodeId ?? "");
 
+	// Plugin glyph attribution. Live source wins inside the 30s pulse window
+	// (so a `meta.source` from a fresh updateNodeStatus lights the badge even
+	// if node.plugin is unset). Falls back to the persistent schema slot.
+	const pluginGlyph = useRoadmapStore((s) => {
+		void s.statusTick;
+		void s.liveTick;
+		if (!nodeId) return null;
+		const live = s.liveEventMeta[nodeId];
+		if (
+			live &&
+			Date.now() - live.lastEventAt < 30_000 &&
+			typeof live.source === "string"
+		) {
+			return live.source;
+		}
+		const plugin = s.nodeIndex.get(nodeId)?.plugin;
+		if (
+			plugin &&
+			typeof plugin === "object" &&
+			"id" in plugin &&
+			typeof (plugin as { id: unknown }).id === "string"
+		) {
+			return (plugin as { id: string }).id;
+		}
+		return null;
+	});
+
 	return (
 		<div
 			className={`node relative min-w-[180px] max-w-[220px] rounded-[var(--node-radius,8px)] border-[length:var(--rv-border-width,1px)] border-[color:var(--rv-border)] bg-[var(--rv-bg-node)] pl-4 pr-3 py-[10px] select-none transition-[box-shadow,border-color,background] duration-150 hover:bg-[var(--rv-bg-node-hover)] group ${isSelected ? "outline outline-2 -outline-offset-1 outline-[var(--rv-accent)]" : ""}`}
@@ -136,9 +197,29 @@ export function RoadmapNodeCard({
 				}
 			}}
 		>
+			{/* Plugin attribution glyph — top-right corner. Hidden when no plugin
+			   id is on the node and no fresh live source is in the 30s window. */}
+			{pluginGlyph &&
+				(() => {
+					const g = pluginGlyphFor(pluginGlyph);
+					return (
+						<span
+							className="absolute top-1.5 right-1.5 inline-flex items-center justify-center w-[16px] h-[16px] rounded-full text-[9px] font-bold text-white pointer-events-none select-none shadow-sm"
+							style={{ background: g.bg }}
+							data-plugin-id={pluginGlyph}
+							role="img"
+							aria-label={`Plugin: ${g.label}`}
+							title={`Connected via ${g.label}`}
+						>
+							{g.letter}
+						</span>
+					);
+				})()}
+
 			{/* Title — swaps to an inline input when renaming. The input borrows
 			   the span's typography + height so the card doesn't reflow; an
-			   accent bottom border is the only visible affordance. */}
+			   accent bottom border is the only visible affordance. Right-pad
+			   widens when a plugin glyph is shown so the title doesn't collide. */}
 			{isRenaming ? (
 				<input
 					ref={renameInputRef}
@@ -161,10 +242,12 @@ export function RoadmapNodeCard({
 					onBlur={() => onRenameCommit?.()}
 					placeholder="Enter title…"
 					aria-label="Rename node"
-					className="block w-full text-[13px] font-semibold leading-[1.3] text-[var(--rv-text-primary)] mb-[6px] bg-transparent border-0 border-b-2 border-[var(--rv-accent)] outline-none px-0 py-0"
+					className={`block w-full text-[13px] font-semibold leading-[1.3] text-[var(--rv-text-primary)] mb-[6px] bg-transparent border-0 border-b-2 border-[var(--rv-accent)] outline-none px-0 py-0 ${pluginGlyph ? "pr-6" : ""}`}
 				/>
 			) : (
-				<span className="block text-[13px] font-semibold leading-[1.3] text-[var(--rv-text-primary)] mb-[6px]">
+				<span
+					className={`block text-[13px] font-semibold leading-[1.3] text-[var(--rv-text-primary)] mb-[6px] ${pluginGlyph ? "pr-6" : ""}`}
+				>
 					{title}
 				</span>
 			)}

@@ -142,6 +142,72 @@ export function Canvas() {
 		};
 	}, []);
 
+	// Fit-to-view: if a node is focused/selected, zoom in close on it; otherwise
+	// fall back to fitting the whole tree (Act 4 pullback for the storytelling
+	// video). Triggered by store.fitView() via the `roadraven:fit-view` event.
+	const setZoomLevel = useRoadmapStore((s) => s.setZoomLevel);
+	useEffect(() => {
+		const handler = () => {
+			const store = useRoadmapStore.getState();
+			const targetId = store.focusedNodeId ?? store.selectedNodeId;
+			const targetPos = targetId
+				? nodePositionsRef.current.get(targetId)
+				: null;
+
+			if (targetPos) {
+				// Close-up on a single node — zoom in tight, center the node card.
+				const FOCUS_ZOOM = 1.6;
+				setZoomLevel(FOCUS_ZOOM);
+				animatePanTo({
+					x: dimensions.width / 2 - targetPos.x * FOCUS_ZOOM,
+					y: dimensions.height / 2 - targetPos.y * FOCUS_ZOOM,
+				});
+				return;
+			}
+
+			// Fall-through: fit the whole tree (Act 4 pullback).
+			const positions = Array.from(nodePositionsRef.current.values());
+			if (positions.length === 0) return;
+			let minX = Number.POSITIVE_INFINITY;
+			let maxX = Number.NEGATIVE_INFINITY;
+			let minY = Number.POSITIVE_INFINITY;
+			let maxY = Number.NEGATIVE_INFINITY;
+			for (const p of positions) {
+				if (p.x < minX) minX = p.x;
+				if (p.x > maxX) maxX = p.x;
+				if (p.y < minY) minY = p.y;
+				if (p.y > maxY) maxY = p.y;
+			}
+			// Pad bounds for the node card extents (240×100 per nodeSize prop).
+			const NODE_W = 240;
+			const NODE_H = 100;
+			const treeW = maxX - minX + NODE_W;
+			const treeH = maxY - minY + NODE_H;
+			const MARGIN = 0.85; // leave 15% breathing room
+			const targetZoom = Math.min(
+				1,
+				Math.max(
+					0.2,
+					Math.min(
+						(dimensions.width * MARGIN) / treeW,
+						(dimensions.height * MARGIN) / treeH,
+					),
+				),
+			);
+			const treeCenterLocal = {
+				x: (minX + maxX) / 2,
+				y: (minY + maxY) / 2,
+			};
+			setZoomLevel(targetZoom);
+			animatePanTo({
+				x: dimensions.width / 2 - treeCenterLocal.x * targetZoom,
+				y: dimensions.height / 2 - treeCenterLocal.y * targetZoom,
+			});
+		};
+		window.addEventListener("roadraven:fit-view", handler);
+		return () => window.removeEventListener("roadraven:fit-view", handler);
+	}, [dimensions, animatePanTo, setZoomLevel]);
+
 	// Pan only enough to land the node inside a comfort zone (middle 50% of
 	// viewport) — recentering on every edge click whips the camera across
 	// long distances and reads as jarring.

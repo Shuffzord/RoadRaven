@@ -125,6 +125,12 @@
 
 	/* Live event pulse — saturated, distinct from selection accent */
 	--rv-pulse: #4ade80;
+
+	/* Plugin source attribution glyphs (rendered as 16px badges in node corner).
+	   Colors cascade through all themes; override per-theme only if contrast fails. */
+	--rv-plugin-claude-code-bg: #d97757;
+	--rv-plugin-github-actions-bg: #2088ff;
+	--rv-plugin-default-bg: #64748b;
 }
 
 /* ============================================================

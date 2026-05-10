@@ -747,6 +747,22 @@ export async function handleAgentRequest(
 			return { ok: true, data: { filePath: path, schema: out.data } };
 		}
 
+		// -------- VIEWPORT TOOLS --------
+		case "cameraFitView": {
+			// No node target — viewport-only. Schema-required gate already
+			// passed above (SCHEMA_OPTIONAL excludes this tool, so a roadmap
+			// must be loaded for the bounding box to mean anything).
+			store.fitView();
+			appendAgentDrawerEvent(
+				"cameraFitView",
+				LIFECYCLE_NODE_ID,
+				args,
+				store,
+				eventLog,
+			);
+			return { ok: true, data: { ok: true } };
+		}
+
 		// -------- DEFAULT --------
 		default:
 			return {

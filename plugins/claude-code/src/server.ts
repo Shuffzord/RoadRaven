@@ -271,6 +271,19 @@ server.registerTool(
 	agentToolCallback("openFile", wsClient),
 );
 
+// -------- Viewport tools (Storytelling-Video Prereq 2) --------
+
+server.registerTool(
+	"cameraFitView",
+	{
+		title: "Fit the entire RoadRaven tree into the viewport",
+		description:
+			"Compute a zoom + pan that fits all nodes into the viewport with margin. No-op when no roadmap is loaded. Used by automated demos / recordings to pull-back the camera; safe for live agent use too.",
+		inputSchema: z.object({}),
+	},
+	agentToolCallback("cameraFitView", wsClient),
+);
+
 // -------- Shutdown + transport (Phase 4 carry-forward, unchanged) --------
 
 const shutdown = async () => {

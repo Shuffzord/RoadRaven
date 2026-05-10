@@ -157,6 +157,8 @@ const TOOL_SCHEMAS: Record<string, z.ZodType> = {
 	saveFile: SaveFileInputSchema,
 	saveFileAs: SaveFileAsInputSchema,
 	openFile: OpenFileInputSchema,
+	// Viewport
+	cameraFitView: NoArgsSchema,
 };
 
 export type ValidationResult =

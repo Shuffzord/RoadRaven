@@ -278,6 +278,7 @@ interface RoadmapState {
 
 	// Viewport actions
 	resetView: () => void;
+	fitView: () => void;
 	setTranslate: (translate: { x: number; y: number }) => void;
 	setZoomLevel: (zoom: number) => void;
 
@@ -826,6 +827,15 @@ export const useRoadmapStore = create<RoadmapState>((set, get) => {
 				translate: { x: canvasWidth / 2, y: canvasHeight / 3 },
 				zoomLevel: 0.8,
 			});
+		},
+
+		// Fit the entire tree into the viewport by computing a bounding box from
+		// the cached node positions inside Canvas and applying a fit-zoom + center.
+		// Implementation lives in Canvas (it owns nodePositionsRef); the store
+		// dispatches a CustomEvent the Canvas listener consumes.
+		fitView: () => {
+			if (typeof window === "undefined") return;
+			window.dispatchEvent(new CustomEvent("roadraven:fit-view"));
 		},
 
 		setTranslate: (translate) => {
