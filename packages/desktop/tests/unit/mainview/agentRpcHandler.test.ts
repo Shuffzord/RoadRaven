@@ -382,4 +382,39 @@ describe("agentRpcHandler — D-12 openFile auto-flushes pending autosave", () =
 		expect(result.ok).toBe(true);
 		expect(triggerSpy).toHaveBeenCalled();
 	});
+
+	// WR-04 (06-REVIEW): autosave timeout must surface as a structured
+	// `autosave_timeout` code, not the generic `internal_error` from the
+	// outer catch in agentRequestHandler. The agent needs to distinguish
+	// "previous file may not be saved" from any other internal failure.
+	it("returns code='autosave_timeout' when autosave never lands within 5s (WR-04)", async () => {
+		vi.useFakeTimers();
+		try {
+			useRoadmapStore.setState({
+				dataKey: "999",
+				lastSavedDataKey: "0",
+				saveState: "saving",
+			} as never);
+
+			// triggerSave is a no-op so saveState stays 'saving' forever.
+			vi.spyOn(useRoadmapStore.getState(), "triggerSave").mockImplementation(
+				() => {
+					/* never settles */
+				},
+			);
+
+			const promise = handleAgentRequest("openFile", {
+				path: "/tmp/test/other.json",
+			});
+			// Advance past the 5s timeout window.
+			await vi.advanceTimersByTimeAsync(5_001);
+			const result = await promise;
+			expect(result.ok).toBe(false);
+			const err = result as { ok: false; code: string; error: string };
+			expect(err.code).toBe("autosave_timeout");
+			expect(err.error.toLowerCase()).toContain("autosave");
+		} finally {
+			vi.useRealTimers();
+		}
+	});
 });

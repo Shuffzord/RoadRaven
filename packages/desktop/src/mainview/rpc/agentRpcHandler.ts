@@ -609,29 +609,46 @@ export async function handleAgentRequest(
 			// D-12: auto-flush pending autosave before opening. If hasUnsavedEdits is true,
 			// synchronously trigger a save and wait for saveState === 'saved' (or a 5s timeout)
 			// before invoking electroview.rpc.request.loadFile.
+			//
+			// WR-04 (06-REVIEW): catch the timeout here and return a structured
+			// `autosave_timeout` error rather than letting the throw bubble up
+			// to agentRequestHandler's outer try/catch (which would emit the
+			// generic `internal_error`). The agent needs to know the previous
+			// file may not be saved so it can call saveFile and retry.
 			const { hasUnsavedEdits } = await import("../store/roadmapStore");
 			if (hasUnsavedEdits(useRoadmapStore.getState())) {
 				useRoadmapStore.getState().triggerSave();
-				await new Promise<void>((resolve, reject) => {
-					const t = setTimeout(() => {
-						unsub();
-						reject(new Error("autosave timeout"));
-					}, 5000);
-					const unsub = useRoadmapStore.subscribe((s) => {
-						if (s.saveState === "saved") {
+				try {
+					await new Promise<void>((resolve, reject) => {
+						const t = setTimeout(() => {
+							unsub();
+							reject(new Error("autosave timeout"));
+						}, 5000);
+						const unsub = useRoadmapStore.subscribe((s) => {
+							if (s.saveState === "saved") {
+								clearTimeout(t);
+								unsub();
+								resolve();
+							}
+						});
+						// Edge case: triggerSave was synchronous (test stub) and saveState is already
+						// 'saved' by the time we subscribe. Check once after subscribing.
+						if (useRoadmapStore.getState().saveState === "saved") {
 							clearTimeout(t);
 							unsub();
 							resolve();
 						}
 					});
-					// Edge case: triggerSave was synchronous (test stub) and saveState is already
-					// 'saved' by the time we subscribe. Check once after subscribing.
-					if (useRoadmapStore.getState().saveState === "saved") {
-						clearTimeout(t);
-						unsub();
-						resolve();
-					}
-				});
+				} catch (err) {
+					return {
+						ok: false,
+						error:
+							"Autosave did not complete within 5s. Previous file may be unsaved.",
+						code: "autosave_timeout",
+						hint: "Call saveFile manually before retrying openFile.",
+						data: { detail: String(err) },
+					};
+				}
 			}
 
 			const { electroview } = await import("../rpc");
