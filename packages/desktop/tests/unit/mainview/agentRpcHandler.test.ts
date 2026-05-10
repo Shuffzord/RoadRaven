@@ -265,6 +265,73 @@ describe("agentRpcHandler — moveNode self-move rejection (CR-01 / CR-02)", () 
 	});
 });
 
+// WR-03 (06-REVIEW): createRoadmap must apply overrides through Zustand
+// setState (immutable spread) so subscribers receive a state-change
+// notification, AND Zod-validate statusConfig / typeConfig so malformed
+// config entries don't slip through the unchecked `as` cast.
+describe("agentRpcHandler — createRoadmap immutable update + Zod validation (WR-03)", () => {
+	beforeEach(() => {
+		useRoadmapStore.setState({
+			schema: null,
+			filePath: null,
+			nodeIndex: new Map(),
+		});
+		useEventLogStore.setState({ rows: [] });
+	});
+	afterEach(() => {
+		useRoadmapStore.setState({
+			schema: null,
+			filePath: null,
+			nodeIndex: new Map(),
+		});
+		useEventLogStore.setState({ rows: [] });
+	});
+
+	it("applies title via setState (a Zustand subscriber sees the change)", async () => {
+		const seen: Array<string | null> = [];
+		const unsub = useRoadmapStore.subscribe((s) =>
+			seen.push(s.schema?.title ?? null),
+		);
+		try {
+			await handleAgentRequest("createRoadmap", {
+				title: "Migration Roadmap",
+			});
+			// Subscriber must have observed at least one snapshot whose title
+			// matches the override (proves setState ran, not direct mutation).
+			expect(seen).toContain("Migration Roadmap");
+		} finally {
+			unsub();
+		}
+	});
+
+	it("rejects statusConfig with missing required fields (id / label) — WR-03", async () => {
+		const result = await handleAgentRequest("createRoadmap", {
+			statusConfig: [{ id: "x" }], // missing label
+		});
+		expect(result.ok).toBe(false);
+		const err = result as { ok: false; code: string };
+		expect(err.code).toBe("invalid_input");
+		// State is still post-newUntitledSchema; the old code would have
+		// silently accepted the malformed config via the unchecked cast.
+		const schema = useRoadmapStore.getState().schema;
+		// statusConfig must NOT have been overwritten with the malformed value.
+		expect(schema?.statusConfig?.[0]?.id).not.toBe("x");
+	});
+
+	it("accepts well-formed statusConfig + typeConfig (regression on the happy path)", async () => {
+		const result = await handleAgentRequest("createRoadmap", {
+			title: "T",
+			statusConfig: [{ id: "open", label: "Open" }],
+			typeConfig: [{ id: "task", label: "Task" }],
+		});
+		expect(result.ok).toBe(true);
+		const schema = useRoadmapStore.getState().schema;
+		expect(schema?.title).toBe("T");
+		expect(schema?.statusConfig).toEqual([{ id: "open", label: "Open" }]);
+		expect(schema?.typeConfig).toEqual([{ id: "task", label: "Task" }]);
+	});
+});
+
 describe("agentRpcHandler — D-12 openFile auto-flushes pending autosave", () => {
 	beforeEach(() => {
 		useRoadmapStore.getState().loadSchema(makeSchema(), "/tmp/test.json");

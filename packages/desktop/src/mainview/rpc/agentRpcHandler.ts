@@ -8,7 +8,12 @@
 // Renderer-side gates: no_file_loaded (D-06), node_not_found,
 // cascade_required (D-11), cannot_delete_last_root, move_would_create_cycle,
 // unknown_tool.
+import { z } from "zod";
 import type { RoadmapNode } from "../../../../../packages/core/src/schema";
+import {
+	StatusConfigSchema,
+	TypeConfigSchema,
+} from "../../../../../packages/core/src/schema";
 import type { IntegrationEvent } from "../../../../../shared/types";
 
 export type AgentResult =
@@ -319,19 +324,55 @@ export async function handleAgentRequest(
 
 		case "createRoadmap": {
 			store.newUntitledSchema();
-			// Optional title/configs override after creation
-			const post = useRoadmapStore.getState();
-			if (post.schema) {
-				if (typeof args.title === "string") post.schema.title = args.title;
-				if (Array.isArray(args.statusConfig)) {
-					post.schema.statusConfig =
-						args.statusConfig as typeof post.schema.statusConfig;
+			// Optional title/configs override after creation.
+			//
+			// WR-03 (06-REVIEW): apply overrides via useRoadmapStore.setState
+			// (immutable spread) instead of mutating post.schema directly.
+			// The previous form mutated the same object reference Zustand
+			// holds, so subscribers were not notified — drawer audit + any UI
+			// bound to schema.title would not re-render until something else
+			// triggered a state update.
+			//
+			// Also Zod-validates statusConfig / typeConfig before accepting
+			// them — the prior `as typeof ...` cast let malformed configs
+			// (missing required `id`/`label`) through, breaking subsequent
+			// operations that assume well-formed entries.
+			const updates: {
+				title?: string;
+				statusConfig?: z.infer<typeof StatusConfigSchema>[];
+				typeConfig?: z.infer<typeof TypeConfigSchema>[];
+			} = {};
+			if (typeof args.title === "string") updates.title = args.title;
+			if (Array.isArray(args.statusConfig)) {
+				const parsed = z.array(StatusConfigSchema).safeParse(args.statusConfig);
+				if (!parsed.success) {
+					return {
+						ok: false,
+						error: `Invalid statusConfig: ${parsed.error.issues[0].message}`,
+						code: "invalid_input",
+						hint: "Each entry must have id and label.",
+					};
 				}
-				if (Array.isArray(args.typeConfig)) {
-					post.schema.typeConfig =
-						args.typeConfig as typeof post.schema.typeConfig;
-				}
+				updates.statusConfig = parsed.data;
 			}
+			if (Array.isArray(args.typeConfig)) {
+				const parsed = z.array(TypeConfigSchema).safeParse(args.typeConfig);
+				if (!parsed.success) {
+					return {
+						ok: false,
+						error: `Invalid typeConfig: ${parsed.error.issues[0].message}`,
+						code: "invalid_input",
+						hint: "Each entry must have id and label.",
+					};
+				}
+				updates.typeConfig = parsed.data;
+			}
+			if (Object.keys(updates).length > 0) {
+				useRoadmapStore.setState((s) => ({
+					schema: s.schema ? { ...s.schema, ...updates } : s.schema,
+				}));
+			}
+			const post = useRoadmapStore.getState();
 			appendAgentDrawerEvent(
 				"createRoadmap",
 				"__lifecycle__",
