@@ -119,6 +119,13 @@ export async function agentRequestHandler(
 	// would allowlist paths the agent never managed to actually open (file
 	// missing, JSON broken) — giving the agent quiet write access to those
 	// paths via later saveFile calls.
+	//
+	// PR review follow-up: only `openFile` propagates `args.path` to the actual
+	// file operation. `saveFileAs` opens a native dialog and the user picks
+	// the path — so the agent's `args.path` would be a ghost entry unrelated
+	// to the file actually written. We skip the deferred push for saveFileAs;
+	// after a successful save, `cachedMainPath` rebases to the real chosen
+	// path, so its parent dir becomes the new allowlist root automatically.
 	let pendingAllowlistPath: string | null = null;
 	if (request.method === "openFile" || request.method === "saveFileAs") {
 		const path = (validatedParams as { path?: unknown }).path;
@@ -133,11 +140,14 @@ export async function agentRequestHandler(
 			);
 			return;
 		}
-		// Defer push until renderer success (see post-success branch below).
-		pendingAllowlistPath = path;
+		// Only openFile gets a deferred push — saveFileAs uses a dialog and
+		// the agent's args.path is not the path the user actually picks.
+		if (request.method === "openFile") {
+			pendingAllowlistPath = path;
+		}
 	}
 
-	// GATE 3 — cross-ref boundary check for moveNode (RESEARCH §Risks L-08).
+	// GATE 4 — cross-ref boundary check for moveNode (RESEARCH §Risks L-08).
 	//
 	// CR-03 (Phase 6 06-REVIEW): the prior `owner1 && owner2 && owner1 !== owner2`
 	// guard failed OPEN for any node missing from the ownership map. Agent-created
@@ -176,7 +186,7 @@ export async function agentRequestHandler(
 		}
 	}
 
-	// GATE 4 — forward to renderer (no_file_loaded, node_not_found, cascade_required,
+	// GATE 5 — forward to renderer (no_file_loaded, node_not_found, cascade_required,
 	//           move_would_create_cycle, cannot_delete_last_root all enforced renderer-side)
 	try {
 		if (!mainWindow.webview.rpc) {

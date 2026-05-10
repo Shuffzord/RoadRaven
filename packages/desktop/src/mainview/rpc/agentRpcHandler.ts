@@ -255,7 +255,9 @@ export async function handleAgentRequest(
 	tool: string,
 	args: Record<string, unknown>,
 ): Promise<AgentResult> {
-	const { useRoadmapStore } = await import("../store/roadmapStore");
+	const { useRoadmapStore, hasUnsavedEdits } = await import(
+		"../store/roadmapStore"
+	);
 	const { useEventLogStore } = await import("../store/eventLogStore");
 	const store = useRoadmapStore.getState();
 	const eventLog = useEventLogStore.getState();
@@ -666,6 +668,7 @@ export async function handleAgentRequest(
 					ok: false,
 					error: "User cancelled save dialog.",
 					code: "save_error",
+					hint: "saveFileAs in v1 always opens a native dialog; the args.path argument is not used. The user picks the path interactively. Do not retry with the same path — instead surface the cancellation to the user, or call saveFile to write to the currently loaded path.",
 				};
 			}
 			return { ok: true, data: { filePath: out.filePath } };
@@ -682,7 +685,6 @@ export async function handleAgentRequest(
 			// to agentRequestHandler's outer try/catch (which would emit the
 			// generic `internal_error`). The agent needs to know the previous
 			// file may not be saved so it can call saveFile and retry.
-			const { hasUnsavedEdits } = await import("../store/roadmapStore");
 			if (hasUnsavedEdits(useRoadmapStore.getState())) {
 				useRoadmapStore.getState().triggerSave();
 				try {

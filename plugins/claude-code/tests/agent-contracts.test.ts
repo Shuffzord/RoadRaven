@@ -52,10 +52,15 @@ describe("FindNodesInputSchema (D-03 AND-combined filter)", () => {
 		expect(FindNodesInputSchema.safeParse({ titleContains: 42 }).success).toBe(
 			false,
 		);
-		// parentId must be a UUID
-		expect(
-			FindNodesInputSchema.safeParse({ parentId: "not-a-uuid" }).success,
-		).toBe(false);
+		// parentId is a permissive id string (RESEARCH §2.1 — Phase 4 allows
+		// non-UUID ids for user-authored schemas). Non-empty strings pass.
+		expect(FindNodesInputSchema.safeParse({ parentId: "task-1" }).success).toBe(
+			true,
+		);
+		// Empty parentId is rejected (.min(1)).
+		expect(FindNodesInputSchema.safeParse({ parentId: "" }).success).toBe(
+			false,
+		);
 	});
 });
 
