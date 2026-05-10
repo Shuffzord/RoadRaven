@@ -286,14 +286,14 @@ export async function handleAgentRequest(
 			// entirely and return schema.nodes directly. The clone runs only
 			// when liveEventMeta has at least one entry — same correctness as
 			// before, materially less garbage on every getRoadmap call.
-			const hasLiveOverlay = Object.keys(liveEventMeta).length > 0;
+			//
 			// biome-ignore lint/style/noNonNullAssertion: schema null-checked above
+			const safeSchema = schema!;
+			const hasLiveOverlay = Object.keys(liveEventMeta).length > 0;
 			const mergedNodes = hasLiveOverlay
-				? // biome-ignore lint/style/noNonNullAssertion: schema null-checked above
-					schema!.nodes.map((n) => walkAndMerge(n, liveEventMeta))
-				: // biome-ignore lint/style/noNonNullAssertion: schema null-checked above
-					schema!.nodes;
-			const mergedSchema = { ...schema!, nodes: mergedNodes };
+				? safeSchema.nodes.map((n) => walkAndMerge(n, liveEventMeta))
+				: safeSchema.nodes;
+			const mergedSchema = { ...safeSchema, nodes: mergedNodes };
 			return {
 				ok: true,
 				data: {
