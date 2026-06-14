@@ -1,14 +1,31 @@
 # RoadRaven
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
+[![Status: Alpha v0.5](https://img.shields.io/badge/status-alpha%20v0.5-orange.svg)](#feature-status)
+[![Platform: Windows | Linux](https://img.shields.io/badge/platform-Windows%20%7C%20Linux-blue.svg)](#install)
+
 A keyboard-first desktop editor for visual roadmap trees. Nodes map to tasks or agents; status updates can stream in over WebSocket (Claude Code integration). Plain JSON data model, atomic autosave, markdown notes.
 
 > Built on **Electrobun** (not Electron). Runtime is **Bun**.
+
+> ⚠️ **Alpha (v0.5).** RoadRaven is an early public release. Core editing and the
+> live Event API work today, but expect rough edges — the data format, APIs, and
+> packaging may still change before v1.0. Bug reports and feedback are very welcome.
+
+## Demo
+
+<!-- TODO(public-launch): replace these placeholders.
+     1. Hero screenshot of the tree canvas — save under docs/assets/ and embed here.
+     2. Demo video walkthrough (keyboard editing + a live WebSocket status update) —
+        a video is in production; drop the embed/link here when ready. -->
+
+> 📷 _Screenshot coming soon._ &nbsp;&nbsp; 🎬 _Demo video coming soon._
 
 ---
 
 ## Install
 
-> **v1.0 ships Windows + Linux installers.** macOS is deferred to v1.1
+> **This alpha (v0.5) ships Windows + Linux installers.** macOS is planned
 > (see [Feature status](#feature-status) below).
 
 Download the latest release from
@@ -20,8 +37,8 @@ Download the latest release from
 2. Extract the `.zip`.
 3. Double-click `RoadRaven-Setup.exe`.
 4. **Windows SmartScreen will warn:** "Windows protected your PC."
-   This is expected — RoadRaven v1.0 ships unsigned (no Authenticode
-   certificate, deferred to v1.1). To install:
+   This is expected — RoadRaven ships unsigned in this alpha (no Authenticode
+   certificate yet; code signing is planned for a later release). To install:
    - Click **More info**.
    - Click **Run anyway**.
 5. Follow the installer prompts.
@@ -54,6 +71,9 @@ Download the latest release from
 
 ### npm packages (for producers and library consumers)
 
+> Contributors to this repo use **bun / bunx** (see [CONTRIBUTING.md](./CONTRIBUTING.md)).
+> Consumers of the published packages may use any package manager — `npm` shown below.
+
 [`@roadraven/core`](https://www.npmjs.com/package/@roadraven/core) — Zod
 schemas + types. Use this if you're building an Event Producer:
 
@@ -75,8 +95,8 @@ for the full Event API contract.
 
 ## Feature status
 
-| What | v1.0 (this release) | v1.1 (planned) |
-|------|--------------------|----------------|
+| What | v0.5 (this alpha) | Planned |
+|------|-------------------|---------|
 | Tree canvas + keyboard editor | available | — |
 | Themes (dark / light / high-contrast) | available | — |
 | Side-panel CodeMirror notes + metadata | available | — |
@@ -94,8 +114,8 @@ for the full Event API contract.
 | Drag-and-drop reordering | deferred | planned |
 | Undo / redo | deferred | planned |
 
-See [`.planning/REQUIREMENTS.md`](./.planning/REQUIREMENTS.md) for the
-complete v1 vs. v2 requirement breakdown.
+See the [documentation site](https://shuffzord.github.io/RoadRaven/) for more
+detail on current capabilities and what's planned next.
 
 ---
 
@@ -148,10 +168,15 @@ bun run build:canary  # Production build
 To edit: open a roadmap JSON (Welcome screen → recent files / sample, or the `Open` button), select a node, then press `e` or click the `[E]` pencil to enter edit mode. Changes autosave to disk.
 
 ```bash
-bunx vitest run                                              # Tests (CI mode)
-bunx @biomejs/biome lint packages/desktop/src/ shared/       # Lint
-bunx vite build --root packages/desktop                      # Production build check
+bun run verify        # Full check: tests + typecheck + build + lint (recommended)
+bun run test          # Tests only
+bun run test:lint     # Lint only
+bun run test:build    # Production build check
 ```
+
+> Use the `bun run` scripts rather than calling `bunx vitest` / `bunx vite`
+> directly — the wrappers pin the workspace versions (see
+> [CONTRIBUTING.md](./CONTRIBUTING.md) for the full workflow).
 
 ## Project structure
 
