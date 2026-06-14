@@ -3,6 +3,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 [![Status: Alpha v0.5](https://img.shields.io/badge/status-alpha%20v0.5-orange.svg)](#feature-status)
 [![Platform: Windows | Linux](https://img.shields.io/badge/platform-Windows%20%7C%20Linux-blue.svg)](#install)
+[![Watch the demo](https://img.shields.io/badge/%E2%96%B6-Watch_the_demo-FF4500.svg)](#demo)
 
 **Your plan. Watching itself.**
 
@@ -19,15 +20,20 @@ no cloud, no accounts. It's just a file, living in your repo.
 
 ## Demo
 
+How the tree looks like
+
 ![RoadRaven — navigate your project as a living tree: phases, plans, and tasks expand left-to-right with live status at every node](screenshots/tree.png)
 
-Inspect any node in the side panel — status, type, metadata, markdown notes, and the live event feed:
+Inspect any node in the side panel — status, type, metadata, markdown notes:
 
 ![RoadRaven Node Details side panel](screenshots/sidepanel-details.png)
 
-<!-- TODO(public-launch): a demo video is in production — drop the embed/link here when ready. -->
+<!-- TODO(public-launch): drag the .mp4 into a GitHub issue/PR to get a
+     github.com/user-attachments/assets/<id> URL, then paste that URL on its own
+     line below for an inline player — and repoint the "Watch the demo" badge above
+     from #demo to that URL. -->
 
-> 🎬 _Demo video coming soon._
+🎬 **Watch the demo** — _video coming soon._
 
 ---
 
