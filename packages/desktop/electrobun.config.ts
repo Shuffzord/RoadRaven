@@ -8,7 +8,7 @@ export default {
 	app: {
 		name: "RoadRaven",
 		identifier: "RoadRaven.electrobun.dev",
-		version: "0.0.1",
+		version: "0.5.0",
 	},
 	build: {
 		copy: {
