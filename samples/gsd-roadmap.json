@@ -743,13 +743,13 @@
                   "status": "completed",
                   "type": "gate",
                   "notes": "Human-verified performance checkpoint. Manual Playwright test confirming 30 fps on rendered 300+ node tree.\n\n**Decision D-09:** fps gate approved by human reviewer on 2026-04-15.\n\n**✅ Status:** Manual Playwright fps checkpoint confirmed smooth rendering under live updates.",
+                  "updatedAt": "2026-06-14T11:08:38.684Z",
                   "metadata": {
                     "decision": "D-09",
                     "verifiedBy": "human",
                     "verifiedDate": "2026-04-15",
                     "result": "PASS"
-                  },
-                  "updatedAt": "2026-06-14T11:08:38.684Z"
+                  }
                 }
               ]
             }
@@ -780,6 +780,7 @@
               "status": "completed",
               "type": "plan",
               "notes": "# Node Mutation Operations\n\nAll CRUD operations on nodes: rename, add, delete, duplicate, copy/paste, move, status change, tree navigation.\n\n**Key Behaviors:**\n- Inline rename with Enter/Escape\n- Add child/sibling nodes\n- Delete with confirmation for non-leaf nodes (shows child count)\n- Duplicate node (deep copy with new UUIDs)\n- Copy/paste preserves full subtree\n- Move node (drag-and-drop or keyboard)\n- Status cycling via keyboard shortcut\n- Arrow-key tree navigation\n\n**✅ Status:** Inline rename, add/delete/duplicate/move, copy-paste subtree, status cycling, and arrow-key navigation all work via keyboard and menu.",
+              "updatedAt": "2026-06-14T11:08:38.921Z",
               "metadata": {
                 "dependencies": []
               },
@@ -797,9 +798,9 @@
                   "title": "Add child/sibling node",
                   "status": "completed",
                   "type": "task",
-                  "children": [],
                   "notes": "**✅ Status:** Add child/sibling node — completed and verified during Phase 03.",
-                  "updatedAt": "2026-06-14T11:08:39.320Z"
+                  "updatedAt": "2026-06-14T11:08:39.320Z",
+                  "children": []
                 },
                 {
                   "id": "a0000000-4103-4000-8000-000000000000",
@@ -807,8 +808,8 @@
                   "status": "completed",
                   "type": "task",
                   "notes": "Non-leaf delete shows confirmation dialog with child count. Leaf nodes delete immediately.\n\n**✅ Status:** Delete node with confirmation dialog — completed and verified during Phase 03.",
-                  "children": [],
-                  "updatedAt": "2026-06-14T11:08:38.766Z"
+                  "updatedAt": "2026-06-14T11:08:38.766Z",
+                  "children": []
                 },
                 {
                   "id": "a0000000-4104-4000-8000-000000000000",
@@ -850,8 +851,7 @@
                   "notes": "**✅ Status:** Arrow-key tree navigation — completed and verified during Phase 03.",
                   "updatedAt": "2026-06-14T11:08:40.960Z"
                 }
-              ],
-              "updatedAt": "2026-06-14T11:08:38.921Z"
+              ]
             },
             {
               "id": "a0000000-4200-4000-8000-000000000000",
@@ -859,6 +859,7 @@
               "status": "completed",
               "type": "plan",
               "notes": "# Context Menu + Linux Fallback\n\nRight-click context menu for all node operations. Custom fallback for Linux where `ContextMenu.showContextMenu()` is a no-op.\n\n**Requirements:**\n- Appears within 50ms of right-click\n- Fully keyboard-navigable\n- ARIA-compliant\n- Linux fallback using HTML/CSS menu\n\n**✅ Status:** Radix-based ARIA context menu plus a Linux webview-rendered fallback menu are implemented.",
+              "updatedAt": "2026-06-14T11:08:41.399Z",
               "metadata": {
                 "dependencies": [
                   "03-01"
@@ -871,8 +872,8 @@
                   "status": "completed",
                   "type": "task",
                   "notes": "Right-click triggers native context menu via Electrobun `ContextMenu.showContextMenu()`. Must appear within 50ms.\n\n**✅ Status:** Native context menu implementation — completed and verified during Phase 03.",
-                  "children": [],
-                  "updatedAt": "2026-06-14T11:08:41.509Z"
+                  "updatedAt": "2026-06-14T11:08:41.509Z",
+                  "children": []
                 },
                 {
                   "id": "a0000000-4202-4000-8000-000000000000",
@@ -890,8 +891,7 @@
                   "notes": "Custom HTML/CSS context menu for Linux where native `ContextMenu.showContextMenu()` is a no-op. Matches native styling.\n\n**✅ Status:** Linux HTML/CSS fallback menu — completed and verified during Phase 03.",
                   "updatedAt": "2026-06-14T11:08:41.533Z"
                 }
-              ],
-              "updatedAt": "2026-06-14T11:08:41.399Z"
+              ]
             },
             {
               "id": "a0000000-4300-4000-8000-000000000000",
@@ -899,6 +899,7 @@
               "status": "completed",
               "type": "plan",
               "notes": "# Side Panel Editor\n\nReplace read-only side panel with editable view. CodeMirror 6 for markdown notes editing, metadata table for structured fields.\n\n**Key Features:**\n- CodeMirror 6 markdown editor\n- Autosave debounced 1s\n- Metadata table (key-value editor)\n- Type and status dropdowns\n\n**✅ Status:** CodeMirror 6 markdown editor (Edit/Preview/Split) with editable metadata, title, status, and type is wired into the side panel.",
+              "updatedAt": "2026-06-14T11:08:41.126Z",
               "metadata": {
                 "dependencies": [
                   "03-01"
@@ -937,8 +938,7 @@
                   "notes": "Dropdown selectors populated from schema's `statusConfig` and `typeConfig` arrays.\n\n**✅ Status:** Type and status dropdown selectors — completed and verified during Phase 03.",
                   "updatedAt": "2026-06-14T11:08:43.334Z"
                 }
-              ],
-              "updatedAt": "2026-06-14T11:08:41.126Z"
+              ]
             },
             {
               "id": "a0000000-4400-4000-8000-000000000000",
@@ -946,6 +946,7 @@
               "status": "completed",
               "type": "plan",
               "notes": "# Autosave + Atomic Writes + $ref Write-Back\n\nPersistence layer with atomic writes, autosave, and `$ref` mutation routing.\n\n**Key Design:**\n- 2s debounced write after any mutation\n- 30s periodic autosave\n- Flush on `before-quit`\n- `.tmp` → rename atomic write (Windows: 3 attempts, 50ms apart)\n- Status bar shows: Saved ✓ / Saving... / Error saving\n- `$ref` mutations write to correct originating file\n- Cross-boundary moves blocked with error\n\n**✅ Status:** Debounced + periodic autosave, atomic .tmp→rename writes, save indicator, and $ref write-back with cross-boundary blocking are complete.",
+              "updatedAt": "2026-06-14T11:08:43.405Z",
               "metadata": {
                 "dependencies": [
                   "03-01",
@@ -1009,8 +1010,7 @@
                   "notes": "Moving a node across `$ref` boundaries is blocked with an error message. Nodes stay within their originating file.\n\n**✅ Status:** Block cross-boundary $ref moves — completed and verified during Phase 03.",
                   "updatedAt": "2026-06-14T11:08:52.284Z"
                 }
-              ],
-              "updatedAt": "2026-06-14T11:08:43.405Z"
+              ]
             }
           ]
         },
@@ -1040,6 +1040,7 @@
               "status": "completed",
               "type": "research",
               "notes": "# Research Gate\n\nDesign document covering all Event API internals. **No implementation until approved.**\n\n**Topics:**\n- WebSocket lifecycle (connect, heartbeat, reconnect, close)\n- Event contract specification\n- 100ms debounce buffer design\n- Connection-drop handling\n- Malformed-event handling\n- Event log storage format\n\n**✅ Status:** Research gate produced the Event API design covering WS lifecycle, event contract, debounce, errors, and log storage.",
+              "updatedAt": "2026-06-14T11:08:52.272Z",
               "metadata": {
                 "dependencies": [],
                 "gate": true
@@ -1085,8 +1086,7 @@
                   "notes": "Define in-memory event log structure. Rotation policy, max entries, export format.\n\n**✅ Status:** Event log storage format — completed and verified during Phase 04.",
                   "updatedAt": "2026-06-14T11:08:52.013Z"
                 }
-              ],
-              "updatedAt": "2026-06-14T11:08:52.272Z"
+              ]
             },
             {
               "id": "a0000000-5200-4000-8000-000000000000",
@@ -1094,6 +1094,7 @@
               "status": "completed",
               "type": "plan",
               "notes": "# WebSocket Server + Event Routing\n\nBun-side WebSocket server receiving events and routing to node store.\n\n**Key Details:**\n- `ws://127.0.0.1:<port>` — port visible to user\n- Event contract validation (Zod)\n- 100ms debounce buffer on Bun side\n- `plugin` and `subscribe` fields parsed but not acted on\n- Route validated events to `roadmapStore.updateNodeStatus()`\n\n**✅ Status:** Bun WebSocket server validates events with Zod, coalesces on a 100ms trailing edge, and routes to the store with a .events.jsonl sidecar.",
+              "updatedAt": "2026-06-14T11:08:52.306Z",
               "metadata": {
                 "dependencies": [
                   "04-01"
@@ -1140,8 +1141,7 @@
                   "notes": "Valid events routed to `roadmapStore.updateNodeStatus()` via RPC. Unknown `nodeId` events produce non-blocking toast.\n\n**✅ Status:** Route events to roadmapStore — completed and verified during Phase 04.",
                   "updatedAt": "2026-06-14T11:08:54.142Z"
                 }
-              ],
-              "updatedAt": "2026-06-14T11:08:52.306Z"
+              ]
             },
             {
               "id": "a0000000-5300-4000-8000-000000000000",
@@ -1149,6 +1149,7 @@
               "status": "completed",
               "type": "plan",
               "notes": "# Event API UI\n\nVisual feedback for live events: animated pulse, integration zone in side panel, toasts, event log.\n\n**Deliverables:**\n- Animated pulse on nodes receiving events\n- Side panel Integration zone (connection status, last event, last meta)\n- Non-blocking error toasts\n- Event log in View menu\n\n**✅ Status:** Pulse indicator, side-panel Integration zone, non-blocking error toasts, and the event-log viewer are all implemented.",
+              "updatedAt": "2026-06-14T11:08:54.104Z",
               "metadata": {
                 "dependencies": [
                   "04-02"
@@ -1187,8 +1188,7 @@
                   "notes": "In-app event log showing all received events with timestamp, nodeId, status, source. Accessible from View menu.\n\n**✅ Status:** Event log viewer (View menu) — completed and verified during Phase 04.",
                   "updatedAt": "2026-06-14T11:08:55.167Z"
                 }
-              ],
-              "updatedAt": "2026-06-14T11:08:54.104Z"
+              ]
             },
             {
               "id": "a0000000-5400-4000-8000-000000000000",
@@ -1196,6 +1196,7 @@
               "status": "completed",
               "type": "plan",
               "notes": "# Claude Code MCP Wrapper\n\nReference Event Producer in `plugins/claude-code/`. Wraps event contract as MCP tools for Claude Code integration.\n\n**Deliverables:**\n- MCP tool definitions for status updates\n- WebSocket client connecting to RoadRaven\n- End-to-end test: Claude Code → MCP → WebSocket → node badge update\n\n**✅ Status:** The Claude Code MCP wrapper connects and updates node status end-to-end as the reference producer.",
+              "updatedAt": "2026-06-14T11:08:55.676Z",
               "metadata": {
                 "dependencies": [
                   "04-02",
@@ -1227,8 +1228,7 @@
                   "notes": "Full pipeline test: Claude Code invokes MCP tool → MCP sends WebSocket event → RoadRaven updates node badge. Verify within 100ms.\n\n**✅ Status:** End-to-end integration test — completed and verified during Phase 04.",
                   "updatedAt": "2026-06-14T11:09:03.939Z"
                 }
-              ],
-              "updatedAt": "2026-06-14T11:08:55.676Z"
+              ]
             }
           ]
         },
@@ -1257,6 +1257,7 @@
               "status": "completed",
               "type": "plan",
               "notes": "# Packaging + Auto-Updater\n\nNative installers for all three platforms and Electrobun auto-updater.\n\n**Installers:**\n- macOS: `.dmg`\n- Windows: `.exe`\n- Ubuntu: `.deb`\n\n**Auto-Updater:**\n- Canary + stable channels\n- `bundleCEF: true` on all platforms (confirmed from Phase 00)\n\n**Other:**\n- All actions reachable via keyboard + toolbar\n- SIGTERM handler for graceful shutdown\n\n**✅ Status:** Tag-triggered release workflow builds Windows .zip and Linux .tar.gz with the Electrobun auto-updater configured (macOS .dmg and .deb were dropped from scope).",
+              "updatedAt": "2026-06-14T11:09:00.703Z",
               "metadata": {
                 "dependencies": [
                   "05-02"
@@ -1303,8 +1304,7 @@
                   "notes": "**✅ Status:** SIGTERM graceful shutdown handler — completed and verified during Phase 05.",
                   "updatedAt": "2026-06-14T11:09:00.658Z"
                 }
-              ],
-              "updatedAt": "2026-06-14T11:09:00.703Z"
+              ]
             },
             {
               "id": "a0000000-6400-4000-8000-000000000000",
@@ -1312,6 +1312,7 @@
               "status": "completed",
               "type": "plan",
               "notes": "# npm Packages + Accessibility + Docs\n\nPublish npm packages, accessibility audit, and documentation.\n\n**npm Packages:**\n- `@roadmap-viewer/core` — zero desktop dependencies (CI enforces)\n- `@roadmap-viewer/react` — peerDependencies on React\n\n**Accessibility:**\n- Full accessibility audit\n- Keyboard-navigable tree and menus\n- Screen reader support\n\n**Documentation:**\n- README with getting started guide\n- Plugin development guide\n- API reference\n\n**✅ Status:** @roadraven/core and the Claude Code plugin publish to npm, the GitHub Pages docs site is live, and the accessibility audit passed (@roadraven/react deferred to v1.1).",
+              "updatedAt": "2026-06-14T11:09:05.826Z",
               "metadata": {
                 "dependencies": [
                   "05-02",
@@ -1357,11 +1358,10 @@
                   "status": "completed",
                   "type": "task",
                   "notes": "Guide for creating Event API producers. WebSocket contract, MCP wrapper pattern, example plugin.\n\n**✅ Status:** Write plugin development guide — completed and verified during Phase 05.",
-                  "children": [],
-                  "updatedAt": "2026-06-14T11:09:06.036Z"
+                  "updatedAt": "2026-06-14T11:09:06.036Z",
+                  "children": []
                 }
-              ],
-              "updatedAt": "2026-06-14T11:09:05.826Z"
+              ]
             }
           ]
         },
@@ -1369,55 +1369,55 @@
           "id": "9b88e55e-5f51-4552-bc76-7121e66904f4",
           "title": "Phase 06 — Agentic Roadmap Authoring",
           "status": "completed",
-          "createdAt": "2026-06-14T11:09:44.146Z",
-          "updatedAt": "2026-06-14T11:09:44.147Z",
           "type": "phase",
           "notes": "# Phase 06: Agentic Roadmap Authoring\n\nAgents (Claude Code and other MCP-capable LLMs) can read, create, edit, move, and delete roadmap nodes via the MCP wrapper — turning Phase 4's one-way producer→app pipe into a bidirectional contract.\n\n**Depends on:** Phase 04\n**Plans:** 6/6\n\n## Outcome\n19 MCP tools, a 4-gate safety model (kill-switch, path allowlist, cross-ref boundary, cascade/cycle), a 13-code error taxonomy, and a drawer audit trail — all contract-tested (TDD).\n\n**✅ Status:** Agents can read, create, edit, move, and delete roadmap nodes via 19 MCP tools behind a 4-gate safety model — shipped 2026-05-10 with all review findings fixed and UAT signed off.",
+          "createdAt": "2026-06-14T11:09:44.146Z",
+          "updatedAt": "2026-06-14T11:09:44.147Z",
           "children": [
             {
               "id": "85f81a77-8687-4438-b8ec-6929cdd0417d",
               "title": "Plan 06-01: Foundation Contracts",
               "status": "completed",
-              "createdAt": "2026-06-14T11:09:51.996Z",
-              "updatedAt": "2026-06-14T11:09:51.997Z",
               "type": "plan",
               "notes": "REQUIREMENTS PLUG-AGENT block, the agentRequest RPC type, the AgentErrorCode taxonomy, Zod tool-input schemas, and the agentToolCallback helper are defined with 5 contract tests.\n\n**✅ Status:** REQUIREMENTS PLUG-AGENT block, the agentRequest RPC type, the AgentErrorCode taxonomy, Zod tool-input schemas, and the agentToolCallback helper are defined with 5 contract tests.",
+              "createdAt": "2026-06-14T11:09:51.996Z",
+              "updatedAt": "2026-06-14T11:09:51.997Z",
               "children": [
                 {
                   "id": "87a4221e-b1c2-4a33-baa6-5fc774b41a58",
                   "title": "REQUIREMENTS PLUG-AGENT block + agentApi.enabled flag",
                   "status": "completed",
-                  "createdAt": "2026-06-14T11:09:52.051Z",
-                  "updatedAt": "2026-06-14T11:09:52.051Z",
                   "type": "task",
-                  "notes": "**✅ Status:** REQUIREMENTS PLUG-AGENT block + agentApi.enabled flag — completed and verified during Phase 06."
+                  "notes": "**✅ Status:** REQUIREMENTS PLUG-AGENT block + agentApi.enabled flag — completed and verified during Phase 06.",
+                  "createdAt": "2026-06-14T11:09:52.051Z",
+                  "updatedAt": "2026-06-14T11:09:52.051Z"
                 },
                 {
                   "id": "9e5e4a61-706d-4859-a848-81a5443a81b5",
                   "title": "AgentErrorCode taxonomy (single source of truth)",
                   "status": "completed",
-                  "createdAt": "2026-06-14T11:09:52.099Z",
-                  "updatedAt": "2026-06-14T11:09:52.100Z",
                   "type": "task",
-                  "notes": "**✅ Status:** AgentErrorCode taxonomy (single source of truth) — completed and verified during Phase 06."
+                  "notes": "**✅ Status:** AgentErrorCode taxonomy (single source of truth) — completed and verified during Phase 06.",
+                  "createdAt": "2026-06-14T11:09:52.099Z",
+                  "updatedAt": "2026-06-14T11:09:52.100Z"
                 },
                 {
                   "id": "4a4ba2a3-ab60-4b8e-89a4-85f7f3ce26fa",
                   "title": "tools/schemas.ts Zod tool inputs",
                   "status": "completed",
-                  "createdAt": "2026-06-14T11:09:52.154Z",
-                  "updatedAt": "2026-06-14T11:09:52.154Z",
                   "type": "task",
-                  "notes": "**✅ Status:** tools/schemas.ts Zod tool inputs — completed and verified during Phase 06."
+                  "notes": "**✅ Status:** tools/schemas.ts Zod tool inputs — completed and verified during Phase 06.",
+                  "createdAt": "2026-06-14T11:09:52.154Z",
+                  "updatedAt": "2026-06-14T11:09:52.154Z"
                 },
                 {
                   "id": "da713715-d07d-47fb-81b5-6aef28e7d562",
                   "title": "agentToolCallback helper",
                   "status": "completed",
-                  "createdAt": "2026-06-14T11:09:52.190Z",
-                  "updatedAt": "2026-06-14T11:09:52.190Z",
                   "type": "task",
-                  "notes": "**✅ Status:** agentToolCallback helper — completed and verified during Phase 06."
+                  "notes": "**✅ Status:** agentToolCallback helper — completed and verified during Phase 06.",
+                  "createdAt": "2026-06-14T11:09:52.190Z",
+                  "updatedAt": "2026-06-14T11:09:52.190Z"
                 }
               ]
             },
@@ -1425,37 +1425,37 @@
               "id": "0e47ff07-84c0-46ef-962d-3c8858cd60b1",
               "title": "Plan 06-02: WS Transport + Correlation",
               "status": "completed",
-              "createdAt": "2026-06-14T11:09:52.243Z",
-              "updatedAt": "2026-06-14T11:09:52.243Z",
               "type": "plan",
               "notes": "wsClient.request() correlation with a 30s timeout, the 3-way IncomingFrameSchema, and the eventServer request branch are implemented with 3 transport tests.\n\n**✅ Status:** wsClient.request() correlation with a 30s timeout, the 3-way IncomingFrameSchema, and the eventServer request branch are implemented with 3 transport tests.",
+              "createdAt": "2026-06-14T11:09:52.243Z",
+              "updatedAt": "2026-06-14T11:09:52.243Z",
               "children": [
                 {
                   "id": "2825de1c-3c26-42bf-b8e9-42dcbd3a4ccb",
                   "title": "wsClient.request() correlation + 30s timeout + close cleanup",
                   "status": "completed",
-                  "createdAt": "2026-06-14T11:09:52.290Z",
-                  "updatedAt": "2026-06-14T11:09:52.291Z",
                   "type": "task",
-                  "notes": "**✅ Status:** wsClient.request() correlation + 30s timeout + close cleanup — completed and verified during Phase 06."
+                  "notes": "**✅ Status:** wsClient.request() correlation + 30s timeout + close cleanup — completed and verified during Phase 06.",
+                  "createdAt": "2026-06-14T11:09:52.290Z",
+                  "updatedAt": "2026-06-14T11:09:52.291Z"
                 },
                 {
                   "id": "f00e0909-35e3-44f9-9c87-2f6edd5cc847",
                   "title": "3-way IncomingFrameSchema (Hello | AgentRequest | Event)",
                   "status": "completed",
-                  "createdAt": "2026-06-14T11:09:52.341Z",
-                  "updatedAt": "2026-06-14T11:09:52.342Z",
                   "type": "task",
-                  "notes": "**✅ Status:** 3-way IncomingFrameSchema (Hello | AgentRequest | Event) — completed and verified during Phase 06."
+                  "notes": "**✅ Status:** 3-way IncomingFrameSchema (Hello | AgentRequest | Event) — completed and verified during Phase 06.",
+                  "createdAt": "2026-06-14T11:09:52.341Z",
+                  "updatedAt": "2026-06-14T11:09:52.342Z"
                 },
                 {
                   "id": "b071bd6b-a509-40f2-8207-ae32080c8d81",
                   "title": "eventServer type:'request' routing branch",
                   "status": "completed",
-                  "createdAt": "2026-06-14T11:09:52.387Z",
-                  "updatedAt": "2026-06-14T11:09:52.388Z",
                   "type": "task",
-                  "notes": "**✅ Status:** eventServer type:'request' routing branch — completed and verified during Phase 06."
+                  "notes": "**✅ Status:** eventServer type:'request' routing branch — completed and verified during Phase 06.",
+                  "createdAt": "2026-06-14T11:09:52.387Z",
+                  "updatedAt": "2026-06-14T11:09:52.388Z"
                 }
               ]
             },
@@ -1463,37 +1463,37 @@
               "id": "247973e3-07b4-4237-acc3-8cdcb7a84c94",
               "title": "Plan 06-03: Bun-Side Safety Gates",
               "status": "completed",
-              "createdAt": "2026-06-14T11:09:52.442Z",
-              "updatedAt": "2026-06-14T11:09:52.443Z",
               "type": "plan",
               "notes": "Kill-switch, path-traversal allowlist, and cross-ref-boundary gates fail fast on the Bun side before forwarding, covered by 6 gate tests.\n\n**✅ Status:** Kill-switch, path-traversal allowlist, and cross-ref-boundary gates fail fast on the Bun side before forwarding, covered by 6 gate tests.",
+              "createdAt": "2026-06-14T11:09:52.442Z",
+              "updatedAt": "2026-06-14T11:09:52.443Z",
               "children": [
                 {
                   "id": "c330cc6f-d9c4-43cd-b1e4-4f9ad3f628c3",
                   "title": "Kill-switch gate (agentApi.enabled)",
                   "status": "completed",
-                  "createdAt": "2026-06-14T11:09:52.497Z",
-                  "updatedAt": "2026-06-14T11:09:52.497Z",
                   "type": "task",
-                  "notes": "**✅ Status:** Kill-switch gate (agentApi.enabled) — completed and verified during Phase 06."
+                  "notes": "**✅ Status:** Kill-switch gate (agentApi.enabled) — completed and verified during Phase 06.",
+                  "createdAt": "2026-06-14T11:09:52.497Z",
+                  "updatedAt": "2026-06-14T11:09:52.497Z"
                 },
                 {
                   "id": "c3cb5f71-a5a1-4d7b-ae41-c82f78aba05c",
                   "title": "Path-traversal allowlist gate",
                   "status": "completed",
-                  "createdAt": "2026-06-14T11:09:52.545Z",
-                  "updatedAt": "2026-06-14T11:09:52.546Z",
                   "type": "task",
-                  "notes": "**✅ Status:** Path-traversal allowlist gate — completed and verified during Phase 06."
+                  "notes": "**✅ Status:** Path-traversal allowlist gate — completed and verified during Phase 06.",
+                  "createdAt": "2026-06-14T11:09:52.545Z",
+                  "updatedAt": "2026-06-14T11:09:52.546Z"
                 },
                 {
                   "id": "98eb0517-c4c9-4d89-bd97-605d99e4a319",
                   "title": "Cross-ref-boundary gate + happy-path forward",
                   "status": "completed",
-                  "createdAt": "2026-06-14T11:09:52.591Z",
-                  "updatedAt": "2026-06-14T11:09:52.592Z",
                   "type": "task",
-                  "notes": "**✅ Status:** Cross-ref-boundary gate + happy-path forward — completed and verified during Phase 06."
+                  "notes": "**✅ Status:** Cross-ref-boundary gate + happy-path forward — completed and verified during Phase 06.",
+                  "createdAt": "2026-06-14T11:09:52.591Z",
+                  "updatedAt": "2026-06-14T11:09:52.592Z"
                 }
               ]
             },
@@ -1501,46 +1501,46 @@
               "id": "8625f5bc-30cb-4590-b47d-14a66d703927",
               "title": "Plan 06-04: Renderer Dispatcher",
               "status": "completed",
-              "createdAt": "2026-06-14T11:09:52.633Z",
-              "updatedAt": "2026-06-14T11:09:52.633Z",
               "type": "plan",
               "notes": "The 18-case agentRpcHandler dispatcher and the roadmapStore.moveNode action are implemented with cycle/last-root/cascade gates, PATCH metadata, AND-filter findNodes, drawer audit, and openFile auto-flush, covered by 9 tests.\n\n**✅ Status:** The 18-case agentRpcHandler dispatcher and the roadmapStore.moveNode action are implemented with cycle/last-root/cascade gates, PATCH metadata, AND-filter findNodes, drawer audit, and openFile auto-flush, covered by 9 tests.",
+              "createdAt": "2026-06-14T11:09:52.633Z",
+              "updatedAt": "2026-06-14T11:09:52.633Z",
               "children": [
                 {
                   "id": "47518e71-8b6c-43d5-b855-c7c4bab99795",
                   "title": "roadmapStore.moveNode action (self-move + cycle safe)",
                   "status": "completed",
-                  "createdAt": "2026-06-14T11:09:52.676Z",
-                  "updatedAt": "2026-06-14T11:09:52.676Z",
                   "type": "task",
-                  "notes": "**✅ Status:** roadmapStore.moveNode action (self-move + cycle safe) — completed and verified during Phase 06."
+                  "notes": "**✅ Status:** roadmapStore.moveNode action (self-move + cycle safe) — completed and verified during Phase 06.",
+                  "createdAt": "2026-06-14T11:09:52.676Z",
+                  "updatedAt": "2026-06-14T11:09:52.676Z"
                 },
                 {
                   "id": "93836ae0-0945-4475-9622-3ad3302b4464",
                   "title": "agentRpcHandler 18-case dispatcher",
                   "status": "completed",
-                  "createdAt": "2026-06-14T11:09:52.720Z",
-                  "updatedAt": "2026-06-14T11:09:52.721Z",
                   "type": "task",
-                  "notes": "**✅ Status:** agentRpcHandler 18-case dispatcher — completed and verified during Phase 06."
+                  "notes": "**✅ Status:** agentRpcHandler 18-case dispatcher — completed and verified during Phase 06.",
+                  "createdAt": "2026-06-14T11:09:52.720Z",
+                  "updatedAt": "2026-06-14T11:09:52.721Z"
                 },
                 {
                   "id": "08cbae17-b587-498a-80d3-8d86f8b396e3",
                   "title": "PATCH metadata + AND-filter findNodes + live-overlay merge",
                   "status": "completed",
-                  "createdAt": "2026-06-14T11:09:52.766Z",
-                  "updatedAt": "2026-06-14T11:09:52.767Z",
                   "type": "task",
-                  "notes": "**✅ Status:** PATCH metadata + AND-filter findNodes + live-overlay merge — completed and verified during Phase 06."
+                  "notes": "**✅ Status:** PATCH metadata + AND-filter findNodes + live-overlay merge — completed and verified during Phase 06.",
+                  "createdAt": "2026-06-14T11:09:52.766Z",
+                  "updatedAt": "2026-06-14T11:09:52.767Z"
                 },
                 {
                   "id": "994b92ff-ca7a-48a1-8404-ab99a70bb001",
                   "title": "Drawer audit trail + openFile auto-flush",
                   "status": "completed",
-                  "createdAt": "2026-06-14T11:09:52.814Z",
-                  "updatedAt": "2026-06-14T11:09:52.814Z",
                   "type": "task",
-                  "notes": "**✅ Status:** Drawer audit trail + openFile auto-flush — completed and verified during Phase 06."
+                  "notes": "**✅ Status:** Drawer audit trail + openFile auto-flush — completed and verified during Phase 06.",
+                  "createdAt": "2026-06-14T11:09:52.814Z",
+                  "updatedAt": "2026-06-14T11:09:52.814Z"
                 }
               ]
             },
@@ -1548,28 +1548,28 @@
               "id": "3e756306-600f-40b0-83fb-8fb3b9d99834",
               "title": "Plan 06-05: MCP Tool Registration",
               "status": "completed",
-              "createdAt": "2026-06-14T11:09:52.857Z",
-              "updatedAt": "2026-06-14T11:09:52.857Z",
               "type": "plan",
               "notes": "17 net-new tools were registered via the agentToolCallback helper and updateNodeStatus rerouted through the dispatcher — 19 tools total.\n\n**✅ Status:** 17 net-new tools were registered via the agentToolCallback helper and updateNodeStatus rerouted through the dispatcher — 19 tools total.",
+              "createdAt": "2026-06-14T11:09:52.857Z",
+              "updatedAt": "2026-06-14T11:09:52.857Z",
               "children": [
                 {
                   "id": "ad1cea01-255f-4951-ba5a-b2a9cfd29735",
                   "title": "Register 17 net-new MCP tools via agentToolCallback",
                   "status": "completed",
-                  "createdAt": "2026-06-14T11:09:52.900Z",
-                  "updatedAt": "2026-06-14T11:09:52.900Z",
                   "type": "task",
-                  "notes": "**✅ Status:** Register 17 net-new MCP tools via agentToolCallback — completed and verified during Phase 06."
+                  "notes": "**✅ Status:** Register 17 net-new MCP tools via agentToolCallback — completed and verified during Phase 06.",
+                  "createdAt": "2026-06-14T11:09:52.900Z",
+                  "updatedAt": "2026-06-14T11:09:52.900Z"
                 },
                 {
                   "id": "66ad9367-b6df-4698-9886-08f0e26e1b87",
                   "title": "Reroute updateNodeStatus through the dispatcher (drawer audit)",
                   "status": "completed",
-                  "createdAt": "2026-06-14T11:09:52.946Z",
-                  "updatedAt": "2026-06-14T11:09:52.946Z",
                   "type": "task",
-                  "notes": "**✅ Status:** Reroute updateNodeStatus through the dispatcher (drawer audit) — completed and verified during Phase 06."
+                  "notes": "**✅ Status:** Reroute updateNodeStatus through the dispatcher (drawer audit) — completed and verified during Phase 06.",
+                  "createdAt": "2026-06-14T11:09:52.946Z",
+                  "updatedAt": "2026-06-14T11:09:52.946Z"
                 }
               ]
             },
@@ -1577,37 +1577,37 @@
               "id": "90a50da0-f721-459b-b5a6-e8ee30530aa3",
               "title": "Plan 06-06: E2E Test + Docs + UAT",
               "status": "completed",
-              "createdAt": "2026-06-14T11:09:52.990Z",
-              "updatedAt": "2026-06-14T11:09:52.990Z",
               "type": "gate",
               "notes": "The end-to-end connectivity test, the 19-tool / 13-code README, and the 7-scenario human UAT are complete and signed off (2026-05-10).\n\n**✅ Status:** The end-to-end connectivity test, the 19-tool / 13-code README, and the 7-scenario human UAT are complete and signed off (2026-05-10).",
+              "createdAt": "2026-06-14T11:09:52.990Z",
+              "updatedAt": "2026-06-14T11:09:52.990Z",
               "children": [
                 {
                   "id": "f0b6b071-6a6d-4045-a31f-1e36fdad7f54",
                   "title": "scaffold.e2e connectivity test (createRoadmap → 5 createNode → saveFile)",
                   "status": "completed",
-                  "createdAt": "2026-06-14T11:09:53.044Z",
-                  "updatedAt": "2026-06-14T11:10:18.731Z",
                   "type": "task",
-                  "notes": "**✅ Status:** scaffold.e2e connectivity test (createRoadmap → 5 createNode → saveFile) — completed and verified during Phase 06."
+                  "notes": "**✅ Status:** scaffold.e2e connectivity test (createRoadmap → 5 createNode → saveFile) — completed and verified during Phase 06.",
+                  "createdAt": "2026-06-14T11:09:53.044Z",
+                  "updatedAt": "2026-06-14T11:10:18.731Z"
                 },
                 {
                   "id": "7b337774-99fa-4ad1-a3e8-7f3f1d789dcc",
                   "title": "19-tool README + 13-code catalog + security model",
                   "status": "completed",
-                  "createdAt": "2026-06-14T11:09:53.103Z",
-                  "updatedAt": "2026-06-14T11:10:20.295Z",
                   "type": "task",
-                  "notes": "**✅ Status:** 19-tool README + 13-code catalog + security model — completed and verified during Phase 06."
+                  "notes": "**✅ Status:** 19-tool README + 13-code catalog + security model — completed and verified during Phase 06.",
+                  "createdAt": "2026-06-14T11:09:53.103Z",
+                  "updatedAt": "2026-06-14T11:10:20.295Z"
                 },
                 {
                   "id": "d29b807b-4ce1-4d8e-b2c8-3d35c68311d9",
                   "title": "7-scenario human UAT (signed off 2026-05-10)",
                   "status": "completed",
-                  "createdAt": "2026-06-14T11:09:53.146Z",
-                  "updatedAt": "2026-06-14T11:09:53.146Z",
                   "type": "gate",
-                  "notes": "**✅ Status:** 7-scenario human UAT (signed off 2026-05-10) — completed and verified during Phase 06."
+                  "notes": "**✅ Status:** 7-scenario human UAT (signed off 2026-05-10) — completed and verified during Phase 06.",
+                  "createdAt": "2026-06-14T11:09:53.146Z",
+                  "updatedAt": "2026-06-14T11:09:53.146Z"
                 }
               ]
             }

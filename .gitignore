@@ -57,10 +57,8 @@ packages/desktop/artifacts/
 # Internal GSD planning artifacts & strategy docs (pricing, pitch, vision, state)
 .planning/
 
-# Vendored GSD tooling / framework copies (keep curated .claude/commands & agents)
-.claude/get-shit-done/
-.claude/gsd-pristine/
-.claude/gsd-local-patches/
+# Claude Code workspace config & vendored GSD tooling (entire folder is internal)
+.claude/
 
 # Marketing / scratch experiments
 Audio/

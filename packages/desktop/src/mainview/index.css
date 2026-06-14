@@ -126,6 +126,11 @@
 	/* Live event pulse — saturated, distinct from selection accent */
 	--rv-pulse: #4ade80;
 
+	/* Node search highlight — tuned per theme (like --rv-pulse), deliberately
+	   distinct from both the selection accent and the live-event pulse so a
+	   match never reads as a selection or a Claude Code event. */
+	--rv-search: #f5a623;
+
 	/* Plugin source attribution glyphs (rendered as 16px badges in node corner).
 	   Colors cascade through all themes; override per-theme only if contrast fails. */
 	--rv-plugin-claude-code-bg: #d97757;
@@ -205,6 +210,7 @@
 
 	/* Live event pulse — saturated green, visible against white nodes */
 	--rv-pulse: #16a34a;
+	--rv-search: #d97706;
 }
 
 /* ============================================================
@@ -272,6 +278,7 @@
 
 	/* Live event pulse — already designed for max visibility */
 	--rv-pulse: #5aee90;
+	--rv-search: #ff9e2c;
 }
 
 /* ============================================================
@@ -340,6 +347,7 @@
 
 	/* Live event pulse — terracotta editorial pop on cream nodes */
 	--rv-pulse: #c2410c;
+	--rv-search: #0e7490;
 }
 
 /* Serif headings to match the editorial mood. Falls back to Georgia
@@ -418,6 +426,7 @@
 
 	/* Live event pulse — saturated amber pop matching theme identity */
 	--rv-pulse: #ffa83d;
+	--rv-search: #22b8cf;
 }
 
 /* Monospace throughout — the point of the theme. Falls back to
@@ -494,6 +503,7 @@
 
 	/* Live event pulse — electric yellow graphic pop */
 	--rv-pulse: #ffe046;
+	--rv-search: #ff2d8e;
 
 	/* Radii collapsed for the graphic look */
 	--rv-radius-xs: 0;
@@ -574,6 +584,7 @@
 
 	/* Live event pulse — warm tan pop on cool slate */
 	--rv-pulse: #e9b675;
+	--rv-search: #fb7185;
 }
 
 /* Serif headings to match the editorial voice. Falls back to Georgia
@@ -652,6 +663,7 @@
 
 	/* Live event pulse — rich gold pop on muted moss */
 	--rv-pulse: #d4a94e;
+	--rv-search: #e76f51;
 }
 
 /* Node cards are cream — flip text inside them to dark ink. */
@@ -799,6 +811,36 @@ body {
 	.node[data-live="true"]::after {
 		animation: none;
 		border: 2px solid var(--rv-pulse);
+		opacity: 1;
+	}
+}
+
+/* --- Node search highlight (header search box).
+   Dim non-matches, outline every match, and pulse the current match.
+   outline (not box-shadow) is used because the foreignObject in Canvas clips
+   outer box-shadows; the current-match pulse reuses the live-event ::after
+   channel with the search-distinct --rv-search color so it never reads as a
+   Claude Code live event. --- */
+.node[data-search-dim="true"] {
+	opacity: 0.32;
+	transition: opacity 150ms ease;
+}
+.node[data-search-match="true"] {
+	outline: 2px solid var(--rv-search);
+	outline-offset: 1px;
+}
+/* The current match and a live event share the single ::after pulse channel.
+   When a node is both, this rule comes later in source order so --rv-search
+   wins over --rv-pulse — i.e. while searching, the search highlight takes
+   precedence over the live-event pulse on that one node. Intentional. */
+.node[data-search-current="true"]::after {
+	border-color: var(--rv-search);
+	animation: rv-node-pulse 1600ms ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+	.node[data-search-current="true"]::after {
+		animation: none;
+		border: 2px solid var(--rv-search);
 		opacity: 1;
 	}
 }

@@ -13,7 +13,15 @@ const sampleModules = import.meta.glob<{ default: unknown }>([
 ]);
 
 // Tokens that should render fully uppercase in a sample label.
-const SAMPLE_ACRONYMS = new Set(["gsd", "cfa", "mcp", "rpc", "api", "ui", "ai"]);
+const SAMPLE_ACRONYMS = new Set([
+	"gsd",
+	"cfa",
+	"mcp",
+	"rpc",
+	"api",
+	"ui",
+	"ai",
+]);
 
 // Intro samples shown first; everything else follows alphabetically.
 const SAMPLE_ORDER = ["hello-world", "getting-started"];

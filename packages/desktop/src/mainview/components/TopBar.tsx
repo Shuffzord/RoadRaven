@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import ravenLogo from "../assets/raven-logo.svg";
 import { useFileActions } from "../hooks/useFileActions";
 import { electroview } from "../rpc";
@@ -109,17 +109,7 @@ export function TopBar() {
 			<div className="flex-1" />
 
 			{/* Search */}
-			<search className="relative flex items-center">
-				<input
-					className="w-[220px] h-[30px] bg-rv-bg-input border border-rv-border rounded-lg px-3 pr-14 text-[12px] text-rv-text-primary placeholder:text-rv-text-tertiary outline-none focus:border-rv-border-focus"
-					type="text"
-					placeholder="Search nodes..."
-					aria-label="Search nodes"
-				/>
-				<kbd className="absolute right-2 top-1/2 -translate-y-1/2 text-[11px] bg-rv-bg-elevated rounded-[3px] px-1.5 py-0.5 text-rv-text-tertiary pointer-events-none">
-					Ctrl+F
-				</kbd>
-			</search>
+			<SearchBox />
 
 			{/* Spacer */}
 			<div className="flex-1" />
@@ -252,6 +242,81 @@ export function TopBar() {
 }
 
 /* ---- Sub-components ---- */
+
+// Enter → next match (Shift+Enter → previous, wraps); Escape → clear + blur.
+// Extracted from SearchBox so the component body stays flat (low complexity).
+function handleSearchKeyDown(
+	e: React.KeyboardEvent<HTMLInputElement>,
+	stepSearchMatch: (delta: number) => void,
+	clearSearch: () => void,
+): void {
+	if (e.key === "Enter") {
+		e.preventDefault();
+		stepSearchMatch(e.shiftKey ? -1 : 1);
+	} else if (e.key === "Escape") {
+		e.preventDefault();
+		clearSearch();
+		e.currentTarget.blur();
+	}
+}
+
+// Header node-search box. Owns the controlled input + match counter; the
+// camera follow + canvas highlight live in Canvas, driven by the store's
+// searchMatchIds / searchCurrentIndex. Ctrl+F (from useKeyboardRouter) fires
+// the `roadraven:focus-search` event this component listens for.
+function SearchBox() {
+	const searchQuery = useRoadmapStore((s) => s.searchQuery);
+	const matchCount = useRoadmapStore((s) => s.searchMatchIds.length);
+	const searchCurrentIndex = useRoadmapStore((s) => s.searchCurrentIndex);
+	const setSearchQuery = useRoadmapStore((s) => s.setSearchQuery);
+	const stepSearchMatch = useRoadmapStore((s) => s.stepSearchMatch);
+	const clearSearch = useRoadmapStore((s) => s.clearSearch);
+	const inputRef = useRef<HTMLInputElement>(null);
+
+	useEffect(() => {
+		const focusSearch = () => {
+			const el = inputRef.current;
+			if (el) {
+				el.focus();
+				el.select();
+			}
+		};
+		window.addEventListener("roadraven:focus-search", focusSearch);
+		return () =>
+			window.removeEventListener("roadraven:focus-search", focusSearch);
+	}, []);
+
+	const matchLabel =
+		matchCount > 0 ? `${searchCurrentIndex + 1}/${matchCount}` : "0/0";
+
+	return (
+		<search className="relative flex items-center">
+			<input
+				ref={inputRef}
+				className="w-[220px] h-[30px] bg-rv-bg-input border border-rv-border rounded-lg px-3 pr-14 text-[12px] text-rv-text-primary placeholder:text-rv-text-tertiary outline-none focus:border-rv-border-focus"
+				type="text"
+				placeholder="Search nodes..."
+				aria-label="Search nodes"
+				value={searchQuery}
+				onChange={(e) => setSearchQuery(e.target.value)}
+				onKeyDown={(e) => handleSearchKeyDown(e, stepSearchMatch, clearSearch)}
+			/>
+			{searchQuery ? (
+				<span
+					className="absolute right-2 top-1/2 -translate-y-1/2 text-[11px] tabular-nums text-rv-text-tertiary pointer-events-none"
+					role="status"
+					aria-label={`${matchCount} matches`}
+				>
+					{matchLabel}
+				</span>
+			) : (
+				<kbd className="absolute right-2 top-1/2 -translate-y-1/2 text-[11px] bg-rv-bg-elevated rounded-[3px] px-1.5 py-0.5 text-rv-text-tertiary pointer-events-none">
+					Ctrl+F
+				</kbd>
+			)}
+		</search>
+	);
+}
 
 function ToggleGroup({
 	label,

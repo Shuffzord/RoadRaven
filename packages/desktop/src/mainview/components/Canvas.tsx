@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { CustomNodeElementProps } from "react-d3-tree";
 import Tree from "react-d3-tree";
 import { useShallow } from "zustand/react/shallow";
@@ -8,7 +8,8 @@ import { useFileActions } from "../hooks/useFileActions";
 import { OPEN_RENAME_EVENT, useInlineRename } from "../hooks/useInlineRename";
 import { useKeyboardRouter } from "../hooks/useKeyboardRouter";
 import { useRecentFiles } from "../hooks/useRecentFiles";
-import { useRoadmapStore } from "../store/roadmapStore";
+import { expandAncestors } from "../lib/nodeCollapse";
+import { getAncestorPath, useRoadmapStore } from "../store/roadmapStore";
 import { RoadRavenContextMenu } from "./ContextMenu";
 import { RoadmapNodeCard } from "./RoadmapNode";
 import { SchemaErrorPanel } from "./SchemaErrorPanel";
@@ -38,6 +39,8 @@ export function Canvas() {
 	const setTranslate = useRoadmapStore((s) => s.setTranslate);
 	const selectedNodeId = useRoadmapStore((s) => s.selectedNodeId);
 	const focusedNodeId = useRoadmapStore((s) => s.focusedNodeId);
+	const searchMatchIds = useRoadmapStore((s) => s.searchMatchIds);
+	const searchCurrentIndex = useRoadmapStore((s) => s.searchCurrentIndex);
 
 	// Container ref for dimensions + getBoundingClientRect for rename math
 	const containerRef = useRef<HTMLDivElement>(null);
@@ -194,6 +197,18 @@ export function Canvas() {
 		return () => window.removeEventListener("roadraven:fit-view", handler);
 	}, [dimensions, animatePanTo, setZoomLevel]);
 
+	// Search highlight derivations. Set membership drives the per-card dim /
+	// outline; the current match drives the pulse + camera follow.
+	const searchMatchSet = useMemo(
+		() => new Set(searchMatchIds),
+		[searchMatchIds],
+	);
+	const searchActive = searchMatchIds.length > 0;
+	const searchCurrentId =
+		searchCurrentIndex >= 0 && searchCurrentIndex < searchMatchIds.length
+			? searchMatchIds[searchCurrentIndex]
+			: null;
+
 	// Pan only enough to land the node inside a comfort zone (middle 50% of
 	// viewport) — recentering on every edge click whips the camera across
 	// long distances and reads as jarring.
@@ -223,6 +238,28 @@ export function Canvas() {
 			y: t.y + (targetScreenY - screenY),
 		});
 	}, [targetNodeId, dimensions, animatePanTo]);
+
+	// Search match follow: when the current match changes (type or Enter/F3),
+	// expand any collapsed ancestors so the node is mounted, then select +
+	// focus it. Selecting drives the comfort-zone pan effect above; expanding
+	// first guarantees the node has a recorded position so the pan isn't a
+	// silent no-op for matches buried in collapsed subtrees.
+	useEffect(() => {
+		if (!searchCurrentId) return;
+		const store = useRoadmapStore.getState();
+		// Guard against a stale match id (e.g. the matched node was deleted
+		// between query and follow) — never point selection/focus at a dead id.
+		if (!store.nodeIndex.has(searchCurrentId)) return;
+		const path = getAncestorPath(store.schema?.nodes ?? [], searchCurrentId);
+		// Cancel on cleanup so a superseded walk (rapid typing / F3) can't fire
+		// its select/focus after a newer match has taken over.
+		return expandAncestors(path, () => {
+			const s = useRoadmapStore.getState();
+			if (!s.nodeIndex.has(searchCurrentId)) return; // re-check after frames
+			s.setSelectedNode(searchCurrentId);
+			s.setFocusedNode(searchCurrentId);
+		});
+	}, [searchCurrentId]);
 
 	// Inline rename bridge: any caller that wants to enter rename mode on a
 	// node dispatches a window CustomEvent with the node's id. Sources:
@@ -341,6 +378,9 @@ export function Canvas() {
 						nodeId={nodeId}
 						isSelected={selectedNodeId === nodeId}
 						isFocused={focusedNodeId === nodeId}
+						isSearchMatch={searchMatchSet.has(nodeId)}
+						isSearchCurrent={searchCurrentId === nodeId}
+						isSearchDimmed={searchActive && !searchMatchSet.has(nodeId)}
 						hasChildren={hasChildren}
 						isCollapsed={!!isCollapsed}
 						childCount={children.length}
@@ -371,6 +411,9 @@ export function Canvas() {
 		[
 			selectedNodeId,
 			focusedNodeId,
+			searchMatchSet,
+			searchCurrentId,
+			searchActive,
 			setSelectedNode,
 			setFocusedNode,
 			inlineRename,

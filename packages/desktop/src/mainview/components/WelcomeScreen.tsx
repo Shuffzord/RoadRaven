@@ -130,7 +130,10 @@ export function WelcomeScreen({
 					</div>
 					<div className="text-[12px] flex flex-wrap items-center gap-x-1.5 gap-y-1">
 						{SAMPLES.map((sample, i) => (
-							<span key={sample.name} className="inline-flex items-center gap-x-1.5">
+							<span
+								key={sample.name}
+								className="inline-flex items-center gap-x-1.5"
+							>
 								{i > 0 && (
 									<span aria-hidden="true" className="text-rv-text-tertiary">
 										{"\u00B7"}

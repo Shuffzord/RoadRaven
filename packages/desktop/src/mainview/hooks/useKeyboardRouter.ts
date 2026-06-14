@@ -107,6 +107,29 @@ export function useKeyboardRouter(deps: RouterDeps): void {
 				return;
 			}
 
+			// Ctrl+F / Cmd+F — focus the header node-search input. Global (works
+			// even from a text input / CodeMirror) so it overrides the browser's
+			// native find, matching the Ctrl+F affordance shown in the search box.
+			if (
+				(e.ctrlKey || e.metaKey) &&
+				!e.shiftKey &&
+				e.key.toLowerCase() === "f"
+			) {
+				e.preventDefault();
+				window.dispatchEvent(new CustomEvent("roadraven:focus-search"));
+				return;
+			}
+
+			// F3 / Shift+F3 — step to next / previous search match. Global, like a
+			// browser find-next, so it works while the canvas (not the input) holds
+			// focus. When no search is active, fall through (don't swallow F3) so
+			// the key isn't consumed app-wide for no reason.
+			if (e.key === "F3" && store.searchMatchIds.length > 0) {
+				e.preventDefault();
+				store.stepSearchMatch(e.shiftKey ? -1 : 1);
+				return;
+			}
+
 			// Context-aware Ctrl+C / Ctrl+V — defers to native when typing in a text input
 			if ((e.ctrlKey || e.metaKey) && (e.key === "c" || e.key === "v")) {
 				if (inTextInput) return;

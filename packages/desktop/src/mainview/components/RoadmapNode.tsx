@@ -24,6 +24,14 @@ export const STATUS_TOKEN_MAP: Record<
 	blocked: { color: "--rv-status-blocked", bg: "--rv-status-blocked-bg" },
 };
 
+// Render a boolean as the string "true" or undefined so a `data-*` attribute
+// drops out of the DOM when false. Factored out of the card body because six
+// inline `x ? "true" : undefined` ternaries each count toward the component's
+// cognitive complexity — a plain call does not.
+function dataFlag(on: boolean | undefined): "true" | undefined {
+	return on ? "true" : undefined;
+}
+
 export function formatStatus(status: string): string {
 	return status
 		.split("-")
@@ -71,6 +79,12 @@ interface RoadmapNodeCardProps {
 	nodeId?: string;
 	isSelected?: boolean;
 	isFocused?: boolean;
+	/** True when a node search is active and this node matches the query. */
+	isSearchMatch?: boolean;
+	/** True when this node is the current (camera-followed) search match. */
+	isSearchCurrent?: boolean;
+	/** True when a search is active and this node does NOT match (dimmed back). */
+	isSearchDimmed?: boolean;
 	hasChildren?: boolean;
 	isCollapsed?: boolean;
 	childCount?: number;
@@ -93,6 +107,9 @@ export function RoadmapNodeCard({
 	nodeId,
 	isSelected,
 	isFocused,
+	isSearchMatch,
+	isSearchCurrent,
+	isSearchDimmed,
 	hasChildren,
 	isCollapsed,
 	childCount,
@@ -172,9 +189,12 @@ export function RoadmapNodeCard({
 		<div
 			className={`node relative min-w-[180px] max-w-[220px] rounded-[var(--node-radius,8px)] border-[length:var(--rv-border-width,1px)] border-[color:var(--rv-border)] bg-[var(--rv-bg-node)] pl-4 pr-3 py-[10px] select-none transition-[box-shadow,border-color,background] duration-150 hover:bg-[var(--rv-bg-node-hover)] group ${isSelected ? "outline outline-2 -outline-offset-1 outline-[var(--rv-accent)]" : ""}`}
 			data-source-id={nodeId}
-			data-selected={isSelected ? "true" : undefined}
-			data-focused={isFocused ? "true" : undefined}
-			data-live={isLive ? "true" : undefined}
+			data-selected={dataFlag(isSelected)}
+			data-focused={dataFlag(isFocused)}
+			data-live={dataFlag(isLive)}
+			data-search-match={dataFlag(isSearchMatch)}
+			data-search-current={dataFlag(isSearchCurrent)}
+			data-search-dim={dataFlag(isSearchDimmed)}
 			data-rv-surface="node"
 			style={
 				{

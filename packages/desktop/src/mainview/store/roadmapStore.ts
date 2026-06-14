@@ -49,6 +49,62 @@ export function buildNodeIndex(nodes: RoadmapNode[]): Map<string, RoadmapNode> {
 	return index;
 }
 
+/**
+ * Pre-order DFS collection of node ids whose `title` or `notes` contain `query`
+ * (case-insensitive substring). Returns [] for blank queries. The traversal
+ * order mirrors the visual top-to-bottom ordering of siblings so Enter/F3
+ * cycling reads as "next match down the tree".
+ */
+export function collectSearchMatches(
+	nodes: RoadmapNode[],
+	query: string,
+): string[] {
+	const needle = query.trim().toLowerCase();
+	if (needle === "") return [];
+	const out: string[] = [];
+
+	function walk(list: RoadmapNode[]): void {
+		for (const node of list) {
+			const title = node.title.toLowerCase();
+			const notes = (node.notes ?? "").toLowerCase();
+			if (title.includes(needle) || notes.includes(needle)) {
+				out.push(node.id);
+			}
+			if (node.children) walk(node.children);
+		}
+	}
+
+	walk(nodes);
+	return out;
+}
+
+/**
+ * Top-down list of ancestor ids for `nodeId` (root first, excluding the node
+ * itself). Empty when the node is at root level or not found. Used to expand
+ * collapsed ancestors before panning a search match into view.
+ */
+export function getAncestorPath(
+	nodes: RoadmapNode[],
+	nodeId: string,
+): string[] {
+	const path: string[] = [];
+	const seen = new Set<string>();
+	let current = nodeId;
+	// Bounded by tree depth; findParentAndIndex is O(n) so this is O(depth*n)
+	// — fine for the modest trees RoadRaven targets and only runs on match step.
+	// The `seen` guard is defensive: a malformed (cyclic) schema would otherwise
+	// loop forever and hang the renderer.
+	while (true) {
+		if (seen.has(current)) break;
+		seen.add(current);
+		const found = findParentAndIndex(nodes, current);
+		if (!found?.parent) break;
+		path.unshift(found.parent.id);
+		current = found.parent.id;
+	}
+	return path;
+}
+
 // ----------------------------------------------------------------------------
 // Internal helpers -- tree walking + node construction
 // ----------------------------------------------------------------------------
@@ -197,6 +253,15 @@ interface RoadmapState {
 	layoutOrientation: "TB" | "LR";
 	isPanelPinned: boolean;
 
+	// --- Node search (header search box) ------------------------------------
+	/** Current search query (raw, untrimmed). Empty string means no active search. */
+	searchQuery: string;
+	/** Ordered (pre-order DFS) ids of nodes matching searchQuery. */
+	searchMatchIds: string[];
+	/** Index into searchMatchIds of the "current" match the camera follows.
+	 *  -1 when there are no matches. */
+	searchCurrentIndex: number;
+
 	// Viewport state for Fit View
 	translate: { x: number; y: number };
 	zoomLevel: number;
@@ -269,6 +334,18 @@ interface RoadmapState {
 	setSelectedNode: (id: string | null) => void;
 	setFocusedNode: (id: string | null) => void;
 	setLayout: (orientation: "TB" | "LR") => void;
+
+	// --- Node search actions -------------------------------------------------
+	/** Set the query, recompute matches over title + notes (case-insensitive),
+	 *  and reset the current index to the first match (or -1 when none). */
+	setSearchQuery: (query: string) => void;
+	/** Move the current match by `delta` (+1 next, -1 prev) with wraparound.
+	 *  No-op when there are no matches. */
+	stepSearchMatch: (delta: number) => void;
+	/** Clear query, matches and index. */
+	clearSearch: () => void;
+	/** Selector: id of the current search match, or null when none. */
+	getCurrentSearchMatchId: () => string | null;
 	getSelectedNode: () => RoadmapNode | undefined;
 	getNodeCount: () => number;
 
@@ -329,6 +406,9 @@ export const INITIAL_STATE = {
 	focusedNodeId: null as string | null,
 	layoutOrientation: "TB" as const,
 	isPanelPinned: false,
+	searchQuery: "",
+	searchMatchIds: [] as string[],
+	searchCurrentIndex: -1,
 	translate: { x: 400, y: 50 },
 	zoomLevel: 0.8,
 	schemaErrors: [] as Array<{ path: string; message: string; code: string }>,
@@ -391,6 +471,27 @@ export const useRoadmapStore = create<RoadmapState>((set, get) => {
 				nodeIndex: buildNodeIndex(nextNodes),
 			});
 		}
+		syncSearchToTree(nextNodes);
+	}
+
+	// An active search holds match ids computed at query time. A structural
+	// mutation (add/delete/rename/move) can delete a matched node or change what
+	// matches — leaving stale ids that would drive the camera/selection to a
+	// node that no longer exists. Recompute from the mutated tree, keeping the
+	// camera on the same match when it survives and otherwise clamping the index
+	// back into range. Called from bumpStructural (the structural chokepoint).
+	function syncSearchToTree(nextNodes: RoadmapNode[]): void {
+		const { searchQuery, searchCurrentIndex, searchMatchIds } = get();
+		if (searchQuery.trim() === "") return;
+		const matches = collectSearchMatches(nextNodes, searchQuery);
+		const survivor = matches.indexOf(searchMatchIds[searchCurrentIndex] ?? "");
+		const nextIndex =
+			matches.length === 0
+				? -1
+				: survivor >= 0
+					? survivor
+					: Math.min(Math.max(searchCurrentIndex, 0), matches.length - 1);
+		set({ searchMatchIds: matches, searchCurrentIndex: nextIndex });
 	}
 
 	return {
@@ -408,6 +509,9 @@ export const useRoadmapStore = create<RoadmapState>((set, get) => {
 				dataKey: nextKey,
 				statusTick: 0,
 				focusedNodeId: null,
+				searchQuery: "",
+				searchMatchIds: [],
+				searchCurrentIndex: -1,
 				pendingConfirmation: null,
 				saveState: "saved",
 				lastSaveError: null,
@@ -432,6 +536,9 @@ export const useRoadmapStore = create<RoadmapState>((set, get) => {
 				dataKey: nextKey,
 				statusTick: 0,
 				focusedNodeId: null,
+				searchQuery: "",
+				searchMatchIds: [],
+				searchCurrentIndex: -1,
 				pendingConfirmation: null,
 				saveState: "saved",
 				lastSaveError: null,
@@ -771,6 +878,38 @@ export const useRoadmapStore = create<RoadmapState>((set, get) => {
 
 		setLayout: (orientation) => {
 			set({ layoutOrientation: orientation });
+		},
+
+		// --- Node search ---------------------------------------------------------
+
+		setSearchQuery: (query) => {
+			const schema = get().schema;
+			const matches = schema ? collectSearchMatches(schema.nodes, query) : [];
+			set({
+				searchQuery: query,
+				searchMatchIds: matches,
+				searchCurrentIndex: matches.length > 0 ? 0 : -1,
+			});
+		},
+
+		stepSearchMatch: (delta) => {
+			const { searchMatchIds, searchCurrentIndex } = get();
+			if (searchMatchIds.length === 0) return;
+			const n = searchMatchIds.length;
+			// Wraparound: stepping past the ends cycles round (browser Ctrl+F).
+			const next = (((searchCurrentIndex + delta) % n) + n) % n;
+			set({ searchCurrentIndex: next });
+		},
+
+		clearSearch: () => {
+			set({ searchQuery: "", searchMatchIds: [], searchCurrentIndex: -1 });
+		},
+
+		getCurrentSearchMatchId: () => {
+			const { searchMatchIds, searchCurrentIndex } = get();
+			if (searchCurrentIndex < 0 || searchCurrentIndex >= searchMatchIds.length)
+				return null;
+			return searchMatchIds[searchCurrentIndex];
 		},
 
 		getSelectedNode: () => {
