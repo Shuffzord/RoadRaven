@@ -4,6 +4,7 @@ import { useCallback, useEffect } from "react";
 // cycle. Suppression anchored to this static edge (the only one fallow can match).
 // fallow-ignore-next-line circular-dependency
 import { electroview } from "../rpc";
+import { loadSampleData } from "../samples";
 import { hasUnsavedEdits, useRoadmapStore } from "../store/roadmapStore";
 
 // WR-01 (Wave 3 review): module-level dedupe for the roadraven:request-save-as
@@ -111,15 +112,8 @@ export function useFileActions() {
 
 	const openSample = useCallback(async (name: string) => {
 		try {
-			let sampleData: unknown;
-			if (name === "hello-world") {
-				sampleData = (await import("../../../../../samples/hello-world.json"))
-					.default;
-			} else {
-				sampleData = (
-					await import("../../../../../samples/getting-started.json")
-				).default;
-			}
+			const sampleData = await loadSampleData(name);
+			if (sampleData === null) return;
 			const { RoadmapSchemaSchema } = await import(
 				"../../../../../packages/core/src/schema"
 			);

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import ravenLogo from "../assets/raven-logo.svg";
+import { SAMPLES } from "../samples";
 import { useEventApiStore } from "../store/eventApiStore";
 
 /** Extract filename from a path (browser-safe, no node:path) */
@@ -127,22 +128,23 @@ export function WelcomeScreen({
 					<div className="text-[11px] font-semibold uppercase tracking-wider text-rv-text-tertiary mb-2">
 						Try a sample
 					</div>
-					<div className="text-[12px]">
-						<button
-							className="text-rv-accent hover:underline bg-transparent border-none cursor-pointer p-0"
-							type="button"
-							onClick={() => onOpenSample("hello-world")}
-						>
-							Hello World
-						</button>
-						<span className="text-rv-text-tertiary mx-1.5">{"\u00B7"}</span>
-						<button
-							className="text-rv-accent hover:underline bg-transparent border-none cursor-pointer p-0"
-							type="button"
-							onClick={() => onOpenSample("getting-started")}
-						>
-							Getting Started
-						</button>
+					<div className="text-[12px] flex flex-wrap items-center gap-x-1.5 gap-y-1">
+						{SAMPLES.map((sample, i) => (
+							<span key={sample.name} className="inline-flex items-center gap-x-1.5">
+								{i > 0 && (
+									<span aria-hidden="true" className="text-rv-text-tertiary">
+										{"\u00B7"}
+									</span>
+								)}
+								<button
+									className="text-rv-accent hover:underline bg-transparent border-none cursor-pointer p-0"
+									type="button"
+									onClick={() => onOpenSample(sample.name)}
+								>
+									{sample.label}
+								</button>
+							</span>
+						))}
 					</div>
 				</div>
 
