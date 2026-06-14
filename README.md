@@ -288,8 +288,7 @@ RoadRaven/
 │       ├── src/bun/         # Main process: file I/O, atomic writes, refMap, settings, logging
 │       └── src/mainview/    # Webview: React 19, Zustand, react-d3-tree, CodeMirror 6
 ├── samples/                 # Sample roadmap JSON files
-├── docs/                    # Developer documentation
-└── .planning/               # Project planning artefacts (orchestrator-managed)
+└── docs/                    # Developer documentation
 ```
 
 See [`docs/`](./docs) for the architecture overview, design system, RPC contract, logging, and developer workflow.

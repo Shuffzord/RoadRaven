@@ -52,3 +52,19 @@ test-results/
 # Build artifacts (Phase 5)
 packages/core/dist/
 packages/desktop/artifacts/
+
+# --- Public release exclusions (alpha v0.5) ---
+# Internal GSD planning artifacts & strategy docs (pricing, pitch, vision, state)
+.planning/
+
+# Vendored GSD tooling / framework copies (keep curated .claude/commands & agents)
+.claude/get-shit-done/
+.claude/gsd-pristine/
+.claude/gsd-local-patches/
+
+# Marketing / scratch experiments
+Audio/
+scripts/storytelling-video/
+
+# WebSocket event-log runtime output (not source data); *.bak.json already ignored above
+*.events.jsonl
