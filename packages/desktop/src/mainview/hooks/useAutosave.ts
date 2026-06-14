@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { electroview } from "../rpc";
-import { useRoadmapStore } from "../store/roadmapStore";
+import { hasUnsavedEdits, useRoadmapStore } from "../store/roadmapStore";
 
 const STRUCTURAL_DEBOUNCE_MS = 2000;
 export const NOTES_DEBOUNCE_MS = 1000;
@@ -89,6 +89,13 @@ async function flushNow(): Promise<void> {
 	// Utils.saveFileDialog via the saveFileAs RPC. User cancels → stay
 	// "saved" in-memory; next mutation will re-prompt after the debounce.
 	if (state.isUntitled || !state.filePath) {
+		// A freshly-opened sample has no disk path but also no edits yet — opening
+		// one should NOT pop the Save As dialog. Only prompt once the user has
+		// actually changed something. File > New is isUntitled and must always
+		// prompt (it has no content to lose but needs a home), so it is exempt.
+		if (!state.isUntitled && !hasUnsavedEdits(state)) {
+			return;
+		}
 		// WR-01 (Wave 3 review): mark saveState="saving" BEFORE the dialog opens
 		// so the early-return guard at the top blocks a re-entrant flushNow
 		// while the user is still picking a filename. Without this guard, a
