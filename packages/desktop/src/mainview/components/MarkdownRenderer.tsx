@@ -122,7 +122,6 @@ const processor = unified()
 				if (type === "checkbox") {
 					return (
 						// biome-ignore lint/a11y/useSemanticElements: custom styled checkbox for markdown task lists
-						// biome-ignore lint/a11y/useFocusableInteractive: read-only display checkbox in rendered markdown
 						<span
 							className={`inline-block w-[14px] h-[14px] border border-rv-border rounded-[2px] mr-1.5 align-middle ${checked ? "bg-rv-accent" : ""}`}
 							aria-checked={!!checked}

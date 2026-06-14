@@ -705,8 +705,11 @@
    component render, which appears AFTER our stylesheet in the DOM and wins
    the cascade at equal specificity. We use !important to ensure theme colors win. */
 .rd3t-link {
+	/* biome-ignore lint/complexity/noImportantStyles: react-d3-tree injects a later-in-DOM .rd3t-link rule at equal specificity */
 	stroke: var(--rv-line-connector) !important;
+	/* biome-ignore lint/complexity/noImportantStyles: react-d3-tree injects a later-in-DOM .rd3t-link rule at equal specificity */
 	stroke-width: 1.5px !important;
+	/* biome-ignore lint/complexity/noImportantStyles: react-d3-tree injects a later-in-DOM .rd3t-link rule at equal specificity */
 	fill: none !important;
 }
 
