@@ -20,15 +20,11 @@
     "prepare": "husky"
   },
   "devDependencies": {
-    "@axe-core/playwright": "^4.11.3",
     "@biomejs/biome": "^2.5.0",
     "fallow": "^2.96.0",
     "husky": "^9.1.7",
     "lint-staged": "^16.4.0",
     "vitest": "^4.1.8"
-  },
-  "dependencies": {
-    "rehype-sanitize": "^6.0.0"
   },
   "overrides": {
     "@codemirror/view": "6.43.1"

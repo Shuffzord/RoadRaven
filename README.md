@@ -187,7 +187,6 @@ Browse the docs in [`docs/`](docs/) — rendered right here on GitHub:
 
 - [Architecture overview](docs/architecture-overview.md)
 - [Development guide](docs/development-guide.md)
-- [RPC and IPC reference](docs/rpc-and-ipc.md)
 - [Design system](docs/design-system.md)
 - [Logging](docs/logging.md)
 - [**Plugin authoring guide**](docs/plugin-authoring.md) — write your own Event Producer
