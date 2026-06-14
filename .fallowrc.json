@@ -21,7 +21,17 @@
     "packages/desktop/electrobun.config.ts",
     "packages/desktop/vite.config.ts",
     "packages/desktop/vitest.config.ts",
-    "packages/desktop/playwright.config.ts"
+    "packages/desktop/playwright.config.ts",
+
+    // Standalone CLI / operator scripts — invoked via `bun run <script>`,
+    // CI, or the Claude allowlist; not reachable from the app import graph.
+    "scripts/check-core-deps.ts",
+    "scripts/bump-version.ts",
+    "scripts/normalize-uuids.mjs",
+    "scripts/validate-cfa-roadmap.mjs",
+    "scripts/validate-roadmap.mjs",
+    "scripts/storytelling-video/run.ts",
+    "scripts/storytelling-video/validate-timeline.ts"
   ],
 
   // Paths excluded from analysis entirely.

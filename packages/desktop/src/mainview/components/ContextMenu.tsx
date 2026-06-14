@@ -1,7 +1,8 @@
 import * as ContextMenuPrimitive from "@radix-ui/react-context-menu";
-import type { ReactNode } from "react";
+import { type ReactNode, useState } from "react";
 import { useShallow } from "zustand/react/shallow";
 import { dispatchOpenRename } from "../hooks/useInlineRename";
+import { getNodeCollapseState, toggleNodeCollapse } from "../lib/nodeCollapse";
 import { useRoadmapStore } from "../store/roadmapStore";
 
 const DEFAULT_STATUSES: ReadonlyArray<{ id: string; label: string }> = [
@@ -102,6 +103,9 @@ function NodeMenuItems({ nodeId }: { nodeId: string }) {
 	);
 	const canPaste = useRoadmapStore((s) => s.lastCopiedSubtree !== null);
 	const schema = useRoadmapStore((s) => s.schema);
+	// Snapshot collapse state once when the menu opens — read from the live DOM
+	// chevron since react-d3-tree owns this state (see lib/nodeCollapse.ts).
+	const [collapse] = useState(() => getNodeCollapseState(nodeId));
 
 	// Paste enabled when the in-memory buffer has content. System clipboard
 	// is tried inside pasteFromClipboard (try/catch) — Pitfall 6.
@@ -120,6 +124,20 @@ function NodeMenuItems({ nodeId }: { nodeId: string }) {
 				<span className={HINT_CLASS}>F2</span>
 			</ContextMenuPrimitive.Item>
 			<ContextMenuPrimitive.Separator className={SEP_CLASS} />
+			{collapse.hasChildren && (
+				<>
+					<ContextMenuPrimitive.Item
+						className={ITEM_CLASS}
+						onSelect={() => toggleNodeCollapse(nodeId)}
+					>
+						<span>
+							{collapse.collapsed ? "Expand subtree" : "Collapse subtree"}
+						</span>
+						<span className={HINT_CLASS}>C</span>
+					</ContextMenuPrimitive.Item>
+					<ContextMenuPrimitive.Separator className={SEP_CLASS} />
+				</>
+			)}
 			<ContextMenuPrimitive.Item
 				className={ITEM_CLASS}
 				onSelect={() => autoRename(addChild(nodeId))}

@@ -12,14 +12,14 @@
  * Plan 04-03: Added pushStatusUpdate, pushEventApiState, pushEventApiError,
  * and pushEventLog (no-op stub until Plan 04-04).
  */
-// fallow-ignore-next-line circular-dependency
-// Cycle useFileActions → rpc → rpcHandlers → useFileActions is broken at
-// runtime by the dynamic import() below; flagged by static graph only.
 import type { IntegrationEvent } from "../../../../shared/types";
 
 export async function handlePushFileChanged(msg: {
 	path: string;
 }): Promise<void> {
+	// fallow-ignore-next-line circular-dependency
+	// Cycle useFileActions → rpc → rpcHandlers → useFileActions is broken at
+	// runtime by this dynamic import(); flagged by static graph only.
 	const { handleExternalFileChange } = await import("./hooks/useFileActions");
 	await handleExternalFileChange(msg);
 }

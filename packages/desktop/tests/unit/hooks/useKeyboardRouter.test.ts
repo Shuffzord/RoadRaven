@@ -129,6 +129,56 @@ describe("useKeyboardRouter", () => {
 		);
 	});
 
+	it("C toggles collapse on the focused node by clicking its chevron", () => {
+		useRoadmapStore.getState().setFocusedNode(CHILD_B_ID);
+		// Stand in for the canvas card + chevron that react-d3-tree renders.
+		const card = document.createElement("div");
+		card.setAttribute("data-source-id", CHILD_B_ID);
+		const chevron = document.createElement("button");
+		chevron.setAttribute("aria-label", "Collapse subtree");
+		const onClick = vi.fn();
+		chevron.addEventListener("click", onClick);
+		card.appendChild(chevron);
+		document.body.appendChild(card);
+
+		renderRouter();
+		fireEvent.keyDown(document, { key: "c" });
+		expect(onClick).toHaveBeenCalledTimes(1);
+	});
+
+	it("plain C is a no-op when the focused node has no chevron (leaf)", () => {
+		useRoadmapStore.getState().setFocusedNode(CHILD_A_ID);
+		renderRouter();
+		// No card/chevron in the DOM — must not throw and must not preventDefault.
+		const evt = new KeyboardEvent("keydown", {
+			key: "c",
+			cancelable: true,
+			bubbles: true,
+		});
+		document.dispatchEvent(evt);
+		expect(evt.defaultPrevented).toBe(false);
+	});
+
+	it("Ctrl+C does NOT trigger collapse (defers to copy)", () => {
+		useRoadmapStore.getState().setFocusedNode(CHILD_B_ID);
+		const card = document.createElement("div");
+		card.setAttribute("data-source-id", CHILD_B_ID);
+		const chevron = document.createElement("button");
+		chevron.setAttribute("aria-label", "Collapse subtree");
+		const onClick = vi.fn();
+		chevron.addEventListener("click", onClick);
+		card.appendChild(chevron);
+		document.body.appendChild(card);
+		vi.spyOn(
+			useRoadmapStore.getState(),
+			"copySubtreeToClipboard",
+		).mockResolvedValue();
+
+		renderRouter();
+		fireEvent.keyDown(document, { key: "c", ctrlKey: true });
+		expect(onClick).not.toHaveBeenCalled();
+	});
+
 	it("Ctrl+D duplicates focused node", () => {
 		useRoadmapStore.getState().setFocusedNode(CHILD_A_ID);
 		const spy = vi.spyOn(useRoadmapStore.getState(), "duplicateNode");

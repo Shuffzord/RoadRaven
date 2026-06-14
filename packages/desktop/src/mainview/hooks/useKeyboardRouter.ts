@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import type { RoadmapNode } from "../../../../../packages/core/src/schema";
+import { toggleNodeCollapse } from "../lib/nodeCollapse";
 import { useEventLogStore } from "../store/eventLogStore";
 import { findParentAndIndex, useRoadmapStore } from "../store/roadmapStore";
 import { dispatchOpenRename, type useInlineRename } from "./useInlineRename";
@@ -123,6 +124,22 @@ export function useKeyboardRouter(deps: RouterDeps): void {
 			}
 
 			if (inTextInput) return;
+
+			// C — toggle collapse/expand on the focused node's subtree. Drives the
+			// same chevron-click path the mouse uses (react-d3-tree owns the
+			// collapse state; see lib/nodeCollapse.ts). Modifier-free to match the
+			// other node shortcuts (F2/Tab/Enter/Space/Del); the Ctrl/Cmd+C copy
+			// shortcut above already returned before reaching here.
+			if (
+				(e.key === "c" || e.key === "C") &&
+				!e.ctrlKey &&
+				!e.metaKey &&
+				!e.altKey &&
+				focusedId
+			) {
+				if (toggleNodeCollapse(focusedId)) e.preventDefault();
+				return;
+			}
 
 			// F6 — global toggle between canvas and side panel focus
 			if (e.key === "F6") {

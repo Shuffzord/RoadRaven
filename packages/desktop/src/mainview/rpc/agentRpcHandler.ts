@@ -661,6 +661,9 @@ export async function handleAgentRequest(
 
 		case "saveFileAs": {
 			// Path-allowlist already passed (Plan 06-03 Bun gate). Delegate to existing Phase 3 RPC.
+			// fallow-ignore-next-line circular-dependency
+			// Cycle agentRpcHandler → rpc → agentRpcHandler is broken at runtime by this
+			// dynamic import(); flagged by static graph only.
 			const { electroview } = await import("../rpc");
 			if (!electroview?.rpc) {
 				return {
