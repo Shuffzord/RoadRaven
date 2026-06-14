@@ -21,14 +21,17 @@
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.11.3",
-    "@biomejs/biome": "^2.4.11",
-    "fallow": "^2.42.0",
+    "@biomejs/biome": "^2.5.0",
+    "fallow": "^2.96.0",
     "husky": "^9.1.7",
     "lint-staged": "^16.4.0",
-    "vitest": "^4.1.4"
+    "vitest": "^4.1.8"
   },
   "dependencies": {
     "rehype-sanitize": "^6.0.0"
+  },
+  "overrides": {
+    "@codemirror/view": "6.43.1"
   },
   "lint-staged": {
     "{packages,shared,plugins}/**/*.{ts,tsx,js,jsx,json,css}": "bunx @biomejs/biome check --write --diagnostic-level=error"

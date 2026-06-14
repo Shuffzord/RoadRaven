@@ -1,7 +1,36 @@
 import { useState } from "react";
+import { useFileActions } from "../hooks/useFileActions";
+import { useRecentFiles } from "../hooks/useRecentFiles";
+import { InfoDialog } from "./InfoDialog";
+
+/** Extract filename from a path (browser-safe, no node:path) */
+function basename(filePath: string): string {
+	return filePath.split(/[\\/]/).pop() ?? filePath;
+}
+
+type InfoDialogKind = "preferences" | "help";
+
+const INFO_DIALOG_CONTENT: Record<
+	InfoDialogKind,
+	{ title: string; body: string }
+> = {
+	preferences: {
+		title: "Preferences",
+		body: "Nothing here yet — stay tuned.",
+	},
+	help: {
+		title: "Help",
+		body: "Nothing here yet — stay tuned.",
+	},
+};
 
 export function Sidebar() {
 	const [collapsed, setCollapsed] = useState(false);
+	const [activeDialog, setActiveDialog] = useState<InfoDialogKind | null>(null);
+	const recentFiles = useRecentFiles();
+	const { openRecent } = useFileActions();
+
+	const dialogContent = activeDialog ? INFO_DIALOG_CONTENT[activeDialog] : null;
 
 	return (
 		<nav
@@ -46,9 +75,21 @@ export function Sidebar() {
 			<div className="flex-1 py-2 overflow-y-auto">
 				{/* Recent Files section */}
 				<SectionHeader label="Recent Files" collapsed={collapsed} />
-				<FileItem name="project-roadmap.json" collapsed={collapsed} />
-				<FileItem name="sprint-backlog.json" collapsed={collapsed} />
-				<FileItem name="release-plan.json" collapsed={collapsed} />
+				{recentFiles.length === 0
+					? !collapsed && (
+							<div className="text-[12px] text-rv-text-tertiary px-3.5 py-[5px]">
+								No recent files
+							</div>
+						)
+					: recentFiles.map((filePath) => (
+							<FileItem
+								key={filePath}
+								name={basename(filePath)}
+								title={filePath}
+								collapsed={collapsed}
+								onClick={() => openRecent(filePath)}
+							/>
+						))}
 
 				{/* Outline section */}
 				<SectionHeader label="Outline" collapsed={collapsed} />
@@ -62,9 +103,22 @@ export function Sidebar() {
 					icon={<SettingsIcon />}
 					label="Preferences"
 					collapsed={collapsed}
+					onClick={() => setActiveDialog("preferences")}
 				/>
-				<BottomButton icon={<HelpIcon />} label="Help" collapsed={collapsed} />
+				<BottomButton
+					icon={<HelpIcon />}
+					label="Help"
+					collapsed={collapsed}
+					onClick={() => setActiveDialog("help")}
+				/>
 			</div>
+
+			<InfoDialog
+				open={dialogContent !== null}
+				onClose={() => setActiveDialog(null)}
+				title={dialogContent?.title ?? ""}
+				body={dialogContent?.body ?? ""}
+			/>
 		</nav>
 	);
 }
@@ -84,13 +138,26 @@ function SectionHeader({
 	);
 }
 
-function FileItem({ name, collapsed }: { name: string; collapsed: boolean }) {
+function FileItem({
+	name,
+	collapsed,
+	title,
+	onClick,
+}: {
+	name: string;
+	collapsed: boolean;
+	title?: string;
+	onClick?: () => void;
+}) {
 	return (
 		<button
 			className={`flex items-center w-full text-rv-text-secondary text-[12px] hover:bg-rv-bg-hover hover:text-rv-text-primary transition-colors duration-150 ${
 				collapsed ? "justify-center py-1.5" : "gap-2 px-3.5 py-[5px]"
 			}`}
 			type="button"
+			title={title}
+			aria-label={collapsed ? name : undefined}
+			onClick={onClick}
 		>
 			<svg
 				aria-hidden="true"
@@ -116,10 +183,12 @@ function BottomButton({
 	icon,
 	label,
 	collapsed,
+	onClick,
 }: {
 	icon: React.ReactNode;
 	label: string;
 	collapsed: boolean;
+	onClick?: () => void;
 }) {
 	return (
 		<button
@@ -127,6 +196,9 @@ function BottomButton({
 				collapsed ? "justify-center py-1.5" : "gap-2 px-2 py-1.5"
 			}`}
 			type="button"
+			onClick={onClick}
+			aria-label={collapsed ? label : undefined}
+			title={collapsed ? label : undefined}
 		>
 			{icon}
 			{!collapsed && <span>{label}</span>}

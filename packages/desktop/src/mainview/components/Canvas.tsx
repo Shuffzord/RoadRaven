@@ -7,7 +7,7 @@ import ravenLogo from "../assets/raven-logo.svg";
 import { useFileActions } from "../hooks/useFileActions";
 import { OPEN_RENAME_EVENT, useInlineRename } from "../hooks/useInlineRename";
 import { useKeyboardRouter } from "../hooks/useKeyboardRouter";
-import { electroview } from "../rpc";
+import { useRecentFiles } from "../hooks/useRecentFiles";
 import { useRoadmapStore } from "../store/roadmapStore";
 import { RoadRavenContextMenu } from "./ContextMenu";
 import { RoadmapNodeCard } from "./RoadmapNode";
@@ -55,8 +55,8 @@ export function Canvas() {
 		new Map(),
 	);
 
-	// Recent files state for WelcomeScreen
-	const [recentFiles, setRecentFiles] = useState<string[]>([]);
+	// Recent files for WelcomeScreen — shared with Sidebar via useRecentFiles
+	const recentFiles = useRecentFiles();
 
 	// Inline rename state
 	const inlineRename = useInlineRename();
@@ -64,20 +64,6 @@ export function Canvas() {
 	// Target of the most recent right-click — null when opened on empty canvas.
 	// Drives RoadRavenContextMenu's node-vs-canvas content switch.
 	const [contextTargetId, setContextTargetId] = useState<string | null>(null);
-
-	// Load recent files on mount
-	useEffect(() => {
-		if (electroview?.rpc) {
-			electroview.rpc.request
-				.loadSettings({})
-				.then((result) => {
-					setRecentFiles(result.settings.recentFiles ?? []);
-				})
-				.catch(() => {
-					// Settings load failed; leave empty
-				});
-		}
-	}, []);
 
 	useEffect(() => {
 		if (!containerRef.current) return;
