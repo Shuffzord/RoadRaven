@@ -90,11 +90,6 @@ export function Sidebar() {
 								onClick={() => openRecent(filePath)}
 							/>
 						))}
-
-				{/* Outline section */}
-				<SectionHeader label="Outline" collapsed={collapsed} />
-				<FileItem name="Phase 1: Foundation" collapsed={collapsed} />
-				<FileItem name="Phase 2: Data Wiring" collapsed={collapsed} />
 			</div>
 
 			{/* Bottom section */}
