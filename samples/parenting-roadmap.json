@@ -1,0 +1,489 @@
+{
+  "version": "1.0",
+  "title": "Educational roadmap v2 — from the 3rd month of pregnancy to the 1st year of life",
+  "themeConfig": {
+    "statusColors": {
+      "not-started": "#6b6b6b",
+      "in-progress": "#4a9eff",
+      "completed": "#4ade80",
+      "blocked": "#ef4444"
+    }
+  },
+  "statusConfig": [
+    {
+      "id": "not-started",
+      "label": "To read"
+    },
+    {
+      "id": "in-progress",
+      "label": "In progress"
+    },
+    {
+      "id": "completed",
+      "label": "Read"
+    },
+    {
+      "id": "blocked",
+      "label": "Depends on earlier phase"
+    }
+  ],
+  "typeConfig": [
+    {
+      "id": "phase",
+      "label": "Phase"
+    },
+    {
+      "id": "book",
+      "label": "Core book"
+    },
+    {
+      "id": "resource",
+      "label": "Ongoing resource"
+    },
+    {
+      "id": "podcast",
+      "label": "Podcast"
+    },
+    {
+      "id": "course",
+      "label": "Course"
+    },
+    {
+      "id": "practice",
+      "label": "Practice"
+    },
+    {
+      "id": "warning",
+      "label": "Critical context"
+    },
+    {
+      "id": "appendix",
+      "label": "Appendix"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "20000000-0000-4000-8000-000000000001",
+      "title": "Educational roadmap v2",
+      "status": "in-progress",
+      "type": "phase",
+      "notes": "# Evidence-first · from the 3rd month of pregnancy to the 1st year of life\n\n**9 core books in 18 months.** Only titles with strong methodological foundations.\n\n## Selection philosophy\n\nEvery title had to pass three tests:\n\n1. **The author's credentials** — whether the author conducted their own research in the field they describe, or merely popularizes the work of others.\n2. **Quality of evidence** — replicable studies or systematic reviews, not anecdotes or single small studies.\n3. **No hidden harm** — whether the book could mislead the reader in a way that affects decisions (alcohol, infant sleep, medical interventions).\n\n## Pace and division within the couple\n\n- **Limit:** max 2 books/month.\n- **Division:** Person A → biology/medicine (Mayo, Karp, Mindell, Medina). Person B → psychology/attachment (Stern, Bowlby, Hrdy, Lieberman). **Both, mandatory:** Simkin, Kleiman, Gottman, Machin, Plomin.\n- **Rhythm:** once a week, 30 min of shared conversation about what each of you read.\n\n## Closing principle\n\nThese 9 books, read carefully, plus the ongoing resources, amount to more parenting knowledge than 95% of parents have. **Do not read more. Read these — carefully, critically, talking with each other.**",
+      "metadata": {
+        "format": "evidence-first",
+        "core_books": 9,
+        "horizon_months": 18
+      },
+      "children": [
+        {
+          "id": "20000000-0001-4000-8000-000000000001",
+          "title": "Phase 1 · 3rd–5th month of pregnancy",
+          "status": "in-progress",
+          "type": "phase",
+          "notes": "## Foundation: pregnancy medicine + the biology of fatherhood\n\nAn energetic phase. Goal: a solid biological base (what really happens to the mother's body) and — crucially — a parallel base for the father.\n\nThe psychobiology of fatherhood is one of the best-documented areas of research of the past decade, something most Polish guidebooks stay silent about.",
+          "children": [
+            {
+              "id": "20000000-0001-4000-8000-000000000002",
+              "title": "Mayo Clinic Guide to a Healthy Pregnancy",
+              "status": "in-progress",
+              "type": "book",
+              "notes": "**Author:** Mayo Clinic obstetrics team (academic medical center, US News #1 in many rankings).\n\n**Why:** A nameless team of doctors instead of a single \"guru.\" Medically conservative, but updated and based on current guidelines.\n\n**How to read it:** The first 4 chapters together. The rest is a reference — you only come back to the chapters that interest you.",
+              "metadata": {
+                "author": "Mayo Clinic",
+                "role": "medical reference"
+              }
+            },
+            {
+              "id": "20000000-0001-4000-8000-000000000003",
+              "title": "The Life of Dad — Anna Machin",
+              "status": "not-started",
+              "type": "book",
+              "notes": "**Author:** Anna Machin (Oxford SENRG, evolutionary anthropologist, a decade of research in Robin Dunbar's group).\n\n**Why:** The strongest title on the market about the psychobiology of fatherhood — what happens to a man's brain and hormones in the perinatal period.\n\n**How to read it:** Both of you read it, a month apart — the father first, then the mother. This lets her understand what his brain/body will go through.",
+              "metadata": {
+                "author": "Anna Machin",
+                "institution": "Oxford SENRG"
+              }
+            },
+            {
+              "id": "20000000-0001-4000-8000-000000000004",
+              "title": "Ongoing resources — Phase 1",
+              "status": "not-started",
+              "type": "resource",
+              "children": [
+                {
+                  "id": "20000000-0001-4000-8000-000000000005",
+                  "title": "ParentData (Emily Oster)",
+                  "status": "not-started",
+                  "type": "resource",
+                  "notes": "**parentdata.org** — a source for learning how to read studies, **NOT** for final medical decisions.\n\n**Caveat:** Oster systematically leans toward \"it's fine\" where the literature says \"we don't know.\" Use it as an exercise in thinking about data; verify decisions with PTGiP/Mayo."
+                },
+                {
+                  "id": "20000000-0001-4000-8000-000000000006",
+                  "title": "Evidence Based Birth (Rebecca Dekker)",
+                  "status": "not-started",
+                  "type": "resource",
+                  "notes": "**evidencebasedbirth.com** — PhD, RN. Compares obstetric practices against the medical literature. The best source for questions like \"do I have to be induced,\" \"does CTG make sense.\""
+                },
+                {
+                  "id": "20000000-0001-4000-8000-000000000007",
+                  "title": "Cochrane Pregnancy and Childbirth",
+                  "status": "not-started",
+                  "type": "resource",
+                  "notes": "**cochranelibrary.com** — the gold standard, systematic reviews of research. You go there when you encounter conflicting advice and want to check the source."
+                },
+                {
+                  "id": "20000000-0001-4000-8000-000000000008",
+                  "title": "PTGiP — guidelines",
+                  "status": "not-started",
+                  "type": "resource",
+                  "notes": "**ptgin.pl** — official Polish gynecological-obstetric standards. Clinical specifics."
+                },
+                {
+                  "id": "20000000-0001-4000-8000-000000000009",
+                  "title": "Diary of a CEO — episodes with A. Machin / R. Sapolsky",
+                  "status": "not-started",
+                  "type": "podcast",
+                  "notes": "Listening to specific episodes before reading the books helps you pinpoint what to look for."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "20000000-0002-4000-8000-000000000001",
+          "title": "Phase 2 · 6th–7th month of pregnancy",
+          "status": "not-started",
+          "type": "phase",
+          "notes": "## Perinatal psychology and the foundation of attachment\n\nThe body already says \"baby,\" the parent's identity is forming. This is the moment for foundational reading — with the right critical context, because Bowlby, though canonical, has well-known limitations.",
+          "children": [
+            {
+              "id": "20000000-0002-4000-8000-000000000002",
+              "title": "The Birth of a Mother — Daniel Stern",
+              "status": "not-started",
+              "type": "book",
+              "notes": "**Author:** Daniel Stern (Cornell psychiatrist, microanalysis of mother–infant interaction, his own empirical data).\n\n**Why:** Stern combines psychoanalysis with frame-by-frame recordings and microanalysis — this isn't speculation, it's observation. He shows how a woman's identity changes in the perinatal period.\n\n**Mandatory reading for both of you.**"
+            },
+            {
+              "id": "20000000-0002-4000-8000-000000000003",
+              "title": "A Secure Base — John Bowlby",
+              "status": "not-started",
+              "type": "book",
+              "notes": "**Author:** John Bowlby (creator of attachment theory, the foundation of the field).\n\n**Why:** You read it to understand where the entire later field came from. **Do not read it as an instruction manual — read it as a history of ideas.**\n\nIMPORTANT caveats — see the node \"Critical context for Bowlby.\""
+            },
+            {
+              "id": "20000000-0002-4000-8000-000000000004",
+              "title": "Critical context for Bowlby",
+              "status": "not-started",
+              "type": "warning",
+              "notes": "Bowlby's theory (1950s–60s) is foundational, but it has three limitations that modern science modifies:\n\n1. **Monotropy** — Bowlby claimed that a child has a single \"primary attachment figure.\" Newer research (Schaffer & Emerson, later Hrdy) shows that a child can simultaneously form multiple secure attachments. Important if you plan to share care equally.\n2. **WEIRD bias** — the whole theory was built on observations of the Western middle class. Anthropology (Hrdy) shows that in most human cultures children were raised communally, not dyadically.\n3. **Neglect of temperament** — part of what Bowlby attributed to the quality of care has a strong innate basis. This dialogue is developed further in Plomin (Phase 6)."
+            },
+            {
+              "id": "20000000-0002-4000-8000-000000000005",
+              "title": "Ongoing resources — Phase 2",
+              "status": "not-started",
+              "type": "resource",
+              "children": [
+                {
+                  "id": "20000000-0002-4000-8000-000000000006",
+                  "title": "Center on the Developing Child (Harvard)",
+                  "status": "not-started",
+                  "type": "resource",
+                  "notes": "**developingchild.harvard.edu** — the best synthesizer of research on early development in the world. Free articles, videos, short courses."
+                },
+                {
+                  "id": "20000000-0002-4000-8000-000000000007",
+                  "title": "Zero to Three",
+                  "status": "not-started",
+                  "type": "resource",
+                  "notes": "**zerotothree.org** — an American non-profit organization, evidence-based materials on development from 0–3 years."
+                },
+                {
+                  "id": "20000000-0002-4000-8000-000000000008",
+                  "title": "BBC Radio 4 — All in the Mind (archive)",
+                  "status": "not-started",
+                  "type": "podcast",
+                  "notes": "Archive episodes on attachment theory and its current modifications (e.g. interviews with Marinus van IJzendoorn — a researcher of cross-cultural meta-analyses of attachment)."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "20000000-0003-4000-8000-000000000001",
+          "title": "Phase 3 · 8th–9th month + birth",
+          "status": "not-started",
+          "type": "phase",
+          "notes": "## Birth, the first weeks, the mother's mental health\n\nA pragmatic phase. No academic reflection, concrete protocols. At the same time: **BEFORE the birth** you need to know what to watch for in yourself after the birth, because there will be no time for it then.",
+          "children": [
+            {
+              "id": "20000000-0003-4000-8000-000000000002",
+              "title": "The Birth Partner — Penny Simkin",
+              "status": "not-started",
+              "type": "book",
+              "notes": "**Author:** Penny Simkin (doula, physiotherapist, 40+ years of practice, a classic of the field).\n\n**Why:** The best handbook for a birth companion — physiology, stages, interventions, the partner's role. Practical, non-ideological.\n\n**Mandatory reading, especially for the father.**"
+            },
+            {
+              "id": "20000000-0003-4000-8000-000000000003",
+              "title": "This Isn't What I Expected — Karen Kleiman",
+              "status": "not-started",
+              "type": "book",
+              "notes": "**Author:** Karen Kleiman (clinician, founder of The Postpartum Stress Center).\n\n**Why:** Concrete signs of PPD, postpartum anxiety, intrusive thoughts.\n\n**BOTH OF YOU READ IT BEFORE THE BIRTH** — so you know what to watch for, because it also affects fathers (5–10% PPD in men)."
+            },
+            {
+              "id": "20000000-0003-4000-8000-000000000004",
+              "title": "PPD — critical to remember",
+              "status": "not-started",
+              "type": "warning",
+              "notes": "**PPD and postpartum anxiety are NOT a \"lack of character.\"**\n\n**Biological basis:** a sudden drop in estrogen/progesterone, sleep deprivation, changes in the HPA axis. It affects 10–20% of mothers and 5–10% of fathers (Paulson & Bazemore, JAMA).\n\n**Risk factors:** previous episodes of depression/anxiety, lack of social support, traumatic birth, feeding problems, a child with a difficult temperament.\n\n**Action BEFORE the birth:** identify specific people to call — a community midwife, gynecologist, perinatal psychiatrist. The number saved in both of your phones."
+            },
+            {
+              "id": "20000000-0003-4000-8000-000000000005",
+              "title": "Ongoing resources — Phase 3",
+              "status": "not-started",
+              "type": "resource",
+              "children": [
+                {
+                  "id": "20000000-0003-4000-8000-000000000006",
+                  "title": "KellyMom",
+                  "status": "not-started",
+                  "type": "resource",
+                  "notes": "**kellymom.com** — an English-language knowledge base on feeding with links to research. The most detailed source online."
+                },
+                {
+                  "id": "20000000-0003-4000-8000-000000000007",
+                  "title": "Postpartum Support International",
+                  "status": "not-started",
+                  "type": "resource",
+                  "notes": "**postpartum.net** — a helpline, a database of therapists specializing in perinatal care."
+                },
+                {
+                  "id": "20000000-0003-4000-8000-000000000008",
+                  "title": "Postpartum Stress Center — course for couples",
+                  "status": "not-started",
+                  "type": "course",
+                  "notes": "Kleiman runs short courses for couples. Worth the investment of **$50–100** — it saves many weeks of suffering if one of you starts to sink."
+                },
+                {
+                  "id": "20000000-0003-4000-8000-000000000009",
+                  "title": "Lactation Science Center (CNoL)",
+                  "status": "not-started",
+                  "type": "resource",
+                  "notes": "The most reliable Polish source on feeding, based on international guidelines."
+                },
+                {
+                  "id": "20000000-0003-4000-8000-00000000000a",
+                  "title": "Childbirth with Dignity Foundation",
+                  "status": "not-started",
+                  "type": "resource",
+                  "notes": "**rodzicpoludzku.pl** — patients' rights in the perinatal period, a ranking of hospitals in Poland."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "20000000-0004-4000-8000-000000000001",
+          "title": "Phase 4 · 0–3 months of life",
+          "status": "not-started",
+          "type": "phase",
+          "notes": "## The fourth trimester: infant regulation, the couple's relationship\n\nThe hardest phase. Reading is short, audiobooks dominate. Only two core titles — both with strong empirical foundations.\n\n**Reading rhythm:** One of you reads, the other manages the chaos. Swap roles every week. Trying to read together will break what is still holding you up — your strength. Audiobooks while feeding, walking, in the shower. 15 min of shared conversation, ideally on a walk with the stroller.",
+          "children": [
+            {
+              "id": "20000000-0004-4000-8000-000000000002",
+              "title": "The Happiest Baby on the Block — Harvey Karp",
+              "status": "not-started",
+              "type": "book",
+              "notes": "**Author:** Harvey Karp (pediatrician, USC Keck/UCLA, AAP fellow). RCT support for the 5S (Japan J Nursing Sci 2019).\n\n**IMPORTANT:** Works **only in the first ~3 months** (after the 4th month the calming reflex fades). Karp also has a commercial interest in the Snoo — **don't buy it**, the book is enough."
+            },
+            {
+              "id": "20000000-0004-4000-8000-000000000003",
+              "title": "And Baby Makes Three — John & Julie Gottman",
+              "status": "not-started",
+              "type": "book",
+              "notes": "**Author:** The Gottman Institute (40+ years of longitudinal research on couples).\n\n**Why:** The best book on the couple's relationship after a baby. The statistic that 67% of couples experience a drop in satisfaction has real data behind it.\n\n**Caveat:** The research is mostly on the white American middle class — but the mechanisms are universally sensible."
+            },
+            {
+              "id": "20000000-0004-4000-8000-000000000004",
+              "title": "Ongoing resources — Phase 4",
+              "status": "not-started",
+              "type": "resource",
+              "children": [
+                {
+                  "id": "20000000-0004-4000-8000-000000000005",
+                  "title": "AAP HealthyChildren.org",
+                  "status": "not-started",
+                  "type": "resource",
+                  "notes": "Official guidelines of the American Academy of Pediatrics. The fastest reference for \"is this normal,\" \"when to see a doctor.\""
+                },
+                {
+                  "id": "20000000-0004-4000-8000-000000000006",
+                  "title": "Possms — Dr Pamela Douglas (NDC)",
+                  "status": "not-started",
+                  "type": "resource",
+                  "notes": "**possms.org** — an Australian pediatrician, the Neuroprotective Developmental Care approach. An alternative to classic sleep training, grounded in neurodevelopment."
+                },
+                {
+                  "id": "20000000-0004-4000-8000-000000000007",
+                  "title": "Where Should We Begin? — Esther Perel",
+                  "status": "not-started",
+                  "type": "podcast",
+                  "notes": "Not about children — about the couple's relationship. Listen together. Esther Perel: a psychotherapist with 35 years of practice."
+                },
+                {
+                  "id": "20000000-0004-4000-8000-000000000008",
+                  "title": "The Gottman Relationship Podcast",
+                  "status": "not-started",
+                  "type": "podcast",
+                  "notes": "A direct application of what you're reading in And Baby Makes Three."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "20000000-0005-4000-8000-000000000001",
+          "title": "Phase 5 · 4th–7th month of life",
+          "status": "not-started",
+          "type": "phase",
+          "notes": "## Neurodevelopment, sleep, introducing solids\n\nEnergy for reading returns. In this phase, v2 replaced both titles — Siegel went in the bin (the left-brain/right-brain myth), Ferber/Komsta replaced by Mindell.\n\n**A skeptic's strategy on the topic of sleep:** The internet will flood you with \"truths.\" Stick to one principle — if a method promises \"nights slept through in 3 days\" or \"perfect attachment if only,\" it's marketing, not knowledge. The real development of an infant's sleep is non-monotonic, individual, and prone to regressions.",
+          "children": [
+            {
+              "id": "20000000-0005-4000-8000-000000000002",
+              "title": "Brain Rules for Baby — John Medina",
+              "status": "not-started",
+              "type": "book",
+              "notes": "**Author:** John Medina (developmental molecular biologist, affiliate prof. UWashington School of Medicine).\n\n**Why:** A better alternative to Siegel. Medina sticks more strictly to what the research actually shows — he starts with the difference between correlation and causation, and debunks myths (e.g. the Mozart Effect for infants)."
+            },
+            {
+              "id": "20000000-0005-4000-8000-000000000003",
+              "title": "Sleeping Through the Night — Jodi Mindell",
+              "status": "not-started",
+              "type": "book",
+              "notes": "**Author:** Jodi Mindell (PhD, director of the Sleep Disorders Center at CHOP — Children's Hospital of Philadelphia).\n\n**Why:** The most balanced book on infant sleep. Mindell publishes peer-reviewed research on sleep. She presents various methods (from no-cry to graduated extinction) with an actual evidence base, without an ideological slant."
+            },
+            {
+              "id": "20000000-0005-4000-8000-000000000004",
+              "title": "Ongoing resources — Phase 5",
+              "status": "not-started",
+              "type": "resource",
+              "children": [
+                {
+                  "id": "20000000-0005-4000-8000-000000000005",
+                  "title": "Solid Starts",
+                  "status": "not-started",
+                  "type": "resource",
+                  "notes": "**solidstarts.com** — the most detailed database on introducing solids. Every food with a safety analysis by age (size, texture, choking risk). A team of experts (RD, SLP, MD)."
+                },
+                {
+                  "id": "20000000-0005-4000-8000-000000000006",
+                  "title": "AAP HealthyChildren — sections on diet and sleep",
+                  "status": "not-started",
+                  "type": "resource",
+                  "notes": "A continuation from Phase 4 — in this phase especially the sections on introducing solids and safe sleep."
+                },
+                {
+                  "id": "20000000-0005-4000-8000-000000000007",
+                  "title": "Mindell's Pediatric Sleep Council",
+                  "status": "not-started",
+                  "type": "course",
+                  "notes": "**babysleep.com** — free materials from one of the world's leading authorities on pediatric sleep."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "20000000-0006-4000-8000-000000000001",
+          "title": "Phase 6 · 8th–12th month of life",
+          "status": "not-started",
+          "type": "phase",
+          "notes": "## Attachment, separation anxiety, the long view\n\nThe phase that closes the roadmap and opens the next stage. The final title — Plomin — is deliberately provocative. It is meant to serve as an epistemic shower after everything you've read before.",
+          "children": [
+            {
+              "id": "20000000-0006-4000-8000-000000000002",
+              "title": "Mothers and Others — Sarah Blaffer Hrdy",
+              "status": "not-started",
+              "type": "book",
+              "notes": "**Author:** Sarah Blaffer Hrdy (PhD Harvard, evolutionary anthropologist, peer-reviewed book from Harvard University Press).\n\n**Why:** Shows that Homo sapiens evolved as a \"cooperative breeder\" species — children were raised by the community, not the nuclear couple.\n\n**Value:** An antidote to the pressure of \"only mum-and-dad can do this.\" Help from outside the family is not a failure, it's the evolutionary norm."
+            },
+            {
+              "id": "20000000-0006-4000-8000-000000000003",
+              "title": "The Emotional Life of the Toddler — Alicia Lieberman",
+              "status": "not-started",
+              "type": "book",
+              "notes": "**Author:** Alicia Lieberman (professor at UCSF, pioneer in diagnosing attachment disorders, creator of Child-Parent Psychotherapy — an evidence-based intervention for traumatized young children).\n\n**Why:** A map of the emotional world of a child aged 1–3. The book begins to cover the age after the first year."
+            },
+            {
+              "id": "20000000-0006-4000-8000-000000000004",
+              "title": "Blueprint — Robert Plomin (the provocation title)",
+              "status": "blocked",
+              "type": "book",
+              "notes": "**Author:** Robert Plomin (King's College London, professor of behavioral genetics, 50+ years of twin and adoption studies).\n\n**Why:** Deliberately provocative. Plomin claims (based on huge meta-analyses) that the influence of the \"shared environment\" (i.e. parenting style) on a child's psychological traits is smaller than we usually assume.\n\n**Caveat:** The book is criticized for genetic determinism and underestimating environmental effects. BUT: as a counterpoint after 18 months of reading about how every parenting decision is incredibly important — a healthy reset.\n\n**The \"blocked\" status** on this node means: read it ONLY after Bowlby, Stern, Lieberman, and Hrdy. Without those foundations, the counterpoint can mislead you.",
+              "metadata": {
+                "role": "epistemic_shower",
+                "order": "last"
+              }
+            },
+            {
+              "id": "20000000-0006-4000-8000-000000000005",
+              "title": "Why Plomin comes at the very end",
+              "status": "not-started",
+              "type": "warning",
+              "notes": "After 18 months of intensive reading about parenting, there is a risk that Alison Gopnik calls **\"carpenter parenting\"** — the belief that you can \"carve\" the right person out of a child by selecting the right methods.\n\nPlomin (and the whole behavioral genetics literature) shows that a large part of a child's traits are innate. This does **NOT** mean that parenting doesn't matter — but it means that your work is not production, only accompanying a being who has already brought their own predispositions.\n\n**Read it critically:** Plomin himself has a tendency to over-interpret in the other direction."
+            },
+            {
+              "id": "20000000-0006-4000-8000-000000000006",
+              "title": "Ongoing resources — Phase 6 and beyond",
+              "status": "not-started",
+              "type": "resource",
+              "children": [
+                {
+                  "id": "20000000-0006-4000-8000-000000000007",
+                  "title": "Center on the Developing Child — stress & resilience",
+                  "status": "not-started",
+                  "type": "resource",
+                  "notes": "Still the best synthesizer. Especially the sections on stress and resilience."
+                },
+                {
+                  "id": "20000000-0006-4000-8000-000000000008",
+                  "title": "BBC Reith Lectures (Robert Plomin 2018)",
+                  "status": "not-started",
+                  "type": "podcast",
+                  "notes": "A concise introduction to the Blueprint thesis, if the book feels too big."
+                },
+                {
+                  "id": "20000000-0006-4000-8000-000000000009",
+                  "title": "Good Inside — Becky Kennedy",
+                  "status": "not-started",
+                  "type": "podcast",
+                  "notes": "Clinical psychologist, PhD Columbia. Practical strategies for regulating emotions in the child and in the parent. Strongly oriented toward the second half of the first year and later."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "20000000-0007-4000-8000-000000000001",
+          "title": "Practical appendices",
+          "status": "not-started",
+          "type": "appendix",
+          "children": [
+            {
+              "id": "20000000-0007-4000-8000-000000000002",
+              "title": "What absolutely not to read",
+              "status": "not-started",
+              "type": "warning",
+              "notes": "- **The Wonder Weeks** (van de Rijt & Plooij) — scientifically discredited. Plooij's doctoral student could not replicate the results; Plooij lost his academic position.\n- **Babywise** (Ezzo) — a rigid feeding schedule; the AAP issued warnings (a link to failure-to-thrive/malnutrition).\n- **The Searses' \"The Baby Book\"** — a popularization of attachment parenting. Often extrapolates Bowlby toward ideology. Excessive pressure on the mother.\n- **Everything by Gabor Maté** — systematically criticized by the medical academy for going beyond the data (ADHD, addiction, trauma).\n- **Whole-Brain Child / No-Drama Discipline** (Siegel & Bryson) — the strategies are OK, but the neuroscience is simplified/false (the left-brain/right-brain myth). Medina is better.\n- **Any books promising a \"perfect\" parent/child** — mostly marketing."
+            },
+            {
+              "id": "20000000-0007-4000-8000-000000000003",
+              "title": "Reading at a distance",
+              "status": "not-started",
+              "type": "warning",
+              "notes": "Worth knowing, but not as foundations:\n\n- **Emily Oster — Expecting Better / Cribsheet** — learning to read studies is OK, but Oster systematically leans toward downplaying medical warnings. Use it as an exercise, not as an oracle.\n- **Ina May Gaskin — Guide to Childbirth** — valuable on the physiology and psychology of natural birth, but skews ideological against medical interventions. Worth knowing, balance it against Simkin and the evidence-based sources."
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
