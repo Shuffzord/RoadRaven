@@ -1,0 +1,68 @@
+.DS_Store
+**/target
+**/zig-cache
+**/zig-out
+node_modules
+build
+/package/vendors
+/package/src/extractor/.zig-cache
+/package/src/launcher/.zig-cache
+.zig-cache
+.colab.json
+dist
+.cache
+/package/bin/electrobun
+/package/bin/electrobun.exe
+electrobun-cef*
+electrobun-core*
+electrobun-cli*
+dist-*
+/package/src/cli/templates/embedded.ts
+/package/src/bun/preload/.generated
+*.tar.gz
+*.tar.zst
+artifacts/
+settings.local.json
+
+# Bunny
+/bunny/ears/build
+/bunny/ears/build-bundled-carrots
+/bunny/ears/node_modules
+/bunny/dash/node_modules
+/bunny/dash/dist
+/bunny/dash/.tmp
+/bunny/foundation-carrots/*/node_modules
+/bunny/test-carrots/*/node_modules
+/bunny/carrot-artifacts
+**/.zig-cache
+**/zig-out
+
+# Test artifacts
+playwright-report/
+test-results/
+
+# Roadmap auto-generated backups
+*.bak.json
+# Fallow analysis cache (incremental, regenerated on every run)
+.fallow/
+
+# Local developer environment overrides (not committed)
+.env.local
+
+# Build artifacts (Phase 5)
+packages/core/dist/
+packages/desktop/artifacts/
+
+# --- Public release exclusions (alpha v0.5) ---
+# Internal GSD planning artifacts & strategy docs (pricing, pitch, vision, state)
+.planning/
+
+# Claude Code workspace config & vendored GSD tooling (entire folder is internal)
+.claude/
+
+# Marketing / scratch experiments
+Audio/
+scripts/storytelling-video/
+
+# WebSocket event-log runtime output (not source data); *.bak.json already ignored above
+*.events.jsonl

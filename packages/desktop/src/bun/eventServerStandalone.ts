@@ -1,0 +1,84 @@
+#!/usr/bin/env bun
+// Headless Bun entry — boots ONLY the event server. No BrowserWindow, no Electrobun.
+// Used by tests/integration/eventApi-e2e.test.ts per RESEARCH §7.3.
+//
+// I-26: stdout/stderr IPC protocol to parent test runner. Legitimate exception to the
+// no-console rule (I-19) because this headless Bun entry has no LogTape logger in scope
+// and the E2E test (eventApi-e2e.test.ts) depends on line-delimited JSON on stdout/stderr.
+// Use process.stdout.write / process.stderr.write to avoid the literal `console.*` ban.
+
+import { DEFAULT_PORT, startEventServer } from "./eventServer";
+import { deleteSentinel, writeSentinel } from "./sentinel";
+
+const envPortRaw = process.env.ROADRAVEN_EVENT_PORT;
+const envPortParsed = envPortRaw ? Number(envPortRaw) : null;
+if (envPortRaw && (envPortParsed === null || Number.isNaN(envPortParsed))) {
+	process.stderr.write(
+		`${JSON.stringify({ ok: false, error: "invalid_port", value: envPortRaw })}\n`,
+	);
+	// WR-06 (06-REVIEW): fail-fast in standalone mode. Without exit(1),
+	// execution fell through to `requestedPort = envPort ?? DEFAULT_PORT`
+	// (envPort is null because envPortParsed was NaN), so the server
+	// silently bound the default port 47921 instead of the user-requested
+	// invalid value. The parent E2E test cannot distinguish "invalid port
+	// → using default" from "invalid port → boot failed" — both end with
+	// the standalone listening on a port. Standalone mode is launched only
+	// from tests/scripts; refusing to boot on garbage input is the
+	// right tradeoff (production runs through bun/index.ts which logs and
+	// continues with the default — separate, intentional behaviour).
+	process.exit(1);
+}
+const envPort =
+	envPortParsed !== null && !Number.isNaN(envPortParsed) ? envPortParsed : null;
+const requestedPort = envPort ?? DEFAULT_PORT;
+const isUserSpecified = envPort !== null;
+
+const result = await startEventServer({
+	requestedPort,
+	isUserSpecified,
+	onFlush: () => {
+		/* no renderer */
+	},
+	onEvent: () => {
+		/* no renderer */
+	},
+	onError: () => {
+		/* no renderer */
+	},
+	onConnectionChange: () => {
+		/* no renderer */
+	},
+	// Phase 6 Plan 06-02: StartOptions requires onAgentRequest. Headless E2E
+	// runner does not exercise the agent transport — Plan 06-03 owns that path.
+	onAgentRequest: () => {
+		/* no renderer */
+	},
+});
+
+if (!result.ok) {
+	process.stderr.write(
+		`${JSON.stringify({ ok: false, error: "in_use", attempted: result.attempted })}\n`,
+	);
+	process.exit(1);
+}
+
+await writeSentinel({
+	port: result.handle.port,
+	url: `ws://127.0.0.1:${result.handle.port}`,
+	startedAt: new Date().toISOString(),
+	pid: process.pid,
+});
+
+// I-26: stdout IPC to parent test runner — E2E reads this ready line.
+process.stdout.write(
+	`${JSON.stringify({ ready: true, port: result.handle.port, pid: process.pid })}\n`,
+);
+
+const shutdown = async () => {
+	await result.handle.stop();
+	await deleteSentinel();
+	process.exit(0);
+};
+
+process.on("SIGTERM", shutdown);
+process.on("SIGINT", shutdown);

@@ -1,0 +1,21 @@
+{
+	"version": "1.0",
+	"title": "Ref Test",
+	"nodes": [
+		{
+			"id": "aaaaaaaa-bbbb-4ccc-8ddd-000000000001",
+			"title": "Main Root",
+			"status": "not-started",
+			"children": [
+				{
+					"id": "aaaaaaaa-bbbb-4ccc-8ddd-000000000002",
+					"title": "Main Child",
+					"status": "not-started"
+				},
+				{
+					"$ref": "./referenced-part.json"
+				}
+			]
+		}
+	]
+}

@@ -1,0 +1,33 @@
+title: RoadRaven
+description: Keyboard-first desktop editor for visual roadmap trees
+remote_theme: just-the-docs/just-the-docs
+url: https://shuffzord.github.io
+baseurl: /RoadRaven                # Repo name; Pages serves at https://shuffzord.github.io/RoadRaven
+
+# Just-the-Docs settings
+search_enabled: true
+heading_anchors: true
+nav_enabled: true
+
+color_scheme: dark                 # matches RoadRaven's default dark theme
+
+# Plugins (GitHub Pages allows these by default)
+plugins:
+  - jekyll-remote-theme
+
+# Aux links (top-right corner)
+aux_links:
+  GitHub: https://github.com/Shuffzord/RoadRaven
+  "npm @roadraven/core": https://www.npmjs.com/package/@roadraven/core
+
+aux_links_new_tab: true
+
+# Footer
+footer_content: 'RoadRaven is MIT-licensed. <a href="https://github.com/Shuffzord/RoadRaven/blob/master/LICENSE">License</a>.'
+
+# Exclude
+exclude:
+  - vendor
+  - "*.gemspec"
+  - Gemfile
+  - Gemfile.lock

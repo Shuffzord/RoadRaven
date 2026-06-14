@@ -1,0 +1,387 @@
+import { dirname, resolve, sep } from "node:path";
+import type {
+	RoadmapNode,
+	RoadmapSchema,
+} from "../../../../packages/core/src/schema";
+import { RoadmapSchemaSchema } from "../../../../packages/core/src/schema";
+import { atomicWrite } from "./atomicWrite";
+import { markSelfWrite } from "./fileWatcher";
+import { bunLogger } from "./logging";
+import {
+	buildOwnershipMap,
+	getOwnership,
+	setSourceTemplate,
+	splitSchemaByOwnership,
+} from "./refMap";
+import { defaultReadFile, resolveRefsWithOwnership } from "./resolveRefs";
+
+// -- Module-level state -----------------------------------------------------
+//
+// The cache holds the last-seen schema + main path so flushPending (called on
+// shutdown/quit by later plans) can safely re-write every owner in the map
+// without depending on the live webview store.
+
+let cachedSchema: RoadmapSchema | null = null;
+let cachedMainPath: string | null = null;
+const dialogAllowlist = new Set<string>();
+
+// -- Path-traversal allowlist (T-03.04-01) ---------------------------------
+
+export interface SaveFileOk {
+	ok: true;
+}
+export interface SaveFileErr {
+	ok: false;
+	error: string;
+}
+export type SaveFileResponse = SaveFileOk | SaveFileErr;
+
+/**
+ * Result of a loadFile call. Mirrors the existing RPC shape (data + errors).
+ */
+export interface LoadFileResponse {
+	data: RoadmapSchema | null;
+	errors: Array<{ path: string; message: string; code: string }>;
+	ownership: Array<[string, string]>;
+}
+
+/**
+ * Add a file path to the session allowlist. Called by the RPC layer after
+ * `Utils.saveFileDialog` returns a user-picked path (saveFileAs flow arrives in
+ * Plan 04c; this stub is safe to call today).
+ */
+export function pushDialogAllowlistPath(absolutePath: string): void {
+	dialogAllowlist.add(resolve(absolutePath));
+}
+
+/**
+ * Called by the RPC loadFile handler after a successful load so subsequent
+ * `saveFile({schema})` (no filePath) calls route back to the loaded file.
+ * Accepts any string; resolves to absolute before caching.
+ *
+ * WR-02 (Phase 6 06-REVIEW): also clears the dialog allowlist when the main
+ * path actually changes so paths the user "owned" while editing the previous
+ * roadmap are not silently carried into the new session. Without this, a
+ * D-13 path-traversal mitigation degrades over time: an agent saveFile to a
+ * path the user picked while editing roadmap-A would pass isAllowlisted()
+ * even after the user moved on to roadmap-B in a different directory.
+ *
+ * The resolved-path comparison guarantees idempotency: re-loading the same
+ * file does not wipe paths added between loads (e.g. saveFileAs picks).
+ */
+export function setCachedMainPath(absolutePath: string): void {
+	const resolved = resolve(absolutePath);
+	if (cachedMainPath !== resolved) {
+		dialogAllowlist.clear();
+	}
+	cachedMainPath = resolved;
+}
+
+/**
+ * Plan 03-04c: clear the cached main path. Used by the `newFile` RPC handler so
+ * a freshly created in-memory schema does not silently overwrite the previously
+ * loaded file when the next saveFile fires before saveFileAs picks a path.
+ *
+ * WR-02 (Phase 6 06-REVIEW): also clears the allowlist — once we have no main
+ * file, no previously-allowlisted path should remain accessible.
+ */
+export function clearCachedMainPath(): void {
+	cachedMainPath = null;
+	dialogAllowlist.clear();
+}
+
+/**
+ * CR-03 (Phase 6 06-REVIEW): expose the current cached main path so the agent
+ * cross-ref boundary gate can default unknown-ownership nodes (e.g.,
+ * agent-created nodes that haven't been propagated to the ownership map yet)
+ * to "owned by the main file." Returning null when no file is loaded is
+ * acceptable — the renderer's `no_file_loaded` gate fires before the
+ * ownership check matters.
+ */
+export function getCachedMainPath(): string | null {
+	return cachedMainPath;
+}
+
+/**
+ * True when `absolutePath` resolves inside the directory of the currently
+ * loaded main file. Used by the resolveRef RPC to block traversal outside
+ * the roadmap's own directory tree (mirrors the guard already inside
+ * resolveRefsWithOwnership).
+ */
+export function isPathWithinMainDir(absolutePath: string): boolean {
+	if (!cachedMainPath) return false;
+	const baseDir = dirname(cachedMainPath);
+	const resolved = resolve(absolutePath);
+	return resolved === baseDir || resolved.startsWith(baseDir + sep);
+}
+
+/**
+ * Called by the RPC loadFile handler after a successful load so shutdown
+ * flushPending has the latest in-memory schema to persist.
+ */
+export function setCachedSchema(schema: RoadmapSchema): void {
+	cachedSchema = schema;
+}
+
+/**
+ * True when `filePath` is either the currently loaded main file or a path the
+ * user explicitly picked via the native dialog this session.
+ */
+function isAllowlisted(resolvedPath: string): boolean {
+	if (cachedMainPath && resolve(cachedMainPath) === resolvedPath) return true;
+	if (dialogAllowlist.has(resolvedPath)) return true;
+	return false;
+}
+
+// -- saveFile handler -------------------------------------------------------
+
+/**
+ * Core saveFile implementation. Shared by the RPC handler (bun/index.ts) and
+ * unit tests (tests/unit/bun/saveFile.test.ts).
+ *
+ * Guards in order:
+ *   1. target path present (either explicit filePath or cached main path)
+ *   2. target is in the session allowlist (T-03.04-01)
+ *   3. schema passes RoadmapSchemaSchema.safeParse (T-03.04-07)
+ *
+ * On success: splits the schema by ownership and atomic-writes every owner.
+ */
+export async function saveFileHandler(params: {
+	schema: RoadmapSchema;
+	filePath?: string;
+}): Promise<SaveFileResponse> {
+	const { schema, filePath } = params;
+	const target = filePath ?? cachedMainPath;
+
+	if (!target) {
+		return { ok: false, error: "saveFile: no file path — use saveFileAs" };
+	}
+
+	const resolved = resolve(target);
+
+	if (!isAllowlisted(resolved)) {
+		bunLogger.warn`saveFile: filePath ${resolved} not in session allowlist; rejecting`;
+		return {
+			ok: false,
+			error:
+				"saveFile: filePath not in session allowlist (path-traversal mitigation)",
+		};
+	}
+
+	// T-03.04-07: Zod pre-write validation (BEFORE splitSchemaByOwnership and BEFORE atomicWrite)
+	const parsed = RoadmapSchemaSchema.safeParse(schema);
+	if (!parsed.success) {
+		const issue = parsed.error.issues[0];
+		const msg = `saveFile: schema validation failed: ${issue.path.map(String).join(".")}: ${issue.message}`;
+		bunLogger.warn`${msg}`;
+		return { ok: false, error: msg };
+	}
+
+	try {
+		const ownership = getOwnership();
+		const perFile = splitSchemaByOwnership(schema, resolved, ownership);
+		await Promise.all(
+			[...perFile].map(async ([p, payload]) => {
+				await atomicWrite(p, JSON.stringify(payload, null, 2));
+				markSelfWrite(p);
+			}),
+		);
+		cachedSchema = schema;
+		cachedMainPath = resolved;
+		bunLogger.info`saveFile wrote ${perFile.size} file(s) for main=${resolved}`;
+		return { ok: true };
+	} catch (err) {
+		bunLogger.error`saveFile failed: ${String(err)}`;
+		return { ok: false, error: String(err) };
+	}
+}
+
+// -- flushPending (idempotent; invocation wires in Plan 04c) ---------------
+
+// CR-01 (Wave 3 review): coalesce concurrent callers. The before-quit path and
+// SIGINT/SIGTERM signal handlers can both fire when Ctrl+C is pressed in the
+// shell that owns the Electrobun event loop. Without this guard, two parallel
+// invocations would race the rename-based atomicWrite on the same path
+// (last-writer-wins on POSIX, EBUSY/EACCES on Windows when the destination
+// handle is still held). The first caller runs the body; subsequent callers
+// await the same in-flight promise and return when it settles.
+let flushInFlight: Promise<void> | null = null;
+
+/**
+ * Called by the quit/before-quit path in later plans. Safe to call anytime —
+ * a no-op when nothing is cached. Concurrent calls coalesce onto a single
+ * in-flight promise (CR-01) so signal handlers and before-quit cannot race
+ * each other into a torn write.
+ */
+export async function flushPending(): Promise<void> {
+	if (flushInFlight) return flushInFlight;
+	flushInFlight = (async () => {
+		try {
+			if (!cachedSchema || !cachedMainPath) {
+				bunLogger.info`flushPending: no cached schema/path; no-op`;
+				return;
+			}
+			try {
+				const parsed = RoadmapSchemaSchema.safeParse(cachedSchema);
+				if (!parsed.success) {
+					bunLogger.error`flushPending: cached schema failed Zod validation; aborting`;
+					return;
+				}
+				const ownership = getOwnership();
+				const perFile = splitSchemaByOwnership(
+					cachedSchema,
+					cachedMainPath,
+					ownership,
+				);
+				await Promise.all(
+					[...perFile].map(async ([p, payload]) => {
+						await atomicWrite(p, JSON.stringify(payload, null, 2));
+						markSelfWrite(p);
+					}),
+				);
+				bunLogger.info`flushPending wrote ${perFile.size} file(s)`;
+			} catch (err) {
+				bunLogger.error`flushPending failed: ${String(err)}`;
+			}
+		} finally {
+			flushInFlight = null;
+		}
+	})();
+	return flushInFlight;
+}
+
+// -- loadFile handler -------------------------------------------------------
+
+/**
+ * Core loadFile implementation. Responsibilities beyond the existing RPC
+ * handler in bun/index.ts:
+ *   - Capture the pre-resolution main-file nodes via setSourceTemplate (needed
+ *     by splitSchemaByOwnership on save to restore $ref placeholders).
+ *   - Populate the ownership map for every node in the resolved tree.
+ *   - Set cachedMainPath so a subsequent saveFile with no filePath works.
+ *
+ * The RPC wrapper in bun/index.ts adds .bak.json backup, file watchers, and
+ * RPC error propagation — concerns that stay out of this core function.
+ */
+export async function loadFileHandler(params: {
+	path: string;
+}): Promise<LoadFileResponse> {
+	const filePath = params.path;
+	const resolvedMain = resolve(filePath);
+
+	let raw: string;
+	try {
+		raw = await defaultReadFile(filePath);
+	} catch (err) {
+		bunLogger.error`Failed to read file ${filePath}: ${String(err)}`;
+		return {
+			data: null,
+			errors: [
+				{
+					path: "",
+					message: `Failed to read file: ${String(err)}`,
+					code: "file_read_error",
+				},
+			],
+			ownership: [],
+		};
+	}
+
+	let parsedRaw: unknown;
+	try {
+		parsedRaw = JSON.parse(raw);
+	} catch (err) {
+		return {
+			data: null,
+			errors: [
+				{
+					path: "",
+					message: `Invalid JSON: ${String(err)}`,
+					code: "json_parse_error",
+				},
+			],
+			ownership: [],
+		};
+	}
+
+	const zod = RoadmapSchemaSchema.safeParse(parsedRaw);
+	const errors: Array<{ path: string; message: string; code: string }> = [];
+	let schemaData: unknown;
+	if (!zod.success) {
+		for (const issue of zod.error.issues) {
+			errors.push({
+				path: issue.path.map(String).join("/"),
+				message: issue.message,
+				code: String(issue.code),
+			});
+		}
+		schemaData = parsedRaw;
+	} else {
+		schemaData = zod.data;
+	}
+
+	// Capture the original (pre-resolution) nodes as the source template
+	// before $ref expansion mutates the tree. splitSchemaByOwnership uses this
+	// on save to restore the $ref placeholders in the main file.
+	if (
+		schemaData &&
+		typeof schemaData === "object" &&
+		"nodes" in schemaData &&
+		Array.isArray((schemaData as { nodes: unknown }).nodes)
+	) {
+		const originalNodes = (schemaData as { nodes: RoadmapNode[] }).nodes;
+		setSourceTemplate(resolvedMain, originalNodes);
+
+		// Seed the ownership map at the main-file scope BEFORE recursion.
+		// resolveRefsWithOwnership then overlays per-ref descendants via setOwnership.
+		buildOwnershipMap(
+			originalNodes.filter((n) => !n.$ref),
+			resolvedMain,
+		);
+
+		// Expand $refs and tag ownership (per-file per-node). Test path omits
+		// the watcher callback — only the production loadFile in bun/index.ts
+		// wires file watchers.
+		const resolvedNodes = await resolveRefsWithOwnership(
+			originalNodes,
+			resolvedMain,
+			resolvedMain,
+			{ readFile: defaultReadFile },
+		);
+		(schemaData as { nodes: RoadmapNode[] }).nodes = resolvedNodes;
+	}
+
+	cachedSchema = schemaData as RoadmapSchema;
+	cachedMainPath = resolvedMain;
+
+	// Seed the ownership map AFTER resolution so buildOwnershipMap covers every
+	// expanded descendant; per-ref overrides are set in resolveRefsWithOwnership.
+	const ownership = getOwnership();
+
+	return {
+		data: schemaData as RoadmapSchema,
+		errors,
+		ownership: [...ownership.entries()],
+	};
+}
+
+// $ref resolution + ownership tagging now lives in `./resolveRefs.ts`,
+// shared with the production loadFile handler in `./index.ts`. The handler
+// here passes only the read-file backend; production also passes a watcher.
+
+// -- Test-only hooks (underscore-prefixed so they're never part of the public API) --
+
+export function __resetSaveFileModuleForTests(): void {
+	cachedSchema = null;
+	cachedMainPath = null;
+	dialogAllowlist.clear();
+	flushInFlight = null;
+}
+
+export function __setCachedMainPathForTests(path: string): void {
+	cachedMainPath = resolve(path);
+}
+
+export function __pushDialogAllowlistPathForTests(path: string): void {
+	pushDialogAllowlistPath(path);
+}

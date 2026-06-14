@@ -1,0 +1,169 @@
+// @vitest-environment jsdom
+
+import fs from "node:fs";
+import path from "node:path";
+import { render, screen } from "@testing-library/react";
+import React from "react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+// Mock the rpc module to prevent Electroview import
+vi.mock("../../../src/mainview/rpc", () => ({
+	electroview: {
+		rpc: {
+			request: {
+				saveSettings: vi.fn(() => Promise.resolve({ success: true })),
+				loadSettings: vi.fn(() => Promise.resolve({ settings: {} })),
+			},
+		},
+	},
+}));
+
+import { RoadmapNodeCard } from "../../../src/mainview/components/RoadmapNode";
+import { SidePanel } from "../../../src/mainview/components/SidePanel";
+import { useRoadmapStore } from "../../../src/mainview/store/roadmapStore";
+
+describe("RoadmapNodeCard", () => {
+	it("renders title text", () => {
+		render(<RoadmapNodeCard title="Test Node" status="in-progress" />);
+		expect(screen.getByText("Test Node")).toBeTruthy();
+	});
+
+	it("renders status badge with text label", () => {
+		render(<RoadmapNodeCard title="Test Node" status="in-progress" />);
+		expect(screen.getByText("In Progress")).toBeTruthy();
+	});
+
+	it("sets --node-stripe-color CSS variable matching status", () => {
+		const { container } = render(
+			<RoadmapNodeCard title="Test Node" status="completed" />,
+		);
+		const node = container.querySelector(".node");
+		expect(node).toBeTruthy();
+		const style = node?.getAttribute("style") ?? "";
+		expect(style).toContain("--node-stripe-color");
+		expect(style).toContain("--rv-status-completed");
+	});
+
+	it("sets --badge-color and --badge-bg CSS variables", () => {
+		const { container } = render(
+			<RoadmapNodeCard title="Test Node" status="blocked" />,
+		);
+		const node = container.querySelector(".node");
+		const style = node?.getAttribute("style") ?? "";
+		expect(style).toContain("--badge-color");
+		expect(style).toContain("--badge-bg");
+		expect(style).toContain("--rv-status-blocked");
+		expect(style).toContain("--rv-status-blocked-bg");
+	});
+
+	// Screen readers announce aria-label verbatim. UUIDs are meaningless noise
+	// to a human listener, so the label must not leak the internal node id.
+	it("aria-label contains the title only — no UUID substring", () => {
+		const nodeId = "aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee";
+		render(
+			<RoadmapNodeCard nodeId={nodeId} title="My Task" status="in-progress" />,
+		);
+		const card = screen.getByRole("treeitem");
+		const label = card.getAttribute("aria-label") ?? "";
+		expect(label).toBe("My Task");
+		expect(label).not.toContain(nodeId);
+	});
+});
+
+describe("SidePanel", () => {
+	it("renders field labels: STATUS, TYPE, CREATED, UPDATED, ID, NOTES", () => {
+		// Set up store with a selected node so field labels render
+		useRoadmapStore.getState().loadSchema(
+			{
+				version: "1.0",
+				title: "Test",
+				nodes: [
+					{
+						id: "test-node-1",
+						title: "Test Node",
+						status: "in-progress",
+						type: "task",
+						notes: "Some notes",
+					},
+				],
+			},
+			"test.json",
+		);
+		useRoadmapStore.getState().setSelectedNode("test-node-1");
+
+		render(
+			<SidePanel
+				isOpen={true}
+				onClose={() => {
+					/* noop */
+				}}
+			/>,
+		);
+		for (const label of [
+			"STATUS",
+			"TYPE",
+			"CREATED",
+			"UPDATED",
+			"ID",
+			"NOTES",
+		]) {
+			expect(screen.getByText(label)).toBeTruthy();
+		}
+
+		// Clean up store state
+		useRoadmapStore.getState().setSelectedNode(null);
+	});
+
+	it("close button has aria-label='Close panel'", () => {
+		render(
+			<SidePanel
+				isOpen={true}
+				onClose={() => {
+					/* noop */
+				}}
+			/>,
+		);
+		expect(screen.getByLabelText("Close panel")).toBeTruthy();
+	});
+
+	it("renders in closed state (width 0) by default", () => {
+		const { container } = render(
+			<SidePanel
+				isOpen={false}
+				onClose={() => {
+					/* noop */
+				}}
+			/>,
+		);
+		const panel = container.firstElementChild as HTMLElement;
+		expect(panel.style.width).toBe("0px");
+	});
+});
+
+describe("Hardcoded color check", () => {
+	it("components contain zero hardcoded hex/rgb color values", () => {
+		const componentsDir = path.resolve(
+			__dirname,
+			"../../../src/mainview/components",
+		);
+		// ThemePicker renders swatches previewing every available theme's palette,
+		// so its hex constants are intentional data (not a theming violation).
+		const THEME_PREVIEW_COMPONENTS = new Set([
+			"ThemeOverrideProvider.tsx",
+			"ThemePicker.tsx",
+		]);
+		const files = fs
+			.readdirSync(componentsDir)
+			.filter(
+				(f: string) => f.endsWith(".tsx") && !THEME_PREVIEW_COMPONENTS.has(f),
+			);
+		const hexPattern = /#[0-9a-fA-F]{3,8}\b/;
+		const rgbPattern = /rgb\(|rgba\(|hsl\(/;
+
+		for (const file of files) {
+			const content = fs.readFileSync(path.join(componentsDir, file), "utf-8");
+			expect(hexPattern.test(content)).toBe(false);
+			expect(rgbPattern.test(content)).toBe(false);
+		}
+	});
+});

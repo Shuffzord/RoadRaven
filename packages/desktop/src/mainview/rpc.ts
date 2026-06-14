@@ -1,0 +1,109 @@
+import { Electroview } from "electrobun/view";
+import type { RoadmapNode } from "../../../../packages/core/src/schema";
+import type { RoadmapRPCType } from "../../../../shared/types";
+import { useRoadmapStore } from "./store/roadmapStore";
+
+const rpc = Electroview.defineRPC<RoadmapRPCType>({
+	maxRequestTime: 120_000, // 2 min — native file dialogs block until user picks a file
+	handlers: {
+		requests: {
+			// Phase 6 PLUG-AGENT-* — Bun forwards inbound type:'request' frames here
+			// (Plan 06-03 agentRequestHandler → mainWindow.webview.rpc.request.agentRequest).
+			// Renderer dispatcher (Plan 06-04) routes to roadmapStore actions and emits
+			// drawer audit events for every mutating tool (D-09).
+			agentRequest: async ({ tool, args }) => {
+				const { handleAgentRequest } = await import("./rpc/agentRpcHandler");
+				return handleAgentRequest(tool, args);
+			},
+		},
+		messages: {
+			pushFileChanged: (msg) => {
+				import("./rpcHandlers").then(({ handlePushFileChanged }) => {
+					handlePushFileChanged(msg);
+				});
+			},
+			pushStatusUpdate: (msg) => {
+				import("./rpcHandlers").then(({ handlePushStatusUpdate }) => {
+					handlePushStatusUpdate(msg);
+				});
+			},
+			pushEventLog: (msg) => {
+				import("./rpcHandlers").then(({ handlePushEventLog }) => {
+					handlePushEventLog(msg);
+				});
+			},
+			pushEventApiState: (msg) => {
+				import("./rpcHandlers").then(({ handlePushEventApiState }) => {
+					handlePushEventApiState(msg);
+				});
+			},
+			pushEventApiError: (msg) => {
+				import("./rpcHandlers").then(({ handlePushEventApiError }) => {
+					handlePushEventApiError(msg);
+				});
+			},
+			pushOwnershipMap: (msg) => {
+				// Ownership map is consumed by refMap — see index.ts bun side.
+				// No renderer-side action needed currently.
+				void msg;
+			},
+		},
+	},
+});
+
+// Electroview constructor throws in regular browsers (HMR dev mode)
+// because the WebSocket URL requires Electrobun's native context.
+// Graceful fallback keeps React rendering for UI development.
+let instance: Electroview<typeof rpc> | null = null;
+try {
+	instance = new Electroview({ rpc });
+} catch {
+	// Running outside Electrobun (e.g. localhost:5173 in browser)
+}
+
+export const electroview = instance;
+
+/**
+ * pullEventApiStateOnMount — request the Bun process's current Event API state
+ * and seed eventApiStore. The Bun-side initial push races bundle load and is
+ * dropped silently if the renderer's RPC handlers haven't registered yet,
+ * leaving the pill and Welcome URL line stuck at "off".
+ */
+export async function pullEventApiStateOnMount(): Promise<void> {
+	if (!electroview?.rpc) return;
+	try {
+		const state = await electroview.rpc.request.getEventApiState({});
+		const { useEventApiStore } = await import("./store/eventApiStore");
+		useEventApiStore.getState().setState(state);
+	} catch {
+		// Bun may still be starting; the push from onConnectionChange / onError
+		// will fill in later if it lands after handlers register.
+	}
+}
+
+/**
+ * pushAllowlistFromStore — collect all node IDs and status IDs from the current
+ * schema and send setNodeAllowlist to the Bun process. Called on mount and on
+ * every dataKey / statusConfig change (RESEARCH §2.3 Pitfall 3, I-01 resolution).
+ *
+ * Uses `schema.nodes` (NOT schema.rootNodes — verified 2026-04-23).
+ */
+export async function pushAllowlistFromStore(): Promise<void> {
+	const { schema } = useRoadmapStore.getState();
+	if (!schema) return;
+
+	const nodeIds: string[] = [];
+	const walk = (n: RoadmapNode) => {
+		nodeIds.push(n.id);
+		n.children?.forEach(walk);
+	};
+	schema.nodes.forEach(walk);
+
+	const statusIds = (schema.statusConfig ?? []).map((s) => s.id);
+
+	try {
+		await electroview?.rpc?.request.setNodeAllowlist({ nodeIds, statusIds });
+	} catch {
+		// RPC may fail during startup before Bun is ready; silently ignore
+	}
+}

@@ -1,0 +1,79 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [master]
+
+# Least-privilege workflow token (W-02 fix). CI only reads code, runs tests,
+# and lints — it never publishes, comments on PRs, or uploads release assets.
+# Setting `contents: read` here protects against repos with default `write-all`
+# token permissions and against future job additions that might inadvertently
+# inherit broader scope.
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lock') }}
+      - run: bun install
+      - name: Verify @roadraven/core dependency allowlist (D-23, T-05-04)
+        run: bun run scripts/check-core-deps.ts
+      - run: bunx @biomejs/biome check --diagnostic-level=error .
+
+  typecheck:
+    name: Type Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - run: bun install
+      - run: bunx tsc --noEmit
+        working-directory: packages/desktop
+
+  test:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - run: bun install
+      - run: bunx vitest run
+        working-directory: packages/desktop
+
+  # TODO(fallow): enable once the branch is stable and the post-GSD dead-code
+  # cleanup has landed. Intended as a non-blocking signal initially; flip to
+  # `--fail-on-regression` after `bunx fallow --save-regression-baseline` is run
+  # on a known-good commit.
+  #
+  # fallow:
+  #   name: Fallow (static analysis)
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #       with:
+  #         fetch-depth: 0  # needed for --changed-since / churn analysis
+  #     - uses: oven-sh/setup-bun@v2
+  #       with:
+  #         bun-version: latest
+  #     - run: bun install
+  #     - run: bunx fallow --format sarif --sarif-file fallow.sarif --fail-on-regression --tolerance=5%
+  #     - uses: github/codeql-action/upload-sarif@v3
+  #       if: always()
+  #       with:
+  #         sarif_file: fallow.sarif
+

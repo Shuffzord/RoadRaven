@@ -1,0 +1,43 @@
+{
+	"$schema": "https://biomejs.dev/schemas/2.4.11/schema.json",
+	"assist": { "actions": { "source": { "organizeImports": "on" } } },
+	"css": {
+		"parser": {
+			"tailwindDirectives": true
+		}
+	},
+	"linter": {
+		"enabled": true,
+		"rules": {
+			"recommended": true,
+			"suspicious": {
+				"noUnknownAtRules": "off",
+				"noEmptyBlockStatements": "error"
+			},
+			"complexity": {
+				"noImportantStyles": "warn"
+			}
+		}
+	},
+	"formatter": {
+		"enabled": true,
+		"indentStyle": "tab",
+		"lineEnding": "lf"
+	},
+	"files": {
+		"experimentalScannerIgnores": [".claude/worktrees"],
+		"includes": [
+			"packages/**",
+			"shared/**",
+			"plugins/**",
+			"biome.json",
+			"!**/dist",
+			"!**/build",
+			"!**/artifacts",
+			"!**/playwright-report",
+			"!**/test-results",
+			"!.claude/worktrees/**",
+			"!**/*.bak.json"
+		]
+	}
+}

@@ -1,0 +1,102 @@
+import { useEffect } from "react";
+import { Canvas } from "./components/Canvas";
+import { ConfirmationDialog } from "./components/ConfirmationDialog";
+import { EventLogDrawer } from "./components/EventLogDrawer";
+import { EventToastStack } from "./components/EventToastStack";
+import { ExternalEditToast } from "./components/ExternalEditToast";
+import { SaveFailureModal } from "./components/SaveFailureModal";
+import { Sidebar } from "./components/Sidebar";
+import { SidePanel } from "./components/SidePanel";
+import { StatusBar } from "./components/StatusBar";
+import { TopBar } from "./components/TopBar";
+import { useAutosave } from "./hooks/useAutosave";
+import { useFileActions } from "./hooks/useFileActions";
+import { pullEventApiStateOnMount, pushAllowlistFromStore } from "./rpc";
+import { useRoadmapStore } from "./store/roadmapStore";
+
+export default function App() {
+	const selectedNodeId = useRoadmapStore((s) => s.selectedNodeId);
+	const setSelectedNode = useRoadmapStore((s) => s.setSelectedNode);
+	const isOpen = selectedNodeId !== null;
+
+	useAutosave();
+	// Plan 03-04c: registers app-level CustomEvent bridges
+	// (roadraven:reload-file, roadraven:request-save-as). Canvas.tsx also calls
+	// useFileActions but its lifecycle is tied to the WelcomeScreen vs Tree
+	// branch; mounting at App scope ensures the listeners survive every state.
+	useFileActions();
+
+	// Plan 04-03: 1Hz tick for live-pulse selector re-evaluation (D-14/D-15).
+	// bumpLiveTick increments liveTick in roadmapStore; useIsNodeLive selectors
+	// subscribe to liveTick so they re-evaluate every second without touching dataKey.
+	useEffect(() => {
+		const t = setInterval(() => {
+			useRoadmapStore.getState().bumpLiveTick();
+		}, 1000);
+		return () => clearInterval(t);
+	}, []);
+
+	// Phase 04 UAT fix: pull current Event API state on mount. The Bun-side
+	// initial push races bundle load and is dropped silently if the renderer's
+	// RPC handlers haven't registered yet, leaving the pill / Welcome URL line
+	// stuck at "off".
+	useEffect(() => {
+		void pullEventApiStateOnMount();
+	}, []);
+
+	// Plan 04-03: push node/status allowlist to Bun on mount and on schema changes.
+	// Uses plain store.subscribe (no subscribeWithSelector — I-01) with manual
+	// prev-value tracking. dataKey changes on every structural edit; statusConfig
+	// identity changes when the user edits status entries.
+	useEffect(() => {
+		// Initial push (schema may already be loaded if HMR reloads this component)
+		if (useRoadmapStore.getState().schema) {
+			void pushAllowlistFromStore();
+		}
+
+		let prevDataKey = useRoadmapStore.getState().dataKey;
+		let prevStatusConfig = useRoadmapStore.getState().schema?.statusConfig;
+
+		const unsub = useRoadmapStore.subscribe((state) => {
+			const dataKeyChanged = state.dataKey !== prevDataKey;
+			const statusConfigChanged =
+				state.schema?.statusConfig !== prevStatusConfig;
+			if (dataKeyChanged || statusConfigChanged) {
+				prevDataKey = state.dataKey;
+				prevStatusConfig = state.schema?.statusConfig;
+				void pushAllowlistFromStore();
+			}
+		});
+
+		return unsub;
+	}, []);
+
+	// Dev-only test hook for deterministic UI tests (Playwright render-budget
+	// checks). Stripped from production builds by Vite's dead-code elimination.
+	useEffect(() => {
+		if (import.meta.env.DEV) {
+			(
+				window as unknown as { __ROADRAVEN_TEST__?: unknown }
+			).__ROADRAVEN_TEST__ = {
+				loadSchema: (schema: unknown) => {
+					useRoadmapStore.getState().loadSchema(schema as never, null);
+				},
+			};
+		}
+	}, []);
+
+	return (
+		<div id="app" className="h-screen w-screen bg-rv-bg-base">
+			<TopBar />
+			<Sidebar />
+			<Canvas />
+			<SidePanel isOpen={isOpen} onClose={() => setSelectedNode(null)} />
+			<StatusBar />
+			<ConfirmationDialog />
+			<SaveFailureModal />
+			<ExternalEditToast />
+			<EventToastStack />
+			<EventLogDrawer />
+		</div>
+	);
+}

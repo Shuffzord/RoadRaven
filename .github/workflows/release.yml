@@ -1,0 +1,194 @@
+name: Release
+
+on:
+  push:
+    tags:
+      # Stable semver only (v1.0.0, v1.0.1, v1.1.0). Pre-release tags
+      # (v1.0.1-canary.0, v1.0.0-rc.1, etc.) are explicitly rejected here;
+      # v1.1's canary channel will live in a separate workflow with its own
+      # gating. Without this anchor a v*-canary.0 push would npm publish
+      # --provenance and create a public Release with prerelease: false.
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+
+# All jobs that publish or upload need explicit permissions (least-privilege).
+# id-token: write — required for npm provenance OIDC token mint (R-03)
+# contents: write — required for gh release create + asset upload
+# NOTE: deploy-docs job (Task 4) overrides these with pages-specific permissions.
+permissions:
+  contents: write
+  id-token: write
+
+jobs:
+  build-windows:
+    name: Build Windows installer
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - name: Cache bun deps
+        uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lock') }}
+      - name: Install workspace dependencies
+        run: bun install
+      - name: Build webview bundle (vite build → packages/desktop/dist)
+        run: bun run --cwd packages/desktop build
+      - name: Build Windows installer (stable channel)
+        # Produces: packages/desktop/artifacts/stable-win-x64-RoadRaven-Setup.zip
+        #           packages/desktop/artifacts/stable-win-x64-update.json
+        #           packages/desktop/artifacts/stable-win-x64-RoadRaven.tar.zst
+        # Names verified against electrobun@1.18.1 src/shared/naming.ts — for
+        # buildEnvironment === "stable" the channel suffix is OMITTED on the
+        # bundle name (only canary/dev/etc. carry a trailing -{channel}).
+        run: bunx electrobun build --env=stable
+        working-directory: packages/desktop
+      - name: Smoke-test installer artifact naming
+        # Wave-0 test from Plan 05-01 — asserts artifact names match Pattern R-02
+        run: bunx vitest run tests/release/installer-artifacts.test.ts
+      - name: Upload installer + update manifest
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-installer
+          path: |
+            packages/desktop/artifacts/stable-win-x64-*.zip
+            packages/desktop/artifacts/stable-win-x64-update.json
+            packages/desktop/artifacts/stable-win-x64-*.tar.zst
+          if-no-files-found: error
+
+  build-linux:
+    name: Build Linux installer
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - name: Cache bun deps
+        uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lock') }}
+      - name: Install workspace dependencies
+        run: bun install
+      - name: Build webview bundle (vite build → packages/desktop/dist)
+        run: bun run --cwd packages/desktop build
+      - name: Build Linux installer (stable channel)
+        # Produces: packages/desktop/artifacts/stable-linux-x64-RoadRaven-Setup.tar.gz
+        #           packages/desktop/artifacts/stable-linux-x64-update.json
+        #           packages/desktop/artifacts/stable-linux-x64-RoadRaven.tar.zst
+        # NOTE per R-01: Electrobun ships .tar.gz, NOT .deb. Wave-0 test asserts no .deb.
+        # Stable build OMITS channel suffix on bundle name (matches Electrobun naming).
+        run: bunx electrobun build --env=stable
+        working-directory: packages/desktop
+      - name: Smoke-test installer artifact naming + .deb absence
+        run: bunx vitest run tests/release/installer-artifacts.test.ts
+      - name: Upload installer + update manifest
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-installer
+          path: |
+            packages/desktop/artifacts/stable-linux-x64-*.tar.gz
+            packages/desktop/artifacts/stable-linux-x64-update.json
+            packages/desktop/artifacts/stable-linux-x64-*.tar.zst
+          if-no-files-found: error
+
+  github-release:
+    name: Create GitHub Release with installers
+    needs: [build-windows, build-linux]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+      - name: Create release and attach artifacts
+        uses: softprops/action-gh-release@v2
+        with:
+          files: artifacts/**
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  publish-npm-core:
+    name: Publish @roadraven/core to npm
+    needs: [build-windows, build-linux]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          registry-url: 'https://registry.npmjs.org'
+      - name: Install workspace dependencies
+        run: bun install
+      - name: Build @roadraven/core (tsup → dist/)
+        run: bun run --cwd packages/core build
+      # CLAUDE.md exception: `npm publish` is the only authorized npm CLI usage.
+      # Bun's publish lacks first-class provenance support; npm CLI is the registry
+      # client with mature OIDC trusted-publishing integration (R-03). Using `bunx
+      # npm publish` defeats the OIDC env wiring that actions/setup-node provides
+      # (RESEARCH.md Pitfall 1). Use `npm publish` directly.
+      - name: Publish @roadraven/core to npm with provenance (OIDC)
+        run: npm publish --access public --provenance
+        working-directory: packages/core
+
+  publish-npm-mcp:
+    name: Publish @roadraven/plugin-claude-code to npm
+    needs: [build-windows, build-linux]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          registry-url: 'https://registry.npmjs.org'
+      - name: Install workspace dependencies
+        run: bun install
+      - name: Build @roadraven/plugin-claude-code (bun build → dist/)
+        run: bun run --cwd plugins/claude-code build
+      # Same CLAUDE.md exception as publish-npm-core above.
+      - name: Publish @roadraven/plugin-claude-code to npm with provenance (OIDC)
+        run: npm publish --access public --provenance
+        working-directory: plugins/claude-code
+
+  deploy-docs:
+    name: Deploy docs site to GitHub Pages
+    # Gated on tag push (defense-in-depth — the workflow trigger is already
+    # tag-only, but explicit gate documents intent and protects against future
+    # workflow_dispatch additions).
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [github-release]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/configure-pages@v5
+      - uses: actions/jekyll-build-pages@v1
+        with:
+          source: ./docs
+          destination: ./_site
+      - uses: actions/upload-pages-artifact@v3
+      - id: deployment
+        uses: actions/deploy-pages@v4
+      - name: Smoke-test GH Pages site is live
+        run: |
+          # Wait briefly for Pages CDN to propagate, then verify the site responds.
+          sleep 10
+          curl -fsSL "https://shuffzord.github.io/RoadRaven/" | grep -q "RoadRaven" || (echo "GH Pages site did not return RoadRaven content"; exit 1)

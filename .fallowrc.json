@@ -1,0 +1,67 @@
+{
+  // Fallow configuration — static analysis for unused code, duplication, complexity.
+  // Docs: https://docs.fallow.tools | Source: https://github.com/fallow-rs/fallow
+  //
+  // Without this file, fallow cannot see Electrobun's runtime entry points
+  // (Bun main process, mainview HTML bootstrap) and reports false positives
+  // such as App.tsx being "100% dead".
+
+  // Entry points fallow can't discover on its own.
+  // - src/bun/index.ts                 — Electrobun main process, loaded by electrobun runtime
+  // - src/bun/eventServerStandalone.ts — headless Bun launcher spawned by eventApi-e2e.test.ts
+  //                                      (spawn("bun", ["run", ...]) — not statically importable)
+  // - src/mainview/index.html          — Vite root; boots main.tsx which renders App
+  // - src/mainview/main.tsx            — belt-and-braces (in case HTML <script> isn't followed)
+  // - *.config.ts                      — Vite/Vitest/Electrobun/Playwright tool configs
+  "entry": [
+    "packages/desktop/src/bun/index.ts",
+    "packages/desktop/src/bun/eventServerStandalone.ts",
+    "packages/desktop/src/mainview/index.html",
+    "packages/desktop/src/mainview/main.tsx",
+    "packages/desktop/electrobun.config.ts",
+    "packages/desktop/vite.config.ts",
+    "packages/desktop/vitest.config.ts",
+    "packages/desktop/playwright.config.ts",
+
+    // Standalone CLI / operator scripts — invoked via `bun run <script>`,
+    // CI, or the Claude allowlist; not reachable from the app import graph.
+    "scripts/check-core-deps.ts",
+    "scripts/bump-version.ts",
+    "scripts/normalize-uuids.mjs",
+    "scripts/validate-cfa-roadmap.mjs",
+    "scripts/validate-roadmap.mjs",
+    "scripts/storytelling-video/run.ts",
+    "scripts/storytelling-video/validate-timeline.ts"
+  ],
+
+  // Paths excluded from analysis entirely.
+  "ignorePatterns": [
+    "**/dist/**",
+    "**/.planning/**",
+    "**/.fallow/**",
+    "samples/**",
+    "**/*.bak.json"
+  ],
+
+  // Treat an export referenced within its own declaring file as "used".
+  // Clears idiomatic store-state types and co-located zod schemas (exported
+  // for convention, consumed only locally) while STILL surfacing exports that
+  // nothing — not even their own module — reads.
+  "ignoreExportsUsedInFile": true,
+
+  // @roadraven/core is a workspace package whose exports are consumed
+  // indirectly (shared schema, plugin surface). Treat as a public library
+  // so its exports aren't flagged unused when no sibling imports them yet.
+  "publicPackages": [
+    "@roadraven/core"
+  ],
+
+  // Per-rule severity overrides.
+  // - duplicate-exports: we knowingly re-export schema types from shared/types.ts
+  //   for the time being; demote from error to warn until consolidation lands.
+  // - unused-dev-dependencies: already warn by default; kept explicit for visibility.
+  "rules": {
+    "duplicate-exports": "warn",
+    "unused-dev-dependencies": "warn"
+  }
+}

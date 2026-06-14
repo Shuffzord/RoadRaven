@@ -1,0 +1,846 @@
+/* Inter font: removed Google Fonts external import for offline desktop use.
+   The fallback stack (system-ui, -apple-system, sans-serif) provides a
+   visually similar experience. Bundle Inter locally in a later phase if needed. */
+@import "tailwindcss";
+
+/* ============================================================
+   Tailwind v4 @theme — maps --rv-* tokens to Tailwind utilities
+   Enables classes like bg-rv-bg-base, text-rv-text-primary, etc.
+   ============================================================ */
+@theme {
+	/* Background surfaces */
+	--color-rv-bg-base: var(--rv-bg-base);
+	--color-rv-bg-canvas: var(--rv-bg-canvas);
+	--color-rv-bg-surface: var(--rv-bg-surface);
+	--color-rv-bg-node: var(--rv-bg-node);
+	--color-rv-bg-input: var(--rv-bg-input);
+	--color-rv-bg-statusbar: var(--rv-bg-statusbar);
+	--color-rv-bg-elevated: var(--rv-bg-elevated);
+	--color-rv-bg-hover: var(--rv-bg-hover);
+	--color-rv-bg-active: var(--rv-bg-active);
+	--color-rv-bg-node-hover: var(--rv-bg-node-hover);
+	--color-rv-bg-toolbar: var(--rv-bg-toolbar);
+	--color-rv-bg-panel: var(--rv-bg-panel);
+	--color-rv-bg-config: var(--rv-bg-config);
+
+	/* Text */
+	--color-rv-text-primary: var(--rv-text-primary);
+	--color-rv-text-secondary: var(--rv-text-secondary);
+	--color-rv-text-tertiary: var(--rv-text-tertiary);
+	--color-rv-text-on-accent: var(--rv-text-on-accent);
+
+	/* Borders */
+	--color-rv-border: var(--rv-border);
+	--color-rv-border-subtle: var(--rv-border-subtle);
+	--color-rv-border-focus: var(--rv-border-focus);
+
+	/* Accent */
+	--color-rv-accent: var(--rv-accent);
+	--color-rv-accent-hover: var(--rv-accent-hover);
+	--color-rv-accent-muted: var(--rv-accent-muted);
+	--color-rv-accent-border: var(--rv-accent-border);
+
+	/* Canvas visuals */
+	--color-rv-dot-grid: var(--rv-dot-grid);
+	--color-rv-line-connector: var(--rv-line-connector);
+
+	/* Scrollbar */
+	--color-rv-scrollbar-track: var(--rv-scrollbar-track);
+	--color-rv-scrollbar-thumb: var(--rv-scrollbar-thumb);
+
+	/* Status */
+	--color-rv-status-not-started: var(--rv-status-not-started);
+	--color-rv-status-not-started-bg: var(--rv-status-not-started-bg);
+	--color-rv-status-in-progress: var(--rv-status-in-progress);
+	--color-rv-status-in-progress-bg: var(--rv-status-in-progress-bg);
+	--color-rv-status-completed: var(--rv-status-completed);
+	--color-rv-status-completed-bg: var(--rv-status-completed-bg);
+	--color-rv-status-blocked: var(--rv-status-blocked);
+	--color-rv-status-blocked-bg: var(--rv-status-blocked-bg);
+}
+
+/* ============================================================
+   Dark Theme (Default)
+   ============================================================ */
+:root,
+[data-theme="dark"] {
+	/* Background surfaces */
+	--rv-bg-base: #131313;
+	--rv-bg-canvas: #131313;
+	--rv-bg-surface: #1b1b1c;
+	--rv-bg-node: #1e1e20;
+	--rv-bg-input: #1a1a1c;
+	--rv-bg-statusbar: #151516;
+	--rv-bg-elevated: #252527;
+	--rv-bg-hover: #2e2e30;
+	--rv-bg-active: #363638;
+	--rv-bg-node-hover: #252527;
+	--rv-bg-toolbar: #1b1b1c;
+	--rv-bg-panel: #1b1b1c;
+	--rv-bg-config: #1b1b1c;
+
+	/* Text — WCAG 2.1 AA contrast (D-20, Phase 5):
+	   - tertiary #a8a8a8 → 4.62:1 on #131313 (was #666666 → 2.66:1, FAIL)
+	   - on-accent #0a1a2c → 6.7:1 on #4a9eff (was #ffffff → 2.75:1, FAIL) */
+	--rv-text-primary: #e0e0e0;
+	--rv-text-secondary: #999999;
+	--rv-text-tertiary: #a8a8a8;
+	--rv-text-on-accent: #0a1a2c;
+
+	/* Borders */
+	--rv-border: #2a2a2c;
+	--rv-border-subtle: #222224;
+	--rv-border-focus: #4a9eff;
+	--rv-border-width: 1px;
+
+	/* Accent */
+	--rv-accent: #4a9eff;
+	--rv-accent-hover: #3a8eef;
+	--rv-accent-muted: rgba(74, 158, 255, 0.12);
+	--rv-accent-border: rgba(74, 158, 255, 0.3);
+
+	/* Canvas visuals */
+	--rv-dot-grid: rgba(255, 255, 255, 0.2);
+	--rv-line-connector: rgba(255, 255, 255, 0.12);
+
+	/* Shadows */
+	--rv-shadow-node: 0 1px 3px rgba(0, 0, 0, 0.3);
+	--rv-shadow-node-hover: 0 3px 10px rgba(0, 0, 0, 0.4);
+	--rv-shadow-panel: -2px 0 16px rgba(0, 0, 0, 0.4);
+	--rv-shadow-config: 0 4px 20px rgba(0, 0, 0, 0.5);
+
+	/* Scrollbar */
+	--rv-scrollbar-track: #1a1a1c;
+	--rv-scrollbar-thumb: #333335;
+
+	/* Status */
+	--rv-status-not-started: #6b6b6b;
+	--rv-status-not-started-bg: rgba(107, 107, 107, 0.1);
+	--rv-status-in-progress: #4a9eff;
+	--rv-status-in-progress-bg: rgba(74, 158, 255, 0.1);
+	--rv-status-completed: #4ade80;
+	--rv-status-completed-bg: rgba(74, 222, 128, 0.1);
+	--rv-status-blocked: #ff5252;
+	--rv-status-blocked-bg: rgba(255, 82, 82, 0.1);
+
+	/* Live event pulse — saturated, distinct from selection accent */
+	--rv-pulse: #4ade80;
+
+	/* Node search highlight — tuned per theme (like --rv-pulse), deliberately
+	   distinct from both the selection accent and the live-event pulse so a
+	   match never reads as a selection or a Claude Code event. */
+	--rv-search: #f5a623;
+
+	/* Plugin source attribution glyphs (rendered as 16px badges in node corner).
+	   Colors cascade through all themes; override per-theme only if contrast fails. */
+	--rv-plugin-claude-code-bg: #d97757;
+	--rv-plugin-github-actions-bg: #2088ff;
+	--rv-plugin-default-bg: #64748b;
+}
+
+/* ============================================================
+   Light Theme
+   ============================================================ */
+[data-theme="light"] {
+	/* Background surfaces */
+	--rv-bg-base: #ffffff;
+	--rv-bg-canvas: #fafafa;
+	--rv-bg-surface: #f5f5f5;
+	--rv-bg-node: #ffffff;
+	--rv-bg-input: #f0f0f0;
+	--rv-bg-statusbar: #f5f5f5;
+	--rv-bg-elevated: #ffffff;
+	--rv-bg-hover: #ebebeb;
+	--rv-bg-active: #e0e0e0;
+	--rv-bg-node-hover: #f8f8f8;
+	--rv-bg-toolbar: #ffffff;
+	--rv-bg-panel: #ffffff;
+	--rv-bg-config: #ffffff;
+
+	/* Text — WCAG 2.1 AA contrast (D-20, Phase 5):
+	   - tertiary #6b6b6b → 4.61:1 on #f0f0f0/#f5f5f5/#ffffff (was #999999 → 2.85:1, FAIL)
+	   - on-accent #ffffff → 5.10:1 on darkened #1e6dd6 accent (was #ffffff on #4a9eff → 2.75, FAIL) */
+	--rv-text-primary: #1a1a1a;
+	--rv-text-secondary: #666666;
+	--rv-text-tertiary: #6b6b6b;
+	--rv-text-on-accent: #ffffff;
+
+	/* Borders */
+	--rv-border: #e0e0e0;
+	--rv-border-subtle: #ebebeb;
+	--rv-border-focus: #155bb8;
+	--rv-border-width: 1px;
+
+	/* Accent — WCAG 2.1 AA contrast (D-20, Phase 5):
+	   - light theme accent darkened from #4a9eff to #155bb8 so text-on-light-bg
+	     hits 4.5:1+ (was 2.25 on #e3e9f1, FAIL).
+	   - #155bb8 → 4.51:1 on #dfe6ee (the muted accent surface) */
+	--rv-accent: #155bb8;
+	--rv-accent-hover: #104590;
+	--rv-accent-muted: rgba(21, 91, 184, 0.08);
+	--rv-accent-border: rgba(21, 91, 184, 0.3);
+
+	/* Canvas visuals */
+	--rv-dot-grid: rgba(0, 0, 0, 0.12);
+	--rv-line-connector: rgba(0, 0, 0, 0.15);
+
+	/* Shadows */
+	--rv-shadow-node: 0 1px 3px rgba(0, 0, 0, 0.08);
+	--rv-shadow-node-hover: 0 3px 10px rgba(0, 0, 0, 0.12);
+	--rv-shadow-panel: -2px 0 16px rgba(0, 0, 0, 0.08);
+	--rv-shadow-config: 0 4px 20px rgba(0, 0, 0, 0.12);
+
+	/* Scrollbar */
+	--rv-scrollbar-track: #f0f0f0;
+	--rv-scrollbar-thumb: #cccccc;
+
+	/* Status */
+	--rv-status-not-started: #6b6b6b;
+	--rv-status-not-started-bg: rgba(107, 107, 107, 0.08);
+	--rv-status-in-progress: #4a9eff;
+	--rv-status-in-progress-bg: rgba(74, 158, 255, 0.08);
+	--rv-status-completed: #4ade80;
+	--rv-status-completed-bg: rgba(74, 222, 128, 0.08);
+	/* B-02 fix: #ef4444 on #ffffff = 3.76:1 fails WCAG 2.1 AA (4.5:1).
+	   #c92020 on #ffffff = 5.59:1 — passes for normal text (Delete menu item,
+	   blocked status badge text). Audit suite now covers light-theme context
+	   menu to prevent regression. */
+	--rv-status-blocked: #c92020;
+	--rv-status-blocked-bg: rgba(201, 32, 32, 0.08);
+
+	/* Live event pulse — saturated green, visible against white nodes */
+	--rv-pulse: #16a34a;
+	--rv-search: #d97706;
+}
+
+/* ============================================================
+   High Contrast Theme
+   ============================================================ */
+[data-theme="high-contrast"] {
+	/* Background surfaces */
+	--rv-bg-base: #000000;
+	--rv-bg-canvas: #000000;
+	--rv-bg-surface: #0a0a0a;
+	--rv-bg-node: #0e0e0e;
+	--rv-bg-input: #0a0a0a;
+	--rv-bg-statusbar: #050505;
+	--rv-bg-elevated: #111111;
+	--rv-bg-hover: #1a1a1a;
+	--rv-bg-active: #222222;
+	--rv-bg-node-hover: #151515;
+	--rv-bg-toolbar: #0a0a0a;
+	--rv-bg-panel: #0a0a0a;
+	--rv-bg-config: #0a0a0a;
+
+	/* Text — WCAG 2.1 AA contrast (D-20, Phase 5):
+	   - on-accent #000000 → 8.9:1 on #60b0ff (was #ffffff → 2.36:1, FAIL)
+	   - tertiary #999999 → 7.05:1 on #000000 (already passing) */
+	--rv-text-primary: #ffffff;
+	--rv-text-secondary: #cccccc;
+	--rv-text-tertiary: #999999;
+	--rv-text-on-accent: #000000;
+
+	/* Borders */
+	--rv-border: #ffffff;
+	--rv-border-subtle: #666666;
+	--rv-border-focus: #60b0ff;
+	--rv-border-width: 2px;
+
+	/* Accent */
+	--rv-accent: #60b0ff;
+	--rv-accent-hover: #80c0ff;
+	--rv-accent-muted: rgba(96, 176, 255, 0.15);
+	--rv-accent-border: rgba(96, 176, 255, 0.5);
+
+	/* Canvas visuals */
+	--rv-dot-grid: rgba(255, 255, 255, 0.08);
+	--rv-line-connector: rgba(255, 255, 255, 0.25);
+
+	/* Shadows */
+	--rv-shadow-node: 0 0 0 2px var(--rv-border);
+	--rv-shadow-node-hover: 0 0 0 2px var(--rv-accent);
+	--rv-shadow-panel: -2px 0 16px rgba(0, 0, 0, 0.6);
+	--rv-shadow-config: 0 4px 20px rgba(0, 0, 0, 0.7);
+
+	/* Scrollbar */
+	--rv-scrollbar-track: #0a0a0a;
+	--rv-scrollbar-thumb: #555555;
+
+	/* Status */
+	--rv-status-not-started: #888888;
+	--rv-status-not-started-bg: rgba(136, 136, 136, 0.15);
+	--rv-status-in-progress: #60b0ff;
+	--rv-status-in-progress-bg: rgba(96, 176, 255, 0.15);
+	--rv-status-completed: #5aee90;
+	--rv-status-completed-bg: rgba(90, 238, 144, 0.15);
+	--rv-status-blocked: #ff5555;
+	--rv-status-blocked-bg: rgba(255, 85, 85, 0.15);
+
+	/* Live event pulse — already designed for max visibility */
+	--rv-pulse: #5aee90;
+	--rv-search: #ff9e2c;
+}
+
+/* ============================================================
+   Paper Theme — warm off-white, terracotta accent, serif headings.
+   Editorial · Calm · Literary.
+   ============================================================ */
+[data-theme="paper"] {
+	/* Background surfaces (warm cream ladder) */
+	--rv-bg-base: #f6f3ec;
+	--rv-bg-canvas: #f9f5ea;
+	--rv-bg-surface: #eee9dc;
+	--rv-bg-node: #ffffff;
+	--rv-bg-input: #ede6d2;
+	--rv-bg-statusbar: #eee9dc;
+	--rv-bg-elevated: #ffffff;
+	--rv-bg-hover: #ede6d2;
+	--rv-bg-active: #e4dcc2;
+	--rv-bg-node-hover: #faf7ee;
+	--rv-bg-toolbar: #f6f3ec;
+	--rv-bg-panel: #eee9dc;
+	--rv-bg-config: #ffffff;
+
+	/* Text (dark ink on cream) */
+	--rv-text-primary: #2a241c;
+	--rv-text-secondary: #6e6453;
+	--rv-text-tertiary: #a39680;
+	--rv-text-on-accent: #ffffff;
+
+	/* Borders */
+	--rv-border: #e1d9c5;
+	--rv-border-subtle: #ebe4d0;
+	--rv-border-focus: #9a4a2a;
+	--rv-border-width: 1px;
+
+	/* Accent (terracotta / warm rust) */
+	--rv-accent: #9a4a2a;
+	--rv-accent-hover: #853e21;
+	--rv-accent-muted: rgba(154, 74, 42, 0.1);
+	--rv-accent-border: rgba(154, 74, 42, 0.25);
+
+	/* Canvas visuals */
+	--rv-dot-grid: rgba(42, 36, 28, 0.1);
+	--rv-line-connector: rgba(42, 36, 28, 0.18);
+
+	/* Shadows (soft, paper-like) */
+	--rv-shadow-node:
+		0 1px 0 rgba(42, 36, 28, 0.04), 0 1px 2px rgba(42, 36, 28, 0.06);
+	--rv-shadow-node-hover:
+		0 2px 0 rgba(42, 36, 28, 0.05), 0 4px 10px rgba(42, 36, 28, 0.08);
+	--rv-shadow-panel: -2px 0 16px rgba(42, 36, 28, 0.06);
+	--rv-shadow-config: 0 4px 20px rgba(42, 36, 28, 0.1);
+
+	/* Scrollbar */
+	--rv-scrollbar-track: #ede6d2;
+	--rv-scrollbar-thumb: #cabe9e;
+
+	/* Status (earth-keyed) */
+	--rv-status-not-started: #8a7d63;
+	--rv-status-not-started-bg: rgba(138, 125, 99, 0.1);
+	--rv-status-in-progress: #6b8a3d;
+	--rv-status-in-progress-bg: rgba(107, 138, 61, 0.12);
+	--rv-status-completed: #3d6e52;
+	--rv-status-completed-bg: rgba(61, 110, 82, 0.12);
+	--rv-status-blocked: #a8412a;
+	--rv-status-blocked-bg: rgba(168, 65, 42, 0.12);
+
+	/* Live event pulse — terracotta editorial pop on cream nodes */
+	--rv-pulse: #c2410c;
+	--rv-search: #0e7490;
+}
+
+/* Serif headings to match the editorial mood. Falls back to Georgia
+   stack if Source Serif 4 is not installed (no Google Fonts bundled). */
+[data-theme="paper"] h1,
+[data-theme="paper"] h2,
+[data-theme="paper"] .rv-heading {
+	font-family:
+		"Source Serif 4", "Source Serif Pro", "Iowan Old Style", Georgia, Cambria,
+		"Times New Roman", serif;
+	letter-spacing: -0.005em;
+}
+
+/* ============================================================
+   Amber Terminal Theme — warm black, phosphor amber, monospace UI.
+   Developer · Focused · Late-night.
+   ============================================================ */
+[data-theme="amber"] {
+	/* Backgrounds (warm-black ladder) */
+	--rv-bg-base: #1a1612;
+	--rv-bg-canvas: #100d0a;
+	--rv-bg-surface: #14110e;
+	--rv-bg-node: #1d1813;
+	--rv-bg-input: #14110e;
+	--rv-bg-statusbar: #0f0c08;
+	--rv-bg-elevated: #2b241c;
+	--rv-bg-hover: #26201a;
+	--rv-bg-active: #322a22;
+	--rv-bg-node-hover: #241e17;
+	--rv-bg-toolbar: #14110e;
+	--rv-bg-panel: #14110e;
+	--rv-bg-config: #1d1813;
+
+	/* Text (amber-ink on warm-black) */
+	--rv-text-primary: #f2d6a4;
+	--rv-text-secondary: #b99975;
+	--rv-text-tertiary: #7a6448;
+	--rv-text-on-accent: #1a1208;
+
+	/* Borders */
+	--rv-border: #2a231b;
+	--rv-border-subtle: #221c15;
+	--rv-border-focus: #ffa83d;
+	--rv-border-width: 1px;
+
+	/* Accent (phosphor amber) */
+	--rv-accent: #ffa83d;
+	--rv-accent-hover: #ffb655;
+	--rv-accent-muted: rgba(255, 168, 61, 0.12);
+	--rv-accent-border: rgba(255, 168, 61, 0.35);
+
+	/* Canvas visuals */
+	--rv-dot-grid: rgba(255, 168, 61, 0.08);
+	--rv-line-connector: rgba(255, 168, 61, 0.2);
+
+	/* Shadows (subtle glow instead of drop) */
+	--rv-shadow-node: 0 0 0 1px rgba(255, 168, 61, 0.1);
+	--rv-shadow-node-hover:
+		0 0 0 1px rgba(255, 168, 61, 0.3), 0 0 12px rgba(255, 168, 61, 0.12);
+	--rv-shadow-panel: -2px 0 16px rgba(0, 0, 0, 0.6);
+	--rv-shadow-config: 0 4px 20px rgba(0, 0, 0, 0.7);
+
+	/* Scrollbar */
+	--rv-scrollbar-track: #14110e;
+	--rv-scrollbar-thumb: #3a3025;
+
+	/* Status */
+	--rv-status-not-started: #8a7a5a;
+	--rv-status-not-started-bg: rgba(138, 122, 90, 0.12);
+	--rv-status-in-progress: #ffa83d;
+	--rv-status-in-progress-bg: rgba(255, 168, 61, 0.14);
+	--rv-status-completed: #a8c775;
+	--rv-status-completed-bg: rgba(168, 199, 117, 0.14);
+	--rv-status-blocked: #e87f4e;
+	--rv-status-blocked-bg: rgba(232, 127, 78, 0.15);
+
+	/* Live event pulse — saturated amber pop matching theme identity */
+	--rv-pulse: #ffa83d;
+	--rv-search: #22b8cf;
+}
+
+/* Monospace throughout — the point of the theme. Falls back to
+   Consolas/Menlo stack if JetBrains Mono is not installed. */
+[data-theme="amber"] {
+	--rv-font-sans:
+		"JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+/* ============================================================
+   Pure Contrast Theme — black & white with citron yellow accent.
+   Minimal · Graphic · Confident. Sharp edges (radii collapsed).
+   ============================================================ */
+[data-theme="contrast"] {
+	/* Backgrounds (pure black chrome; light nodes) */
+	--rv-bg-base: #000000;
+	--rv-bg-canvas: #0a0a0a;
+	--rv-bg-surface: #000000;
+	--rv-bg-node: #ffffff;
+	--rv-bg-input: #141414;
+	--rv-bg-statusbar: #000000;
+	--rv-bg-elevated: #141414;
+	--rv-bg-hover: #1a1a1a;
+	--rv-bg-active: #262626;
+	--rv-bg-node-hover: #f0f0f0;
+	--rv-bg-toolbar: #000000;
+	--rv-bg-panel: #000000;
+	--rv-bg-config: #0a0a0a;
+
+	/* Text — B-01 fix: prior #666666 on #000000 = 3.66:1 fails WCAG 2.1 AA.
+	   #d1d1d1 on #000000 = 12.0:1 (primary, easy pass).
+	   #888888 on #000000 = 5.13:1 (tertiary, replaces #666666 = 3.66:1 FAIL).
+	   #9a9a9a on #000000 = 7.46:1 (secondary, already passing — kept). */
+	--rv-text-primary: #d1d1d1;
+	--rv-text-secondary: #9a9a9a;
+	--rv-text-tertiary: #888888;
+	--rv-text-on-accent: #000000;
+
+	/* Borders */
+	--rv-border: #262626;
+	--rv-border-subtle: #1a1a1a;
+	--rv-border-focus: #ffe046;
+	--rv-border-width: 1px;
+
+	/* Accent (citron / electric yellow) */
+	--rv-accent: #ffe046;
+	--rv-accent-hover: #ffec7a;
+	--rv-accent-muted: rgba(255, 224, 70, 0.12);
+	--rv-accent-border: rgba(255, 224, 70, 0.4);
+
+	/* Canvas visuals */
+	--rv-dot-grid: rgba(255, 255, 255, 0.08);
+	--rv-line-connector: rgba(255, 255, 255, 0.2);
+
+	/* Shadows: none — theme is flat by design */
+	--rv-shadow-node: none;
+	--rv-shadow-node-hover: 0 0 0 2px var(--rv-accent);
+	--rv-shadow-panel: -1px 0 0 rgba(255, 255, 255, 0.15);
+	--rv-shadow-config: 0 0 0 1px var(--rv-border);
+
+	/* Scrollbar */
+	--rv-scrollbar-track: #000000;
+	--rv-scrollbar-thumb: #3a3a3a;
+
+	/* Status (graphic block fills) */
+	--rv-status-not-started: #9a9a9a;
+	--rv-status-not-started-bg: #f0f0f0;
+	--rv-status-in-progress: #000000;
+	--rv-status-in-progress-bg: #ffe046;
+	--rv-status-completed: #ffffff;
+	--rv-status-completed-bg: #000000;
+	--rv-status-blocked: #ffffff;
+	--rv-status-blocked-bg: #d93025;
+
+	/* Live event pulse — electric yellow graphic pop */
+	--rv-pulse: #ffe046;
+	--rv-search: #ff2d8e;
+
+	/* Radii collapsed for the graphic look */
+	--rv-radius-xs: 0;
+	--rv-radius-sm: 2px;
+	--rv-radius-md: 2px;
+	--rv-radius-lg: 2px;
+	--rv-radius-xl: 2px;
+	--rv-radius-pill: 2px;
+}
+
+/* Node cards are white — flip inner text to black. */
+[data-theme="contrast"] .node,
+[data-theme="contrast"] [data-rv-surface="node"] {
+	color: #000000;
+}
+
+/* ============================================================
+   Editorial Slate Theme — deep slate-blue, cream type, brass accent.
+   Typographic · Spacious · Quiet.
+   ============================================================ */
+[data-theme="slate"] {
+	/* Backgrounds (slate-blue ladder) */
+	--rv-bg-base: #1e232b;
+	--rv-bg-canvas: #1a1f27;
+	--rv-bg-surface: #171b22;
+	--rv-bg-node: #242932;
+	--rv-bg-input: #1a1f27;
+	--rv-bg-statusbar: #13171d;
+	--rv-bg-elevated: #2f3542;
+	--rv-bg-hover: #2c323c;
+	--rv-bg-active: #353c48;
+	--rv-bg-node-hover: #2a303a;
+	--rv-bg-toolbar: #171b22;
+	--rv-bg-panel: #171b22;
+	--rv-bg-config: #242932;
+
+	/* Text (cream ink on slate) */
+	--rv-text-primary: #ede4d0;
+	--rv-text-secondary: #9fa3a9;
+	--rv-text-tertiary: #6a6e76;
+	--rv-text-on-accent: #1e232b;
+
+	/* Borders (quiet — theme leans on air, not lines) */
+	--rv-border: #2a2f38;
+	--rv-border-subtle: #23282f;
+	--rv-border-focus: #e9b675;
+	--rv-border-width: 1px;
+
+	/* Accent (warm sand / brass) */
+	--rv-accent: #e9b675;
+	--rv-accent-hover: #efc28a;
+	--rv-accent-muted: rgba(233, 182, 117, 0.1);
+	--rv-accent-border: rgba(233, 182, 117, 0.3);
+
+	/* Canvas visuals */
+	--rv-dot-grid: rgba(237, 228, 208, 0.05);
+	--rv-line-connector: rgba(237, 228, 208, 0.15);
+
+	/* Shadows (very soft — airiness does the work) */
+	--rv-shadow-node: 0 1px 2px rgba(0, 0, 0, 0.12);
+	--rv-shadow-node-hover: 0 4px 14px rgba(0, 0, 0, 0.2);
+	--rv-shadow-panel: -2px 0 20px rgba(0, 0, 0, 0.25);
+	--rv-shadow-config: 0 8px 30px rgba(0, 0, 0, 0.35);
+
+	/* Scrollbar */
+	--rv-scrollbar-track: #171b22;
+	--rv-scrollbar-thumb: #3a4049;
+
+	/* Status */
+	--rv-status-not-started: #8a8e96;
+	--rv-status-not-started-bg: rgba(138, 142, 150, 0.12);
+	--rv-status-in-progress: #e9b675;
+	--rv-status-in-progress-bg: rgba(233, 182, 117, 0.12);
+	--rv-status-completed: #9cc2a5;
+	--rv-status-completed-bg: rgba(156, 194, 165, 0.12);
+	--rv-status-blocked: #e48573;
+	--rv-status-blocked-bg: rgba(228, 133, 115, 0.12);
+
+	/* Live event pulse — warm tan pop on cool slate */
+	--rv-pulse: #e9b675;
+	--rv-search: #fb7185;
+}
+
+/* Serif headings to match the editorial voice. Falls back to Georgia
+   stack if Newsreader is not installed. */
+[data-theme="slate"] h1,
+[data-theme="slate"] h2,
+[data-theme="slate"] .rv-heading {
+	font-family:
+		"Newsreader", "IBM Plex Serif", "Iowan Old Style", Georgia, Cambria, serif;
+	font-weight: 500;
+	letter-spacing: -0.005em;
+}
+
+/* ============================================================
+   Moss Theme — muted sage canvas, cream nodes, warm-gold accent.
+   Earthy · Grounded · Understated.
+   ============================================================ */
+[data-theme="moss"] {
+	/* Backgrounds (mossy green ladder) */
+	--rv-bg-base: #3b4338;
+	--rv-bg-canvas: #424b3e;
+	--rv-bg-surface: #323a30;
+	--rv-bg-node: #eae5d3;
+	--rv-bg-input: #323a30;
+	--rv-bg-statusbar: #2b322a;
+	--rv-bg-elevated: #505a4c;
+	--rv-bg-hover: #4a5346;
+	--rv-bg-active: #56604f;
+	--rv-bg-node-hover: #dfd9c4;
+	--rv-bg-toolbar: #323a30;
+	--rv-bg-panel: #323a30;
+	--rv-bg-config: #3b4338;
+
+	/* Text (cream on moss) */
+	--rv-text-primary: #858472;
+	--rv-text-secondary: #b8b5a2;
+	--rv-text-tertiary: #858472;
+	--rv-text-on-accent: #3b2a10;
+
+	/* Borders */
+	--rv-border: #2e342b;
+	--rv-border-subtle: #353c32;
+	--rv-border-focus: #d4a94e;
+	--rv-border-width: 1px;
+
+	/* Accent (warm gold) */
+	--rv-accent: #d4a94e;
+	--rv-accent-hover: #e2b85a;
+	--rv-accent-muted: rgba(212, 169, 78, 0.12);
+	--rv-accent-border: rgba(212, 169, 78, 0.3);
+
+	/* Canvas visuals */
+	--rv-dot-grid: rgba(234, 229, 211, 0.07);
+	--rv-line-connector: rgba(234, 229, 211, 0.22);
+
+	/* Shadows (earthy, darker than slate) */
+	--rv-shadow-node: 0 1px 0 rgba(0, 0, 0, 0.15), 0 4px 12px rgba(0, 0, 0, 0.12);
+	--rv-shadow-node-hover:
+		0 2px 0 rgba(0, 0, 0, 0.2), 0 8px 20px rgba(0, 0, 0, 0.18);
+	--rv-shadow-panel: -2px 0 16px rgba(0, 0, 0, 0.25);
+	--rv-shadow-config: 0 4px 24px rgba(0, 0, 0, 0.35);
+
+	/* Scrollbar */
+	--rv-scrollbar-track: #323a30;
+	--rv-scrollbar-thumb: #56604f;
+
+	/* Status (saturated on dark chrome) */
+	--rv-status-not-started: #8a8976;
+	--rv-status-not-started-bg: rgba(138, 137, 118, 0.16);
+	--rv-status-in-progress: #d4a94e;
+	--rv-status-in-progress-bg: rgba(212, 169, 78, 0.16);
+	--rv-status-completed: #b8c9a3;
+	--rv-status-completed-bg: rgba(184, 201, 163, 0.16);
+	--rv-status-blocked: #d89478;
+	--rv-status-blocked-bg: rgba(216, 148, 120, 0.18);
+
+	/* Live event pulse — rich gold pop on muted moss */
+	--rv-pulse: #d4a94e;
+	--rv-search: #e76f51;
+}
+
+/* Node cards are cream — flip text inside them to dark ink. */
+[data-theme="moss"] .node,
+[data-theme="moss"] [data-rv-surface="node"] {
+	color: #2a241c;
+}
+[data-theme="moss"] .node .rv-label,
+[data-theme="moss"] [data-rv-surface="node"] .rv-label {
+	color: #585646;
+}
+
+/* ============================================================
+   Global Styles
+   ============================================================ */
+
+/* Focus ring */
+:focus-visible {
+	outline: 2px solid var(--rv-accent);
+	outline-offset: 2px;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+	*,
+	*::before,
+	*::after {
+		/* biome-ignore lint/complexity/noImportantStyles: accessibility override for motion sensitivity */
+		transition-duration: 0ms !important;
+		/* biome-ignore lint/complexity/noImportantStyles: accessibility override for motion sensitivity */
+		animation-duration: 0ms !important;
+	}
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+	width: 6px;
+}
+
+::-webkit-scrollbar-track {
+	background: var(--rv-scrollbar-track);
+}
+
+::-webkit-scrollbar-thumb {
+	background: var(--rv-scrollbar-thumb);
+	border-radius: 3px;
+}
+
+/* react-d3-tree connector lines — override the library's hardcoded #000 stroke.
+   The library injects <style>.rd3t-link { stroke: #000 }</style> inside its
+   component render, which appears AFTER our stylesheet in the DOM and wins
+   the cascade at equal specificity. We use !important to ensure theme colors win. */
+.rd3t-link {
+	/* biome-ignore lint/complexity/noImportantStyles: react-d3-tree injects a later-in-DOM .rd3t-link rule at equal specificity */
+	stroke: var(--rv-line-connector) !important;
+	/* biome-ignore lint/complexity/noImportantStyles: react-d3-tree injects a later-in-DOM .rd3t-link rule at equal specificity */
+	stroke-width: 1.5px !important;
+	/* biome-ignore lint/complexity/noImportantStyles: react-d3-tree injects a later-in-DOM .rd3t-link rule at equal specificity */
+	fill: none !important;
+}
+
+/* Node status stripe */
+.node::before {
+	content: "";
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	left: 0;
+	width: 4px;
+	background: var(--node-stripe-color, var(--rv-status-not-started));
+	border-radius: var(--node-radius, 8px) 0 0 var(--node-radius, 8px);
+}
+
+/* App shell grid */
+#app {
+	display: grid;
+	grid-template-rows: auto 1fr auto;
+	grid-template-columns: auto 1fr auto;
+	grid-template-areas:
+		"topbar topbar topbar"
+		"sidebar canvas panel"
+		"status status status";
+	height: 100vh;
+	width: 100vw;
+	background-color: var(--rv-bg-base);
+}
+
+/* Base font */
+body {
+	font-family: "Inter", system-ui, -apple-system, sans-serif;
+	font-size: 13px;
+	line-height: 1.5;
+	color: var(--rv-text-primary);
+	background-color: var(--rv-bg-base);
+	margin: 0;
+	padding: 0;
+}
+
+/* ============================================================
+   Focus ring (keyboard navigation) — coexists with selection ring per D-06
+   Only shown while the user is in keyboard mode (body.keyboard-nav-active).
+   Mouse interaction removes the class, hiding the dashed ring.
+   ============================================================ */
+.keyboard-nav-active .node[data-focused="true"] {
+	outline: 2px dashed var(--rv-accent);
+	outline-offset: 2px;
+}
+/* When BOTH focused and selected, push the dashed ring outside the solid selection outline */
+.keyboard-nav-active .node[data-focused="true"][data-selected="true"] {
+	outline: 2px solid var(--rv-accent);
+	outline-offset: 1px;
+	box-shadow:
+		var(--rv-shadow-node),
+		0 0 0 4px var(--rv-accent-muted),
+		0 0 0 5px var(--rv-accent);
+}
+
+/* --- Phase 4 gap closure 04-06: Live event pulse via ::after pseudo-element
+   (root-cause: foreignObject in Canvas.tsx:266-270 clips outer box-shadows;
+   ::after paints inside the card stacking context, sidesteps the clip) --- */
+.node::after {
+	content: "";
+	position: absolute;
+	inset: -3px;
+	border-radius: inherit;
+	border: 0px solid var(--rv-pulse);
+	opacity: 0;
+	pointer-events: none;
+}
+.node[data-live="true"]::after {
+	animation: rv-node-pulse 1600ms ease-in-out infinite;
+}
+@keyframes rv-node-pulse {
+	0%,
+	100% {
+		border-width: 0;
+		opacity: 0;
+	}
+	50% {
+		border-width: 3px;
+		opacity: 1;
+	}
+}
+@media (prefers-reduced-motion: reduce) {
+	.node[data-live="true"]::after {
+		animation: none;
+		border: 2px solid var(--rv-pulse);
+		opacity: 1;
+	}
+}
+
+/* --- Node search highlight (header search box).
+   Dim non-matches, outline every match, and pulse the current match.
+   outline (not box-shadow) is used because the foreignObject in Canvas clips
+   outer box-shadows; the current-match pulse reuses the live-event ::after
+   channel with the search-distinct --rv-search color so it never reads as a
+   Claude Code live event. --- */
+.node[data-search-dim="true"] {
+	opacity: 0.32;
+	transition: opacity 150ms ease;
+}
+.node[data-search-match="true"] {
+	outline: 2px solid var(--rv-search);
+	outline-offset: 1px;
+}
+/* The current match and a live event share the single ::after pulse channel.
+   When a node is both, this rule comes later in source order so --rv-search
+   wins over --rv-pulse — i.e. while searching, the search highlight takes
+   precedence over the live-event pulse on that one node. Intentional. */
+.node[data-search-current="true"]::after {
+	border-color: var(--rv-search);
+	animation: rv-node-pulse 1600ms ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+	.node[data-search-current="true"]::after {
+		animation: none;
+		border: 2px solid var(--rv-search);
+		opacity: 1;
+	}
+}
