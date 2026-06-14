@@ -19,12 +19,15 @@ no cloud, no accounts. It's just a file, living in your repo.
 
 ## Demo
 
-<!-- TODO(public-launch): replace these placeholders.
-     1. Hero screenshot of the tree canvas — save under docs/assets/ and embed here.
-     2. Demo video walkthrough (keyboard editing + a live WebSocket status update) —
-        a video is in production; drop the embed/link here when ready. -->
+![RoadRaven — navigate your project as a living tree: phases, plans, and tasks expand left-to-right with live status at every node](screenshots/tree.png)
 
-> 📷 _Screenshot coming soon._ &nbsp;&nbsp; 🎬 _Demo video coming soon._
+Inspect any node in the side panel — status, type, metadata, markdown notes, and the live event feed:
+
+![RoadRaven Node Details side panel](screenshots/sidepanel-details.png)
+
+<!-- TODO(public-launch): a demo video is in production — drop the embed/link here when ready. -->
+
+> 🎬 _Demo video coming soon._
 
 ---
 
@@ -152,6 +155,8 @@ at the built file (use an absolute path). For Claude Code, add it to your MCP co
 
 Full tool catalog, configuration, kill-switch, and security model:
 [`plugins/claude-code/README.md`](plugins/claude-code/README.md).
+
+![Live event log — every Claude Code MCP tool call streams into a filterable feed over WebSocket](screenshots/events.png)
 
 ---
 
