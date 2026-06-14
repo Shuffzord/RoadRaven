@@ -6,8 +6,6 @@ layout: default
 
 # Development Guide
 
-> Last updated: 2026-04-22 | Phase: 03-full-editor (Waves 1 + 2)
-
 ## Prerequisites
 
 - [Bun](https://bun.sh) (latest) -- Electrobun's runtime; provides native TypeScript execution and fast package management
@@ -15,155 +13,109 @@ layout: default
 
 ## Commands
 
+Prefer the `bun run` script wrappers over calling `bunx vitest` / `bunx vite` directly -- the wrappers use the workspace-pinned tool versions and avoid silent version drift. Run `bun run verify` before opening a PR.
+
 ```bash
 bun install           # Install all dependencies
 
 bun run dev:hmr       # Recommended: Vite HMR + Electrobun running concurrently
 bun run dev           # Alternative: Electrobun with file watching (restarts on changes)
 bun run start         # One-shot: Vite build then Electrobun dev (no watching)
-
-bun run hmr           # Vite dev server only (port 5173) -- used internally by dev:hmr
-
+bun run hmr           # Vite dev server only, port 5173 (desktop package; used internally by dev:hmr)
 bun run build:canary  # Production build (canary channel)
-
-bunx vitest           # Run tests in watch mode
-bunx vitest run       # Run tests once (CI)
-bunx vitest run path/to/file.test.ts  # Run a single test file
 ```
+
+### Tests
+
+```bash
+bun run test          # Full test suite across all workspaces
+bun run test:desktop  # Desktop package only (faster)
+bun run test:file path/to/file.test.ts  # Run a single test file
+bun run test:typecheck # tsc --noEmit
+bun run test:build    # Production build (catches import/CSS issues unit tests miss)
+bun run test:lint     # Biome lint (matches CI)
+bun run verify        # test + typecheck + build + lint -- the PR-readiness check
+```
+
+The desktop package also provides `test:bun` (Bun-native event-server tests), `test:e2e`
+(Playwright), and `test:a11y` (Playwright accessibility). Run these from
+`packages/desktop` (or via `bun run --cwd packages/desktop <script>`).
 
 ### Why dev:hmr is Preferred
 
-`bun run dev:hmr` runs two processes concurrently:
+`bun run dev:hmr` runs the Vite dev server (port 5173, with Hot Module Replacement) and
+Electrobun concurrently. On startup the Bun main process probes the dev server: if it is
+up, the app loads from `http://localhost:5173`; otherwise it falls back to the bundled
+`views://mainview/index.html`. This gives instant CSS/component feedback without
+restarting the app.
 
-1. **Vite dev server** on port 5173 with Hot Module Replacement (HMR)
-2. **Electrobun** in dev mode
-
-When the Bun main process starts, it checks if the Vite dev server is running. If it is, the app loads from `http://localhost:5173` instead of the bundled `views://mainview/index.html`. This gives you instant feedback on CSS and component changes without restarting the app.
-
-```typescript
-// From packages/desktop/src/bun/index.ts
-if (channel === "dev") {
-  try {
-    await fetch(DEV_SERVER_URL, { method: "HEAD" });
-    return DEV_SERVER_URL;       // Vite dev server is running
-  } catch {
-    // Fall through to bundled view
-  }
-}
-return "views://mainview/index.html";
-```
-
-`bun run dev` (without HMR) watches for file changes and restarts the Bun process, but does not provide instant CSS/component updates. Use it when you need to test main process changes.
+`bun run dev` (no HMR) watches files and restarts the Bun process, but does not provide
+instant CSS/component updates. Use it when testing main-process changes.
 
 ## Test Environment
 
-Tests use Vitest with environment-specific configuration:
-
-```typescript
-// From packages/desktop/vitest.config.ts
-test: {
-  globals: true,
-  environment: "node",                                        // Default: node
-  include: ["tests/unit/**/*.test.ts", "tests/unit/**/*.test.tsx"],
-  environmentMatchGlobs: [
-    ["tests/unit/ui/**/*.test.{ts,tsx}", "jsdom"]             // UI tests: jsdom
-  ],
-}
-```
+Tests use Vitest with environment-specific configuration (see
+`packages/desktop/vitest.config.ts`):
 
 - **Unit tests** (`tests/unit/`) run in the `node` environment by default.
-- **UI tests** (`tests/unit/ui/`) run in `jsdom` for DOM access.
-- **Benchmarks** (`tests/bench/`) run in the `node` environment via `bunx vitest bench`.
+- **UI tests** (`tests/unit/ui/`) run in `jsdom` for DOM access (matched via `environmentMatchGlobs`).
+- **Benchmarks** (`tests/bench/`) run in `node` via `bunx vitest bench` (run from the desktop package).
 - `@testing-library/react` and `@testing-library/jest-dom` are available for component testing.
 
-### Benchmarks
-
-Performance benchmarks validate the dataKey invariant (status updates must not trigger tree re-layout):
-
-```bash
-bunx vitest bench                     # Run benchmarks
-```
-
-The benchmark suite in `tests/bench/perf.bench.ts` uses a schema generator (`generateLargeSchema(300)`) to create deterministic test trees with 300+ nodes. It asserts that `updateNodeStatus` never changes the `dataKey` value.
+The benchmark suite (`tests/bench/perf.bench.ts`) uses a schema generator
+(`generateLargeSchema(300)`) to build deterministic 300+ node trees and asserts that
+`updateNodeStatus` never changes the `dataKey` value -- the invariant that status
+updates must not trigger tree re-layout.
 
 ### Sample Schemas
-
-Two sample schemas are available for development and testing:
 
 - `samples/hello-world.json` -- Minimal schema (4 nodes, all 4 statuses)
 - `samples/getting-started.json` -- Rich schema (15 nodes, 4 depth levels, markdown notes, metadata)
 
-In the Vite dev server (HMR mode without Electrobun), the Open button loads `getting-started.json` as a fallback. The WelcomeScreen offers links to load both samples directly.
+In the Vite dev server (HMR mode without Electrobun), the Open button loads
+`getting-started.json` as a fallback. The WelcomeScreen offers links to load both samples directly.
 
 ### The electrobun/view Unavailability Issue
 
-> **Why this matters:** Unlike Electron (where `electron` is always importable), `electrobun/view` is injected by the Electrobun runtime and does not exist as a regular npm package. Any code that imports it will crash outside Electrobun. This affects two common development scenarios, and every developer working on the webview side will encounter it.
-
-`electrobun/view` is only available inside the Electrobun runtime. In two situations it is not available:
-
-1. **Vite dev server** (standalone HMR mode)
-2. **Test environment** (vitest with jsdom)
-
-The codebase handles this with lazy imports and try/catch:
+`electrobun/view` is injected by the Electrobun runtime and is **not** a regular npm
+package -- it does not exist in the Vite dev server (standalone HMR) or in the test
+environment (vitest with jsdom). Any code that imports it eagerly will crash there. Use a
+lazy import wrapped in try/catch so the app still works in dev/test:
 
 ```typescript
-// Logging setup uses lazy import
 try {
   const { electroview } = await import("../rpc");
   rpcSend = (payload) => electroview.rpc.request.logMessage(payload);
 } catch {
-  // RPC forwarding disabled -- console-only logging
+  // electrobun/view unavailable outside the runtime -- fall back gracefully
 }
 ```
 
-```typescript
-// Main entry catches logging setup failure
-try {
-  await setupWebviewLogging();
-} catch {
-  // electrobun/view may not be available outside Electrobun runtime
-}
-```
-
-When writing new code that uses `electroview`, follow this same pattern: catch the import failure gracefully so the app still works in dev/test environments.
+Follow this pattern whenever new code uses `electroview`.
 
 ## How to Add a New Component
 
 1. **Create the component file** in `packages/desktop/src/mainview/components/`.
 
-2. **Use only `--rv-*` tokens** via Tailwind classes. No hardcoded colors:
+2. **Use only `--rv-*` tokens** via Tailwind classes -- no hardcoded colors (a CI grep check enforces this):
 
    ```tsx
    // Good
-   export function MyComponent() {
-     return (
-       <div className="bg-rv-bg-surface text-rv-text-primary border border-rv-border">
-         Content
-       </div>
-     );
-   }
+   <div className="bg-rv-bg-surface text-rv-text-primary border border-rv-border">Content</div>
+
+   // Bad -- hardcoded colors fail the CI grep check
+   <div className="bg-[#1b1b1c] text-[#e0e0e0]">Content</div>
    ```
 
-   ```tsx
-   // Bad -- hardcoded colors will fail CI grep check
-   export function MyComponent() {
-     return (
-       <div className="bg-[#1b1b1c] text-[#e0e0e0]">
-         Content
-       </div>
-     );
-   }
-   ```
+3. **If you need a new token**, follow [Design System -- How to Add a New Token](./design-system.md#how-to-add-a-new-token).
 
-3. **If you need a new token**, follow the steps in [Design System -- How to Add a New Token](./design-system.md#how-to-add-a-new-token).
+4. **Add the component** to the app shell in `App.tsx` or the appropriate parent.
 
-4. **Add the component** to the app shell in `App.tsx` or the appropriate parent component.
-
-5. **Write tests** in `tests/unit/ui/` using `@testing-library/react`. UI tests automatically get the `jsdom` environment.
+5. **Write tests** in `tests/unit/ui/` using `@testing-library/react` (these get the `jsdom` environment automatically).
 
 ## How to Add a New RPC Endpoint
 
-This is a three-file change. TypeScript enforces consistency across all three.
+A three-file change; TypeScript enforces consistency across all three.
 
 1. **`shared/types.ts`** -- Define the contract:
 
@@ -179,9 +131,7 @@ This is a three-file change. TypeScript enforces consistency across all three.
 
    ```typescript
    // Inside BrowserView.defineRPC handlers.requests:
-   myEndpoint: ({ input }) => {
-     return { output: input.length };
-   },
+   myEndpoint: ({ input }) => ({ output: input.length }),
    ```
 
 3. **Call from webview code**:
@@ -195,21 +145,25 @@ See [RPC and IPC](./rpc-and-ipc.md) for the full contract reference and data flo
 
 ## How to Add a New Logger Category
 
-Create a logger with `getLogger()` using an array-based category:
+Create a logger with `getLogger()` using an array-based category. No extra configuration
+is needed -- loggers inherit from their parent category.
 
 ```typescript
-// Webview side (in packages/desktop/src/mainview/logging/logger.ts)
+// Webview side (packages/desktop/src/mainview/logging/logger.ts)
 export const myFeatureLogger = getLogger(["webview", "my-feature"]);
 
-// Bun side (in packages/desktop/src/bun/logging.ts)
+// Bun side (packages/desktop/src/bun/logging.ts)
 export const myFeatureLogger = getLogger(["bun", "my-feature"]);
 ```
 
-No additional configuration needed -- loggers inherit from their parent category. See [Logging](./logging.md) for details.
+See [Logging](./logging.md) for details.
 
 ## Keyboard Shortcuts
 
-The canvas keyboard layer is implemented in [`hooks/useKeyboardRouter.ts`](../packages/desktop/src/mainview/hooks/useKeyboardRouter.ts). The router runs in capture phase and stands down when a Radix dialog or context menu is open, or when a text input / CodeMirror editor is focused.
+The canvas keyboard layer lives in
+[`hooks/useKeyboardRouter.ts`](../packages/desktop/src/mainview/hooks/useKeyboardRouter.ts).
+The router runs in capture phase and stands down when a Radix dialog or context menu is
+open, or when a text input / CodeMirror editor is focused.
 
 ### Canvas (focused node)
 
@@ -233,9 +187,11 @@ The canvas keyboard layer is implemented in [`hooks/useKeyboardRouter.ts`](../pa
 | `Escape` | Cancel inline rename, or deselect node |
 | `F6` | Toggle focus between canvas and side panel |
 
-Arrow-key axes follow the layout orientation: in TB (top-bottom) layout siblings are horizontal neighbours and children flow downward; in LR (left-right) layout siblings are vertical neighbours and children flow rightward. The same focus-then-act mental model applies to both.
-
-`Ctrl+C` / `Ctrl+V` are context-aware: when `document.activeElement` is a text input, `<textarea>`, `contentEditable` element, or inside a `.cm-editor` (CodeMirror), the shortcuts fall through to the browser's native text copy/paste instead of the node clipboard.
+Arrow-key axes follow the layout orientation: in TB (top-bottom) layout siblings are
+horizontal and children flow downward; in LR (left-right) layout siblings are vertical and
+children flow rightward. `Ctrl+C` / `Ctrl+V` are context-aware -- when a text input,
+`<textarea>`, `contentEditable`, or CodeMirror (`.cm-editor`) is focused, they fall through
+to the browser's native text copy/paste instead of the node clipboard.
 
 ### Side panel
 
@@ -244,22 +200,21 @@ Arrow-key axes follow the layout orientation: in TB (top-bottom) layout siblings
 | `e` | Enter edit mode | Side panel open, no text input focused, not already editing |
 | `Escape` | Cancel title edit / exit edit mode | Side panel in edit mode |
 
-Edit mode can also be entered by clicking the title field or the `[E]` pencil button in the panel header.
-
-Node cards are keyboard-accessible (`role="button"`, `tabIndex={0}`, Enter / Space handlers). The dashed focus ring uses a `keyboard-nav-active` class on `<body>` so it only shows during keyboard navigation, not after a mouse click.
+Edit mode can also be entered by clicking the title field or the `[E]` pencil button in
+the panel header. Node cards are keyboard-accessible (`role="button"`, `tabIndex={0}`,
+Enter / Space handlers); the dashed focus ring uses a `keyboard-nav-active` class on
+`<body>` so it shows only during keyboard navigation, not after a mouse click.
 
 ## Project Conventions
 
-> **Why these conventions exist:** Each rule prevents a specific class of bug or maintenance problem. The token prefix prevents CSS collisions. The hardcoded color ban ensures themes work everywhere. The single RPC contract prevents process drift. LogTape loggers provide persistent, structured output that `console.log` cannot. These are not style preferences -- they are guardrails for a two-process desktop app where bugs across the process boundary are hard to debug.
-
 | Convention | Rule | Why |
 |-----------|------|-----|
-| Token prefix | All CSS custom properties start with `--rv-` | Namespace isolation from Tailwind internals and third-party CSS *(D-03)* |
-| Hardcoded colors | Not allowed in components. CI grep enforces this. | Ensures theme switching works for every component *(D-03, D-17)* |
-| RPC contract | Defined once in `shared/types.ts`, imported by both processes | Compile-time safety across the process boundary *(D-22)* |
-| Logging | Use LogTape loggers, not `console.log` | Structured output, file persistence, category filtering *(D-21)* |
+| Token prefix | All CSS custom properties start with `--rv-` | Namespace isolation from Tailwind internals and third-party CSS |
+| Hardcoded colors | Not allowed in components; CI grep enforces this | Ensures theme switching works for every component |
+| RPC contract | Defined once in `shared/types.ts`, imported by both processes | Compile-time safety across the process boundary |
+| Logging | Use LogTape loggers, not `console.log` | Structured output, file persistence, category filtering |
 | Test location | `tests/unit/` for unit tests, `tests/unit/ui/` for component tests | Environment matching: node for logic, jsdom for components |
-| Formatter | Biome (not Prettier) | Faster, linting + formatting in one tool (Phase 0 decision) |
+| Formatter | Biome (not Prettier) | Faster; linting + formatting in one tool |
 | Package scope | `@roadraven/` | Consistent npm namespace for publishable packages |
 
 ## Related Documentation

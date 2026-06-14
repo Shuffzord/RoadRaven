@@ -6,17 +6,11 @@ layout: default
 
 # Design System
 
-> Last updated: 2026-04-15 | Phase: 02-read-only-viewer
-
 ## Overview
 
 RoadRaven uses CSS custom properties (`--rv-*` tokens) mapped to Tailwind CSS v4 utilities through the `@theme` directive. Components reference tokens exclusively through Tailwind classes -- zero hardcoded color values are allowed in component code.
 
 ## Why This Approach
-
-> **Why CSS custom properties instead of CSS-in-JS:** CSS custom properties have zero runtime cost -- the browser's style engine resolves them natively. CSS-in-JS libraries (styled-components, Emotion) add JavaScript overhead on every render, conflict with Tailwind's utility model, and make theme switching require React re-renders. With CSS custom properties, theme switching is a single attribute swap and the browser does the rest. *(Decision D-01.)*
-
-> **Why Tailwind v4 `@theme` instead of v3 config:** Tailwind v4's `@theme` directive defines tokens directly in CSS, eliminating the dual-maintenance problem of keeping colors in both a CSS file and a `tailwind.config.js` file. There is no JS config file at all -- tokens are real CSS properties, PostCSS dependency is eliminated, and the Vite plugin replaces the PostCSS integration entirely. *(Decision D-01; see 01-RESEARCH.md -- Pattern 1.)*
 
 Three options were evaluated for the token system:
 
@@ -26,15 +20,13 @@ Three options were evaluated for the token system:
 | CSS-in-JS (styled-components, etc.) | Adds runtime overhead, conflicts with Tailwind utility model, harder to theme. |
 | **CSS custom properties + Tailwind v4 `@theme`** | **Chosen.** Single source of truth in CSS. Native browser performance. Full Tailwind modifier support. |
 
-Tailwind v4 introduced the `@theme` directive, which lets you define design tokens directly in CSS. This means the token values live in one place (`index.css`), and Tailwind generates utility classes from them automatically.
+CSS custom properties have zero runtime cost -- the browser resolves them natively, and theme switching is a single attribute swap rather than a React re-render. Tailwind v4's `@theme` directive defines tokens directly in CSS, so values live in one place (`index.css`) with no separate JS config file to keep in sync.
 
 ## The --rv-* Token Convention
 
-> **Why the `--rv-*` prefix:** Namespace isolation prevents collisions with Tailwind internals (which use `--tw-*`) and any third-party CSS libraries. The prefix also makes tokens grep-friendly -- searching for `--rv-` finds every token definition and reference across the entire codebase. Without a prefix, generic names like `--bg-base` could clash with library internals or future dependencies. *(Decision D-03.)*
-
 All tokens use the `--rv-` prefix (short for "RoadRaven"). This prefix exists for two reasons:
 
-1. **Namespace isolation.** Third-party CSS or future library integrations will not collide with RoadRaven tokens.
+1. **Namespace isolation.** Third-party CSS or future library integrations will not collide with RoadRaven tokens (and avoids clashing with Tailwind internals, which use `--tw-*`).
 2. **Grepability.** You can search the entire codebase for `--rv-` to find every token reference.
 
 ### Token Categories
@@ -80,17 +72,9 @@ Source: [`packages/desktop/src/mainview/index.css`](../packages/desktop/src/main
 
 ## How Themes Work
 
-### Three Built-in Themes
+RoadRaven ships with three built-in themes: **dark** (default), **light**, and **high-contrast**.
 
-RoadRaven ships with three themes: **dark** (default), **light**, and **high-contrast**.
-
-### The Mechanism
-
-> **Why `data-theme` attribute on `<html>`:** CSS-only theming means no JavaScript re-render on theme switch. The attribute is inherited by all children through CSS custom property inheritance, so every component picks up new token values instantly. Alternatives like React Context would require re-rendering the entire tree on theme change. *(Decision D-02.)*
-
-1. The active theme is stored as a `data-theme` attribute on the `<html>` element.
-2. CSS selectors define token values per theme.
-3. The browser resolves the correct values automatically.
+The active theme is stored as a `data-theme` attribute on the `<html>` element. CSS selectors define token values per theme, and the browser resolves the correct values automatically via custom-property inheritance -- no JavaScript re-render on theme switch.
 
 ```css
 /* Dark is the default (applied to :root and [data-theme="dark"]) */
@@ -104,29 +88,25 @@ RoadRaven ships with three themes: **dark** (default), **light**, and **high-con
 [data-theme="light"] {
   --rv-bg-base: #ffffff;
   --rv-text-primary: #1a1a1a;
-  /* ... */
 }
 
 [data-theme="high-contrast"] {
   --rv-bg-base: #000000;
   --rv-text-primary: #ffffff;
   --rv-border-width: 2px;  /* thicker borders for visibility */
-  /* ... */
 }
 ```
 
 ### Theme State Management
 
-The `useThemeStore` Zustand store manages theme state:
+The `useThemeStore` Zustand store manages theme state. The key fields:
 
 ```typescript
 // From packages/desktop/src/mainview/store/themeStore.ts
 interface ThemeState {
   preference: ThemePreference;        // "dark" | "light" | "high-contrast" | "system"
-  systemResolution: "dark" | "light"; // What the OS prefers
   resolvedTheme: ResolvedTheme;       // The actual theme applied
   setTheme: (pref: ThemePreference) => void;
-  updateSystemResolution: (resolved: "dark" | "light") => void;
 }
 ```
 
@@ -136,7 +116,7 @@ Source: [`packages/desktop/src/mainview/store/themeStore.ts`](../packages/deskto
 
 ### ThemeProvider Component
 
-`ThemeProvider` wraps the entire app and handles three responsibilities:
+`ThemeProvider` wraps the app and handles three responsibilities:
 
 1. **Load persisted theme** on mount (via `loadSettings` RPC to Bun process).
 2. **Apply `data-theme` attribute** to `<html>` when `resolvedTheme` changes.
@@ -146,17 +126,11 @@ Source: [`packages/desktop/src/mainview/components/ThemeProvider.tsx`](../packag
 
 ## Per-Schema Theme Overrides (ThemeOverrideProvider)
 
-Individual roadmap files can customize status colors and node shapes without affecting the rest of the UI. This is the `ThemeOverrideProvider` component.
+Individual roadmap files can customize status colors and node shapes without affecting the rest of the UI, via the `ThemeOverrideProvider` component.
 
-### Why a Scoped Provider
+Schema-level overrides must not leak to global UI elements (toolbar, status bar, etc.), so the override is applied as inline CSS custom properties on a wrapper `<div>`, not on `:root`. CSS inheritance means child elements pick up the overrides, while sibling elements outside the wrapper are unaffected.
 
-> **Why scoped `ThemeOverrideProvider` instead of global overrides:** Applying overrides on `:root` would leak custom status colors into the toolbar, status bar, and any other global UI elements. With a scoped wrapper `<div>`, multiple schemas could theoretically have different overrides simultaneously (e.g., in a future tabbed view), and the overrides compose naturally with whichever base theme is active. The scoped approach also prevents cross-schema leakage if the app later supports multi-file workspaces. *(Decision D-08; extensibility noted in D-07.)*
-
-Schema-level overrides must not leak to global UI elements (toolbar, status bar, etc.). The override is applied as inline CSS custom properties on a wrapper `<div>`, not on `:root`. CSS inheritance means child elements pick up the overrides, but sibling elements outside the wrapper are unaffected.
-
-### What Can Be Overridden
-
-In Phase 1, the override scope is intentionally narrow:
+The override scope is intentionally narrow:
 
 - **Status colors**: Custom hex colors per status value (e.g., `"completed": "#00ff00"`)
 - **Node shape**: Border radius in pixels
@@ -188,7 +162,7 @@ Source: [`packages/desktop/src/mainview/components/ThemeOverrideProvider.tsx`](.
 
 ## Node Card Styling
 
-Tree node cards (`RoadmapNodeCard`) use a combination of token-driven and dynamic CSS custom properties. The status color and badge background are set via inline `style` using `STATUS_TOKEN_MAP`:
+Tree node cards (`RoadmapNodeCard`) combine token-driven Tailwind classes with dynamic inline CSS custom properties. The status color and badge background are set via inline `style` using `STATUS_TOKEN_MAP`:
 
 ```typescript
 const STATUS_TOKEN_MAP = {
@@ -199,7 +173,7 @@ const STATUS_TOKEN_MAP = {
 };
 ```
 
-The card reads `--node-radius` from the theme (defaulting to `8px`), applies a selection ring via `ring-1 ring-[var(--rv-accent)]`, and sets the node shadow via `var(--rv-shadow-node)`. The collapse/expand chevron button uses the status color for its border and background.
+The card reads `--node-radius` from the theme (defaulting to `8px`), applies a selection ring via `ring-1 ring-[var(--rv-accent)]`, and sets the node shadow via `var(--rv-shadow-node)`.
 
 Source: [`packages/desktop/src/mainview/components/RoadmapNode.tsx`](../packages/desktop/src/mainview/components/RoadmapNode.tsx)
 
