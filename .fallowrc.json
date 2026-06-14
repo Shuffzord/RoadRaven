@@ -43,6 +43,12 @@
     "**/*.bak.json"
   ],
 
+  // Treat an export referenced within its own declaring file as "used".
+  // Clears idiomatic store-state types and co-located zod schemas (exported
+  // for convention, consumed only locally) while STILL surfacing exports that
+  // nothing — not even their own module — reads.
+  "ignoreExportsUsedInFile": true,
+
   // @roadraven/core is a workspace package whose exports are consumed
   // indirectly (shared schema, plugin surface). Treat as a public library
   // so its exports aren't flagged unused when no sibling imports them yet.

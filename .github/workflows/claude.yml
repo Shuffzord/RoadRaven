@@ -36,6 +36,10 @@ jobs:
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
 
+          # Temporary: surface the full SDK output to diagnose first-turn failures.
+          # Remove once the @claude runs are confirmed working.
+          claude_args: '--debug'
+
           # This is an optional setting that allows Claude to read CI results on PRs
           additional_permissions: |
             actions: read
