@@ -4,12 +4,24 @@ The reference MCP wrapper for the [Roadmap Viewer](https://github.com/Shuffzord/
 
 ## Installation
 
+> **Alpha v0.5 — not on npm yet.** This package ships with the first tagged release.
+> For now, build it from source:
+>
+> ```bash
+> git clone https://github.com/Shuffzord/RoadRaven.git
+> cd RoadRaven && bun install
+> bun run --cwd plugins/claude-code build   # -> plugins/claude-code/dist/index.js
+> ```
+>
+> Then point your MCP host at the built file (see [Configuration](#configuration-in-claude-code),
+> "running from a local build"). The commands below work **once the package is published.**
+
 ```bash
-# Run as a one-shot via npx — no install needed
-npx -y @roadraven/plugin-claude-code
+# Run as a one-shot via bunx — no install needed
+bunx @roadraven/plugin-claude-code
 
 # Or install globally
-npm install -g @roadraven/plugin-claude-code
+bun add -g @roadraven/plugin-claude-code
 roadraven-mcp
 ```
 

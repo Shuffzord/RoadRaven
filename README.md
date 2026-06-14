@@ -4,7 +4,12 @@
 [![Status: Alpha v0.5](https://img.shields.io/badge/status-alpha%20v0.5-orange.svg)](#feature-status)
 [![Platform: Windows | Linux](https://img.shields.io/badge/platform-Windows%20%7C%20Linux-blue.svg)](#install)
 
-A keyboard-first desktop editor for visual roadmap trees. Nodes map to tasks or agents; status updates can stream in over WebSocket (Claude Code integration). Plain JSON data model, atomic autosave, markdown notes.
+**Your plan. Watching itself.**
+
+A keyboard-first desktop editor for visual roadmap trees — backed by a plain JSON
+file you own. Wire each node to something real (an AI agent, a CI pipeline, a local
+script) and watch status update live over WebSocket. No sprints, no story points,
+no cloud, no accounts. It's just a file, living in your repo.
 
 > Built on **Electrobun** (not Electron). Runtime is **Bun**.
 
@@ -20,6 +25,21 @@ A keyboard-first desktop editor for visual roadmap trees. Nodes map to tasks or 
         a video is in production; drop the embed/link here when ready. -->
 
 > 📷 _Screenshot coming soon._ &nbsp;&nbsp; 🎬 _Demo video coming soon._
+
+---
+
+## Why RoadRaven
+
+Imagine you have an idea. You sketch it as a tree, name the pieces, set your own
+statuses — the plan is yours, with no opinions baked in. Then you connect each node
+to whatever is actually running, and the tree keeps itself current.
+
+- **🌳 Plan-as-file** — your roadmap is plain `roadmap.json`, living in your repo. Diffable, reviewable, yours. No database, no proprietary format.
+- **📡 Live status from anything** — any process that can send a message updates a node. A GitHub Action finishes → the node turns green. Claude Code completes a task → the node updates. You don't touch a thing.
+- **🤖 Built for agent supervision** — watch Claude Code work through your plan in real time via the [MCP integration](#use-with-claude-code-mcp).
+- **🔒 Local-first** — binds to `127.0.0.1`, works air-gapped. Nothing leaves your machine. No accounts, no cloud, no subscription.
+- **⌨️ Keyboard-first** — navigate and edit the entire tree without reaching for the mouse.
+- **🎚️ Zero-opinion schema** — you define the statuses, types, and hierarchy. The app stays dumb; your tools do the talking.
 
 ---
 
@@ -69,27 +89,69 @@ Download the latest release from
    desktop shortcut; the CEF runtime ships bundled (`bundleCEF: true`),
    so no system Chromium dependency is needed.
 
-### npm packages (for producers and library consumers)
+### Packages (for producers and library consumers)
 
-> Contributors to this repo use **bun / bunx** (see [CONTRIBUTING.md](./CONTRIBUTING.md)).
-> Consumers of the published packages may use any package manager — `npm` shown below.
+> **Heads-up (alpha v0.5):** these npm packages are **not published yet** — they ship
+> with the first tagged release. For now, clone the repo and build from source. The
+> `bun add` / `bunx` commands below are how it will work once published. RoadRaven is
+> **bun-first**, but these are plain npm packages, so any package manager works.
 
-[`@roadraven/core`](https://www.npmjs.com/package/@roadraven/core) — Zod
-schemas + types. Use this if you're building an Event Producer:
-
-```bash
-npm install @roadraven/core
-```
-
-[`@roadraven/plugin-claude-code`](https://www.npmjs.com/package/@roadraven/plugin-claude-code)
-— MCP wrapper that lets Claude Code push live status updates:
+`@roadraven/core` — Zod schemas + types. Use this if you're building an Event Producer:
 
 ```bash
-npx -y @roadraven/plugin-claude-code
+bun add @roadraven/core          # available once the first release is published
 ```
 
-See the [plugin authoring guide](https://shuffzord.github.io/RoadRaven/plugin-authoring.html)
-for the full Event API contract.
+`@roadraven/plugin-claude-code` — the MCP wrapper that lets Claude Code (and any MCP
+host) read, edit, and push live status updates to your roadmap. Until it's published,
+build it locally — see [Use with Claude Code (MCP)](#use-with-claude-code-mcp) below.
+
+See the [plugin authoring guide](docs/plugin-authoring.md) for the full Event API contract.
+
+---
+
+## Use with Claude Code (MCP)
+
+**Why.** RoadRaven's headline use case is letting an AI agent author and maintain
+your roadmap. `@roadraven/plugin-claude-code` is an MCP server exposing **19 tools**
+so Claude Code can create, edit, move, and delete nodes — and push live status as it
+works. Your plan becomes something the agent keeps current for you.
+
+**How (alpha v0.5 — build from source).** The package isn't on npm yet, so build the
+MCP server locally:
+
+```bash
+git clone https://github.com/Shuffzord/RoadRaven.git
+cd RoadRaven
+bun install
+bun run --cwd plugins/claude-code build   # produces plugins/claude-code/dist/index.js
+```
+
+Start the RoadRaven desktop app, then register the server with your MCP host, pointing
+at the built file (use an absolute path). For Claude Code, add it to your MCP config:
+
+```json
+{
+  "mcpServers": {
+    "roadraven": {
+      "command": "node",
+      "args": ["/absolute/path/to/RoadRaven/plugins/claude-code/dist/index.js"]
+    }
+  }
+}
+```
+
+> The desktop app **must be running** — the plugin talks to it over the local Event
+> API (`127.0.0.1`). If the app is closed, every tool returns `app_not_running`.
+
+> 📦 **Once the first release is published to npm**, this simplifies to a one-liner —
+> no clone, no build:
+> ```json
+> { "mcpServers": { "roadraven": { "command": "bunx", "args": ["-y", "@roadraven/plugin-claude-code"] } } }
+> ```
+
+Full tool catalog, configuration, kill-switch, and security model:
+[`plugins/claude-code/README.md`](plugins/claude-code/README.md).
 
 ---
 
@@ -114,21 +176,26 @@ for the full Event API contract.
 | Drag-and-drop reordering | deferred | planned |
 | Undo / redo | deferred | planned |
 
-See the [documentation site](https://shuffzord.github.io/RoadRaven/) for more
-detail on current capabilities and what's planned next.
+See the [documentation](docs/) for more detail on current capabilities and
+what's planned next.
 
 ---
 
 ## Documentation
 
-Published at https://shuffzord.github.io/RoadRaven/
+Browse the docs in [`docs/`](docs/) — rendered right here on GitHub:
 
-- [Architecture overview](https://shuffzord.github.io/RoadRaven/architecture-overview.html)
-- [Development guide](https://shuffzord.github.io/RoadRaven/development-guide.html)
-- [RPC and IPC reference](https://shuffzord.github.io/RoadRaven/rpc-and-ipc.html)
-- [Design system](https://shuffzord.github.io/RoadRaven/design-system.html)
-- [Logging](https://shuffzord.github.io/RoadRaven/logging.html)
-- [**Plugin authoring guide**](https://shuffzord.github.io/RoadRaven/plugin-authoring.html) — write your own Event Producer
+- [Architecture overview](docs/architecture-overview.md)
+- [Development guide](docs/development-guide.md)
+- [RPC and IPC reference](docs/rpc-and-ipc.md)
+- [Design system](docs/design-system.md)
+- [Logging](docs/logging.md)
+- [**Plugin authoring guide**](docs/plugin-authoring.md) — write your own Event Producer
+
+<!-- A Jekyll config (docs/_config.yml) is set up for a GitHub Pages site at
+     https://shuffzord.github.io/RoadRaven/. It is NOT enabled yet, so those URLs
+     404 — enable Pages (Settings → Pages → source: docs/ folder) to publish it,
+     then these links can point at the .html site instead of the .md files. -->
 
 ---
 
@@ -137,6 +204,28 @@ Published at https://shuffzord.github.io/RoadRaven/
 See [CONTRIBUTING.md](./CONTRIBUTING.md) for local setup, test commands,
 code style, and project conventions. Bug reports + feature requests via
 [GitHub Issues](https://github.com/Shuffzord/RoadRaven/issues).
+
+---
+
+## A note from the creator
+
+I built RoadRaven to scratch my own itch. When you're working on something with a
+lot of moving parts, your plan and your actual work drift apart fast — the plan
+lives in a doc or in your head, while the real state is scattered across terminals,
+CI, and AI agents. The doc is out of date the moment you write it, and slowly turns
+into fiction.
+
+It started as a personal study- and project-tracker. The moment it clicked was
+watching nodes flip status on their own as Claude Code worked through tasks — I
+hadn't touched anything, I just opened the app and the current state was right
+there. That's the whole idea: **your plan, watching itself.**
+
+It's an alpha, and it's open source, because I'd love for it to be useful to more
+than just me. If you have ideas, hit rough edges, or want a node to watch something
+I haven't thought of yet — please open an [issue](https://github.com/Shuffzord/RoadRaven/issues)
+or a PR. Contributions, feedback, and wild suggestions are all genuinely welcome.
+
+— [Shuffzord](https://github.com/Shuffzord)
 
 ---
 
