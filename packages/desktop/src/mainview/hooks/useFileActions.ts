@@ -1,4 +1,8 @@
 import { useCallback, useEffect } from "react";
+// Cycle useFileActions → rpc → rpcHandlers → useFileActions: rpc reaches back
+// here only via dynamic import() at call time, so there is no runtime init
+// cycle. Suppression anchored to this static edge (the only one fallow can match).
+// fallow-ignore-next-line circular-dependency
 import { electroview } from "../rpc";
 import { hasUnsavedEdits, useRoadmapStore } from "../store/roadmapStore";
 
