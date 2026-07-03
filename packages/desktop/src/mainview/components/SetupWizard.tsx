@@ -191,7 +191,9 @@ function McpStep({
 			<Body>
 				Register the <code style={codeStyle}>roadraven</code> MCP server in your
 				Claude Code config so Claude can create, edit, and push live status to
-				your roadmap. RoadRaven must be running for the tools to work.
+				your roadmap. Close Claude Code before installing (it writes this config
+				too), then restart it afterwards. RoadRaven must be running for the
+				tools to work.
 			</Body>
 			<DetectedList status={status} />
 			<InstallLog result={result} />

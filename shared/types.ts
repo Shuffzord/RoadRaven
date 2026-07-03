@@ -42,8 +42,6 @@ export interface AppSettings {
 	setup?: {
 		/** True once the user has finished or dismissed the first-run wizard. */
 		completed?: boolean;
-		/** App version at which setup was last completed. */
-		completedVersion?: string;
 	};
 }
 

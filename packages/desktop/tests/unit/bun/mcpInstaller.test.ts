@@ -1,5 +1,6 @@
 import {
 	existsSync,
+	mkdirSync,
 	mkdtempSync,
 	readFileSync,
 	rmSync,
@@ -148,6 +149,25 @@ describe("installMcpIntegration (sandboxed)", () => {
 		expect(config.numStartups).toBe(7);
 		expect(config.mcpServers.codegraph.command).toBe("codegraph");
 		expect(config.mcpServers[MCP_SERVER_NAME]).toBeDefined();
+	});
+
+	it("treats an empty/whitespace config file as absent and installs cleanly", () => {
+		writeFileSync(getClaudeConfigPath(), "   \n", "utf-8");
+		const result = installMcpIntegration();
+		expect(result.ok).toBe(true);
+		const config = JSON.parse(readFileSync(getClaudeConfigPath(), "utf-8"));
+		expect(config.mcpServers[MCP_SERVER_NAME]).toBeDefined();
+	});
+
+	it("resolveBundledMcpServer resolves relative to an anchor dir, not cwd", () => {
+		delete process.env.ROADRAVEN_MCP_SERVER_PATH;
+		const anchor = join(sandbox, "bundle-bin");
+		mkdirSync(join(anchor, "mcp"), { recursive: true });
+		const bundled = join(anchor, "mcp", "index.js");
+		writeFileSync(bundled, "// bundle\n", "utf-8");
+		// Anchor candidates are checked before cwd candidates, so this wins even
+		// though the real dev bundle exists under the workspace cwd.
+		expect(resolveBundledMcpServer([anchor])).toBe(bundled);
 	});
 
 	it("refuses to overwrite a corrupt config and reports the failing step", () => {

@@ -84,15 +84,29 @@ export function getInstalledMcpServerPath(): string {
  *   4. from-source — the workspace plugin build output
  * Returns null when none exist (the wizard surfaces an actionable error).
  */
-export function resolveBundledMcpServer(): string | null {
+export function resolveBundledMcpServer(anchorDirs?: string[]): string | null {
 	const candidates: string[] = [];
 	const override = process.env.ROADRAVEN_MCP_SERVER_PATH;
 	if (override) candidates.push(override);
-	// Packaged: the Bun process runs inside the app bundle; Resources sits one
-	// level up (mirrors electrobun's own `../Resources/...` reads).
-	candidates.push(resolve("../Resources/app/mcp/index.js"));
-	candidates.push(resolve("../Resources/mcp/index.js"));
-	// Dev / from-source, resolved against wherever the process was launched.
+	// Packaged app: anchor lookups to the running module / executable location,
+	// NOT process.cwd() — a launched desktop app's cwd is the launch directory
+	// (Finder / Start-menu / shortcut), not the app bundle. `import.meta.dir` is
+	// the bundled Bun module's dir at runtime; it is undefined outside Bun (e.g.
+	// under vitest), so it is filtered out there. Several walk-up shapes are
+	// tried because the exact Resources layout must be confirmed against a real
+	// packaged build (electrobun copies assets/mcp/index.js → mcp/index.js).
+	const anchors =
+		anchorDirs ??
+		[import.meta.dir, dirname(process.execPath)].filter(
+			(d): d is string => typeof d === "string" && d.length > 0,
+		);
+	for (const a of anchors) {
+		candidates.push(resolve(a, "mcp/index.js"));
+		candidates.push(resolve(a, "../mcp/index.js"));
+		candidates.push(resolve(a, "../Resources/app/mcp/index.js"));
+		candidates.push(resolve(a, "../Resources/mcp/index.js"));
+	}
+	// Dev / from-source, resolved against where the dev process was launched.
 	const cwd = process.cwd();
 	candidates.push(resolve(cwd, "assets/mcp/index.js"));
 	candidates.push(resolve(cwd, "packages/desktop/assets/mcp/index.js"));
@@ -103,6 +117,10 @@ export function resolveBundledMcpServer(): string | null {
 
 /** Build the stdio server entry that points Claude Code at our server file. */
 export function buildMcpServerEntry(serverPath: string): McpServerEntry {
+	// `node` must be on the PATH of the shell Claude Code spawns MCP servers in.
+	// Safe assumption — Claude Code is itself a Node app — but note it is NOT
+	// verified here: the wizard only checks the server file exists, not that it
+	// runs, so a node-less host would fail later at MCP spawn time.
 	return { type: "stdio", command: "node", args: [serverPath], env: {} };
 }
 
@@ -135,7 +153,11 @@ export function mergeMcpConfig(
 export function readClaudeConfig(): Record<string, unknown> | null {
 	const path = getClaudeConfigPath();
 	if (!existsSync(path)) return null;
-	return JSON.parse(readFileSync(path, "utf-8")) as Record<string, unknown>;
+	const raw = readFileSync(path, "utf-8");
+	// Empty / whitespace-only file: nothing to preserve. Treat as absent (fresh
+	// config) rather than corrupt, so the install proceeds instead of aborting.
+	if (raw.trim() === "") return null;
+	return JSON.parse(raw) as Record<string, unknown>;
 }
 
 /** Atomic-ish write via temp file + rename so a crash can't truncate the config. */

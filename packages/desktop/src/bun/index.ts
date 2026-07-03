@@ -52,8 +52,9 @@ import { getSetupStatus, installMcpIntegration } from "./mcpInstaller";
 import { deleteSentinel, writeSentinel } from "./sentinel";
 import { addRecentFile, loadSettings, saveSettings } from "./settings";
 
-// App version for the Setup Wizard. Keep in sync with electrobun.config.ts
-// (both are updated by scripts/bump-version.ts).
+// App version shown in the Setup Wizard. scripts/bump-version.ts rewrites this
+// literal (alongside the package.json + electrobun.config.ts versions) so it
+// stays in lockstep — do not edit by hand.
 const APP_VERSION = "0.6.0";
 
 // Re-export the RPC type so downstream modules can import from the app entry
@@ -510,9 +511,7 @@ const rpc = BrowserView.defineRPC<RoadmapRPCType>({
 			// completeSetup: persist that the first-run wizard is done so it stops
 			// auto-opening on subsequent launches.
 			completeSetup: () => {
-				saveSettings({
-					setup: { completed: true, completedVersion: APP_VERSION },
-				});
+				saveSettings({ setup: { completed: true } });
 				return { ok: true as const };
 			},
 
