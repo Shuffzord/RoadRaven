@@ -8,12 +8,16 @@ export default {
 	app: {
 		name: "RoadRaven",
 		identifier: "RoadRaven.electrobun.dev",
-		version: "0.5.0",
+		version: "0.6.0",
 	},
 	build: {
 		copy: {
 			"dist/index.html": "views/mainview/index.html",
 			"dist/assets": "views/mainview/assets",
+			// MCP server bundle (v0.6) — built by `bun run build:mcp` into
+			// assets/mcp/index.js, shipped so the Setup Wizard can install the
+			// Claude Code integration. Resolved at runtime by mcpInstaller.ts.
+			"assets/mcp/index.js": "mcp/index.js",
 		},
 		watchIgnore: ["dist/**"],
 		mac: { bundleCEF },
