@@ -36,6 +36,11 @@ jobs:
         run: bun install
       - name: Build webview bundle (vite build → packages/desktop/dist)
         run: bun run --cwd packages/desktop build
+      - name: Build MCP server bundle (bun build → packages/desktop/assets/mcp)
+        # Produces packages/desktop/assets/mcp/index.js, copied into the app
+        # bundle by electrobun.config.ts so the Setup Wizard can install the
+        # Claude Code MCP integration (v0.6).
+        run: bun run --cwd packages/desktop build:mcp
       - name: Build Windows installer (stable channel)
         # Produces: packages/desktop/artifacts/stable-win-x64-RoadRaven-Setup.zip
         #           packages/desktop/artifacts/stable-win-x64-update.json
@@ -75,6 +80,11 @@ jobs:
         run: bun install
       - name: Build webview bundle (vite build → packages/desktop/dist)
         run: bun run --cwd packages/desktop build
+      - name: Build MCP server bundle (bun build → packages/desktop/assets/mcp)
+        # Produces packages/desktop/assets/mcp/index.js, copied into the app
+        # bundle by electrobun.config.ts so the Setup Wizard can install the
+        # Claude Code MCP integration (v0.6).
+        run: bun run --cwd packages/desktop build:mcp
       - name: Build Linux installer (stable channel)
         # Produces: packages/desktop/artifacts/stable-linux-x64-RoadRaven-Setup.tar.gz
         #           packages/desktop/artifacts/stable-linux-x64-update.json

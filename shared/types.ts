@@ -38,6 +38,19 @@ export interface AppSettings {
 		/** RESEARCH §13 (kill-switch — Phase 6). When false, all agent mutation/read tools return code 'agent_api_disabled' before any tool dispatch. */
 		enabled?: boolean;
 	};
+	/** First-run setup wizard state (v0.6). */
+	setup?: {
+		/** True once the user has finished or dismissed the first-run wizard. */
+		completed?: boolean;
+	};
+}
+
+/** One step in the MCP integration install, surfaced live in the Setup Wizard. */
+export interface McpInstallStep {
+	id: string;
+	label: string;
+	status: "ok" | "error" | "skipped";
+	detail?: string;
 }
 
 // -- Zod-inferred types from @roadraven/core --------------------------------
@@ -120,6 +133,36 @@ export type RoadmapRPCType = {
 					connectedCount: number;
 					errorMessage: string | null;
 				};
+			};
+			// -- Setup Wizard (v0.6) ------------------------------------------
+			// getSetupStatus: pulled on mount to decide whether to auto-open the
+			// wizard and to seed the MCP-integration step's detected state.
+			getSetupStatus: {
+				params: Record<string, never>;
+				response: {
+					firstRun: boolean;
+					claudeDetected: boolean;
+					mcpServerAvailable: boolean;
+					mcpInstalled: boolean;
+					appVersion: string;
+				};
+			};
+			// installMcpIntegration: copies the bundled MCP server into the user
+			// data dir and registers it under mcpServers.roadraven in the user's
+			// Claude Code config. Returns a per-step trace for the wizard to render.
+			installMcpIntegration: {
+				params: Record<string, never>;
+				response: {
+					ok: boolean;
+					steps: McpInstallStep[];
+					serverPath?: string;
+					configPath?: string;
+				};
+			};
+			// completeSetup: persists setup.completed so the wizard stops auto-opening.
+			completeSetup: {
+				params: Record<string, never>;
+				response: { ok: true };
 			};
 		};
 		messages: {

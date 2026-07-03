@@ -26,8 +26,24 @@ const pkgTargets = [
 	"plugins/claude-code/package.json",
 ];
 
-const cfgPath = "packages/desktop/electrobun.config.ts";
-const cfgRegex = /version:\s*"[^"]+"/;
+// Non-JSON source/config files that embed the version as a string literal.
+// Each is validated (regex must match) before any file is written, so a
+// renamed literal aborts the whole bump instead of leaving a partial state.
+const textTargets = [
+	{
+		path: "packages/desktop/electrobun.config.ts",
+		regex: /version:\s*"[^"]+"/,
+		replacement: `version: "${newVersion}"`,
+		label: 'version: "..."',
+	},
+	{
+		// Setup Wizard app version (H1 — keep in lockstep, not hand-edited).
+		path: "packages/desktop/src/bun/index.ts",
+		regex: /const APP_VERSION = "[^"]+"/,
+		replacement: `const APP_VERSION = "${newVersion}"`,
+		label: 'const APP_VERSION = "..."',
+	},
+];
 
 type ParsedPkg = { path: string; pkg: { version?: string } };
 
@@ -44,26 +60,33 @@ const parsedPkgs: ParsedPkg[] = pkgTargets.map((path) => {
 	}
 });
 
-if (!existsSync(cfgPath)) {
-	console.error(`Missing target: ${cfgPath}`);
-	process.exit(1);
-}
-const cfg = readFileSync(cfgPath, "utf8");
-const cfgUpdated = cfg.replace(cfgRegex, `version: "${newVersion}"`);
-if (cfgUpdated === cfg) {
-	console.error(
-		`Failed to find 'version: "..."' in ${cfgPath}. Refusing to write — partial bump would break lockstep invariant (D-04).`,
-	);
-	process.exit(1);
-}
+const preparedText = textTargets.map(({ path, regex, replacement, label }) => {
+	if (!existsSync(path)) {
+		console.error(`Missing target: ${path}`);
+		process.exit(1);
+	}
+	const content = readFileSync(path, "utf8");
+	const updated = content.replace(regex, replacement);
+	if (updated === content) {
+		console.error(
+			`Failed to find '${label}' in ${path}. Refusing to write — partial bump would break lockstep invariant (D-04).`,
+		);
+		process.exit(1);
+	}
+	return { path, updated };
+});
 
 for (const { path, pkg } of parsedPkgs) {
 	pkg.version = newVersion;
 	writeFileSync(path, `${JSON.stringify(pkg, null, "\t")}\n`);
 }
-writeFileSync(cfgPath, cfgUpdated);
+for (const { path, updated } of preparedText) {
+	writeFileSync(path, updated);
+}
 
-console.log(`Bumped ${parsedPkgs.length} package.json files + ${cfgPath} to ${newVersion}`);
+console.log(
+	`Bumped ${parsedPkgs.length} package.json files + ${preparedText.length} source/config files to ${newVersion}`,
+);
 console.log(
 	`Next: git commit -am "release: v${newVersion}" && git tag v${newVersion} && git push --follow-tags`,
 );

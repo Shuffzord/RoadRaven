@@ -5,6 +5,7 @@ import { EventLogDrawer } from "./components/EventLogDrawer";
 import { EventToastStack } from "./components/EventToastStack";
 import { ExternalEditToast } from "./components/ExternalEditToast";
 import { SaveFailureModal } from "./components/SaveFailureModal";
+import { SetupWizard } from "./components/SetupWizard";
 import { Sidebar } from "./components/Sidebar";
 import { SidePanel } from "./components/SidePanel";
 import { StatusBar } from "./components/StatusBar";
@@ -97,6 +98,7 @@ export default function App() {
 			<ExternalEditToast />
 			<EventToastStack />
 			<EventLogDrawer />
+			<SetupWizard />
 		</div>
 	);
 }

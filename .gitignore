@@ -52,6 +52,8 @@ test-results/
 # Build artifacts (Phase 5)
 packages/core/dist/
 packages/desktop/artifacts/
+# Generated MCP server bundle (built by `bun run build:mcp`, v0.6)
+packages/desktop/assets/mcp/
 
 # --- Public release exclusions (alpha v0.5) ---
 # Internal GSD planning artifacts & strategy docs (pricing, pitch, vision, state)

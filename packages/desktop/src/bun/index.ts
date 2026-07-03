@@ -48,8 +48,14 @@ import {
 } from "./eventServer";
 import { replayEventLog } from "./eventsLog";
 import { serverLogger } from "./logging";
+import { getSetupStatus, installMcpIntegration } from "./mcpInstaller";
 import { deleteSentinel, writeSentinel } from "./sentinel";
 import { addRecentFile, loadSettings, saveSettings } from "./settings";
+
+// App version shown in the Setup Wizard. scripts/bump-version.ts rewrites this
+// literal (alongside the package.json + electrobun.config.ts versions) so it
+// stays in lockstep — do not edit by hand.
+const APP_VERSION = "0.6.0";
 
 // Re-export the RPC type so downstream modules can import from the app entry
 export type { RoadmapRPCType };
@@ -482,6 +488,31 @@ const rpc = BrowserView.defineRPC<RoadmapRPCType>({
 			// loadSettings handler
 			loadSettings: () => {
 				return { settings: loadSettings() };
+			},
+
+			// -- Setup Wizard (v0.6) --------------------------------------------
+			// getSetupStatus: renderer pulls this on mount to decide whether to
+			// auto-open the first-run wizard and to seed the MCP step's state.
+			getSetupStatus: () => {
+				return getSetupStatus(APP_VERSION, loadSettings());
+			},
+			// installMcpIntegration: copy the bundled MCP server into the user
+			// data dir and register it in the user's Claude Code config.
+			installMcpIntegration: () => {
+				const result = installMcpIntegration();
+				if (result.ok) {
+					bunLogger.info`MCP integration installed: server=${result.serverPath} config=${result.configPath}`;
+				} else {
+					const failed = result.steps.find((s) => s.status === "error");
+					bunLogger.warn`MCP integration install failed at step '${failed?.id}': ${failed?.detail}`;
+				}
+				return result;
+			},
+			// completeSetup: persist that the first-run wizard is done so it stops
+			// auto-opening on subsequent launches.
+			completeSetup: () => {
+				saveSettings({ setup: { completed: true } });
+				return { ok: true as const };
 			},
 
 			// newFile handler (EDIT-17): produce a fresh in-memory schema with a
