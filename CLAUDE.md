@@ -1,86 +1,84 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Behavioral guidelines to reduce common LLM coding mistakes. Merge with project-specific instructions as needed.
 
-## Project
+**Tradeoff:** These guidelines bias toward caution over speed. For trivial tasks, use judgment.
 
-**Roadmap Viewer** — an Electrobun desktop app for creating, editing, and live-monitoring visual roadmap trees. Nodes map to tasks/agents; status updates arrive via WebSocket (Claude Code integration). Plain JSON data model, keyboard-first editing, markdown side panels.
+## 1. Think Before Coding
 
-> **IMPORTANT:** This is Electrobun, NOT Electron. Do not use Electron APIs, patterns, or documentation.
+Don't assume. Don't hide confusion. Surface tradeoffs.
 
-> **IMPORTANT:** Use `bun` and `bunx` for all package management and script execution. Do not use `npm`, `npx`, `yarn`, or `pnpm`.
+Before implementing:
 
-## Commands
+- State your assumptions explicitly. If uncertain, ask.
+- If multiple interpretations exist, present them - don't pick silently.
+- If a simpler approach exists, say so. Push back when warranted.
+- If something is unclear, stop. Name what's confusing. Ask.
 
-```bash
-bun install           # Install dependencies
+## 2. Simplicity First
 
-bun run start         # One-shot: vite build → electrobun dev (no file watching)
-bun run dev           # Dev with file watching (auto-restarts bun process on changes)
-bun run dev:hmr       # Dev with HMR — runs Vite dev server + electrobun concurrently (recommended)
-                      # Renderer: CEF (Chromium) by default. To use WebKitGTK/WKWebView instead,
-                      # create .env.local at repo root with: ROADRAVEN_RENDERER=webkit
-bun run hmr           # Vite dev server only (port 5173) — used internally by dev:hmr
-bun run build:canary  # Production build (canary channel)
+Minimum code that solves the problem. Nothing speculative.
 
-# Tests (vitest) — ALWAYS via `bun run`, never `bunx vitest` directly.
-# `bunx vitest` from workspace root pulls a different version from bun's
-# global cache than the workspace-pinned one — silent version drift.
-bun run test                          # Full suite across all workspaces
-bun run test:desktop                  # Desktop package only (faster)
-bun run test:file path/to/file.test.ts  # Single file
-bun run test:typecheck                # tsc --noEmit
-bun run test:lint                     # biome lint (matches CI)
-bun run verify                        # test + typecheck + build + lint (PR-readiness)
+- No features beyond what was asked.
+- No abstractions for single-use code.
+- No "flexibility" or "configurability" that wasn't requested.
+- No error handling for impossible scenarios.
+- If you write 200 lines and it could be 50, rewrite it.
 
-# Linting (biome) — bunx is fine for biome (root devDep)
-bunx @biomejs/biome lint packages/desktop/src/ shared/  # Lint source
-bunx @biomejs/biome check --write .                      # Auto-fix
+Ask yourself: "Would a senior engineer say this is overcomplicated?" If yes, simplify.
+
+## 3. Surgical Changes
+
+Touch only what you must. Clean up only your own mess.
+
+When editing existing code:
+
+- Don't "improve" adjacent code, comments, or formatting.
+- Don't refactor things that aren't broken.
+- Match existing style, even if you'd do it differently.
+- If you notice unrelated dead code, mention it - don't delete it.
+
+When your changes create orphans:
+
+- Remove imports/variables/functions that YOUR changes made unused.
+- Don't remove pre-existing dead code unless asked.
+
+The test: Every changed line should trace directly to the user's request.
+
+## 4. Goal-Driven Execution
+
+Define success criteria. Loop until verified.
+
+Transform tasks into verifiable goals:
+
+- "Add validation" → "Write tests for invalid inputs, then make them pass"
+- "Fix the bug" → "Write a test that reproduces it, then make it pass"
+- "Refactor X" → "Ensure tests pass before and after"
+
+For multi-step tasks, state a brief plan:
+
+```
+1. [Step] → verify: [check]
+2. [Step] → verify: [check]
+3. [Step] → verify: [check]
 ```
 
-## Architecture
+Strong success criteria let you loop independently. Weak criteria ("make it work") require constant clarification.
 
-See `docs/` for detailed architecture documentation, design system guide, and developer workflow.
+These guidelines are working if: fewer unnecessary changes in diffs, fewer rewrites due to overcomplication, and clarifying questions come before implementation rather than after mistakes.
 
-## Verification
+ ## 5. Codegraph — use it before reading/writing code
+ 
+ This repo is indexed by **codegraph** (a SQLite knowledge graph of every symbol, edge, and file; `.codegraph/` at repo root, available via the `codegraph` MCP tools). Reads are sub-millisecond; the index lags writes by ~1s via a file watcher. **Consult it BEFORE writing or editing code**, not during.
+ 
+ - **Almost any question** — "how does X work", architecture, a bug, "what/where is X", surveying an area → `codegraph_explore` (PRIMARY; call FIRST). One capped call returns the verbatim source of the relevant symbols grouped by file — Read-equivalent, usually the ONLY call needed. Treat its output as already-Read; don't re-Read those files.
+ - **"How does X reach/become Y / the flow / path"** → `codegraph_explore`, naming the symbols that span the flow (it surfaces dynamic-dispatch hops grep can't follow).
+ - **"Where/what is symbol X" (location only)** → `codegraph_search`.
+ - **"What calls this / what does this call / what would changing this break"** → `codegraph_callers` / `codegraph_callees` / `codegraph_impact`.
+ 
+ Codegraph IS the prebuilt search index: a direct answer is typically 1–few calls, vs dozens for a grep/read loop. Don't delegate the same lookup to a sub-agent or re-run it with grep — that repeats work codegraph already did. Reach for raw Read/Grep only to confirm a specific detail codegraph didn't cover.
+ 
+---
 
-Before creating a PR, ensure:
-1. `bun run verify` — all tests pass
-2. `bunx vite build` — production build succeeds (catches import/CSS issues that unit tests miss)
-3. `bunx @biomejs/biome lint packages/desktop/src/ shared/` — no lint errors
-4. `fallow audit --changed-since=HEAD` — no new dead code / duplication / complexity regressions in your diff (see below)
-
-## Static analysis (fallow)
-
-Fallow is a Rust-based code-quality analyzer wired in as an *informational* fourth
-verification layer on top of the biome → tsc → vitest stack. Config lives at
-`.fallowrc.json` (JSONC); entry points for the Electrobun main process, the
-mainview HTML bootstrap, and the dev harness are declared there — without them
-the tool reports App.tsx and friends as dead code.
-
-```bash
-bunx fallow                                   # Full combined scan (dead code + dupes + health)
-bunx fallow audit --changed-since=HEAD        # Scoped to your uncommitted diff — fast, use during review
-bunx fallow dead-code --summary               # Counts only
-bunx fallow health --score --trend            # Complexity + delta vs. last snapshot
-bunx fallow config                            # Print resolved config + which file loaded
-```
-
-Treat fallow output as a signal, not a gate — it is not currently wired into
-`bun run verify`, pre-commit, or CI (commented-out placeholders exist in
-`.husky/pre-commit` and `.github/workflows/ci.yml`; enable after the post-GSD
-dead-code cleanup lands). When planning refactors, use it to locate complexity
-hotspots and circular dependencies rather than acting on each unused-export
-finding in isolation.
-
-## Electrobun-specific patterns
-
-- Load bundled views with `views://mainview/index.html`
-- Main process imports: `import { BrowserWindow, Updater } from "electrobun/bun"`
-- Renderer imports: `import { Electroview } from "electrobun/view"`
-
-## Electrobun documentation
-
-- Quick start guide: https://blackboard.sh/electrobun/docs/guides/quick-start/
-- Source + issues: https://github.com/blackboardsh/electrobun
-- LLM-optimised API reference: https://blackboard.sh/electrobun/llms.txt
+## Project specific
+@PROJECT.MD
