@@ -11,7 +11,7 @@ import {
 } from "../src/tools/schemas";
 
 describe("AgentErrorCode enum (RESEARCH §9 / D-11/D-12/D-13 + WR-01/WR-04)", () => {
-	it("contains exactly 15 codes: 13 originals + invalid_input (WR-01) + autosave_timeout (WR-04)", () => {
+	it("contains exactly 16 codes: 13 originals + invalid_input (WR-01) + autosave_timeout (WR-04) + stale_write (v0.7 CONC-01)", () => {
 		const expected = new Set<AgentErrorCode>([
 			"app_not_running",
 			"no_file_loaded",
@@ -28,9 +28,10 @@ describe("AgentErrorCode enum (RESEARCH §9 / D-11/D-12/D-13 + WR-01/WR-04)", ()
 			"internal_error",
 			"invalid_input",
 			"autosave_timeout",
+			"stale_write",
 		] as const);
 		expect(new Set(AGENT_ERROR_CODES)).toEqual(expected);
-		expect(AGENT_ERROR_CODES.length).toBe(15);
+		expect(AGENT_ERROR_CODES.length).toBe(16);
 	});
 });
 

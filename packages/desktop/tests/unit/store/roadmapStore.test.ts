@@ -109,7 +109,10 @@ describe("loadSchema", () => {
 		useRoadmapStore.getState().loadSchema(TEST_SCHEMA, TEST_FILE_PATH);
 		const state = useRoadmapStore.getState();
 
-		expect(state.schema).toBe(TEST_SCHEMA);
+		// v0.7 CONC-01: loadSchema stamps a revision, so the stored schema is a
+		// shallow copy of the input — nodes stay shared by reference.
+		expect(state.schema).toEqual({ ...TEST_SCHEMA, revision: 1 });
+		expect(state.schema?.nodes).toBe(TEST_SCHEMA.nodes);
 		expect(state.filePath).toBe(TEST_FILE_PATH);
 		expect(state.treeData).not.toBeNull();
 		expect(state.treeData?.name).toBe("Root Node");

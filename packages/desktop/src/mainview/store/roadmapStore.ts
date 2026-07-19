@@ -471,7 +471,18 @@ export const useRoadmapStore = create<RoadmapState>((set, get) => {
 				nodeIndex: buildNodeIndex(nextNodes),
 			});
 		}
+		bumpRevision();
 		syncSearchToTree(nextNodes);
+	}
+
+	// v0.7 CONC-01: bump the agent-visible revision counter on every
+	// agent-visible mutation. Mutated in place ON PURPOSE: the in-place update
+	// path (updateNodeStatus & friends, D-02) must keep the same schema/treeData
+	// references to avoid react-d3-tree's deep clone, and no UI subscribes to
+	// revision — agents read it via getRoadmap/getNode.
+	function bumpRevision(): void {
+		const s = get().schema;
+		if (s) s.revision = (s.revision ?? 0) + 1;
 	}
 
 	// An active search holds match ids computed at query time. A structural
@@ -501,8 +512,14 @@ export const useRoadmapStore = create<RoadmapState>((set, get) => {
 			const treeData = schema.nodes[0] ? toTreeDatum(schema.nodes[0]) : null;
 			const nodeIndex = buildNodeIndex(schema.nodes);
 			const nextKey = String(Number(get().dataKey) + 1);
+			// v0.7 CONC-01: every (re)load advances revision past BOTH the file's
+			// value and the in-memory one. Files without a revision load as 1
+			// (0 + 1); the in-memory max closes the external-reload race where a
+			// reloaded file carries an old revision number an agent already read.
+			const revision =
+				Math.max(schema.revision ?? 0, get().schema?.revision ?? 0) + 1;
 			set({
-				schema,
+				schema: { ...schema, revision },
 				filePath,
 				treeData,
 				nodeIndex,
@@ -529,8 +546,11 @@ export const useRoadmapStore = create<RoadmapState>((set, get) => {
 			const treeData = schema.nodes[0] ? toTreeDatum(schema.nodes[0]) : null;
 			const nodeIndex = buildNodeIndex(schema.nodes);
 			const nextKey = String(Number(get().dataKey) + 1);
+			// v0.7 CONC-01: same revision-advance rule as loadSchema above.
+			const revision =
+				Math.max(schema.revision ?? 0, get().schema?.revision ?? 0) + 1;
 			set({
-				schema,
+				schema: { ...schema, revision },
 				treeData,
 				nodeIndex,
 				dataKey: nextKey,
@@ -838,6 +858,7 @@ export const useRoadmapStore = create<RoadmapState>((set, get) => {
 			// This is the critical performance path per D-02: status-only updates
 			// bypass react-d3-tree's deep-clone by keeping the same data reference.
 			node.status = status as RoadmapNode["status"];
+			bumpRevision();
 			set({ statusTick: get().statusTick + 1 });
 		},
 
@@ -847,6 +868,7 @@ export const useRoadmapStore = create<RoadmapState>((set, get) => {
 			if (node.type === type) return;
 			node.type = type;
 			node.updatedAt = new Date().toISOString();
+			bumpRevision();
 			set({ statusTick: get().statusTick + 1 });
 		},
 
@@ -856,6 +878,7 @@ export const useRoadmapStore = create<RoadmapState>((set, get) => {
 			if (node.metadata === metadata) return;
 			node.metadata = metadata;
 			node.updatedAt = new Date().toISOString();
+			bumpRevision();
 			set({ statusTick: get().statusTick + 1 });
 		},
 
@@ -865,6 +888,7 @@ export const useRoadmapStore = create<RoadmapState>((set, get) => {
 			if (node.notes === notes) return;
 			node.notes = notes;
 			node.updatedAt = new Date().toISOString();
+			bumpRevision();
 			set({ statusTick: get().statusTick + 1 });
 		},
 

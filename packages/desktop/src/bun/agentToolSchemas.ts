@@ -34,6 +34,12 @@ import {
 // ID — permissive (matches eventSchema.ts EventFrameSchema.nodeId)
 const IdString = z.string().min(1);
 
+// v0.7 CONC-01: optimistic-concurrency guard accepted by every write tool.
+// Must be declared here or z.object() strips it before the renderer's
+// stale_write gate ever sees it. Optional — omitted keeps pre-v0.7
+// last-writer-wins behavior.
+const ExpectedRevision = z.number().int().min(1).optional();
+
 // -- Read tools --------------------------------------------------------------
 
 const GetNodeInputSchema = z.object({
@@ -58,6 +64,7 @@ const CreateNodeInputSchema = z.object({
 	status: z.string().optional(),
 	notes: z.string().optional(),
 	metadata: z.record(z.string(), z.unknown()).optional(),
+	expectedRevision: ExpectedRevision,
 });
 
 const CreateRoadmapInputSchema = z.object({
@@ -71,22 +78,26 @@ const CreateRoadmapInputSchema = z.object({
 const RenameNodeInputSchema = z.object({
 	nodeId: IdString,
 	title: z.string().min(1).max(200),
+	expectedRevision: ExpectedRevision,
 });
 
 const UpdateNodeStatusInputSchema = z.object({
 	nodeId: IdString,
 	status: z.string().min(1),
 	meta: z.record(z.string(), z.unknown()).optional(),
+	expectedRevision: ExpectedRevision,
 });
 
 const UpdateNodeTypeInputSchema = z.object({
 	nodeId: IdString,
 	type: z.string(),
+	expectedRevision: ExpectedRevision,
 });
 
 const UpdateNodeNotesInputSchema = z.object({
 	nodeId: IdString,
 	notes: z.string(),
+	expectedRevision: ExpectedRevision,
 });
 
 // D-04 PATCH semantics: null deletes the key. patch is REQUIRED (empty object
@@ -96,12 +107,14 @@ const UpdateNodeNotesInputSchema = z.object({
 const UpdateNodeMetadataInputSchema = z.object({
 	nodeId: IdString,
 	patch: z.record(z.string(), z.unknown().nullable()),
+	expectedRevision: ExpectedRevision,
 });
 
 const MoveNodeInputSchema = z.object({
 	nodeId: IdString,
 	newParentId: IdString,
 	position: z.number().int().min(0).optional(),
+	expectedRevision: ExpectedRevision,
 });
 
 // -- Delete tool -------------------------------------------------------------
@@ -109,6 +122,7 @@ const MoveNodeInputSchema = z.object({
 const DeleteNodeInputSchema = z.object({
 	nodeId: IdString,
 	cascade: z.boolean().optional(),
+	expectedRevision: ExpectedRevision,
 });
 
 // -- File-lifecycle tools ----------------------------------------------------

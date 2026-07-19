@@ -55,6 +55,9 @@ export const RoadmapNodeSchema = z.object({
 export const RoadmapSchemaSchema = z.object({
 	version: z.string(),
 	title: z.string(),
+	// v0.7 CONC-01: optimistic-concurrency counter for agent writes. Monotonic,
+	// starts at 1; files written before v0.7 lack it and load as revision 1.
+	revision: z.number().int().min(1).optional(),
 	themeConfig: z
 		.object({
 			statusColors: z.record(z.string(), z.string()).optional(),

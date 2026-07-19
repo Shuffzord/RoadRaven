@@ -54,6 +54,16 @@ server.registerTool(
 				.describe(
 					"Arbitrary key-value metadata, e.g. { branch, commit, ci_run_id }",
 				),
+			// v0.7 CONC-01 — inline schema (Phase 4 predates schemas.ts) mirrors
+			// the ExpectedRevision field every write tool in schemas.ts carries.
+			expectedRevision: z
+				.number()
+				.int()
+				.min(1)
+				.optional()
+				.describe(
+					"Revision from your last getRoadmap/getNode read. If the roadmap changed since, the write fails with stale_write instead of clobbering.",
+				),
 		}),
 	},
 	agentToolCallback("updateNodeStatus", wsClient),
@@ -82,7 +92,7 @@ server.registerTool(
 	{
 		title: "Get the loaded RoadRaven roadmap",
 		description:
-			"Return the full schema tree from the desktop app, with live-event statuses merged in. Requires the app to be running and a file to be loaded.",
+			"Return the full schema tree from the desktop app, with live-event statuses merged in, plus the current `revision` (pass it as expectedRevision on writes to detect stale reads). Requires the app to be running and a file to be loaded.",
 		inputSchema: z.object({}),
 	},
 	agentToolCallback("getRoadmap", wsClient),
@@ -93,7 +103,7 @@ server.registerTool(
 	{
 		title: "Get a single RoadRaven node",
 		description:
-			"Return a node by UUID, with its immediate parent ID and full ancestor chain (root-to-parent). Status reflects the live overlay if a recent event landed.",
+			"Return a node by UUID, with its immediate parent ID, full ancestor chain (root-to-parent), and the current roadmap `revision`. Status reflects the live overlay if a recent event landed.",
 		inputSchema: GetNodeInputSchema,
 	},
 	agentToolCallback("getNode", wsClient),

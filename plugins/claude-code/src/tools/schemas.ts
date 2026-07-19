@@ -27,6 +27,18 @@ import {
 // (RoadmapNodeSchema), not the agent boundary.
 const IdString = z.string().min(1);
 
+// v0.7 CONC-01: optimistic-concurrency guard accepted by every write tool.
+// Optional — omitted keeps pre-v0.7 last-writer-wins behavior. On mismatch the
+// desktop returns stale_write with data.currentRevision.
+const ExpectedRevision = z
+	.number()
+	.int()
+	.min(1)
+	.optional()
+	.describe(
+		"Revision from your last getRoadmap/getNode read. If the roadmap changed since, the write fails with stale_write instead of clobbering.",
+	);
+
 // -- Read tools (only non-trivial input shapes get a schema) ------------------
 
 export const GetNodeInputSchema = z.object({
@@ -61,6 +73,7 @@ export const CreateNodeInputSchema = z.object({
 		.describe("Status id — defaults to first statusConfig entry"),
 	notes: z.string().optional(),
 	metadata: z.record(z.string(), z.unknown()).optional(),
+	expectedRevision: ExpectedRevision,
 });
 
 // D-01: createRoadmap mirrors File > New (newUntitledSchema). Reuses the existing
@@ -76,16 +89,19 @@ export const CreateRoadmapInputSchema = z.object({
 export const RenameNodeInputSchema = z.object({
 	nodeId: IdString,
 	title: z.string().min(1).max(200),
+	expectedRevision: ExpectedRevision,
 });
 
 export const UpdateNodeTypeInputSchema = z.object({
 	nodeId: IdString,
 	type: z.string(),
+	expectedRevision: ExpectedRevision,
 });
 
 export const UpdateNodeNotesInputSchema = z.object({
 	nodeId: IdString,
 	notes: z.string(),
+	expectedRevision: ExpectedRevision,
 });
 
 // D-04: PATCH semantics — null value deletes that key from node.metadata.
@@ -94,6 +110,7 @@ export const UpdateNodeNotesInputSchema = z.object({
 export const UpdateNodeMetadataInputSchema = z.object({
 	nodeId: IdString,
 	patch: z.record(z.string(), z.unknown().nullable()),
+	expectedRevision: ExpectedRevision,
 });
 
 // D-01: moveNode with optional position. Cycle and cross-$ref-boundary checks
@@ -102,6 +119,7 @@ export const MoveNodeInputSchema = z.object({
 	nodeId: IdString,
 	newParentId: IdString,
 	position: z.number().int().min(0).optional(),
+	expectedRevision: ExpectedRevision,
 });
 
 // -- Delete tool --------------------------------------------------------------
@@ -111,6 +129,7 @@ export const MoveNodeInputSchema = z.object({
 export const DeleteNodeInputSchema = z.object({
 	nodeId: IdString,
 	cascade: z.boolean().optional(),
+	expectedRevision: ExpectedRevision,
 });
 
 // -- File-lifecycle tools (D-13: path is the security-sensitive surface) -----

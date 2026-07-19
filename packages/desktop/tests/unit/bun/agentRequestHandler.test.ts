@@ -496,3 +496,39 @@ describe("agentRequestHandler — cross-ref boundary gate (CR-03)", () => {
 		expect(env.result).toEqual({ ok: true });
 	});
 });
+
+// v0.7 CONC-01: GATE 2's Zod schemas strip unknown fields, so expectedRevision
+// must be declared per write tool or the renderer's stale_write gate never
+// sees it. This pins the passthrough.
+describe("agentRequestHandler — expectedRevision passthrough (CONC-01)", () => {
+	beforeEach(() => {
+		vi.clearAllMocks();
+	});
+
+	it("forwards expectedRevision through per-tool validation to the renderer", async () => {
+		vi.mocked(loadSettings).mockReturnValue({});
+		const { ws, sent } = makeWs();
+		const mainWindow = makeMainWindow(async ({ tool, args }) => {
+			expect(tool).toBe("updateNodeStatus");
+			// The load-bearing assertion: Zod did NOT strip expectedRevision.
+			expect(args).toEqual({
+				nodeId: "00000000-0000-0000-0000-000000000001",
+				status: "completed",
+				expectedRevision: 3,
+			});
+			return { ok: true, data: { ok: true } };
+		});
+		await agentRequestHandler(
+			ws,
+			makeRequest("updateNodeStatus", {
+				nodeId: "00000000-0000-0000-0000-000000000001",
+				status: "completed",
+				expectedRevision: 3,
+			}),
+			mainWindow,
+		);
+		const env = JSON.parse(sent[0]);
+		expect(env.error).toBeUndefined();
+		expect(env.result).toEqual({ ok: true });
+	});
+});

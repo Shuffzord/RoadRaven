@@ -529,3 +529,86 @@ describe("agentRpcHandler — D-12 openFile auto-flushes pending autosave", () =
 		}
 	});
 });
+
+// v0.7 CONC-01: optimistic concurrency. Writes carrying a stale
+// expectedRevision must fail loudly with stale_write + data.currentRevision;
+// a matching or omitted expectedRevision keeps pre-v0.7 behavior.
+describe("agentRpcHandler — stale_write optimistic concurrency (CONC-01)", () => {
+	beforeEach(() => {
+		useRoadmapStore.getState().loadSchema(makeSchema(), "/tmp/test.json"); // revision 1
+		useEventLogStore.setState({ rows: [] });
+	});
+	afterEach(() => {
+		useRoadmapStore.setState({
+			schema: null,
+			filePath: null,
+			nodeIndex: new Map(),
+		});
+		useEventLogStore.setState({ rows: [] });
+	});
+
+	it("rejects a write whose expectedRevision is stale with code='stale_write' and data.currentRevision; write does NOT land", async () => {
+		const target = "00000000-0000-0000-0000-000000000002"; // Login flow
+		// A user edit lands between the agent's read (revision 1) and its write.
+		useRoadmapStore.getState().renameNode(target, "User renamed"); // → revision 2
+		const current = useRoadmapStore.getState().schema?.revision;
+		const result = await handleAgentRequest("updateNodeStatus", {
+			nodeId: target,
+			status: "completed",
+			expectedRevision: 1,
+		});
+		expect(result.ok).toBe(false);
+		const err = result as {
+			ok: false;
+			error: string;
+			code: string;
+			hint?: string;
+			data?: { currentRevision: number };
+		};
+		expect(err.code).toBe("stale_write");
+		expect(err.error).toBe("Roadmap changed since your last read.");
+		expect(err.hint).toBe(
+			"Call getRoadmap for the current revision and replay your change.",
+		);
+		expect(err.data?.currentRevision).toBe(current);
+		// The stale write must NOT have landed.
+		const node = useRoadmapStore.getState().nodeIndex.get(target);
+		expect(node?.status).toBe("in-progress");
+	});
+
+	it("accepts a write whose expectedRevision matches the current revision", async () => {
+		const current = useRoadmapStore.getState().schema?.revision;
+		const result = await handleAgentRequest("updateNodeStatus", {
+			nodeId: "00000000-0000-0000-0000-000000000002",
+			status: "completed",
+			expectedRevision: current,
+		});
+		expect(result.ok).toBe(true);
+	});
+
+	it("accepts a write with no expectedRevision (pre-v0.7 last-writer-wins)", async () => {
+		useRoadmapStore
+			.getState()
+			.renameNode("00000000-0000-0000-0000-000000000002", "User renamed");
+		const result = await handleAgentRequest("updateNodeStatus", {
+			nodeId: "00000000-0000-0000-0000-000000000002",
+			status: "completed",
+		});
+		expect(result.ok).toBe(true);
+	});
+
+	it("getRoadmap and getNode responses include the current revision", async () => {
+		const r1 = await handleAgentRequest("getRoadmap", {});
+		expect(r1.ok).toBe(true);
+		expect((r1 as { ok: true; data: { revision: number } }).data.revision).toBe(
+			1,
+		);
+		const r2 = await handleAgentRequest("getNode", {
+			nodeId: "00000000-0000-0000-0000-000000000001",
+		});
+		expect(r2.ok).toBe(true);
+		expect((r2 as { ok: true; data: { revision: number } }).data.revision).toBe(
+			1,
+		);
+	});
+});

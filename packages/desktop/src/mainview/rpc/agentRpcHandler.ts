@@ -291,6 +291,35 @@ export async function handleAgentRequest(
 		};
 	}
 
+	// v0.7 CONC-01: optimistic concurrency. Write tools may carry
+	// expectedRevision (captured from a prior getRoadmap/getNode); a mismatch
+	// means the tree changed since that read, so fail loudly instead of writing
+	// on a stale picture. Omitted expectedRevision keeps pre-v0.7 behavior.
+	// Enforced here (not Bun-side) because the renderer owns the live schema —
+	// same reason no_file_loaded / node_not_found live here.
+	const WRITE_TOOLS = new Set([
+		"createNode",
+		"deleteNode",
+		"moveNode",
+		"renameNode",
+		"updateNodeStatus",
+		"updateNodeType",
+		"updateNodeMetadata",
+		"updateNodeNotes",
+	]);
+	if (WRITE_TOOLS.has(tool) && typeof args.expectedRevision === "number") {
+		const currentRevision = schema?.revision ?? 1;
+		if (args.expectedRevision !== currentRevision) {
+			return {
+				ok: false,
+				error: "Roadmap changed since your last read.",
+				code: "stale_write",
+				hint: "Call getRoadmap for the current revision and replay your change.",
+				data: { currentRevision },
+			};
+		}
+	}
+
 	// D-07 live overlay snapshot — reused by getRoadmap, getNode, findNodes.
 	const liveEventMeta = store.liveEventMeta;
 
@@ -319,6 +348,9 @@ export async function handleAgentRequest(
 					schema: mergedSchema,
 					filePath: store.filePath,
 					isUntitled: store.isUntitled,
+					// v0.7 CONC-01: top-level echo so agents can pass it back as
+					// expectedRevision without digging into schema.
+					revision: safeSchema.revision ?? 1,
 				},
 			};
 		}
@@ -344,6 +376,9 @@ export async function handleAgentRequest(
 					node: merged,
 					parentId: ancestry.parentId,
 					ancestorIds: ancestry.ancestorIds,
+					// v0.7 CONC-01: see getRoadmap above.
+					// biome-ignore lint/style/noNonNullAssertion: schema null-checked above
+					revision: schema!.revision ?? 1,
 				},
 			};
 		}
