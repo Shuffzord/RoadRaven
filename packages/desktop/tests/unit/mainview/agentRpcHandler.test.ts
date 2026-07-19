@@ -612,3 +612,184 @@ describe("agentRpcHandler — stale_write optimistic concurrency (CONC-01)", () 
 		);
 	});
 });
+
+// v0.7 Phase 4 — caller-supplied createNode id. Recovery/recreation keeps node
+// identity stable so history/metadata continuity survives file churn.
+describe("agentRpcHandler — createNode caller-supplied id (v0.7 Phase 4)", () => {
+	beforeEach(() => {
+		useRoadmapStore.getState().loadSchema(makeSchema(), "/tmp/test.json");
+		useEventLogStore.setState({ rows: [] });
+	});
+	afterEach(() => {
+		useRoadmapStore.setState({
+			schema: null,
+			filePath: null,
+			nodeIndex: new Map(),
+		});
+		useEventLogStore.setState({ rows: [] });
+	});
+
+	it("round-trips an exact caller-supplied UUID id", async () => {
+		const id = "7c9e6679-7425-40de-944b-e07fc1f90ae7";
+		const result = await handleAgentRequest("createNode", {
+			parentId: "00000000-0000-0000-0000-000000000001",
+			title: "Recreated node",
+			id,
+		});
+		expect(result.ok).toBe(true);
+		expect((result as { ok: true; data: { nodeId: string } }).data.nodeId).toBe(
+			id,
+		);
+		const node = useRoadmapStore.getState().nodeIndex.get(id);
+		expect(node?.title).toBe("Recreated node");
+	});
+
+	it("round-trips an exact caller-supplied slug id", async () => {
+		const id = "phase-4.retry_1";
+		const result = await handleAgentRequest("createNode", {
+			parentId: "00000000-0000-0000-0000-000000000001",
+			title: "Slug node",
+			id,
+		});
+		expect(result.ok).toBe(true);
+		expect((result as { ok: true; data: { nodeId: string } }).data.nodeId).toBe(
+			id,
+		);
+		expect(useRoadmapStore.getState().nodeIndex.get(id)?.title).toBe(
+			"Slug node",
+		);
+	});
+
+	it("returns code='duplicate_id' when the id exists anywhere in the tree; nothing is created", async () => {
+		const before = useRoadmapStore.getState().nodeIndex.size;
+		const result = await handleAgentRequest("createNode", {
+			parentId: "00000000-0000-0000-0000-000000000001",
+			title: "Clone attempt",
+			id: "00000000-0000-0000-0000-000000000002", // existing 'Login flow'
+		});
+		expect(result.ok).toBe(false);
+		expect((result as { ok: false; code: string }).code).toBe("duplicate_id");
+		expect(useRoadmapStore.getState().nodeIndex.size).toBe(before);
+		// No drawer audit row on a rejected mutation.
+		expect(useEventLogStore.getState().rows.length).toBe(0);
+	});
+});
+
+// v0.7 Phase 4 — updateNodeNotes mode: "append" joins existing + "\n\n" + new;
+// empty/absent existing notes → plain set; default stays REPLACE.
+describe("agentRpcHandler — updateNodeNotes append mode (v0.7 Phase 4)", () => {
+	const target = "00000000-0000-0000-0000-000000000002"; // Login flow (no notes)
+
+	beforeEach(() => {
+		useRoadmapStore.getState().loadSchema(makeSchema(), "/tmp/test.json");
+		useEventLogStore.setState({ rows: [] });
+	});
+	afterEach(() => {
+		useRoadmapStore.setState({
+			schema: null,
+			filePath: null,
+			nodeIndex: new Map(),
+		});
+		useEventLogStore.setState({ rows: [] });
+	});
+
+	it("append preserves existing notes with a blank-line separator", async () => {
+		useRoadmapStore.getState().updateNodeNotes(target, "first line");
+		const result = await handleAgentRequest("updateNodeNotes", {
+			nodeId: target,
+			notes: "progress: done",
+			mode: "append",
+		});
+		expect(result.ok).toBe(true);
+		expect(useRoadmapStore.getState().nodeIndex.get(target)?.notes).toBe(
+			"first line\n\nprogress: done",
+		);
+	});
+
+	it("append to empty/absent notes sets the text plainly (no leading separator)", async () => {
+		const result = await handleAgentRequest("updateNodeNotes", {
+			nodeId: target,
+			notes: "solo entry",
+			mode: "append",
+		});
+		expect(result.ok).toBe(true);
+		expect(useRoadmapStore.getState().nodeIndex.get(target)?.notes).toBe(
+			"solo entry",
+		);
+	});
+
+	it("default (no mode) still REPLACES the entire notes field", async () => {
+		useRoadmapStore.getState().updateNodeNotes(target, "old content");
+		const result = await handleAgentRequest("updateNodeNotes", {
+			nodeId: target,
+			notes: "clean slate",
+		});
+		expect(result.ok).toBe(true);
+		expect(useRoadmapStore.getState().nodeIndex.get(target)?.notes).toBe(
+			"clean slate",
+		);
+	});
+});
+
+// v0.7 Phase 4 dogfood fix — openFile must be SCHEMA_OPTIONAL. With no schema
+// loaded (e.g. after a webview reload), the no_file_loaded hint says "call
+// openFile(path)"; gating openFile itself behind the schema was a deadlock.
+describe("agentRpcHandler — openFile dispatches with no schema loaded (v0.7 Phase 4)", () => {
+	beforeEach(() => {
+		useRoadmapStore.setState({
+			schema: null,
+			filePath: null,
+			nodeIndex: new Map(),
+		});
+		useEventLogStore.setState({ rows: [] });
+	});
+	afterEach(() => {
+		useRoadmapStore.setState({
+			schema: null,
+			filePath: null,
+			nodeIndex: new Map(),
+		});
+		useEventLogStore.setState({ rows: [] });
+		vi.restoreAllMocks();
+	});
+
+	it("reaches the openFile handler (NOT no_file_loaded) and skips the autosave flush when schema is null", async () => {
+		// Dirty markers set: without the schema guard, the handler would wait on
+		// an autosave that can never fire (triggerSave spy never settles).
+		useRoadmapStore.setState({
+			dataKey: "999",
+			lastSavedDataKey: "0",
+			saveState: "saving",
+		} as never);
+		const triggerSpy = vi
+			.spyOn(useRoadmapStore.getState(), "triggerSave")
+			.mockImplementation(() => {
+				/* never settles — must not be called */
+			});
+		// The D-12 tests above spied this same store action; zustand's setState
+		// copies the mock fn into later state objects, so spyOn returns the old
+		// mock WITH its historical calls. Clear before acting.
+		triggerSpy.mockClear();
+
+		vi.doMock("../../../src/mainview/rpc", () => ({
+			electroview: {
+				rpc: {
+					request: {
+						loadFile: vi.fn().mockResolvedValue({
+							data: { version: "0.3", title: "T", statusConfig: [], nodes: [] },
+						}),
+					},
+				},
+			},
+		}));
+
+		const result = await handleAgentRequest("openFile", {
+			path: "/tmp/test/recovered.json",
+		});
+		expect(result.ok).toBe(true);
+		expect(
+			(result as { ok: true; data: { filePath: string } }).data.filePath,
+		).toBe("/tmp/test/recovered.json");
+		expect(triggerSpy).not.toHaveBeenCalled();
+	});
+});

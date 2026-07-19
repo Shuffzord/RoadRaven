@@ -109,10 +109,10 @@ export function getAncestorPath(
 // Internal helpers -- tree walking + node construction
 // ----------------------------------------------------------------------------
 
-function makeNewNode(title = "Untitled"): RoadmapNode {
+function makeNewNode(title = "Untitled", id?: string): RoadmapNode {
 	const now = new Date().toISOString();
 	return {
-		id: crypto.randomUUID(),
+		id: id ?? crypto.randomUUID(),
 		title,
 		status: "not-started",
 		createdAt: now,
@@ -343,7 +343,7 @@ interface RoadmapState {
 	loadSchema: (schema: RoadmapSchema, filePath: string | null) => void;
 	reloadSchema: (schema: RoadmapSchema) => void;
 	newUntitledSchema: () => void;
-	addChild: (parentId: string, title?: string) => string | null;
+	addChild: (parentId: string, title?: string, id?: string) => string | null;
 	addSiblingAbove: (nodeId: string) => string | null;
 	addSiblingBelow: (nodeId: string) => string | null;
 	deleteNode: (nodeId: string) => { deletedCount: number };
@@ -651,13 +651,15 @@ export const useRoadmapStore = create<RoadmapState>((set, get) => {
 
 		// --- Structural mutations ------------------------------------------------
 
-		addChild: (parentId, title) => {
+		addChild: (parentId, title, id) => {
 			const schema = get().schema;
 			if (!schema) return null;
 			const nodes = schema.nodes;
 			const found = findParentAndIndex(nodes, parentId);
 			if (!found) return null;
-			const newNode = makeNewNode(title);
+			// v0.7 Phase 4: caller-supplied id (uniqueness is the caller's gate —
+			// agentRpcHandler rejects collisions with duplicate_id before this).
+			const newNode = makeNewNode(title, id);
 			const nextNodes = immutablyReplaceArray(nodes, parentId, (children) => [
 				...children,
 				newNode,

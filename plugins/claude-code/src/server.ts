@@ -161,7 +161,7 @@ server.registerTool(
 	{
 		title: "Create a new RoadRaven node",
 		description:
-			"Add a child node under parentId with the given title. Optional: type, status (defaults to first statusConfig entry), notes (markdown), metadata. Returns the new node's UUID. Requires a loaded roadmap.",
+			"Add a child node under parentId with the given title. Optional: id (UUID or slug — supply it when recovering/recreating a node so its identity stays stable and history/metadata continuity survives file churn; duplicate_id if it already exists), type, status (defaults to first statusConfig entry), notes (markdown), metadata. Returns the new node's id. Requires a loaded roadmap.",
 		inputSchema: CreateNodeInputSchema,
 	},
 	agentToolCallback("createNode", wsClient),
@@ -204,9 +204,9 @@ server.registerTool(
 server.registerTool(
 	"updateNodeNotes",
 	{
-		title: "Replace a RoadRaven node's notes",
+		title: "Update a RoadRaven node's notes",
 		description:
-			"Replace a node's notes string (markdown). Pass an empty string to clear. This is REPLACE, not patch — the entire notes field is overwritten.",
+			'Set a node\'s notes string (markdown). mode "replace" (default) overwrites the entire notes field — pass an empty string to clear. mode "append" adds a blank line then your text after the existing notes; recommended for agent progress lines.',
 		inputSchema: UpdateNodeNotesInputSchema,
 	},
 	agentToolCallback("updateNodeNotes", wsClient),

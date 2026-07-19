@@ -34,6 +34,11 @@ import {
 // ID — permissive (matches eventSchema.ts EventFrameSchema.nodeId)
 const IdString = z.string().min(1);
 
+// v0.7 Phase 4 — caller-supplied createNode id: a UUID or a slug. One regex
+// covers both (UUIDs are hex + hyphens, 36 chars ≤ 64). Collision against the
+// live tree is rejected renderer-side with duplicate_id.
+const CallerNodeId = z.string().regex(/^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/);
+
 // v0.7 CONC-01: optimistic-concurrency guard accepted by every write tool.
 // Must be declared here or z.object() strips it before the renderer's
 // stale_write gate ever sees it. Optional — omitted keeps pre-v0.7
@@ -60,6 +65,7 @@ const FindNodesInputSchema = z.object({
 const CreateNodeInputSchema = z.object({
 	parentId: IdString,
 	title: z.string().min(1).max(200),
+	id: CallerNodeId.optional(),
 	type: z.string().optional(),
 	status: z.string().optional(),
 	notes: z.string().optional(),
@@ -97,6 +103,9 @@ const UpdateNodeTypeInputSchema = z.object({
 const UpdateNodeNotesInputSchema = z.object({
 	nodeId: IdString,
 	notes: z.string(),
+	// v0.7 Phase 4 — "append" joins existing notes + "\n\n" + notes; omitted
+	// or "replace" keeps the pre-v0.7 overwrite behavior.
+	mode: z.enum(["replace", "append"]).optional(),
 	expectedRevision: ExpectedRevision,
 });
 

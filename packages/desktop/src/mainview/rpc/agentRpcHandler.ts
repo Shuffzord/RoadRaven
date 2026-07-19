@@ -371,7 +371,7 @@ function mergeMetadataPatch(
 /**
  * Phase 6 PLUG-AGENT-* — renderer dispatcher.
  *
- * Gates: no_file_loaded (except createRoadmap, getOpenFile),
+ * Gates: no_file_loaded (except createRoadmap, getOpenFile, openFile),
  *        node_not_found, cascade_required, cannot_delete_last_root,
  *        move_would_create_cycle, unknown_tool.
  *
@@ -391,8 +391,11 @@ export async function handleAgentRequest(
 	const eventLog = useEventLogStore.getState();
 	const schema = store.schema;
 
-	// Tools that don't require a loaded schema
-	const SCHEMA_OPTIONAL = new Set(["createRoadmap", "getOpenFile"]);
+	// Tools that don't require a loaded schema. openFile MUST be here (v0.7
+	// Phase 4 dogfood fix): with no schema loaded, no_file_loaded's hint says
+	// "call openFile(path)" — gating openFile itself behind the schema made
+	// that recovery path a deadlock.
+	const SCHEMA_OPTIONAL = new Set(["createRoadmap", "getOpenFile", "openFile"]);
 	if (!schema && !SCHEMA_OPTIONAL.has(tool)) {
 		return {
 			ok: false,
@@ -532,7 +535,18 @@ export async function handleAgentRequest(
 		case "createNode": {
 			const parentId = args.parentId as string;
 			const title = args.title as string;
-			const newId = store.addChild(parentId, title);
+			// v0.7 Phase 4: optional caller-supplied id (format validated by the
+			// Bun gate). Keeps node identity stable across delete/recreate.
+			const requestedId = typeof args.id === "string" ? args.id : undefined;
+			if (requestedId !== undefined && store.nodeIndex.has(requestedId)) {
+				return {
+					ok: false,
+					error: `A node with id '${requestedId}' already exists.`,
+					code: "duplicate_id",
+					hint: "Pick a different id, or omit id to auto-generate one.",
+				};
+			}
+			const newId = store.addChild(parentId, title, requestedId);
 			if (!newId) {
 				return {
 					ok: false,
@@ -675,7 +689,13 @@ export async function handleAgentRequest(
 					code: "node_not_found",
 				};
 			}
-			store.updateNodeNotes(nodeId, args.notes as string);
+			const notes = args.notes as string;
+			// v0.7 Phase 4: mode "append" joins existing notes + blank line + new
+			// text; empty/absent existing notes fall through to a plain set.
+			const existing = store.nodeIndex.get(nodeId)?.notes;
+			const next =
+				args.mode === "append" && existing ? `${existing}\n\n${notes}` : notes;
+			store.updateNodeNotes(nodeId, next);
 			recordAgentLive(nodeId, args, store);
 			appendAgentDrawerEvent("updateNodeNotes", nodeId, args, store, eventLog);
 			return { ok: true, data: { ok: true } };
@@ -870,7 +890,10 @@ export async function handleAgentRequest(
 			// to agentRequestHandler's outer try/catch (which would emit the
 			// generic `internal_error`). The agent needs to know the previous
 			// file may not be saved so it can call saveFile and retry.
-			if (hasUnsavedEdits(useRoadmapStore.getState())) {
+			// schema guard: openFile is SCHEMA_OPTIONAL (v0.7 Phase 4) — with no
+			// schema loaded there is nothing to flush, and waiting on an autosave
+			// that can never fire would time out.
+			if (schema && hasUnsavedEdits(useRoadmapStore.getState())) {
 				useRoadmapStore.getState().triggerSave();
 				try {
 					await new Promise<void>((resolve, reject) => {

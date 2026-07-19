@@ -22,6 +22,7 @@ vi.mock("../../../src/bun/refMap", () => ({
 }));
 
 import { agentRequestHandler } from "../../../src/bun/agentRequestHandler";
+import { validateToolInput } from "../../../src/bun/agentToolSchemas";
 import { getOwnership, setOwnership } from "../../../src/bun/refMap";
 import {
 	getCachedMainPath,
@@ -530,5 +531,56 @@ describe("agentRequestHandler — expectedRevision passthrough (CONC-01)", () =>
 		const env = JSON.parse(sent[0]);
 		expect(env.error).toBeUndefined();
 		expect(env.result).toEqual({ ok: true });
+	});
+});
+
+// v0.7 Phase 4 — GATE 2 shapes for caller-supplied createNode.id (UUID or
+// slug ^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$) and updateNodeNotes.mode enum.
+describe("agentToolSchemas — createNode.id + updateNodeNotes.mode (v0.7 Phase 4)", () => {
+	const base = { parentId: "p-1", title: "T" };
+
+	it("accepts a UUID id and a slug id; both survive validation unstripped", () => {
+		const uuid = validateToolInput("createNode", {
+			...base,
+			id: "7c9e6679-7425-40de-944b-e07fc1f90ae7",
+		});
+		expect(uuid.ok).toBe(true);
+		expect((uuid as { ok: true; data: { id?: string } }).data.id).toBe(
+			"7c9e6679-7425-40de-944b-e07fc1f90ae7",
+		);
+		const slug = validateToolInput("createNode", {
+			...base,
+			id: "phase-4.retry_1",
+		});
+		expect(slug.ok).toBe(true);
+		expect((slug as { ok: true; data: { id?: string } }).data.id).toBe(
+			"phase-4.retry_1",
+		);
+	});
+
+	it("rejects malformed ids with invalid_input (spaces, bad leading char, >64 chars, empty)", () => {
+		for (const id of ["has space", "-leading-dash", "a".repeat(65), ""]) {
+			const r = validateToolInput("createNode", { ...base, id });
+			expect(r.ok).toBe(false);
+			expect((r as { ok: false; code: string }).code).toBe("invalid_input");
+		}
+	});
+
+	it("accepts mode 'append' and 'replace' on updateNodeNotes; rejects other values", () => {
+		const notesBase = { nodeId: "n-1", notes: "x" };
+		expect(
+			validateToolInput("updateNodeNotes", { ...notesBase, mode: "append" }).ok,
+		).toBe(true);
+		expect(
+			validateToolInput("updateNodeNotes", { ...notesBase, mode: "replace" })
+				.ok,
+		).toBe(true);
+		expect(validateToolInput("updateNodeNotes", notesBase).ok).toBe(true);
+		const bad = validateToolInput("updateNodeNotes", {
+			...notesBase,
+			mode: "prepend",
+		});
+		expect(bad.ok).toBe(false);
+		expect((bad as { ok: false; code: string }).code).toBe("invalid_input");
 	});
 });

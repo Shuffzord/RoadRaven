@@ -27,6 +27,16 @@ import {
 // (RoadmapNodeSchema), not the agent boundary.
 const IdString = z.string().min(1);
 
+// v0.7 Phase 4 — caller-supplied createNode id: a UUID or a slug. One regex
+// covers both (UUIDs are hex + hyphens, 36 chars ≤ 64). Collision against the
+// live tree is rejected renderer-side with duplicate_id.
+const CallerNodeId = z
+	.string()
+	.regex(
+		/^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/,
+		"id must be a UUID or a slug: alphanumeric start, then letters/digits/._-, max 64 chars",
+	);
+
 // v0.7 CONC-01: optimistic-concurrency guard accepted by every write tool.
 // Optional — omitted keeps pre-v0.7 last-writer-wins behavior. On mismatch the
 // desktop returns stale_write with data.currentRevision.
@@ -66,6 +76,9 @@ export const FindNodesInputSchema = z.object({
 export const CreateNodeInputSchema = z.object({
 	parentId: IdString.describe("ID of the parent node"),
 	title: z.string().min(1).max(200).describe("Node title"),
+	id: CallerNodeId.optional().describe(
+		"Optional caller-supplied node id (UUID or slug ^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$). Use when recreating a node so its identity stays stable and history/metadata continuity survives file churn. Fails with duplicate_id if the id already exists anywhere in the tree. Omit to auto-generate a UUID.",
+	),
 	type: z.string().optional().describe("Node type id"),
 	status: z
 		.string()
@@ -101,6 +114,12 @@ export const UpdateNodeTypeInputSchema = z.object({
 export const UpdateNodeNotesInputSchema = z.object({
 	nodeId: IdString,
 	notes: z.string(),
+	mode: z
+		.enum(["replace", "append"])
+		.optional()
+		.describe(
+			'How to combine with existing notes. "replace" (default) overwrites the entire notes field; "append" adds a blank line then your text after the existing notes — recommended for agent progress lines.',
+		),
 	expectedRevision: ExpectedRevision,
 });
 
