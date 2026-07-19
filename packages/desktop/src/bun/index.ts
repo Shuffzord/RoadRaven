@@ -16,6 +16,8 @@ import type { RoadmapRPCType } from "../../../../shared/types.ts";
 // the Plan 04a acceptance grep) can see the persistence surface at a glance.
 import { agentRequestHandler } from "./agentRequestHandler";
 import { atomicWrite } from "./atomicWrite";
+import { writeLoadBackup } from "./backups";
+import { canonicalizeSchemaJson } from "./canonicalJson";
 import { markSelfWrite, stopAllWatchers, watchFile } from "./fileWatcher";
 import { bunLogger, setupBunLogging } from "./logging";
 import {
@@ -249,7 +251,7 @@ const rpc = BrowserView.defineRPC<RoadmapRPCType>({
 				logger[level](message, data ? { ...data } : undefined);
 			},
 
-			// loadFile handler with Zod validation + error propagation + .bak.json backup
+			// loadFile handler with Zod validation + error propagation + app-data backup
 			loadFile: async ({ path: filePath }) => {
 				const { RoadmapSchemaSchema } = await import(
 					"../../../../packages/core/src/schema"
@@ -272,10 +274,10 @@ const rpc = BrowserView.defineRPC<RoadmapRPCType>({
 					};
 				}
 
-				// Write .bak.json backup (VIEW-12)
-				const bakPath = filePath.replace(/\.json$/, ".bak.json");
+				// Write load backup into the app-data backups dir (VIEW-12; v0.7
+				// phase 3 — no longer written next to the roadmap file).
 				try {
-					await Bun.write(bakPath, raw);
+					const bakPath = writeLoadBackup(filePath, raw);
 					bunLogger.info`Backup written to ${bakPath}`;
 				} catch (err) {
 					bunLogger.error`Failed to write backup: ${String(err)}`;
@@ -617,7 +619,7 @@ const rpc = BrowserView.defineRPC<RoadmapRPCType>({
 				}
 
 				try {
-					await atomicWrite(resolved, JSON.stringify(schema, null, 2));
+					await atomicWrite(resolved, canonicalizeSchemaJson(schema));
 					markSelfWrite(resolved);
 					pushDialogAllowlistPath(resolved);
 					setCachedSchema(schema);

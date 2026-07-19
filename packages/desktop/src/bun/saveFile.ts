@@ -5,6 +5,7 @@ import type {
 } from "../../../../packages/core/src/schema";
 import { RoadmapSchemaSchema } from "../../../../packages/core/src/schema";
 import { atomicWrite } from "./atomicWrite";
+import { canonicalizeSchemaJson } from "./canonicalJson";
 import { markSelfWrite } from "./fileWatcher";
 import { bunLogger } from "./logging";
 import {
@@ -182,7 +183,7 @@ export async function saveFileHandler(params: {
 		const perFile = splitSchemaByOwnership(schema, resolved, ownership);
 		await Promise.all(
 			[...perFile].map(async ([p, payload]) => {
-				await atomicWrite(p, JSON.stringify(payload, null, 2));
+				await atomicWrite(p, canonicalizeSchemaJson(payload));
 				markSelfWrite(p);
 			}),
 		);
@@ -235,7 +236,7 @@ export async function flushPending(): Promise<void> {
 				);
 				await Promise.all(
 					[...perFile].map(async ([p, payload]) => {
-						await atomicWrite(p, JSON.stringify(payload, null, 2));
+						await atomicWrite(p, canonicalizeSchemaJson(payload));
 						markSelfWrite(p);
 					}),
 				);
@@ -260,8 +261,9 @@ export async function flushPending(): Promise<void> {
  *   - Populate the ownership map for every node in the resolved tree.
  *   - Set cachedMainPath so a subsequent saveFile with no filePath works.
  *
- * The RPC wrapper in bun/index.ts adds .bak.json backup, file watchers, and
- * RPC error propagation — concerns that stay out of this core function.
+ * The RPC wrapper in bun/index.ts adds the app-data load backup, file
+ * watchers, and RPC error propagation — concerns that stay out of this core
+ * function.
  */
 export async function loadFileHandler(params: {
 	path: string;
