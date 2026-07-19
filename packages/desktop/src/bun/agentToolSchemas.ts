@@ -110,6 +110,37 @@ const UpdateNodeMetadataInputSchema = z.object({
 	expectedRevision: ExpectedRevision,
 });
 
+// v0.7 Phase 2 — atomic batch write. 1..100 items; each item must carry at
+// least one of status/notes/metadata (enforced via .refine → invalid_input).
+// metadata uses the same D-04 PATCH semantics as updateNodeMetadata (null
+// deletes the key). Node-existence + statusConfig checks live renderer-side
+// (batch_validation_failed), not here.
+const UpdateNodesInputSchema = z.object({
+	updates: z
+		.array(
+			z
+				.object({
+					nodeId: IdString,
+					status: z.string().min(1).optional(),
+					notes: z.string().optional(),
+					metadata: z.record(z.string(), z.unknown().nullable()).optional(),
+				})
+				.refine(
+					(u) =>
+						u.status !== undefined ||
+						u.notes !== undefined ||
+						u.metadata !== undefined,
+					{
+						message:
+							"Each update needs at least one of status, notes, metadata",
+					},
+				),
+		)
+		.min(1)
+		.max(100),
+	expectedRevision: ExpectedRevision,
+});
+
 const MoveNodeInputSchema = z.object({
 	nodeId: IdString,
 	newParentId: IdString,
@@ -164,6 +195,7 @@ const TOOL_SCHEMAS: Record<string, z.ZodType> = {
 	updateNodeType: UpdateNodeTypeInputSchema,
 	updateNodeNotes: UpdateNodeNotesInputSchema,
 	updateNodeMetadata: UpdateNodeMetadataInputSchema,
+	updateNodes: UpdateNodesInputSchema,
 	moveNode: MoveNodeInputSchema,
 	// Delete
 	deleteNode: DeleteNodeInputSchema,

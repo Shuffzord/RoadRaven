@@ -120,6 +120,39 @@ function makeNewNode(title = "Untitled"): RoadmapNode {
 	};
 }
 
+/**
+ * v0.7 Phase 2 (batch updateNodes): apply one batch item to a node IN PLACE.
+ * Mirrors the single-item updateNodeStatus/Notes/Metadata mutations, including
+ * their no-op short-circuits and updatedAt rules (status changes do not touch
+ * updatedAt; notes/metadata do). Returns true when anything actually changed.
+ */
+function applyNodePatchInPlace(
+	node: RoadmapNode,
+	patch: {
+		status?: string;
+		notes?: string;
+		metadata?: Record<string, unknown>;
+	},
+	now: string,
+): boolean {
+	let changed = false;
+	if (patch.status !== undefined && node.status !== patch.status) {
+		node.status = patch.status as RoadmapNode["status"];
+		changed = true;
+	}
+	if (patch.notes !== undefined && node.notes !== patch.notes) {
+		node.notes = patch.notes;
+		node.updatedAt = now;
+		changed = true;
+	}
+	if (patch.metadata !== undefined && node.metadata !== patch.metadata) {
+		node.metadata = patch.metadata;
+		node.updatedAt = now;
+		changed = true;
+	}
+	return changed;
+}
+
 type ParentLookup = {
 	parent: RoadmapNode | null;
 	parentArray: RoadmapNode[];
@@ -331,6 +364,20 @@ interface RoadmapState {
 		metadata: Record<string, unknown>,
 	) => void;
 	updateNodeNotes: (nodeId: string, notes: string) => void;
+	/** v0.7 Phase 2 (batch updateNodes): apply many in-place item updates as ONE
+	 *  logical change — single revision bump + single statusTick bump. Items are
+	 *  pre-validated by the caller (agentRpcHandler batch gate); unknown nodeIds
+	 *  are skipped defensively. `metadata` is the FINAL object per node (D-04
+	 *  patch-merge happens in the caller). Keeps the D-02 no-clone contract:
+	 *  in-place mutation, no treeData ref change, no dataKey bump. */
+	updateNodesBatch: (
+		updates: Array<{
+			nodeId: string;
+			status?: string;
+			notes?: string;
+			metadata?: Record<string, unknown>;
+		}>,
+	) => void;
 	setSelectedNode: (id: string | null) => void;
 	setFocusedNode: (id: string | null) => void;
 	setLayout: (orientation: "TB" | "LR") => void;
@@ -888,6 +935,21 @@ export const useRoadmapStore = create<RoadmapState>((set, get) => {
 			if (node.notes === notes) return;
 			node.notes = notes;
 			node.updatedAt = new Date().toISOString();
+			bumpRevision();
+			set({ statusTick: get().statusTick + 1 });
+		},
+
+		updateNodesBatch: (updates) => {
+			const nodeIndex = get().nodeIndex;
+			const now = new Date().toISOString();
+			let changed = false;
+			for (const u of updates) {
+				const node = nodeIndex.get(u.nodeId);
+				if (node) changed = applyNodePatchInPlace(node, u, now) || changed;
+			}
+			// Mirror the single-item no-op short-circuits: an all-no-op batch
+			// leaves revision/statusTick untouched.
+			if (!changed) return;
 			bumpRevision();
 			set({ statusTick: get().statusTick + 1 });
 		},

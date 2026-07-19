@@ -15,6 +15,7 @@ import {
 	SaveFileAsInputSchema,
 	UpdateNodeMetadataInputSchema,
 	UpdateNodeNotesInputSchema,
+	UpdateNodesInputSchema,
 	UpdateNodeTypeInputSchema,
 } from "./tools/schemas";
 import { createWsClient } from "./wsClient";
@@ -220,6 +221,17 @@ server.registerTool(
 		inputSchema: UpdateNodeMetadataInputSchema,
 	},
 	agentToolCallback("updateNodeMetadata", wsClient),
+);
+
+server.registerTool(
+	"updateNodes",
+	{
+		title: "Batch-update RoadRaven nodes atomically",
+		description:
+			"Apply up to 100 node updates (status, notes, metadata patch) in ONE atomic call — the roadmap revision advances exactly once for the whole batch and the response returns the final `revision` so you can chain further writes without re-reading. All-or-nothing: every item is validated first (node exists, status id in statusConfig); any failure returns batch_validation_failed with per-item {index, nodeId, code} and NOTHING is applied. Ideal for replaying a set of changes after stale_write: call getRoadmap once, rebuild all updates against the fresh tree, and resend the whole batch with expectedRevision.",
+		inputSchema: UpdateNodesInputSchema,
+	},
+	agentToolCallback("updateNodes", wsClient),
 );
 
 server.registerTool(

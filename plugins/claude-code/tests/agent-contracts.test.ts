@@ -11,7 +11,7 @@ import {
 } from "../src/tools/schemas";
 
 describe("AgentErrorCode enum (RESEARCH §9 / D-11/D-12/D-13 + WR-01/WR-04)", () => {
-	it("contains exactly 16 codes: 13 originals + invalid_input (WR-01) + autosave_timeout (WR-04) + stale_write (v0.7 CONC-01)", () => {
+	it("contains exactly 17 codes: 13 originals + invalid_input (WR-01) + autosave_timeout (WR-04) + stale_write (v0.7 CONC-01) + batch_validation_failed (v0.7 Phase 2)", () => {
 		const expected = new Set<AgentErrorCode>([
 			"app_not_running",
 			"no_file_loaded",
@@ -29,9 +29,10 @@ describe("AgentErrorCode enum (RESEARCH §9 / D-11/D-12/D-13 + WR-01/WR-04)", ()
 			"invalid_input",
 			"autosave_timeout",
 			"stale_write",
+			"batch_validation_failed",
 		] as const);
 		expect(new Set(AGENT_ERROR_CODES)).toEqual(expected);
-		expect(AGENT_ERROR_CODES.length).toBe(16);
+		expect(AGENT_ERROR_CODES.length).toBe(17);
 	});
 });
 
@@ -114,15 +115,19 @@ describe("agentToolCallback (RESEARCH §9 MCP-result shape)", () => {
 		expect(okResult.content[0].type).toBe("text");
 		expect(okResult.content[0].text).toContain("ok-data");
 
-		// Stub wsClient: error path with a code+hint (RESEARCH §9 shape)
+		// Stub wsClient: error path with a code+hint+data (RESEARCH §9 shape;
+		// v0.7 Phase 2 renders structured `data` so agents can recover from
+		// stale_write / batch_validation_failed without a re-read)
 		const wsErr = {
 			request: async () => {
 				const e = new Error("Node 'x' not found.") as Error & {
 					code?: string;
 					hint?: string;
+					data?: unknown;
 				};
 				e.code = "node_not_found";
 				e.hint = "Call getRoadmap or findNodes to discover node IDs.";
+				e.data = { currentRevision: 7 };
 				throw e;
 			},
 		};
@@ -132,6 +137,7 @@ describe("agentToolCallback (RESEARCH §9 MCP-result shape)", () => {
 		// Format from RESEARCH §9: `Error (${code}): ${message}${hint ? ` ${hint}` : ""}`
 		expect(errResult.content[0].text).toContain("(node_not_found)");
 		expect(errResult.content[0].text).toContain("Call getRoadmap");
+		expect(errResult.content[0].text).toContain('"currentRevision":7');
 	});
 });
 

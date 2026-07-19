@@ -113,6 +113,50 @@ export const UpdateNodeMetadataInputSchema = z.object({
 	expectedRevision: ExpectedRevision,
 });
 
+// v0.7 Phase 2 — atomic batch write. 1..100 items; each item must carry at
+// least one of status/notes/metadata. metadata uses the same D-04 PATCH
+// semantics as updateNodeMetadata (null value deletes that key). All-or-
+// nothing: any invalid item rejects the whole batch (batch_validation_failed)
+// and NOTHING is applied.
+export const UpdateNodesInputSchema = z.object({
+	updates: z
+		.array(
+			z
+				.object({
+					nodeId: IdString.describe("ID of the target node"),
+					status: z
+						.string()
+						.min(1)
+						.optional()
+						.describe("New status id — must exist in statusConfig"),
+					notes: z
+						.string()
+						.optional()
+						.describe("Replacement notes string (markdown)"),
+					metadata: z
+						.record(z.string(), z.unknown().nullable())
+						.optional()
+						.describe(
+							"Shallow metadata patch — null value deletes that key, unlisted keys preserved",
+						),
+				})
+				.refine(
+					(u) =>
+						u.status !== undefined ||
+						u.notes !== undefined ||
+						u.metadata !== undefined,
+					{
+						message:
+							"Each update needs at least one of status, notes, metadata",
+					},
+				),
+		)
+		.min(1)
+		.max(100)
+		.describe("1..100 node updates applied atomically as one change"),
+	expectedRevision: ExpectedRevision,
+});
+
 // D-01: moveNode with optional position. Cycle and cross-$ref-boundary checks
 // live in agentRequestHandler / agentRpcHandler — Zod only checks input shape.
 export const MoveNodeInputSchema = z.object({

@@ -10,7 +10,10 @@
 // unknown_tool.
 import { z } from "zod";
 import { LIFECYCLE_NODE_ID } from "../../../../../packages/core/src/plugin";
-import type { RoadmapNode } from "../../../../../packages/core/src/schema";
+import type {
+	RoadmapNode,
+	RoadmapSchema,
+} from "../../../../../packages/core/src/schema";
 import {
 	StatusConfigSchema,
 	TypeConfigSchema,
@@ -257,6 +260,114 @@ function buildAncestorIds(
 	};
 }
 
+type BatchUpdateItem = {
+	nodeId: string;
+	status?: string;
+	notes?: string;
+	metadata?: Record<string, unknown | null>;
+};
+
+/**
+ * v0.7 Phase 2 — atomic batch write (`updateNodes`). Validates EVERY item
+ * first (all-or-nothing: any failure rejects the whole batch with a per-item
+ * `{index, nodeId, code}` report and NOTHING is applied), then applies via ONE
+ * store action so revision and statusTick each bump exactly once per batch.
+ */
+function handleUpdateNodesBatch(
+	args: Record<string, unknown>,
+	schema: RoadmapSchema,
+	store: RoadmapStoreState,
+	roadmapStore: typeof import("../store/roadmapStore").useRoadmapStore,
+	eventLog: LogStoreState,
+): AgentResult {
+	const updates = args.updates as BatchUpdateItem[];
+	// Only enforce status ids when the schema declares a statusConfig —
+	// config-less files accept any status, matching the single-item
+	// updateNodeStatus path.
+	const statusIds = new Set((schema.statusConfig ?? []).map((s) => s.id));
+	const failures: Array<{ index: number; nodeId: string; code: string }> = [];
+	updates.forEach((u, index) => {
+		if (!store.nodeIndex.get(u.nodeId)) {
+			failures.push({ index, nodeId: u.nodeId, code: "node_not_found" });
+		} else if (
+			u.status !== undefined &&
+			statusIds.size > 0 &&
+			!statusIds.has(u.status)
+		) {
+			failures.push({ index, nodeId: u.nodeId, code: "invalid_status" });
+		}
+	});
+	if (failures.length > 0) {
+		return {
+			ok: false,
+			error: `Batch rejected: ${failures.length} of ${updates.length} item(s) failed validation. Nothing was applied.`,
+			code: "batch_validation_failed",
+			hint: "Fix the listed items and resend the whole batch.",
+			data: { failures },
+		};
+	}
+	// Resolve metadata PATCH semantics (D-04: null deletes the key, unlisted
+	// keys preserved) against the current tree BEFORE the single batch apply.
+	const resolved = updates.map((u) => ({
+		nodeId: u.nodeId,
+		status: u.status,
+		notes: u.notes,
+		metadata:
+			u.metadata === undefined
+				? undefined
+				: mergeMetadataPatch(
+						store.nodeIndex.get(u.nodeId)?.metadata,
+						u.metadata,
+					),
+	}));
+	store.updateNodesBatch(resolved);
+	// Live pulse for every touched node in ONE setState — recordAgentLive/
+	// recordLiveSource bumps statusTick per call, which would break the
+	// "statusTick bumps once per batch" contract (updateNodesBatch already
+	// bumped it, so the pulse re-render is covered).
+	const lastEventAt = Date.now();
+	roadmapStore.setState((s) => {
+		const nextLive = { ...s.liveEventMeta };
+		for (const u of updates) {
+			nextLive[u.nodeId] = { lastEventAt, source: "claude-code" };
+		}
+		return { liveEventMeta: nextLive };
+	});
+	// Per-item drawer audit (D-09) — same surfacing as the single
+	// updateNodeStatus path, one event per batch item.
+	for (const u of updates) {
+		appendAgentDrawerEvent(
+			"updateNodes",
+			u.nodeId,
+			u as unknown as Record<string, unknown>,
+			store,
+			eventLog,
+		);
+	}
+	return {
+		ok: true,
+		data: {
+			updated: updates.length,
+			// Final revision AFTER the single batch bump — agents chain the next
+			// expectedRevision from here without a re-read.
+			revision: schema.revision ?? 1,
+		},
+	};
+}
+
+/** D-04 shallow PATCH merge: null value deletes that key, unlisted preserved. */
+function mergeMetadataPatch(
+	current: Record<string, unknown> | undefined,
+	patch: Record<string, unknown | null>,
+): Record<string, unknown> {
+	const next: Record<string, unknown> = { ...(current ?? {}) };
+	for (const [k, v] of Object.entries(patch)) {
+		if (v === null) delete next[k];
+		else next[k] = v;
+	}
+	return next;
+}
+
 /**
  * Phase 6 PLUG-AGENT-* — renderer dispatcher.
  *
@@ -306,6 +417,7 @@ export async function handleAgentRequest(
 		"updateNodeType",
 		"updateNodeMetadata",
 		"updateNodeNotes",
+		"updateNodes",
 	]);
 	if (WRITE_TOOLS.has(tool) && typeof args.expectedRevision === "number") {
 		const currentRevision = schema?.revision ?? 1;
@@ -598,6 +710,18 @@ export async function handleAgentRequest(
 			);
 			return { ok: true, data: { metadata: next } };
 		}
+
+		// v0.7 Phase 2 — atomic batch write (extracted to keep this dispatcher's
+		// complexity flat; see handleUpdateNodesBatch above the dispatcher).
+		case "updateNodes":
+			// biome-ignore lint/style/noNonNullAssertion: schema null-checked above
+			return handleUpdateNodesBatch(
+				args,
+				schema!,
+				store,
+				useRoadmapStore,
+				eventLog,
+			);
 
 		case "moveNode": {
 			const nodeId = args.nodeId as string;
