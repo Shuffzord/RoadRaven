@@ -734,9 +734,9 @@ export async function handleAgentRequest(
 		// v0.7 Phase 2 — atomic batch write (extracted to keep this dispatcher's
 		// complexity flat; see handleUpdateNodesBatch above the dispatcher).
 		case "updateNodes":
-			// biome-ignore lint/style/noNonNullAssertion: schema null-checked above
 			return handleUpdateNodesBatch(
 				args,
+				// biome-ignore lint/style/noNonNullAssertion: schema null-checked above
 				schema!,
 				store,
 				useRoadmapStore,
