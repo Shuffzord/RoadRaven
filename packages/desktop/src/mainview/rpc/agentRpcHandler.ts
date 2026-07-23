@@ -10,7 +10,10 @@
 // unknown_tool.
 import { z } from "zod";
 import { LIFECYCLE_NODE_ID } from "../../../../../packages/core/src/plugin";
-import type { RoadmapNode } from "../../../../../packages/core/src/schema";
+import type {
+	RoadmapNode,
+	RoadmapSchema,
+} from "../../../../../packages/core/src/schema";
 import {
 	StatusConfigSchema,
 	TypeConfigSchema,
@@ -257,10 +260,118 @@ function buildAncestorIds(
 	};
 }
 
+type BatchUpdateItem = {
+	nodeId: string;
+	status?: string;
+	notes?: string;
+	metadata?: Record<string, unknown | null>;
+};
+
+/**
+ * v0.7 Phase 2 — atomic batch write (`updateNodes`). Validates EVERY item
+ * first (all-or-nothing: any failure rejects the whole batch with a per-item
+ * `{index, nodeId, code}` report and NOTHING is applied), then applies via ONE
+ * store action so revision and statusTick each bump exactly once per batch.
+ */
+function handleUpdateNodesBatch(
+	args: Record<string, unknown>,
+	schema: RoadmapSchema,
+	store: RoadmapStoreState,
+	roadmapStore: typeof import("../store/roadmapStore").useRoadmapStore,
+	eventLog: LogStoreState,
+): AgentResult {
+	const updates = args.updates as BatchUpdateItem[];
+	// Only enforce status ids when the schema declares a statusConfig —
+	// config-less files accept any status, matching the single-item
+	// updateNodeStatus path.
+	const statusIds = new Set((schema.statusConfig ?? []).map((s) => s.id));
+	const failures: Array<{ index: number; nodeId: string; code: string }> = [];
+	updates.forEach((u, index) => {
+		if (!store.nodeIndex.get(u.nodeId)) {
+			failures.push({ index, nodeId: u.nodeId, code: "node_not_found" });
+		} else if (
+			u.status !== undefined &&
+			statusIds.size > 0 &&
+			!statusIds.has(u.status)
+		) {
+			failures.push({ index, nodeId: u.nodeId, code: "invalid_status" });
+		}
+	});
+	if (failures.length > 0) {
+		return {
+			ok: false,
+			error: `Batch rejected: ${failures.length} of ${updates.length} item(s) failed validation. Nothing was applied.`,
+			code: "batch_validation_failed",
+			hint: "Fix the listed items and resend the whole batch.",
+			data: { failures },
+		};
+	}
+	// Resolve metadata PATCH semantics (D-04: null deletes the key, unlisted
+	// keys preserved) against the current tree BEFORE the single batch apply.
+	const resolved = updates.map((u) => ({
+		nodeId: u.nodeId,
+		status: u.status,
+		notes: u.notes,
+		metadata:
+			u.metadata === undefined
+				? undefined
+				: mergeMetadataPatch(
+						store.nodeIndex.get(u.nodeId)?.metadata,
+						u.metadata,
+					),
+	}));
+	store.updateNodesBatch(resolved);
+	// Live pulse for every touched node in ONE setState — recordAgentLive/
+	// recordLiveSource bumps statusTick per call, which would break the
+	// "statusTick bumps once per batch" contract (updateNodesBatch already
+	// bumped it, so the pulse re-render is covered).
+	const lastEventAt = Date.now();
+	roadmapStore.setState((s) => {
+		const nextLive = { ...s.liveEventMeta };
+		for (const u of updates) {
+			nextLive[u.nodeId] = { lastEventAt, source: "claude-code" };
+		}
+		return { liveEventMeta: nextLive };
+	});
+	// Per-item drawer audit (D-09) — same surfacing as the single
+	// updateNodeStatus path, one event per batch item.
+	for (const u of updates) {
+		appendAgentDrawerEvent(
+			"updateNodes",
+			u.nodeId,
+			u as unknown as Record<string, unknown>,
+			store,
+			eventLog,
+		);
+	}
+	return {
+		ok: true,
+		data: {
+			updated: updates.length,
+			// Final revision AFTER the single batch bump — agents chain the next
+			// expectedRevision from here without a re-read.
+			revision: schema.revision ?? 1,
+		},
+	};
+}
+
+/** D-04 shallow PATCH merge: null value deletes that key, unlisted preserved. */
+function mergeMetadataPatch(
+	current: Record<string, unknown> | undefined,
+	patch: Record<string, unknown | null>,
+): Record<string, unknown> {
+	const next: Record<string, unknown> = { ...(current ?? {}) };
+	for (const [k, v] of Object.entries(patch)) {
+		if (v === null) delete next[k];
+		else next[k] = v;
+	}
+	return next;
+}
+
 /**
  * Phase 6 PLUG-AGENT-* — renderer dispatcher.
  *
- * Gates: no_file_loaded (except createRoadmap, getOpenFile),
+ * Gates: no_file_loaded (except createRoadmap, getOpenFile, openFile),
  *        node_not_found, cascade_required, cannot_delete_last_root,
  *        move_would_create_cycle, unknown_tool.
  *
@@ -280,8 +391,11 @@ export async function handleAgentRequest(
 	const eventLog = useEventLogStore.getState();
 	const schema = store.schema;
 
-	// Tools that don't require a loaded schema
-	const SCHEMA_OPTIONAL = new Set(["createRoadmap", "getOpenFile"]);
+	// Tools that don't require a loaded schema. openFile MUST be here (v0.7
+	// Phase 4 dogfood fix): with no schema loaded, no_file_loaded's hint says
+	// "call openFile(path)" — gating openFile itself behind the schema made
+	// that recovery path a deadlock.
+	const SCHEMA_OPTIONAL = new Set(["createRoadmap", "getOpenFile", "openFile"]);
 	if (!schema && !SCHEMA_OPTIONAL.has(tool)) {
 		return {
 			ok: false,
@@ -289,6 +403,36 @@ export async function handleAgentRequest(
 			code: "no_file_loaded",
 			hint: "Open a roadmap or call openFile(path).",
 		};
+	}
+
+	// v0.7 CONC-01: optimistic concurrency. Write tools may carry
+	// expectedRevision (captured from a prior getRoadmap/getNode); a mismatch
+	// means the tree changed since that read, so fail loudly instead of writing
+	// on a stale picture. Omitted expectedRevision keeps pre-v0.7 behavior.
+	// Enforced here (not Bun-side) because the renderer owns the live schema —
+	// same reason no_file_loaded / node_not_found live here.
+	const WRITE_TOOLS = new Set([
+		"createNode",
+		"deleteNode",
+		"moveNode",
+		"renameNode",
+		"updateNodeStatus",
+		"updateNodeType",
+		"updateNodeMetadata",
+		"updateNodeNotes",
+		"updateNodes",
+	]);
+	if (WRITE_TOOLS.has(tool) && typeof args.expectedRevision === "number") {
+		const currentRevision = schema?.revision ?? 1;
+		if (args.expectedRevision !== currentRevision) {
+			return {
+				ok: false,
+				error: "Roadmap changed since your last read.",
+				code: "stale_write",
+				hint: "Call getRoadmap for the current revision and replay your change.",
+				data: { currentRevision },
+			};
+		}
 	}
 
 	// D-07 live overlay snapshot — reused by getRoadmap, getNode, findNodes.
@@ -319,6 +463,9 @@ export async function handleAgentRequest(
 					schema: mergedSchema,
 					filePath: store.filePath,
 					isUntitled: store.isUntitled,
+					// v0.7 CONC-01: top-level echo so agents can pass it back as
+					// expectedRevision without digging into schema.
+					revision: safeSchema.revision ?? 1,
 				},
 			};
 		}
@@ -344,6 +491,9 @@ export async function handleAgentRequest(
 					node: merged,
 					parentId: ancestry.parentId,
 					ancestorIds: ancestry.ancestorIds,
+					// v0.7 CONC-01: see getRoadmap above.
+					// biome-ignore lint/style/noNonNullAssertion: schema null-checked above
+					revision: schema!.revision ?? 1,
 				},
 			};
 		}
@@ -385,7 +535,18 @@ export async function handleAgentRequest(
 		case "createNode": {
 			const parentId = args.parentId as string;
 			const title = args.title as string;
-			const newId = store.addChild(parentId, title);
+			// v0.7 Phase 4: optional caller-supplied id (format validated by the
+			// Bun gate). Keeps node identity stable across delete/recreate.
+			const requestedId = typeof args.id === "string" ? args.id : undefined;
+			if (requestedId !== undefined && store.nodeIndex.has(requestedId)) {
+				return {
+					ok: false,
+					error: `A node with id '${requestedId}' already exists.`,
+					code: "duplicate_id",
+					hint: "Pick a different id, or omit id to auto-generate one.",
+				};
+			}
+			const newId = store.addChild(parentId, title, requestedId);
 			if (!newId) {
 				return {
 					ok: false,
@@ -528,7 +689,13 @@ export async function handleAgentRequest(
 					code: "node_not_found",
 				};
 			}
-			store.updateNodeNotes(nodeId, args.notes as string);
+			const notes = args.notes as string;
+			// v0.7 Phase 4: mode "append" joins existing notes + blank line + new
+			// text; empty/absent existing notes fall through to a plain set.
+			const existing = store.nodeIndex.get(nodeId)?.notes;
+			const next =
+				args.mode === "append" && existing ? `${existing}\n\n${notes}` : notes;
+			store.updateNodeNotes(nodeId, next);
 			recordAgentLive(nodeId, args, store);
 			appendAgentDrawerEvent("updateNodeNotes", nodeId, args, store, eventLog);
 			return { ok: true, data: { ok: true } };
@@ -563,6 +730,18 @@ export async function handleAgentRequest(
 			);
 			return { ok: true, data: { metadata: next } };
 		}
+
+		// v0.7 Phase 2 — atomic batch write (extracted to keep this dispatcher's
+		// complexity flat; see handleUpdateNodesBatch above the dispatcher).
+		case "updateNodes":
+			return handleUpdateNodesBatch(
+				args,
+				// biome-ignore lint/style/noNonNullAssertion: schema null-checked above
+				schema!,
+				store,
+				useRoadmapStore,
+				eventLog,
+			);
 
 		case "moveNode": {
 			const nodeId = args.nodeId as string;
@@ -711,7 +890,10 @@ export async function handleAgentRequest(
 			// to agentRequestHandler's outer try/catch (which would emit the
 			// generic `internal_error`). The agent needs to know the previous
 			// file may not be saved so it can call saveFile and retry.
-			if (hasUnsavedEdits(useRoadmapStore.getState())) {
+			// schema guard: openFile is SCHEMA_OPTIONAL (v0.7 Phase 4) — with no
+			// schema loaded there is nothing to flush, and waiting on an autosave
+			// that can never fire would time out.
+			if (schema && hasUnsavedEdits(useRoadmapStore.getState())) {
 				useRoadmapStore.getState().triggerSave();
 				try {
 					await new Promise<void>((resolve, reject) => {

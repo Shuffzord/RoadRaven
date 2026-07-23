@@ -109,15 +109,48 @@ export function getAncestorPath(
 // Internal helpers -- tree walking + node construction
 // ----------------------------------------------------------------------------
 
-function makeNewNode(title = "Untitled"): RoadmapNode {
+function makeNewNode(title = "Untitled", id?: string): RoadmapNode {
 	const now = new Date().toISOString();
 	return {
-		id: crypto.randomUUID(),
+		id: id ?? crypto.randomUUID(),
 		title,
 		status: "not-started",
 		createdAt: now,
 		updatedAt: now,
 	};
+}
+
+/**
+ * v0.7 Phase 2 (batch updateNodes): apply one batch item to a node IN PLACE.
+ * Mirrors the single-item updateNodeStatus/Notes/Metadata mutations, including
+ * their no-op short-circuits and updatedAt rules (status changes do not touch
+ * updatedAt; notes/metadata do). Returns true when anything actually changed.
+ */
+function applyNodePatchInPlace(
+	node: RoadmapNode,
+	patch: {
+		status?: string;
+		notes?: string;
+		metadata?: Record<string, unknown>;
+	},
+	now: string,
+): boolean {
+	let changed = false;
+	if (patch.status !== undefined && node.status !== patch.status) {
+		node.status = patch.status as RoadmapNode["status"];
+		changed = true;
+	}
+	if (patch.notes !== undefined && node.notes !== patch.notes) {
+		node.notes = patch.notes;
+		node.updatedAt = now;
+		changed = true;
+	}
+	if (patch.metadata !== undefined && node.metadata !== patch.metadata) {
+		node.metadata = patch.metadata;
+		node.updatedAt = now;
+		changed = true;
+	}
+	return changed;
 }
 
 type ParentLookup = {
@@ -310,7 +343,7 @@ interface RoadmapState {
 	loadSchema: (schema: RoadmapSchema, filePath: string | null) => void;
 	reloadSchema: (schema: RoadmapSchema) => void;
 	newUntitledSchema: () => void;
-	addChild: (parentId: string, title?: string) => string | null;
+	addChild: (parentId: string, title?: string, id?: string) => string | null;
 	addSiblingAbove: (nodeId: string) => string | null;
 	addSiblingBelow: (nodeId: string) => string | null;
 	deleteNode: (nodeId: string) => { deletedCount: number };
@@ -331,6 +364,20 @@ interface RoadmapState {
 		metadata: Record<string, unknown>,
 	) => void;
 	updateNodeNotes: (nodeId: string, notes: string) => void;
+	/** v0.7 Phase 2 (batch updateNodes): apply many in-place item updates as ONE
+	 *  logical change — single revision bump + single statusTick bump. Items are
+	 *  pre-validated by the caller (agentRpcHandler batch gate); unknown nodeIds
+	 *  are skipped defensively. `metadata` is the FINAL object per node (D-04
+	 *  patch-merge happens in the caller). Keeps the D-02 no-clone contract:
+	 *  in-place mutation, no treeData ref change, no dataKey bump. */
+	updateNodesBatch: (
+		updates: Array<{
+			nodeId: string;
+			status?: string;
+			notes?: string;
+			metadata?: Record<string, unknown>;
+		}>,
+	) => void;
 	setSelectedNode: (id: string | null) => void;
 	setFocusedNode: (id: string | null) => void;
 	setLayout: (orientation: "TB" | "LR") => void;
@@ -471,7 +518,18 @@ export const useRoadmapStore = create<RoadmapState>((set, get) => {
 				nodeIndex: buildNodeIndex(nextNodes),
 			});
 		}
+		bumpRevision();
 		syncSearchToTree(nextNodes);
+	}
+
+	// v0.7 CONC-01: bump the agent-visible revision counter on every
+	// agent-visible mutation. Mutated in place ON PURPOSE: the in-place update
+	// path (updateNodeStatus & friends, D-02) must keep the same schema/treeData
+	// references to avoid react-d3-tree's deep clone, and no UI subscribes to
+	// revision — agents read it via getRoadmap/getNode.
+	function bumpRevision(): void {
+		const s = get().schema;
+		if (s) s.revision = (s.revision ?? 0) + 1;
 	}
 
 	// An active search holds match ids computed at query time. A structural
@@ -501,8 +559,14 @@ export const useRoadmapStore = create<RoadmapState>((set, get) => {
 			const treeData = schema.nodes[0] ? toTreeDatum(schema.nodes[0]) : null;
 			const nodeIndex = buildNodeIndex(schema.nodes);
 			const nextKey = String(Number(get().dataKey) + 1);
+			// v0.7 CONC-01: every (re)load advances revision past BOTH the file's
+			// value and the in-memory one. Files without a revision load as 1
+			// (0 + 1); the in-memory max closes the external-reload race where a
+			// reloaded file carries an old revision number an agent already read.
+			const revision =
+				Math.max(schema.revision ?? 0, get().schema?.revision ?? 0) + 1;
 			set({
-				schema,
+				schema: { ...schema, revision },
 				filePath,
 				treeData,
 				nodeIndex,
@@ -529,8 +593,11 @@ export const useRoadmapStore = create<RoadmapState>((set, get) => {
 			const treeData = schema.nodes[0] ? toTreeDatum(schema.nodes[0]) : null;
 			const nodeIndex = buildNodeIndex(schema.nodes);
 			const nextKey = String(Number(get().dataKey) + 1);
+			// v0.7 CONC-01: same revision-advance rule as loadSchema above.
+			const revision =
+				Math.max(schema.revision ?? 0, get().schema?.revision ?? 0) + 1;
 			set({
-				schema,
+				schema: { ...schema, revision },
 				treeData,
 				nodeIndex,
 				dataKey: nextKey,
@@ -584,13 +651,15 @@ export const useRoadmapStore = create<RoadmapState>((set, get) => {
 
 		// --- Structural mutations ------------------------------------------------
 
-		addChild: (parentId, title) => {
+		addChild: (parentId, title, id) => {
 			const schema = get().schema;
 			if (!schema) return null;
 			const nodes = schema.nodes;
 			const found = findParentAndIndex(nodes, parentId);
 			if (!found) return null;
-			const newNode = makeNewNode(title);
+			// v0.7 Phase 4: caller-supplied id (uniqueness is the caller's gate —
+			// agentRpcHandler rejects collisions with duplicate_id before this).
+			const newNode = makeNewNode(title, id);
 			const nextNodes = immutablyReplaceArray(nodes, parentId, (children) => [
 				...children,
 				newNode,
@@ -838,6 +907,7 @@ export const useRoadmapStore = create<RoadmapState>((set, get) => {
 			// This is the critical performance path per D-02: status-only updates
 			// bypass react-d3-tree's deep-clone by keeping the same data reference.
 			node.status = status as RoadmapNode["status"];
+			bumpRevision();
 			set({ statusTick: get().statusTick + 1 });
 		},
 
@@ -847,6 +917,7 @@ export const useRoadmapStore = create<RoadmapState>((set, get) => {
 			if (node.type === type) return;
 			node.type = type;
 			node.updatedAt = new Date().toISOString();
+			bumpRevision();
 			set({ statusTick: get().statusTick + 1 });
 		},
 
@@ -856,6 +927,7 @@ export const useRoadmapStore = create<RoadmapState>((set, get) => {
 			if (node.metadata === metadata) return;
 			node.metadata = metadata;
 			node.updatedAt = new Date().toISOString();
+			bumpRevision();
 			set({ statusTick: get().statusTick + 1 });
 		},
 
@@ -865,6 +937,22 @@ export const useRoadmapStore = create<RoadmapState>((set, get) => {
 			if (node.notes === notes) return;
 			node.notes = notes;
 			node.updatedAt = new Date().toISOString();
+			bumpRevision();
+			set({ statusTick: get().statusTick + 1 });
+		},
+
+		updateNodesBatch: (updates) => {
+			const nodeIndex = get().nodeIndex;
+			const now = new Date().toISOString();
+			let changed = false;
+			for (const u of updates) {
+				const node = nodeIndex.get(u.nodeId);
+				if (node) changed = applyNodePatchInPlace(node, u, now) || changed;
+			}
+			// Mirror the single-item no-op short-circuits: an all-no-op batch
+			// leaves revision/statusTick untouched.
+			if (!changed) return;
+			bumpRevision();
 			set({ statusTick: get().statusTick + 1 });
 		},
 
