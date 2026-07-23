@@ -32,8 +32,18 @@ export const TypeConfigSchema = z.object({
  * Single roadmap node with recursive children via Zod v4 getter pattern.
  * Uses `get children()` for lazy recursive reference (Pitfall 6 avoided: import from "zod" not "zod/v4").
  */
+// v0.7 Phase 4: node ids are UUIDs or caller-supplied slugs (agent-created,
+// identity-stable across recreation). One regex covers both — UUIDs are hex +
+// hyphens, 36 chars ≤ 64. Must stay in sync with CallerNodeId in
+// agentToolSchemas.ts and the plugin's schemas.ts; the save/load gates
+// (saveFileHandler, loadFile) validate against THIS schema, so a stricter id
+// here than at the tool layer makes slug-id nodes unsaveable.
+export const NodeIdSchema = z
+	.string()
+	.regex(/^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/);
+
 export const RoadmapNodeSchema = z.object({
-	id: z.string().uuid(),
+	id: NodeIdSchema,
 	title: z.string().min(1),
 	status: NodeStatusSchema,
 	type: z.string().optional(),

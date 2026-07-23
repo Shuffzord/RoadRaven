@@ -356,6 +356,38 @@ describe("Schema validation — negative cases", () => {
 	});
 });
 
+// v0.7 Phase 4 follow-up — node ids may be caller-supplied slugs, not just
+// UUIDs. The save/load gates validate against RoadmapNodeSchema, so a
+// UUID-only id here made slug-id nodes unsaveable (live-repro: autosave
+// rejected "nodes.0.children.6.id: Invalid UUID" after createNode with a
+// slug id succeeded).
+describe("Node id — slug or UUID", () => {
+	const base = { title: "X", status: "not-started" };
+
+	it("accepts a slug id", () => {
+		const result = RoadmapNodeSchema.safeParse({
+			...base,
+			id: "v07-test-sandbox",
+		});
+		expect(result.success).toBe(true);
+	});
+
+	it("accepts a UUID id", () => {
+		const result = RoadmapNodeSchema.safeParse({
+			...base,
+			id: crypto.randomUUID(),
+		});
+		expect(result.success).toBe(true);
+	});
+
+	it("rejects ids with a leading separator, spaces, or over 64 chars", () => {
+		for (const id of ["-leading", "has space", "a".repeat(65), ""]) {
+			const result = RoadmapNodeSchema.safeParse({ ...base, id });
+			expect(result.success).toBe(false);
+		}
+	});
+});
+
 // Phase 4 Wave 0 — PLUG-09 additions (D-26).
 // plugin and subscribe are z.unknown().optional() — confirm they stay permissive.
 describe("PLUG-09: plugin/subscribe fields", () => {
