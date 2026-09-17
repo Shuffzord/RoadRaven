@@ -1,9 +1,13 @@
+
 # RoadRaven
 
 [![License: PolyForm Noncommercial 1.0.0](https://img.shields.io/badge/License-PolyForm--Noncommercial--1.0.0-blue.svg)](./LICENSE)
 [![Status: Alpha v0.6](https://img.shields.io/badge/status-alpha%20v0.6-orange.svg)](#feature-status)
 [![Platform: Windows | Linux](https://img.shields.io/badge/platform-Windows%20%7C%20Linux-blue.svg)](#install)
 [![Watch the demo](https://img.shields.io/badge/%E2%96%B6-Watch_the_demo-FF4500.svg)](#demo)
+
+
+<img width="1920" height="1080" alt="brag" src="https://github.com/user-attachments/assets/7a5ee9e9-33b1-4bab-9dad-f680a36fdc21" />
 
 **Your plan. Watching itself.**
 
