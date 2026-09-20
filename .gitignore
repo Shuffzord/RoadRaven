@@ -79,3 +79,6 @@ temp/
 
 # Hutch/Cottontail vendored toolchain (Electrobun 2.x) - native binaries, not source
 .hutch/
+
+# Cottontail build scratch (Electrobun 2.x) - per-PID temp, regenerated each build
+.cottontail-tmp/

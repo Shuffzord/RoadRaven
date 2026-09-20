@@ -25,7 +25,11 @@
 		"lineEnding": "lf"
 	},
 	"files": {
-		"experimentalScannerIgnores": [".claude/worktrees", "**/.hutch"],
+		"experimentalScannerIgnores": [
+			".claude/worktrees",
+			"**/.hutch",
+			"**/.cottontail-tmp"
+		],
 		"includes": [
 			"packages/**",
 			"shared/**",
@@ -39,6 +43,7 @@
 			"!**/test-results",
 			"!.claude/worktrees",
 			"!**/.hutch",
+			"!**/.cottontail-tmp",
 			"!**/*.bak.json"
 		]
 	},
