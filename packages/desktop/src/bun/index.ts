@@ -16,6 +16,8 @@ import type { RoadmapRPCType } from "../../../../shared/types.ts";
 // the Plan 04a acceptance grep) can see the persistence surface at a glance.
 import { agentRequestHandler } from "./agentRequestHandler";
 import { atomicWrite } from "./atomicWrite";
+import { writeLoadBackup } from "./backups";
+import { canonicalizeSchemaJson } from "./canonicalJson";
 import { markSelfWrite, stopAllWatchers, watchFile } from "./fileWatcher";
 import { bunLogger, setupBunLogging } from "./logging";
 import {
@@ -249,9 +251,9 @@ const rpc = BrowserView.defineRPC<RoadmapRPCType>({
 				logger[level](message, data ? { ...data } : undefined);
 			},
 
-			// loadFile handler with Zod validation + error propagation + .bak.json backup
+			// loadFile handler with Zod validation + error propagation + app-data backup
 			loadFile: async ({ path: filePath }) => {
-				const { RoadmapSchemaSchema } = await import(
+				const { NodeStatusSchema, RoadmapSchemaSchema } = await import(
 					"../../../../packages/core/src/schema"
 				);
 
@@ -272,10 +274,10 @@ const rpc = BrowserView.defineRPC<RoadmapRPCType>({
 					};
 				}
 
-				// Write .bak.json backup (VIEW-12)
-				const bakPath = filePath.replace(/\.json$/, ".bak.json");
+				// Write load backup into the app-data backups dir (VIEW-12; v0.7
+				// phase 3 — no longer written next to the roadmap file).
 				try {
-					await Bun.write(bakPath, raw);
+					const bakPath = writeLoadBackup(filePath, raw);
 					bunLogger.info`Backup written to ${bakPath}`;
 				} catch (err) {
 					bunLogger.error`Failed to write backup: ${String(err)}`;
@@ -301,20 +303,22 @@ const rpc = BrowserView.defineRPC<RoadmapRPCType>({
 				// Validate with Zod
 				const result = RoadmapSchemaSchema.safeParse(parsed);
 
-				let schemaData: unknown;
-				let errors: Array<{ path: string; message: string; code: string }> = [];
-
 				if (!result.success) {
-					errors = result.error.issues.map((issue) => ({
-						path: issue.path.map(String).join("/"),
-						message: issue.message,
-						code: String(issue.code),
-					}));
-					// Return raw parsed data for partial rendering + errors for error panel
-					schemaData = parsed;
-				} else {
-					schemaData = result.data;
+					return {
+						data: null,
+						errors: result.error.issues.map((issue) => ({
+							path: issue.path.map(String).join("/"),
+							message: issue.message,
+							code: String(issue.code),
+						})),
+					};
 				}
+				const schemaData = result.data;
+				const errors: Array<{
+					path: string;
+					message: string;
+					code: string;
+				}> = [];
 
 				// Resolve $ref nodes
 				const fileChangeCallback = (changedPath: string) => {
@@ -322,6 +326,7 @@ const rpc = BrowserView.defineRPC<RoadmapRPCType>({
 					bunLogger.info`File changed: ${changedPath}`;
 					mainWindow.webview.rpc?.send.pushFileChanged({
 						path: changedPath,
+						mainPath: resolvedMain,
 					});
 				};
 
@@ -383,21 +388,32 @@ const rpc = BrowserView.defineRPC<RoadmapRPCType>({
 					bunLogger.error`pushOwnershipMap failed: ${String(err)}`;
 				}
 
-				// Sidecar hydrate: set sidecar path + replay last-event-per-nodeId overlay
-				// I-12 fix: property-access form per Electrobun defineRPC pattern
+				// Return sidecar status hydration with the loaded schema. Applying it in
+				// the renderer after loadSchema prevents target-file events from mutating
+				// the previously displayed roadmap while this request is in flight.
 				const sidecarPath = getEventSidecarPath(filePath);
 				eventServerHandle?.setSidecarPath(sidecarPath);
+				const sidecarUpdates: Array<{
+					nodeId: string;
+					status: RoadmapNode["status"];
+					meta?: Record<string, unknown>;
+					source?: string;
+					lastEventAt: number;
+				}> = [];
 				try {
 					const { overlay, events } = await replayEventLog(sidecarPath);
-					if (overlay.size > 0) {
-						mainWindow.webview.rpc?.send.pushStatusUpdate({
-							updates: Array.from(overlay.values()).map((v) => ({
-								nodeId: v.nodeId,
-								status: v.status,
-								meta: v.meta,
-								source: v.source,
-								lastEventAt: v.lastEventAt,
-							})),
+					for (const value of overlay.values()) {
+						const status = NodeStatusSchema.safeParse(value.status);
+						if (!status.success) {
+							bunLogger.warn`Ignoring invalid sidecar status ${value.status} for node ${value.nodeId}`;
+							continue;
+						}
+						sidecarUpdates.push({
+							nodeId: value.nodeId,
+							status: status.data,
+							meta: value.meta,
+							source: value.source,
+							lastEventAt: value.lastEventAt,
 						});
 					}
 					if (events.length > 0) {
@@ -409,7 +425,9 @@ const rpc = BrowserView.defineRPC<RoadmapRPCType>({
 
 				return {
 					data: schemaData as RoadmapRPCType["bun"]["requests"]["loadFile"]["response"]["data"],
+					filePath: resolvedMain,
 					errors,
+					sidecarUpdates,
 				};
 			},
 
@@ -617,7 +635,7 @@ const rpc = BrowserView.defineRPC<RoadmapRPCType>({
 				}
 
 				try {
-					await atomicWrite(resolved, JSON.stringify(schema, null, 2));
+					await atomicWrite(resolved, canonicalizeSchemaJson(schema));
 					markSelfWrite(resolved);
 					pushDialogAllowlistPath(resolved);
 					setCachedSchema(schema);

@@ -109,7 +109,10 @@ describe("loadSchema", () => {
 		useRoadmapStore.getState().loadSchema(TEST_SCHEMA, TEST_FILE_PATH);
 		const state = useRoadmapStore.getState();
 
-		expect(state.schema).toBe(TEST_SCHEMA);
+		// Loading creates a shallow store copy without rewriting the persisted
+		// revision merely because the file was opened.
+		expect(state.schema).toEqual(TEST_SCHEMA);
+		expect(state.schema?.nodes).toBe(TEST_SCHEMA.nodes);
 		expect(state.filePath).toBe(TEST_FILE_PATH);
 		expect(state.treeData).not.toBeNull();
 		expect(state.treeData?.name).toBe("Root Node");

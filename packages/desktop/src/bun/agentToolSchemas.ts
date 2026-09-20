@@ -27,12 +27,24 @@
 
 import { z } from "zod";
 import {
+	NodeStatusSchema,
 	StatusConfigSchema,
 	TypeConfigSchema,
 } from "../../../../packages/core/src/schema";
 
 // ID — permissive (matches eventSchema.ts EventFrameSchema.nodeId)
 const IdString = z.string().min(1);
+
+// v0.7 Phase 4 — caller-supplied createNode id: a UUID or a slug. One regex
+// covers both (UUIDs are hex + hyphens, 36 chars ≤ 64). Collision against the
+// live tree is rejected renderer-side with duplicate_id.
+const CallerNodeId = z.string().regex(/^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/);
+
+// v0.7 CONC-01: optimistic-concurrency guard accepted by every write tool.
+// Must be declared here or z.object() strips it before the renderer's
+// stale_write gate ever sees it. Optional — omitted keeps pre-v0.7
+// last-writer-wins behavior.
+const ExpectedRevision = z.number().int().min(1).optional();
 
 // -- Read tools --------------------------------------------------------------
 
@@ -54,10 +66,12 @@ const FindNodesInputSchema = z.object({
 const CreateNodeInputSchema = z.object({
 	parentId: IdString,
 	title: z.string().min(1).max(200),
+	id: CallerNodeId.optional(),
 	type: z.string().optional(),
-	status: z.string().optional(),
+	status: NodeStatusSchema.optional(),
 	notes: z.string().optional(),
 	metadata: z.record(z.string(), z.unknown()).optional(),
+	expectedRevision: ExpectedRevision,
 });
 
 const CreateRoadmapInputSchema = z.object({
@@ -71,22 +85,29 @@ const CreateRoadmapInputSchema = z.object({
 const RenameNodeInputSchema = z.object({
 	nodeId: IdString,
 	title: z.string().min(1).max(200),
+	expectedRevision: ExpectedRevision,
 });
 
 const UpdateNodeStatusInputSchema = z.object({
 	nodeId: IdString,
-	status: z.string().min(1),
+	status: NodeStatusSchema,
 	meta: z.record(z.string(), z.unknown()).optional(),
+	expectedRevision: ExpectedRevision,
 });
 
 const UpdateNodeTypeInputSchema = z.object({
 	nodeId: IdString,
 	type: z.string(),
+	expectedRevision: ExpectedRevision,
 });
 
 const UpdateNodeNotesInputSchema = z.object({
 	nodeId: IdString,
 	notes: z.string(),
+	// v0.7 Phase 4 — "append" joins existing notes + "\n\n" + notes; omitted
+	// or "replace" keeps the pre-v0.7 overwrite behavior.
+	mode: z.enum(["replace", "append"]).optional(),
+	expectedRevision: ExpectedRevision,
 });
 
 // D-04 PATCH semantics: null deletes the key. patch is REQUIRED (empty object
@@ -96,12 +117,45 @@ const UpdateNodeNotesInputSchema = z.object({
 const UpdateNodeMetadataInputSchema = z.object({
 	nodeId: IdString,
 	patch: z.record(z.string(), z.unknown().nullable()),
+	expectedRevision: ExpectedRevision,
+});
+
+// v0.7 Phase 2 — atomic batch write. 1..100 items; each item must carry at
+// least one of status/notes/metadata (enforced via .refine → invalid_input).
+// metadata uses the same D-04 PATCH semantics as updateNodeMetadata (null
+// deletes the key). Node existence is checked renderer-side; malformed statuses
+// are rejected at this transport boundary before they can reach the store.
+const UpdateNodesInputSchema = z.object({
+	updates: z
+		.array(
+			z
+				.object({
+					nodeId: IdString,
+					status: NodeStatusSchema.optional(),
+					notes: z.string().optional(),
+					metadata: z.record(z.string(), z.unknown().nullable()).optional(),
+				})
+				.refine(
+					(u) =>
+						u.status !== undefined ||
+						u.notes !== undefined ||
+						u.metadata !== undefined,
+					{
+						message:
+							"Each update needs at least one of status, notes, metadata",
+					},
+				),
+		)
+		.min(1)
+		.max(100),
+	expectedRevision: ExpectedRevision,
 });
 
 const MoveNodeInputSchema = z.object({
 	nodeId: IdString,
 	newParentId: IdString,
 	position: z.number().int().min(0).optional(),
+	expectedRevision: ExpectedRevision,
 });
 
 // -- Delete tool -------------------------------------------------------------
@@ -109,6 +163,7 @@ const MoveNodeInputSchema = z.object({
 const DeleteNodeInputSchema = z.object({
 	nodeId: IdString,
 	cascade: z.boolean().optional(),
+	expectedRevision: ExpectedRevision,
 });
 
 // -- File-lifecycle tools ----------------------------------------------------
@@ -150,6 +205,7 @@ const TOOL_SCHEMAS: Record<string, z.ZodType> = {
 	updateNodeType: UpdateNodeTypeInputSchema,
 	updateNodeNotes: UpdateNodeNotesInputSchema,
 	updateNodeMetadata: UpdateNodeMetadataInputSchema,
+	updateNodes: UpdateNodesInputSchema,
 	moveNode: MoveNodeInputSchema,
 	// Delete
 	deleteNode: DeleteNodeInputSchema,

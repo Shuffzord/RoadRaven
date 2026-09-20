@@ -1,17 +1,19 @@
-// Phase 6 contract tests — frozen at 5 cases. Anti-sprawl: every test pins one
+// Phase 6 contract tests — frozen at 6 cases. Anti-sprawl: every test pins one
 // public-API truth that downstream plans (06-02..06-06) build on. Adding a sixth
 // case for "completeness" violates the test budget — split into a follow-up plan instead.
 import { describe, expect, it } from "vitest";
 import { agentToolCallback } from "../src/tools/agentToolCallback";
 import { AGENT_ERROR_CODES, type AgentErrorCode } from "../src/tools/errors";
 import {
+	CreateNodeInputSchema,
 	DeleteNodeInputSchema,
 	FindNodesInputSchema,
 	UpdateNodeMetadataInputSchema,
+	UpdateNodesInputSchema,
 } from "../src/tools/schemas";
 
 describe("AgentErrorCode enum (RESEARCH §9 / D-11/D-12/D-13 + WR-01/WR-04)", () => {
-	it("contains exactly 15 codes: 13 originals + invalid_input (WR-01) + autosave_timeout (WR-04)", () => {
+	it("contains exactly 18 codes: 13 originals + invalid_input (WR-01) + autosave_timeout (WR-04) + stale_write (v0.7 CONC-01) + batch_validation_failed (v0.7 Phase 2) + duplicate_id (v0.7 Phase 4)", () => {
 		const expected = new Set<AgentErrorCode>([
 			"app_not_running",
 			"no_file_loaded",
@@ -28,9 +30,12 @@ describe("AgentErrorCode enum (RESEARCH §9 / D-11/D-12/D-13 + WR-01/WR-04)", ()
 			"internal_error",
 			"invalid_input",
 			"autosave_timeout",
+			"stale_write",
+			"batch_validation_failed",
+			"duplicate_id",
 		] as const);
 		expect(new Set(AGENT_ERROR_CODES)).toEqual(expected);
-		expect(AGENT_ERROR_CODES.length).toBe(15);
+		expect(AGENT_ERROR_CODES.length).toBe(18);
 	});
 });
 
@@ -79,6 +84,23 @@ describe("UpdateNodeMetadataInputSchema (D-04 PATCH semantics: null = delete)", 
 	});
 });
 
+describe("agent mutation status schemas", () => {
+	it("reject configured statuses outside the persisted core union", () => {
+		expect(
+			CreateNodeInputSchema.safeParse({
+				parentId: "parent",
+				title: "Child",
+				status: "custom",
+			}).success,
+		).toBe(false);
+		expect(
+			UpdateNodesInputSchema.safeParse({
+				updates: [{ nodeId: "node", status: "custom" }],
+			}).success,
+		).toBe(false);
+	});
+});
+
 describe("DeleteNodeInputSchema (D-11 cascade gate)", () => {
 	it("makes cascade an optional boolean (omitted = false at runtime per D-11)", () => {
 		expect(
@@ -113,15 +135,19 @@ describe("agentToolCallback (RESEARCH §9 MCP-result shape)", () => {
 		expect(okResult.content[0].type).toBe("text");
 		expect(okResult.content[0].text).toContain("ok-data");
 
-		// Stub wsClient: error path with a code+hint (RESEARCH §9 shape)
+		// Stub wsClient: error path with a code+hint+data (RESEARCH §9 shape;
+		// v0.7 Phase 2 renders structured `data` so agents can recover from
+		// stale_write / batch_validation_failed without a re-read)
 		const wsErr = {
 			request: async () => {
 				const e = new Error("Node 'x' not found.") as Error & {
 					code?: string;
 					hint?: string;
+					data?: unknown;
 				};
 				e.code = "node_not_found";
 				e.hint = "Call getRoadmap or findNodes to discover node IDs.";
+				e.data = { currentRevision: 7 };
 				throw e;
 			},
 		};
@@ -130,9 +156,11 @@ describe("agentToolCallback (RESEARCH §9 MCP-result shape)", () => {
 		expect(errResult.isError).toBe(true);
 		// Format from RESEARCH §9: `Error (${code}): ${message}${hint ? ` ${hint}` : ""}`
 		expect(errResult.content[0].text).toContain("(node_not_found)");
+		expect(errResult.content[0].text).toContain("Node 'x' not found.");
 		expect(errResult.content[0].text).toContain("Call getRoadmap");
+		expect(errResult.content[0].text).toContain('"currentRevision":7');
 	});
 });
 
-// INTENTIONALLY 5 TESTS. Do not add more in this plan. The transport, gate, dispatcher,
+// INTENTIONALLY 6 TESTS. Do not add more in this plan. The transport, gate, dispatcher,
 // and store-action contracts are tested in 06-02 (3 tests), 06-03 (6 tests), 06-04 (5-7 tests).

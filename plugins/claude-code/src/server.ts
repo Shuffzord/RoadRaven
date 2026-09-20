@@ -1,6 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
+import { NodeStatusSchema } from "../../../packages/core/src/schema";
 import { readSentinel } from "./sentinel";
 import { agentToolCallback } from "./tools/agentToolCallback";
 import {
@@ -15,6 +16,7 @@ import {
 	SaveFileAsInputSchema,
 	UpdateNodeMetadataInputSchema,
 	UpdateNodeNotesInputSchema,
+	UpdateNodesInputSchema,
 	UpdateNodeTypeInputSchema,
 } from "./tools/schemas";
 import { createWsClient } from "./wsClient";
@@ -42,17 +44,22 @@ server.registerTool(
 			"Push a status update to a node. Requires the desktop app to be running and a roadmap loaded. Routes through the agent dispatcher so the change appears in the event-log drawer (Ctrl+Shift+L).",
 		inputSchema: z.object({
 			nodeId: z.string().min(1).describe("The node UUID from the roadmap"),
-			status: z
-				.string()
-				.min(1)
-				.describe(
-					"Status id — must match one in the loaded schema's statusConfig",
-				),
+			status: NodeStatusSchema.describe("Core node status"),
 			meta: z
 				.record(z.string(), z.unknown())
 				.optional()
 				.describe(
 					"Arbitrary key-value metadata, e.g. { branch, commit, ci_run_id }",
+				),
+			// v0.7 CONC-01 — inline schema (Phase 4 predates schemas.ts) mirrors
+			// the ExpectedRevision field every write tool in schemas.ts carries.
+			expectedRevision: z
+				.number()
+				.int()
+				.min(1)
+				.optional()
+				.describe(
+					"Revision from your last getRoadmap/getNode read. If the roadmap changed since, the write fails with stale_write instead of clobbering.",
 				),
 		}),
 	},
@@ -82,7 +89,7 @@ server.registerTool(
 	{
 		title: "Get the loaded RoadRaven roadmap",
 		description:
-			"Return the full schema tree from the desktop app, with live-event statuses merged in. Requires the app to be running and a file to be loaded.",
+			"Return the full schema tree from the desktop app, with live-event statuses merged in, plus the current `revision` (pass it as expectedRevision on writes to detect stale reads). Requires the app to be running and a file to be loaded.",
 		inputSchema: z.object({}),
 	},
 	agentToolCallback("getRoadmap", wsClient),
@@ -93,7 +100,7 @@ server.registerTool(
 	{
 		title: "Get a single RoadRaven node",
 		description:
-			"Return a node by UUID, with its immediate parent ID and full ancestor chain (root-to-parent). Status reflects the live overlay if a recent event landed.",
+			"Return a node by UUID, with its immediate parent ID, full ancestor chain (root-to-parent), and the current roadmap `revision`. Status reflects the live overlay if a recent event landed.",
 		inputSchema: GetNodeInputSchema,
 	},
 	agentToolCallback("getNode", wsClient),
@@ -115,7 +122,7 @@ server.registerTool(
 	{
 		title: "Get RoadRaven status configuration",
 		description:
-			"Return the loaded roadmap's statusConfig array (the valid status IDs and their labels/colors). Use this before createNode if you don't know what statuses are valid.",
+			"Return the loaded roadmap's statusConfig array (display labels/colors for statuses). Agent mutations accept only core node statuses.",
 		inputSchema: z.object({}),
 	},
 	agentToolCallback("getStatusConfig", wsClient),
@@ -150,7 +157,7 @@ server.registerTool(
 	{
 		title: "Create a new RoadRaven node",
 		description:
-			"Add a child node under parentId with the given title. Optional: type, status (defaults to first statusConfig entry), notes (markdown), metadata. Returns the new node's UUID. Requires a loaded roadmap.",
+			"Add a child node under parentId with the given title. Optional: id (UUID or slug — supply it when recovering/recreating a node so its identity stays stable and history/metadata continuity survives file churn; duplicate_id if it already exists), type, core status (defaults to not-started), notes (markdown), metadata. Returns the new node's id. Requires a loaded roadmap.",
 		inputSchema: CreateNodeInputSchema,
 	},
 	agentToolCallback("createNode", wsClient),
@@ -193,9 +200,9 @@ server.registerTool(
 server.registerTool(
 	"updateNodeNotes",
 	{
-		title: "Replace a RoadRaven node's notes",
+		title: "Update a RoadRaven node's notes",
 		description:
-			"Replace a node's notes string (markdown). Pass an empty string to clear. This is REPLACE, not patch — the entire notes field is overwritten.",
+			'Set a node\'s notes string (markdown). mode "replace" (default) overwrites the entire notes field — pass an empty string to clear. mode "append" adds a blank line then your text after the existing notes; recommended for agent progress lines.',
 		inputSchema: UpdateNodeNotesInputSchema,
 	},
 	agentToolCallback("updateNodeNotes", wsClient),
@@ -210,6 +217,17 @@ server.registerTool(
 		inputSchema: UpdateNodeMetadataInputSchema,
 	},
 	agentToolCallback("updateNodeMetadata", wsClient),
+);
+
+server.registerTool(
+	"updateNodes",
+	{
+		title: "Batch-update RoadRaven nodes atomically",
+		description:
+			"Apply up to 100 node updates (status, notes, metadata patch) in ONE atomic call — the roadmap revision advances exactly once for the whole batch and the response returns the final `revision` so you can chain further writes without re-reading. All-or-nothing: every item is validated first (node exists, status id in statusConfig); any failure returns batch_validation_failed with per-item {index, nodeId, code} and NOTHING is applied. Ideal for replaying a set of changes after stale_write: call getRoadmap once, rebuild all updates against the fresh tree, and resend the whole batch with expectedRevision.",
+		inputSchema: UpdateNodesInputSchema,
+	},
+	agentToolCallback("updateNodes", wsClient),
 );
 
 server.registerTool(

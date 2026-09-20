@@ -60,6 +60,8 @@ afterEach(() => {
 
 describe("useAutosave — debounce timers", () => {
 	it("1. structural mutation (dataKey bump) → saveFile called exactly 2000ms later", async () => {
+		// Separate timing cases pin distinct debounce behavior.
+		// fallow-ignore-next-line code-duplication
 		renderHook(() => useAutosave());
 		useRoadmapStore.getState().addChild(NODE_ID);
 
@@ -69,6 +71,9 @@ describe("useAutosave — debounce timers", () => {
 		await vi.advanceTimersByTimeAsync(1);
 		await flushMicrotasks();
 		expect(saveFileMock).toHaveBeenCalledTimes(1);
+		expect(saveFileMock).toHaveBeenCalledWith(
+			expect.objectContaining({ filePath: "/tmp/autosave.json" }),
+		);
 	});
 
 	it("2. two rapid dataKey bumps within 2s → ONE saveFile call at 2000ms after the LAST mutation", async () => {

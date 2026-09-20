@@ -12,6 +12,19 @@ import { handleAgentRequest } from "../../../src/mainview/rpc/agentRpcHandler";
 import { useEventLogStore } from "../../../src/mainview/store/eventLogStore";
 import { useRoadmapStore } from "../../../src/mainview/store/roadmapStore";
 
+const { loadFileMock, newFileMock } = vi.hoisted(() => ({
+	loadFileMock: vi.fn(),
+	newFileMock: vi.fn(),
+}));
+
+vi.mock("../../../src/mainview/rpc", () => ({
+	electroview: {
+		rpc: {
+			request: { loadFile: loadFileMock, newFile: newFileMock },
+		},
+	},
+}));
+
 function makeSchema(): RoadmapSchema {
 	return {
 		version: "0.3",
@@ -45,6 +58,8 @@ function makeSchema(): RoadmapSchema {
 	} as RoadmapSchema;
 }
 
+// Isolated dispatcher suites intentionally reset the same singleton stores.
+// fallow-ignore-next-line code-duplication
 describe("agentRpcHandler — dispatch + drawer audit (D-09 / PLUG-AGENT-SAFETY-02)", () => {
 	beforeEach(() => {
 		useRoadmapStore.getState().loadSchema(makeSchema(), "/tmp/test.json");
@@ -76,6 +91,52 @@ describe("agentRpcHandler — dispatch + drawer audit (D-09 / PLUG-AGENT-SAFETY-
 		expect(rows[0].source).toBe("claude-code");
 		expect(rows[0].meta?.tool).toBe("createNode");
 		expect(rows[0].nodeId).toBe(data.nodeId);
+	});
+
+	it("creates all initial fields with one notification and one revision bump", async () => {
+		const before = useRoadmapStore.getState();
+		let notifications = 0;
+		const unsubscribe = useRoadmapStore.subscribe(() => notifications++);
+		const result = await handleAgentRequest("createNode", {
+			parentId: "00000000-0000-0000-0000-000000000001",
+			title: "Atomic child",
+			status: "completed",
+			type: "task",
+			notes: "Ready",
+			metadata: { owner: "alice" },
+		});
+		unsubscribe();
+
+		expect(result.ok).toBe(true);
+		const id = (result as { ok: true; data: { nodeId: string } }).data.nodeId;
+		const after = useRoadmapStore.getState();
+		expect(notifications).toBe(1);
+		expect(after.agentRevision).toBe(before.agentRevision + 1);
+		expect(after.schema?.revision).toBe((before.schema?.revision ?? 0) + 1);
+		expect(after.nodeIndex.get(id)).toMatchObject({
+			status: "completed",
+			type: "task",
+			notes: "Ready",
+			metadata: { owner: "alice" },
+		});
+		expect(after.liveEventMeta[id]?.source).toBe("claude-code");
+		expect(useEventLogStore.getState().rows[0]?.status).toBe("completed");
+	});
+
+	it("rejects an invalid create status before mutating", async () => {
+		const before = useRoadmapStore.getState();
+		const result = await handleAgentRequest("createNode", {
+			parentId: "00000000-0000-0000-0000-000000000001",
+			title: "Invalid child",
+			status: "custom",
+		});
+
+		expect(result).toMatchObject({ ok: false, code: "invalid_status" });
+		expect(useRoadmapStore.getState().nodeIndex.size).toBe(
+			before.nodeIndex.size,
+		);
+		expect(useRoadmapStore.getState().agentRevision).toBe(before.agentRevision);
+		expect(useEventLogStore.getState().rows).toHaveLength(0);
 	});
 });
 
@@ -179,7 +240,8 @@ describe("agentRpcHandler — getRoadmap short-circuits when no live overlay (WR
 	});
 
 	it("returns schema.nodes by reference (no clone) when liveEventMeta is empty", async () => {
-		const before = useRoadmapStore.getState().schema!.nodes;
+		const before = useRoadmapStore.getState().schema?.nodes;
+		if (!before) throw new Error("fixture broken");
 		const result = await handleAgentRequest("getRoadmap", {});
 		expect(result.ok).toBe(true);
 		const data = (
@@ -193,7 +255,8 @@ describe("agentRpcHandler — getRoadmap short-circuits when no live overlay (WR
 	});
 
 	it("DOES clone when liveEventMeta has entries (regression — overlay still works)", async () => {
-		const before = useRoadmapStore.getState().schema!.nodes;
+		const before = useRoadmapStore.getState().schema?.nodes;
+		if (!before) throw new Error("fixture broken");
 		useRoadmapStore.setState({
 			liveEventMeta: {
 				"00000000-0000-0000-0000-000000000002": {
@@ -380,6 +443,8 @@ describe("agentRpcHandler — moveNode self-move rejection (CR-01 / CR-02)", () 
 // setState (immutable spread) so subscribers receive a state-change
 // notification, AND Zod-validate statusConfig / typeConfig so malformed
 // config entries don't slip through the unchecked `as` cast.
+// Isolated dispatcher suites intentionally reset the same singleton stores.
+// fallow-ignore-next-line code-duplication
 describe("agentRpcHandler — createRoadmap immutable update + Zod validation (WR-03)", () => {
 	beforeEach(() => {
 		useRoadmapStore.setState({
@@ -422,11 +487,8 @@ describe("agentRpcHandler — createRoadmap immutable update + Zod validation (W
 		expect(result.ok).toBe(false);
 		const err = result as { ok: false; code: string };
 		expect(err.code).toBe("invalid_input");
-		// State is still post-newUntitledSchema; the old code would have
-		// silently accepted the malformed config via the unchecked cast.
-		const schema = useRoadmapStore.getState().schema;
-		// statusConfig must NOT have been overwritten with the malformed value.
-		expect(schema?.statusConfig?.[0]?.id).not.toBe("x");
+		// Validation happens before replacing the current document.
+		expect(useRoadmapStore.getState().schema).toBeNull();
 	});
 
 	it("accepts well-formed statusConfig + typeConfig (regression on the happy path)", async () => {
@@ -446,6 +508,12 @@ describe("agentRpcHandler — createRoadmap immutable update + Zod validation (W
 describe("agentRpcHandler — D-12 openFile auto-flushes pending autosave", () => {
 	beforeEach(() => {
 		useRoadmapStore.getState().loadSchema(makeSchema(), "/tmp/test.json");
+		loadFileMock.mockReset();
+		newFileMock.mockReset();
+		loadFileMock.mockResolvedValue({
+			data: { version: "0.3", title: "T", statusConfig: [], nodes: [] },
+			errors: [],
+		});
 	});
 	afterEach(() => {
 		useRoadmapStore.setState({
@@ -473,19 +541,6 @@ describe("agentRpcHandler — D-12 openFile auto-flushes pending autosave", () =
 					lastSavedDataKey: "999",
 				} as never);
 			});
-
-		// Mock the electroview RPC bridge's loadFile so the test does not require Bun.
-		vi.doMock("../../../src/mainview/rpc", () => ({
-			electroview: {
-				rpc: {
-					request: {
-						loadFile: vi.fn().mockResolvedValue({
-							data: { version: "0.3", title: "T", statusConfig: [], nodes: [] },
-						}),
-					},
-				},
-			},
-		}));
 
 		const result = await handleAgentRequest("openFile", {
 			path: "/tmp/test/other.json",
@@ -527,5 +582,455 @@ describe("agentRpcHandler — D-12 openFile auto-flushes pending autosave", () =
 		} finally {
 			vi.useRealTimers();
 		}
+	});
+
+	it("does not load when a new mutation lands while the pending save completes", async () => {
+		vi.useFakeTimers();
+		try {
+			useRoadmapStore.setState({
+				dataKey: "999",
+				lastSavedDataKey: "0",
+				saveState: "saving",
+			} as never);
+			vi.spyOn(useRoadmapStore.getState(), "triggerSave").mockImplementation(
+				() => {
+					useRoadmapStore.setState({
+						saveState: "saved",
+						lastSavedDataKey: "999",
+					});
+					useRoadmapStore
+						.getState()
+						.renameNode(
+							"00000000-0000-0000-0000-000000000002",
+							"Edited during save",
+						);
+				},
+			);
+
+			const promise = handleAgentRequest("openFile", {
+				path: "/tmp/test/other.json",
+			});
+			await vi.advanceTimersByTimeAsync(5_001);
+			const result = await promise;
+
+			expect(result).toMatchObject({ ok: false, code: "autosave_timeout" });
+			expect(loadFileMock).not.toHaveBeenCalled();
+			expect(
+				useRoadmapStore
+					.getState()
+					.nodeIndex.get("00000000-0000-0000-0000-000000000002")?.title,
+			).toBe("Edited during save");
+		} finally {
+			vi.useRealTimers();
+		}
+	});
+
+	it("keeps renderer edits and restores the old Bun binding after a mutation during load", async () => {
+		let finishLoad: ((value: unknown) => void) | undefined;
+		loadFileMock
+			.mockImplementationOnce(
+				() =>
+					new Promise((resolve) => {
+						finishLoad = resolve;
+					}),
+			)
+			.mockResolvedValueOnce({ data: makeSchema(), errors: [] });
+
+		const promise = handleAgentRequest("openFile", {
+			path: "/tmp/test/other.json",
+		});
+		await vi.waitFor(() => expect(loadFileMock).toHaveBeenCalledTimes(1));
+		useRoadmapStore
+			.getState()
+			.renameNode("00000000-0000-0000-0000-000000000002", "Edited during load");
+		finishLoad?.({
+			data: { version: "0.3", title: "Other", nodes: [] },
+			errors: [],
+		});
+		const result = await promise;
+
+		expect(result).toMatchObject({
+			ok: false,
+			code: "stale_write",
+			data: { retry: true, backendBindingRestored: true },
+		});
+		expect(loadFileMock).toHaveBeenNthCalledWith(1, {
+			path: "/tmp/test/other.json",
+		});
+		expect(loadFileMock).toHaveBeenNthCalledWith(2, {
+			path: "/tmp/test.json",
+		});
+		expect(useRoadmapStore.getState().filePath).toBe("/tmp/test.json");
+		expect(
+			useRoadmapStore
+				.getState()
+				.nodeIndex.get("00000000-0000-0000-0000-000000000002")?.title,
+		).toBe("Edited during load");
+	});
+
+	it("serializes overlapping opens through renderer state application", async () => {
+		let finishFirst: ((value: unknown) => void) | undefined;
+		loadFileMock
+			.mockImplementationOnce(
+				() =>
+					new Promise((resolve) => {
+						finishFirst = resolve;
+					}),
+			)
+			.mockResolvedValueOnce({
+				data: { version: "1.0", title: "Second", nodes: [] },
+				errors: [],
+			});
+
+		const first = handleAgentRequest("openFile", { path: "/tmp/first.json" });
+		await vi.waitFor(() => expect(loadFileMock).toHaveBeenCalledTimes(1));
+		const second = handleAgentRequest("openFile", { path: "/tmp/second.json" });
+		await Promise.resolve();
+		expect(loadFileMock).toHaveBeenCalledTimes(1);
+
+		finishFirst?.({
+			data: { version: "1.0", title: "First", nodes: [] },
+			errors: [],
+		});
+		expect((await first).ok).toBe(true);
+		expect((await second).ok).toBe(true);
+		expect(loadFileMock).toHaveBeenNthCalledWith(2, {
+			path: "/tmp/second.json",
+		});
+		expect(useRoadmapStore.getState().filePath).toBe("/tmp/second.json");
+		expect(useRoadmapStore.getState().schema?.title).toBe("Second");
+	});
+});
+
+// v0.7 CONC-01: optimistic concurrency. Writes carrying a stale
+// expectedRevision must fail loudly with stale_write + data.currentRevision;
+// a matching or omitted expectedRevision keeps pre-v0.7 behavior.
+describe("agentRpcHandler — stale_write optimistic concurrency (CONC-01)", () => {
+	beforeEach(() => {
+		useRoadmapStore.getState().loadSchema(makeSchema(), "/tmp/test.json"); // revision 1
+		useEventLogStore.setState({ rows: [] });
+	});
+	afterEach(() => {
+		useRoadmapStore.setState({
+			schema: null,
+			filePath: null,
+			nodeIndex: new Map(),
+		});
+		useEventLogStore.setState({ rows: [] });
+	});
+
+	it("rejects a write whose expectedRevision is stale with code='stale_write' and data.currentRevision; write does NOT land", async () => {
+		const target = "00000000-0000-0000-0000-000000000002"; // Login flow
+		const previous = useRoadmapStore.getState().agentRevision;
+		// A user edit lands between the agent's read and its write.
+		useRoadmapStore.getState().renameNode(target, "User renamed");
+		const current = useRoadmapStore.getState().agentRevision;
+		const result = await handleAgentRequest("updateNodeStatus", {
+			nodeId: target,
+			status: "completed",
+			expectedRevision: previous,
+		});
+		expect(result.ok).toBe(false);
+		const err = result as {
+			ok: false;
+			error: string;
+			code: string;
+			hint?: string;
+			data?: { currentRevision: number };
+		};
+		expect(err.code).toBe("stale_write");
+		expect(err.error).toBe("Roadmap changed since your last read.");
+		expect(err.hint).toBe(
+			"Call getRoadmap for the current revision and replay your change.",
+		);
+		expect(err.data?.currentRevision).toBe(current);
+		// The stale write must NOT have landed.
+		const node = useRoadmapStore.getState().nodeIndex.get(target);
+		expect(node?.status).toBe("in-progress");
+	});
+
+	it("accepts a write whose expectedRevision matches the current revision", async () => {
+		const current = useRoadmapStore.getState().agentRevision;
+		const result = await handleAgentRequest("updateNodeStatus", {
+			nodeId: "00000000-0000-0000-0000-000000000002",
+			status: "completed",
+			expectedRevision: current,
+		});
+		expect(result.ok).toBe(true);
+	});
+
+	it("accepts a write with no expectedRevision (pre-v0.7 last-writer-wins)", async () => {
+		useRoadmapStore
+			.getState()
+			.renameNode("00000000-0000-0000-0000-000000000002", "User renamed");
+		const result = await handleAgentRequest("updateNodeStatus", {
+			nodeId: "00000000-0000-0000-0000-000000000002",
+			status: "completed",
+		});
+		expect(result.ok).toBe(true);
+	});
+
+	it("returns invalid_status without mutating when called directly", async () => {
+		const before = useRoadmapStore.getState();
+		const result = await handleAgentRequest("updateNodeStatus", {
+			nodeId: "00000000-0000-0000-0000-000000000002",
+			status: "custom",
+		});
+
+		expect(result).toMatchObject({ ok: false, code: "invalid_status" });
+		expect(
+			useRoadmapStore
+				.getState()
+				.nodeIndex.get("00000000-0000-0000-0000-000000000002")?.status,
+		).toBe("in-progress");
+		expect(useRoadmapStore.getState().agentRevision).toBe(before.agentRevision);
+	});
+
+	it("getRoadmap and getNode responses include the current revision", async () => {
+		const current = useRoadmapStore.getState().agentRevision;
+		const r1 = await handleAgentRequest("getRoadmap", {});
+		expect(r1.ok).toBe(true);
+		expect((r1 as { ok: true; data: { revision: number } }).data.revision).toBe(
+			current,
+		);
+		const r2 = await handleAgentRequest("getNode", {
+			nodeId: "00000000-0000-0000-0000-000000000001",
+		});
+		expect(r2.ok).toBe(true);
+		expect((r2 as { ok: true; data: { revision: number } }).data.revision).toBe(
+			current,
+		);
+	});
+});
+
+// v0.7 Phase 4 — caller-supplied createNode id. Recovery/recreation keeps node
+// identity stable so history/metadata continuity survives file churn.
+// Isolated dispatcher suites intentionally reset the same singleton stores.
+// fallow-ignore-next-line code-duplication
+describe("agentRpcHandler — createNode caller-supplied id (v0.7 Phase 4)", () => {
+	beforeEach(() => {
+		useRoadmapStore.getState().loadSchema(makeSchema(), "/tmp/test.json");
+		useEventLogStore.setState({ rows: [] });
+	});
+	afterEach(() => {
+		useRoadmapStore.setState({
+			schema: null,
+			filePath: null,
+			nodeIndex: new Map(),
+		});
+		useEventLogStore.setState({ rows: [] });
+	});
+
+	it("round-trips an exact caller-supplied UUID id", async () => {
+		const id = "7c9e6679-7425-40de-944b-e07fc1f90ae7";
+		const result = await handleAgentRequest("createNode", {
+			parentId: "00000000-0000-0000-0000-000000000001",
+			title: "Recreated node",
+			id,
+		});
+		expect(result.ok).toBe(true);
+		expect((result as { ok: true; data: { nodeId: string } }).data.nodeId).toBe(
+			id,
+		);
+		const node = useRoadmapStore.getState().nodeIndex.get(id);
+		expect(node?.title).toBe("Recreated node");
+	});
+
+	it("round-trips an exact caller-supplied slug id", async () => {
+		const id = "phase-4.retry_1";
+		const result = await handleAgentRequest("createNode", {
+			parentId: "00000000-0000-0000-0000-000000000001",
+			title: "Slug node",
+			id,
+		});
+		expect(result.ok).toBe(true);
+		expect((result as { ok: true; data: { nodeId: string } }).data.nodeId).toBe(
+			id,
+		);
+		expect(useRoadmapStore.getState().nodeIndex.get(id)?.title).toBe(
+			"Slug node",
+		);
+	});
+
+	it("returns code='duplicate_id' when the id exists anywhere in the tree; nothing is created", async () => {
+		const before = useRoadmapStore.getState().nodeIndex.size;
+		const result = await handleAgentRequest("createNode", {
+			parentId: "00000000-0000-0000-0000-000000000001",
+			title: "Clone attempt",
+			id: "00000000-0000-0000-0000-000000000002", // existing 'Login flow'
+		});
+		expect(result.ok).toBe(false);
+		expect((result as { ok: false; code: string }).code).toBe("duplicate_id");
+		expect(useRoadmapStore.getState().nodeIndex.size).toBe(before);
+		// No drawer audit row on a rejected mutation.
+		expect(useEventLogStore.getState().rows.length).toBe(0);
+	});
+});
+
+// v0.7 Phase 4 — updateNodeNotes mode: "append" joins existing + "\n\n" + new;
+// empty/absent existing notes → plain set; default stays REPLACE.
+describe("agentRpcHandler — updateNodeNotes append mode (v0.7 Phase 4)", () => {
+	const target = "00000000-0000-0000-0000-000000000002"; // Login flow (no notes)
+
+	beforeEach(() => {
+		useRoadmapStore.getState().loadSchema(makeSchema(), "/tmp/test.json");
+		useEventLogStore.setState({ rows: [] });
+	});
+	afterEach(() => {
+		useRoadmapStore.setState({
+			schema: null,
+			filePath: null,
+			nodeIndex: new Map(),
+		});
+		useEventLogStore.setState({ rows: [] });
+	});
+
+	it("append preserves existing notes with a blank-line separator", async () => {
+		useRoadmapStore.getState().updateNodeNotes(target, "first line");
+		const result = await handleAgentRequest("updateNodeNotes", {
+			nodeId: target,
+			notes: "progress: done",
+			mode: "append",
+		});
+		expect(result.ok).toBe(true);
+		expect(useRoadmapStore.getState().nodeIndex.get(target)?.notes).toBe(
+			"first line\n\nprogress: done",
+		);
+	});
+
+	it("append to empty/absent notes sets the text plainly (no leading separator)", async () => {
+		const result = await handleAgentRequest("updateNodeNotes", {
+			nodeId: target,
+			notes: "solo entry",
+			mode: "append",
+		});
+		expect(result.ok).toBe(true);
+		expect(useRoadmapStore.getState().nodeIndex.get(target)?.notes).toBe(
+			"solo entry",
+		);
+	});
+
+	it("default (no mode) still REPLACES the entire notes field", async () => {
+		useRoadmapStore.getState().updateNodeNotes(target, "old content");
+		const result = await handleAgentRequest("updateNodeNotes", {
+			nodeId: target,
+			notes: "clean slate",
+		});
+		expect(result.ok).toBe(true);
+		expect(useRoadmapStore.getState().nodeIndex.get(target)?.notes).toBe(
+			"clean slate",
+		);
+	});
+});
+
+// v0.7 Phase 4 dogfood fix — openFile must be SCHEMA_OPTIONAL. With no schema
+// loaded (e.g. after a webview reload), the no_file_loaded hint says "call
+// openFile(path)"; gating openFile itself behind the schema was a deadlock.
+describe("agentRpcHandler — openFile dispatches with no schema loaded (v0.7 Phase 4)", () => {
+	beforeEach(() => {
+		useRoadmapStore.setState({
+			schema: null,
+			filePath: null,
+			nodeIndex: new Map(),
+		});
+		useEventLogStore.setState({ rows: [] });
+		loadFileMock.mockReset();
+	});
+	afterEach(() => {
+		useRoadmapStore.setState({
+			schema: null,
+			filePath: null,
+			nodeIndex: new Map(),
+		});
+		useEventLogStore.setState({ rows: [] });
+		vi.restoreAllMocks();
+	});
+
+	it("reaches the openFile handler (NOT no_file_loaded) and skips the autosave flush when schema is null", async () => {
+		// Dirty markers set: without the schema guard, the handler would wait on
+		// an autosave that can never fire (triggerSave spy never settles).
+		useRoadmapStore.setState({
+			dataKey: "999",
+			lastSavedDataKey: "0",
+			saveState: "saving",
+		} as never);
+		const triggerSpy = vi
+			.spyOn(useRoadmapStore.getState(), "triggerSave")
+			.mockImplementation(() => {
+				/* never settles — must not be called */
+			});
+		// The D-12 tests above spied this same store action; zustand's setState
+		// copies the mock fn into later state objects, so spyOn returns the old
+		// mock WITH its historical calls. Clear before acting.
+		triggerSpy.mockClear();
+
+		const loaded = makeSchema();
+		loaded.title = "Recovered";
+		loadFileMock.mockResolvedValue({
+			data: loaded,
+			errors: [],
+			sidecarUpdates: [
+				{
+					nodeId: "00000000-0000-0000-0000-000000000003",
+					status: "completed",
+					lastEventAt: Date.now(),
+					source: "ci",
+				},
+			],
+		});
+
+		const result = await handleAgentRequest("openFile", {
+			path: "/tmp/test/recovered.json",
+		});
+		expect(result.ok).toBe(true);
+		expect(
+			(result as { ok: true; data: { filePath: string } }).data.filePath,
+		).toBe("/tmp/test/recovered.json");
+		expect(triggerSpy).not.toHaveBeenCalled();
+
+		const roadmap = await handleAgentRequest("getRoadmap", {});
+		const openFile = await handleAgentRequest("getOpenFile", {});
+		expect(roadmap.ok).toBe(true);
+		expect(openFile.ok).toBe(true);
+		const roadmapData = (
+			roadmap as {
+				ok: true;
+				data: { filePath: string; revision: number };
+			}
+		).data;
+		const openFileData = (
+			openFile as {
+				ok: true;
+				data: { filePath: string; nodeCount: number; title: string };
+			}
+		).data;
+		expect(roadmapData.filePath).toBe("/tmp/test/recovered.json");
+		expect(roadmapData.revision).toBe(useRoadmapStore.getState().agentRevision);
+		expect(openFileData).toMatchObject({
+			filePath: "/tmp/test/recovered.json",
+			nodeCount: 3,
+			title: "Recovered",
+		});
+		expect(
+			useRoadmapStore
+				.getState()
+				.nodeIndex.get("00000000-0000-0000-0000-000000000003")?.status,
+		).toBe("completed");
+		expect(useEventLogStore.getState().rows).toHaveLength(1);
+	});
+
+	it("does not append an openFile audit event when Bun reports a load failure", async () => {
+		loadFileMock.mockResolvedValue({
+			data: null,
+			errors: [{ path: "", message: "missing", code: "file_read_error" }],
+		});
+
+		const result = await handleAgentRequest("openFile", {
+			path: "/tmp/test/missing.json",
+		});
+
+		expect(result).toMatchObject({ ok: false, code: "file_read_error" });
+		expect(useRoadmapStore.getState().schema).toBeNull();
+		expect(useEventLogStore.getState().rows).toHaveLength(0);
 	});
 });

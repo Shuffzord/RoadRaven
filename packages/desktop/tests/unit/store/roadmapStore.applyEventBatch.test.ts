@@ -3,7 +3,11 @@
 
 import { afterEach, describe, expect, it } from "vitest";
 import type { RoadmapSchema } from "../../../../../packages/core/src/schema";
-import { useRoadmapStore } from "../../../src/mainview/store/roadmapStore";
+import { handleAgentRequest } from "../../../src/mainview/rpc/agentRpcHandler";
+import {
+	hasUnsavedEdits,
+	useRoadmapStore,
+} from "../../../src/mainview/store/roadmapStore";
 import { resetStore } from "../../helpers/resetStore";
 
 const TEST_SCHEMA: RoadmapSchema = {
@@ -71,7 +75,7 @@ describe("roadmapStore.applyEventBatch", () => {
 
 	it("increments statusTick exactly once per batch regardless of batch size", () => {
 		loadFresh();
-		const before = useRoadmapStore.getState().statusTick;
+		const before = useRoadmapStore.getState();
 
 		useRoadmapStore.getState().applyEventBatch([
 			{ nodeId: "a", status: "done", lastEventAt: Date.now() },
@@ -79,7 +83,57 @@ describe("roadmapStore.applyEventBatch", () => {
 			{ nodeId: "c", status: "done", lastEventAt: Date.now() },
 		]);
 
-		expect(useRoadmapStore.getState().statusTick).toBe(before + 1);
+		const after = useRoadmapStore.getState();
+		expect(after.statusTick).toBe(before.statusTick + 1);
+		expect(after.schema?.revision).toBe(1);
+		expect(after.agentRevision).toBe(before.agentRevision + 1);
+	});
+
+	it("does not bump revisions when event statuses are all no-ops", () => {
+		loadFresh();
+		const before = useRoadmapStore.getState();
+		expect(hasUnsavedEdits(before)).toBe(false);
+
+		useRoadmapStore.getState().applyEventBatch([
+			{
+				nodeId: "a",
+				status: "not-started",
+				lastEventAt: Date.now(),
+				source: "ci",
+				meta: { run: 42 },
+			},
+		]);
+
+		const after = useRoadmapStore.getState();
+		expect(after.schema?.revision).toBe(before.schema?.revision);
+		expect(after.agentRevision).toBe(before.agentRevision);
+		expect(after.statusTick).toBe(before.statusTick);
+		expect(hasUnsavedEdits(after)).toBe(false);
+		expect(after.liveEventMeta.a?.meta).toEqual({ run: 42 });
+	});
+
+	it("status events invalidate old tokens and stale guarded writes are rejected", async () => {
+		loadFresh();
+		const oldToken = useRoadmapStore.getState().agentRevision;
+
+		useRoadmapStore
+			.getState()
+			.applyEventBatch([
+				{ nodeId: "a", status: "in-progress", lastEventAt: Date.now() },
+			]);
+
+		expect(useRoadmapStore.getState().agentRevision).toBe(oldToken + 1);
+		const result = await handleAgentRequest("renameNode", {
+			nodeId: "a",
+			title: "Stale rename",
+			expectedRevision: oldToken,
+		});
+		expect(result).toMatchObject({
+			ok: false,
+			code: "stale_write",
+			data: { currentRevision: oldToken + 1 },
+		});
+		expect(useRoadmapStore.getState().nodeIndex.get("a")?.title).toBe("A");
 	});
 
 	it("mutates each node status in-place via nodeIndex", () => {
@@ -111,10 +165,10 @@ describe("roadmapStore.applyEventBatch", () => {
 		]);
 
 		const meta = useRoadmapStore.getState().liveEventMeta;
-		expect(meta["a"]).toBeDefined();
-		expect(meta["a"].lastEventAt).toBe(now);
-		expect(meta["a"].source).toBe("claude-code");
-		expect(meta["a"].meta).toEqual({ pr: 42 });
+		expect(meta.a).toBeDefined();
+		expect(meta.a.lastEventAt).toBe(now);
+		expect(meta.a.source).toBe("claude-code");
+		expect(meta.a.meta).toEqual({ pr: 42 });
 	});
 
 	it("no-ops on empty batch — statusTick unchanged, subscribe not called", () => {

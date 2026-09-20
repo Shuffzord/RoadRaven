@@ -28,6 +28,35 @@ type McpResult = {
 	isError?: boolean;
 };
 
+// Structured-error formatter (RESEARCH §9): `Error (<code>): <msg> <hint>`,
+// plus — v0.7 Phase 2 — a rendered `data` line (e.g. stale_write's
+// { currentRevision }, batch_validation_failed's { failures }) so the agent
+// can recover without a re-read. Best-effort: a non-serializable payload just
+// drops the Data suffix.
+function formatStructuredError(e: {
+	code: string;
+	hint?: string;
+	message?: string;
+	data?: unknown;
+}): McpResult {
+	const message = e.message ?? "Unknown error";
+	const hint = e.hint ? ` ${e.hint}` : "";
+	let data = "";
+	if (e.data !== undefined) {
+		try {
+			data = `\nData: ${JSON.stringify(e.data)}`;
+		} catch {
+			// non-serializable data — omit
+		}
+	}
+	return {
+		content: [
+			{ type: "text", text: `Error (${e.code}): ${message}${hint}${data}` },
+		],
+		isError: true,
+	};
+}
+
 export function agentToolCallback(
 	method: string,
 	wsClient: WsClientLike,
@@ -39,19 +68,22 @@ export function agentToolCallback(
 				content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
 			};
 		} catch (err: unknown) {
-			const e = err as { code?: string; hint?: string; message?: string };
+			const e = err as {
+				code?: string;
+				hint?: string;
+				message?: string;
+				data?: unknown;
+			};
 
 			// Structured-error path: error came from the Bun handler with a known code
 			// from AGENT_ERROR_CODES — format per RESEARCH §9 and return.
 			if (typeof e.code === "string" && e.code.length > 0) {
-				const message = e.message ?? "Unknown error";
-				const hint = e.hint ? ` ${e.hint}` : "";
-				return {
-					content: [
-						{ type: "text", text: `Error (${e.code}): ${message}${hint}` },
-					],
-					isError: true,
-				};
+				return formatStructuredError({
+					code: e.code,
+					message: e.message,
+					hint: e.hint,
+					data: e.data,
+				});
 			}
 
 			// Transport-failure path: no code → distinguish app-not-running from
