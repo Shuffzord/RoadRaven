@@ -7,17 +7,22 @@ import {
 	writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import {
 	buildMcpServerEntry,
+	buildOpenCodeServerEntry,
+	detectPluginInstall,
 	getClaudeConfigPath,
 	getInstalledMcpServerPath,
+	getOpenCodeConfigPath,
+	getOpenCodeJsoncPath,
 	getSetupStatus,
 	installMcpIntegration,
 	isMcpInstalled,
 	MCP_SERVER_NAME,
 	mergeMcpConfig,
+	mergeOpenCodeConfig,
 	resolveBundledMcpServer,
 } from "../../../src/bun/mcpInstaller";
 
@@ -77,6 +82,49 @@ describe("mergeMcpConfig", () => {
 		const existing = { mcpServers: { codegraph: { command: "codegraph" } } };
 		const snapshot = JSON.stringify(existing);
 		mergeMcpConfig(existing, "/abs/server.mjs");
+		expect(JSON.stringify(existing)).toBe(snapshot);
+	});
+});
+
+describe("mergeOpenCodeConfig", () => {
+	it("creates mcp with the roadraven entry from an empty/null config", () => {
+		const merged = mergeOpenCodeConfig(null, "/abs/server.mjs");
+		expect(merged).toEqual({
+			mcp: {
+				[MCP_SERVER_NAME]: {
+					type: "local",
+					command: ["node", "/abs/server.mjs"],
+					enabled: true,
+				},
+			},
+		});
+	});
+
+	it("preserves other top-level keys and other MCP servers", () => {
+		const existing = {
+			provider: { anthropic: { apiKey: "x" } },
+			autoupdate: false,
+			permission: { edit: "allow" },
+			mcp: {
+				codegraph: { type: "local", command: ["codegraph", "serve"] },
+			},
+		};
+		const merged = mergeOpenCodeConfig(existing, "/abs/server.mjs");
+		expect(merged.provider).toEqual(existing.provider);
+		expect(merged.autoupdate).toBe(false);
+		expect(merged.permission).toEqual(existing.permission);
+		expect((merged.mcp as Record<string, unknown>).codegraph).toEqual(
+			existing.mcp.codegraph,
+		);
+		expect((merged.mcp as Record<string, unknown>)[MCP_SERVER_NAME]).toEqual(
+			buildOpenCodeServerEntry("/abs/server.mjs"),
+		);
+	});
+
+	it("does not mutate the input config", () => {
+		const existing = { mcp: { codegraph: { command: ["codegraph"] } } };
+		const snapshot = JSON.stringify(existing);
+		mergeOpenCodeConfig(existing, "/abs/server.mjs");
 		expect(JSON.stringify(existing)).toBe(snapshot);
 	});
 });
@@ -205,5 +253,63 @@ describe("installMcpIntegration (sandboxed)", () => {
 		expect(
 			getSetupStatus("0.6.0", { setup: { completed: true } }).firstRun,
 		).toBe(false);
+	});
+
+	/** Runs installMcpIntegration(["opencode"]), asserting it failed at the register-opencode step. */
+	function installOpenCodeExpectingError() {
+		const result = installMcpIntegration(["opencode"]);
+		expect(result.ok).toBe(false);
+		const registerStep = result.steps.find((s) => s.id === "register-opencode");
+		expect(registerStep?.status).toBe("error");
+		return registerStep;
+	}
+
+	it("refuses to write OpenCode config when opencode.jsonc exists", () => {
+		const jsoncPath = getOpenCodeJsoncPath();
+		mkdirSync(dirname(jsoncPath), { recursive: true });
+		writeFileSync(jsoncPath, "{ /* comment */ }", "utf-8");
+
+		const registerStep = installOpenCodeExpectingError();
+		expect(registerStep?.detail).toContain("opencode.jsonc");
+		// No opencode.json should have been created.
+		expect(existsSync(getOpenCodeConfigPath())).toBe(false);
+	});
+
+	it("refuses to overwrite an unparseable OpenCode config", () => {
+		const corrupt = "{ this is not json";
+		const configPath = getOpenCodeConfigPath();
+		mkdirSync(dirname(configPath), { recursive: true });
+		writeFileSync(configPath, corrupt, "utf-8");
+
+		installOpenCodeExpectingError();
+		// The corrupt file must be left exactly as-is.
+		expect(readFileSync(configPath, "utf-8")).toBe(corrupt);
+	});
+
+	it("detectPluginInstall is true for a roadraven@ marketplace key", () => {
+		const path = join(sandbox, ".claude", "plugins", "installed_plugins.json");
+		mkdirSync(dirname(path), { recursive: true });
+		writeFileSync(
+			path,
+			JSON.stringify({
+				version: 2,
+				plugins: {
+					"roadraven@some-marketplace": [{ installedAt: "2026-01-01" }],
+				},
+			}),
+			"utf-8",
+		);
+		expect(detectPluginInstall()).toBe(true);
+	});
+
+	it("detectPluginInstall is false when the manifest is absent", () => {
+		expect(detectPluginInstall()).toBe(false);
+	});
+
+	it("detectPluginInstall is false when the manifest is corrupt", () => {
+		const path = join(sandbox, ".claude", "plugins", "installed_plugins.json");
+		mkdirSync(dirname(path), { recursive: true });
+		writeFileSync(path, "{ not json", "utf-8");
+		expect(detectPluginInstall()).toBe(false);
 	});
 });
