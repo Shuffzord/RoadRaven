@@ -1,34 +1,37 @@
 /**
- * writeLoadBackup tests (v0.7 phase 3).
- *
- * Covers:
- *  - #1 backup lands in <base>/backups/<stem>.<timestamp>.bak.json with the
- *       original bytes; NOTHING is written next to the source file
- *  - #2 rotation keeps only the newest 5 backups per original file
- *  - #3 rotation is scoped per original basename (other stems untouched)
+ * writeLoadBackup persistence tests.
  */
 
-import { mkdtempSync, readdirSync, readFileSync, rmSync } from "node:fs";
+import {
+	existsSync,
+	mkdtempSync,
+	readdirSync,
+	readFileSync,
+	rmSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { basename, dirname, join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { getBackupsDir, writeLoadBackup } from "../../../src/bun/backups";
+import * as renameModule from "../../../src/bun/renameSync";
 
-describe("writeLoadBackup (v0.7 phase 3)", () => {
+describe("writeLoadBackup", () => {
 	let baseDir: string;
-	let sourceDir: string;
+	let sourceDirA: string;
+	let sourceDirB: string;
 	let now: number;
 
 	beforeEach(() => {
 		baseDir = mkdtempSync(join(tmpdir(), "rr-bak-base-"));
-		sourceDir = mkdtempSync(join(tmpdir(), "rr-bak-src-"));
+		sourceDirA = mkdtempSync(join(tmpdir(), "rr-bak-src-a-"));
+		sourceDirB = mkdtempSync(join(tmpdir(), "rr-bak-src-b-"));
 		now = 1_000_000;
 		vi.spyOn(Date, "now").mockImplementation(() => now);
 	});
 
 	afterEach(() => {
 		vi.restoreAllMocks();
-		for (const dir of [baseDir, sourceDir]) {
+		for (const dir of [baseDir, sourceDirA, sourceDirB]) {
 			try {
 				rmSync(dir, { recursive: true, force: true });
 			} catch {
@@ -37,47 +40,92 @@ describe("writeLoadBackup (v0.7 phase 3)", () => {
 		}
 	});
 
-	it("#1 writes into <base>/backups and NOT next to the source file", () => {
-		const original = join(sourceDir, "main.roadmap.json");
+	it("writes atomically into the backups directory with a unique completed name", () => {
+		const original = join(sourceDirA, "main.roadmap.json");
 		const bakPath = writeLoadBackup(original, '{"version":"1.0"}', baseDir);
 
-		expect(bakPath).toBe(
-			join(getBackupsDir(baseDir), "main.roadmap.1000000.bak.json"),
+		expect(dirname(bakPath)).toBe(getBackupsDir(baseDir));
+		expect(basename(bakPath)).toMatch(
+			/^main\.roadmap\.[0-9a-f]{64}\.1000000\.[0-9a-f-]{36}\.bak\.json$/,
 		);
 		expect(readFileSync(bakPath, "utf-8")).toBe('{"version":"1.0"}');
-		// The roadmap's own directory stays clean — no .bak litter.
-		expect(readdirSync(sourceDir)).toEqual([]);
+		expect(readdirSync(sourceDirA)).toEqual([]);
+		expect(
+			readdirSync(getBackupsDir(baseDir)).some((name) => name.endsWith(".tmp")),
+		).toBe(false);
 	});
 
-	it("#2 keeps only the newest 5 backups per original file", () => {
-		const original = join(sourceDir, "main.roadmap.json");
-		for (let i = 0; i < 7; i++) {
-			now = 1_000_000 + i;
-			writeLoadBackup(original, `{"rev":${i}}`, baseDir);
-		}
+	it("keeps the newest five of seven same-tick snapshots without collisions", () => {
+		const original = join(sourceDirA, "main.roadmap.json");
+		const written = Array.from({ length: 7 }, (_, revision) =>
+			writeLoadBackup(original, `{"rev":${revision}}`, baseDir),
+		);
 
-		const remaining = readdirSync(getBackupsDir(baseDir)).sort();
-		expect(remaining).toEqual([
-			"main.roadmap.1000002.bak.json",
-			"main.roadmap.1000003.bak.json",
-			"main.roadmap.1000004.bak.json",
-			"main.roadmap.1000005.bak.json",
-			"main.roadmap.1000006.bak.json",
-		]);
+		expect(new Set(written)).toHaveLength(7);
+		expect(readdirSync(getBackupsDir(baseDir))).toHaveLength(5);
+		for (const removed of written.slice(0, 2))
+			expect(existsSync(removed)).toBe(false);
+		for (const [revision, retained] of written.slice(2).entries()) {
+			expect(readFileSync(retained, "utf-8")).toBe(`{"rev":${revision + 2}}`);
+		}
 	});
 
-	it("#3 rotation is scoped per original basename", () => {
-		const a = join(sourceDir, "alpha.json");
-		const b = join(sourceDir, "beta.json");
-		writeLoadBackup(b, "{}", baseDir);
-		for (let i = 1; i <= 6; i++) {
-			now = 1_000_000 + i;
-			writeLoadBackup(a, "{}", baseDir);
+	it("retains five independent snapshots for same-basename sources", () => {
+		const sourceA = join(sourceDirA, "main.json");
+		const sourceB = join(sourceDirB, "main.json");
+		const pathsA: string[] = [];
+		const pathsB: string[] = [];
+		for (let revision = 0; revision < 7; revision++) {
+			pathsA.push(writeLoadBackup(sourceA, `a-${revision}`, baseDir));
+			pathsB.push(writeLoadBackup(sourceB, `b-${revision}`, baseDir));
 		}
 
-		const remaining = readdirSync(getBackupsDir(baseDir));
-		// beta's single backup survives alpha's rotation.
-		expect(remaining).toContain("beta.1000000.bak.json");
-		expect(remaining.filter((f) => f.startsWith("alpha."))).toHaveLength(5);
+		expect(readdirSync(getBackupsDir(baseDir))).toHaveLength(10);
+		for (const path of [...pathsA.slice(2), ...pathsB.slice(2)]) {
+			expect(existsSync(path)).toBe(true);
+		}
+		for (const path of [...pathsA.slice(0, 2), ...pathsB.slice(0, 2)]) {
+			expect(existsSync(path)).toBe(false);
+		}
+	});
+
+	it("retains and returns the newly completed backup after clock rollback", () => {
+		const original = join(sourceDirA, "main.json");
+		for (let revision = 0; revision < 5; revision++) {
+			writeLoadBackup(original, `before-${revision}`, baseDir);
+		}
+		now = 1;
+
+		const rolledBack = writeLoadBackup(original, "after-rollback", baseDir);
+
+		expect(existsSync(rolledBack)).toBe(true);
+		expect(readFileSync(rolledBack, "utf-8")).toBe("after-rollback");
+		expect(readdirSync(getBackupsDir(baseDir))).toHaveLength(5);
+	});
+
+	it("cleans a failed temp publish without changing completed backups", () => {
+		const original = join(sourceDirA, "main.json");
+		for (let revision = 0; revision < 3; revision++) {
+			writeLoadBackup(original, `prior-${revision}`, baseDir);
+		}
+		const backupDir = getBackupsDir(baseDir);
+		const before = new Map(
+			readdirSync(backupDir).map((name) => [
+				name,
+				readFileSync(join(backupDir, name)),
+			]),
+		);
+		vi.spyOn(renameModule, "renameWithRetry").mockImplementationOnce(() => {
+			throw new Error("injected rename failure");
+		});
+
+		expect(() => writeLoadBackup(original, "partial", baseDir)).toThrow(
+			"injected rename failure",
+		);
+
+		expect(readdirSync(backupDir).sort()).toEqual([...before.keys()].sort());
+		for (const [name, bytes] of before) {
+			expect(readFileSync(join(backupDir, name))).toEqual(bytes);
+		}
 	});
 });

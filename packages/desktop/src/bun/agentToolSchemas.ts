@@ -27,6 +27,7 @@
 
 import { z } from "zod";
 import {
+	NodeStatusSchema,
 	StatusConfigSchema,
 	TypeConfigSchema,
 } from "../../../../packages/core/src/schema";
@@ -67,7 +68,7 @@ const CreateNodeInputSchema = z.object({
 	title: z.string().min(1).max(200),
 	id: CallerNodeId.optional(),
 	type: z.string().optional(),
-	status: z.string().optional(),
+	status: NodeStatusSchema.optional(),
 	notes: z.string().optional(),
 	metadata: z.record(z.string(), z.unknown()).optional(),
 	expectedRevision: ExpectedRevision,
@@ -89,7 +90,7 @@ const RenameNodeInputSchema = z.object({
 
 const UpdateNodeStatusInputSchema = z.object({
 	nodeId: IdString,
-	status: z.string().min(1),
+	status: NodeStatusSchema,
 	meta: z.record(z.string(), z.unknown()).optional(),
 	expectedRevision: ExpectedRevision,
 });
@@ -122,15 +123,15 @@ const UpdateNodeMetadataInputSchema = z.object({
 // v0.7 Phase 2 — atomic batch write. 1..100 items; each item must carry at
 // least one of status/notes/metadata (enforced via .refine → invalid_input).
 // metadata uses the same D-04 PATCH semantics as updateNodeMetadata (null
-// deletes the key). Node-existence + statusConfig checks live renderer-side
-// (batch_validation_failed), not here.
+// deletes the key). Node existence is checked renderer-side; malformed statuses
+// are rejected at this transport boundary before they can reach the store.
 const UpdateNodesInputSchema = z.object({
 	updates: z
 		.array(
 			z
 				.object({
 					nodeId: IdString,
-					status: z.string().min(1).optional(),
+					status: NodeStatusSchema.optional(),
 					notes: z.string().optional(),
 					metadata: z.record(z.string(), z.unknown().nullable()).optional(),
 				})

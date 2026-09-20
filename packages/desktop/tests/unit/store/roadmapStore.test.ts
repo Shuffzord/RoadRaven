@@ -109,9 +109,9 @@ describe("loadSchema", () => {
 		useRoadmapStore.getState().loadSchema(TEST_SCHEMA, TEST_FILE_PATH);
 		const state = useRoadmapStore.getState();
 
-		// v0.7 CONC-01: loadSchema stamps a revision, so the stored schema is a
-		// shallow copy of the input — nodes stay shared by reference.
-		expect(state.schema).toEqual({ ...TEST_SCHEMA, revision: 1 });
+		// Loading creates a shallow store copy without rewriting the persisted
+		// revision merely because the file was opened.
+		expect(state.schema).toEqual(TEST_SCHEMA);
 		expect(state.schema?.nodes).toBe(TEST_SCHEMA.nodes);
 		expect(state.filePath).toBe(TEST_FILE_PATH);
 		expect(state.treeData).not.toBeNull();

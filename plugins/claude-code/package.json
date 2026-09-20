@@ -12,15 +12,14 @@
 		"event-api"
 	],
 	"bin": {
-		"roadraven-mcp": "./dist/index.js",
-		"roadraven-notify": "./dist/notify.js"
+		"roadraven-mcp": "./dist/index.js"
 	},
 	"main": "./dist/index.js",
 	"files": [
-		"dist"
+		"dist/index.js"
 	],
 	"scripts": {
-		"build": "bun build src/index.ts src/notify.ts --outdir dist --target node",
+		"build": "bun build src/index.ts --outdir dist --target node",
 		"prepublishOnly": "bun run build",
 		"test": "vitest run"
 	},

@@ -32,32 +32,46 @@ function makeTestSchema(revision?: number): RoadmapSchema {
 	};
 }
 
-function revision(): number | undefined {
+function persistedRevision(): number | undefined {
 	return useRoadmapStore.getState().schema?.revision;
+}
+
+function agentRevision(): number {
+	return useRoadmapStore.getState().agentRevision;
 }
 
 afterEach(() => {
 	resetStore();
 });
 
-describe("loadSchema revision seeding (CONC-01)", () => {
-	it("loads a pre-v0.7 file (no revision field) as revision 1", () => {
+describe("loadSchema agent revision seeding (CONC-01)", () => {
+	it("keeps a pre-v0.7 payload unchanged and creates a valid agent token", () => {
 		useRoadmapStore.getState().loadSchema(makeTestSchema(), "/tmp/test.json");
-		expect(revision()).toBe(1);
+		expect(persistedRevision()).toBeUndefined();
+		expect(agentRevision()).toBe(1);
 	});
 
-	it("advances past the file's revision on load (external-reload safety)", () => {
+	it("advances the agent token past the file revision without changing it", () => {
 		useRoadmapStore.getState().loadSchema(makeTestSchema(5), "/tmp/test.json");
-		expect(revision()).toBe(6);
+		expect(persistedRevision()).toBe(5);
+		expect(agentRevision()).toBe(6);
 	});
 
-	it("never goes backwards past the in-memory revision on reload", () => {
-		useRoadmapStore.getState().loadSchema(makeTestSchema(5), "/tmp/test.json"); // → 6
-		useRoadmapStore.getState().renameNode(ROOT_ID, "Renamed"); // → 7
+	it("external reload invalidates an old token without rewriting the loaded revision", () => {
+		useRoadmapStore.getState().loadSchema(makeTestSchema(5), "/tmp/test.json");
+		const oldToken = agentRevision();
+		useRoadmapStore.getState().renameNode(ROOT_ID, "Renamed");
 		// Reload a file carrying an OLDER revision (external edit that kept the
-		// stale counter) — must still land above the in-memory value.
-		useRoadmapStore.getState().loadSchema(makeTestSchema(2), "/tmp/test.json");
-		expect(revision()).toBe(8);
+		// stale counter) — the agent token must still move forward.
+		useRoadmapStore.getState().reloadSchema(makeTestSchema(2));
+		expect(persistedRevision()).toBe(2);
+		expect(agentRevision()).toBeGreaterThan(oldToken);
+		expect(agentRevision()).toBe(8);
+	});
+
+	it("new untitled roadmaps receive a valid agent token", () => {
+		useRoadmapStore.getState().newUntitledSchema();
+		expect(agentRevision()).toBeGreaterThan(0);
 	});
 });
 
@@ -68,30 +82,60 @@ describe("revision bumps on agent-visible mutations (CONC-01)", () => {
 
 	it("structural mutations bump: addChild, renameNode, moveNode, deleteNode", () => {
 		useRoadmapStore.getState().addChild(CHILD_A_ID, "New");
-		expect(revision()).toBe(2);
+		expect(agentRevision()).toBe(2);
 		useRoadmapStore.getState().renameNode(CHILD_A_ID, "Renamed");
-		expect(revision()).toBe(3);
+		expect(agentRevision()).toBe(3);
 		useRoadmapStore.getState().moveNode(CHILD_B_ID, CHILD_A_ID);
-		expect(revision()).toBe(4);
+		expect(agentRevision()).toBe(4);
 		useRoadmapStore.getState().deleteNode(CHILD_B_ID);
-		expect(revision()).toBe(5);
+		expect(agentRevision()).toBe(5);
+		expect(persistedRevision()).toBe(4);
 	});
 
 	it("in-place mutations bump: status, type, metadata, notes", () => {
 		const s = useRoadmapStore.getState();
 		s.updateNodeStatus(CHILD_A_ID, "in-progress");
-		expect(revision()).toBe(2);
+		expect(agentRevision()).toBe(2);
 		s.updateNodeType(CHILD_A_ID, "task");
-		expect(revision()).toBe(3);
+		expect(agentRevision()).toBe(3);
 		s.updateNodeMetadata(CHILD_A_ID, { owner: "alice" });
-		expect(revision()).toBe(4);
+		expect(agentRevision()).toBe(4);
 		s.updateNodeNotes(CHILD_A_ID, "notes");
-		expect(revision()).toBe(5);
+		expect(agentRevision()).toBe(5);
+		expect(persistedRevision()).toBe(4);
 	});
 
 	it("no-op in-place update does NOT bump (same status short-circuits)", () => {
 		useRoadmapStore.getState().updateNodeStatus(CHILD_A_ID, "not-started");
-		expect(revision()).toBe(1);
+		expect(agentRevision()).toBe(1);
+		expect(persistedRevision()).toBeUndefined();
+	});
+
+	it("a mutation persists one revision and advances the agent token once", () => {
+		useRoadmapStore.getState().renameNode(CHILD_A_ID, "Renamed");
+		expect(persistedRevision()).toBe(1);
+		expect(agentRevision()).toBe(2);
+	});
+
+	it("publishes a new schema without mutating the subscriber's previous snapshot", () => {
+		const before = useRoadmapStore.getState();
+		const beforeSchema = before.schema;
+		const beforeNodes = before.schema?.nodes;
+		const beforeTreeData = before.treeData;
+		let observed: { next: typeof before; previous: typeof before } | undefined;
+		const unsubscribe = useRoadmapStore.subscribe((next, previous) => {
+			observed = { next, previous };
+		});
+
+		useRoadmapStore.getState().updateNodeStatus(CHILD_A_ID, "in-progress");
+		unsubscribe();
+
+		expect(observed?.previous.schema).toBe(beforeSchema);
+		expect(observed?.previous.schema?.revision).toBeUndefined();
+		expect(observed?.next.schema).not.toBe(beforeSchema);
+		expect(observed?.next.schema?.revision).toBe(1);
+		expect(observed?.next.schema?.nodes).toBe(beforeNodes);
+		expect(observed?.next.treeData).toBe(beforeTreeData);
 	});
 
 	it("paste bumps via the structural chokepoint", async () => {
@@ -106,6 +150,7 @@ describe("revision bumps on agent-visible mutations (CONC-01)", () => {
 			.getState()
 			.pasteFromClipboard(CHILD_A_ID);
 		expect(newId).toBeTruthy();
-		expect(revision()).toBe(2);
+		expect(agentRevision()).toBe(2);
+		expect(persistedRevision()).toBe(1);
 	});
 });

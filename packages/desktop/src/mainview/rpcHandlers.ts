@@ -16,6 +16,7 @@ import type { IntegrationEvent } from "../../../../shared/types";
 
 export async function handlePushFileChanged(msg: {
 	path: string;
+	mainPath?: string;
 }): Promise<void> {
 	// Cycle useFileActions → rpc → rpcHandlers → useFileActions is broken at
 	// runtime by this dynamic import(); flagged by fallow's static graph only.

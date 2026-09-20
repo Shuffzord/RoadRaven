@@ -11,12 +11,13 @@
 //   plugin and Bun schemas in sync prevents the agent from getting a cryptic
 //   Zod error before the Bun gate layer — and is what agentToolSchemas.ts:22
 //   asks for explicitly ("IMPORTANT: keep these in sync").
-// - status / type fields use z.string().min(1) NOT a fixed enum — Phase 4 D-26 enables
-//   user-defined statuses; agents must accept whatever the loaded schema allows.
+// - agent mutations use the core NodeStatusSchema. statusConfig remains a display
+//   configuration surface; it does not expand the persisted node-status union.
 // - Cycle detection / cross-$ref / cascade gates live in the handler, not Zod (the
 //   schema only checks the input shape, not the live tree state).
 import { z } from "zod";
 import {
+	NodeStatusSchema,
 	StatusConfigSchema,
 	TypeConfigSchema,
 } from "../../../../packages/core/src/schema";
@@ -80,10 +81,9 @@ export const CreateNodeInputSchema = z.object({
 		"Optional caller-supplied node id (UUID or slug ^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$). Use when recreating a node so its identity stays stable and history/metadata continuity survives file churn. Fails with duplicate_id if the id already exists anywhere in the tree. Omit to auto-generate a UUID.",
 	),
 	type: z.string().optional().describe("Node type id"),
-	status: z
-		.string()
-		.optional()
-		.describe("Status id — defaults to first statusConfig entry"),
+	status: NodeStatusSchema.optional().describe(
+		"Core node status — defaults to not-started",
+	),
 	notes: z.string().optional(),
 	metadata: z.record(z.string(), z.unknown()).optional(),
 	expectedRevision: ExpectedRevision,
@@ -143,11 +143,9 @@ export const UpdateNodesInputSchema = z.object({
 			z
 				.object({
 					nodeId: IdString.describe("ID of the target node"),
-					status: z
-						.string()
-						.min(1)
-						.optional()
-						.describe("New status id — must exist in statusConfig"),
+					status: NodeStatusSchema.optional().describe(
+						"New core node status id",
+					),
 					notes: z
 						.string()
 						.optional()

@@ -2,7 +2,10 @@
 // 4 tests: atomic apply + single revision bump, all-or-nothing rejection with
 // per-item report, stale_write gate, 13-item replay in one call.
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import type { RoadmapSchema } from "../../../../../packages/core/src/schema";
+import {
+	type RoadmapSchema,
+	RoadmapSchemaSchema,
+} from "../../../../../packages/core/src/schema";
 import { handleAgentRequest } from "../../../src/mainview/rpc/agentRpcHandler";
 import { useEventLogStore } from "../../../src/mainview/store/eventLogStore";
 import { useRoadmapStore } from "../../../src/mainview/store/roadmapStore";
@@ -39,8 +42,8 @@ function makeSchema(childCount = 13): RoadmapSchema {
 	} as RoadmapSchema;
 }
 
-function revision(): number | undefined {
-	return useRoadmapStore.getState().schema?.revision;
+function revision(): number {
+	return useRoadmapStore.getState().agentRevision;
 }
 
 describe("agentRpcHandler — updateNodes batch (v0.7 Phase 2)", () => {
@@ -53,6 +56,7 @@ describe("agentRpcHandler — updateNodes batch (v0.7 Phase 2)", () => {
 			schema: null,
 			filePath: null,
 			nodeIndex: new Map(),
+			agentRevision: 0,
 		});
 		useEventLogStore.setState({ rows: [] });
 	});
@@ -74,6 +78,7 @@ describe("agentRpcHandler — updateNodes batch (v0.7 Phase 2)", () => {
 		expect(data.updated).toBe(3);
 		expect(data.revision).toBe(2); // exactly one bump for the whole batch
 		expect(revision()).toBe(2);
+		expect(useRoadmapStore.getState().schema?.revision).toBe(1);
 		expect(useRoadmapStore.getState().statusTick).toBe(statusTickBefore + 1);
 		const idx = useRoadmapStore.getState().nodeIndex;
 		expect(idx.get(childId(1))?.status).toBe("in-progress");
@@ -83,6 +88,36 @@ describe("agentRpcHandler — updateNodes batch (v0.7 Phase 2)", () => {
 		const rows = useEventLogStore.getState().rows;
 		expect(rows.length).toBe(3);
 		expect(rows.every((r) => r.meta?.tool === "updateNodes")).toBe(true);
+	});
+
+	it("applies repeated metadata patches for one node in input order with one revision bump", async () => {
+		const result = await handleAgentRequest("updateNodes", {
+			updates: [
+				{ nodeId: childId(1), metadata: { owner: "alice" } },
+				{ nodeId: childId(1), metadata: { reviewer: "bob" } },
+			],
+		});
+
+		expect(result.ok).toBe(true);
+		expect(
+			useRoadmapStore.getState().nodeIndex.get(childId(1))?.metadata,
+		).toEqual({ seq: 1, owner: "alice", reviewer: "bob" });
+		expect(revision()).toBe(2);
+	});
+
+	it("does not resurrect a metadata key deleted by an earlier patch in the batch", async () => {
+		const result = await handleAgentRequest("updateNodes", {
+			updates: [
+				{ nodeId: childId(1), metadata: { seq: null } },
+				{ nodeId: childId(1), metadata: { owner: "alice" } },
+			],
+		});
+
+		expect(result.ok).toBe(true);
+		expect(
+			useRoadmapStore.getState().nodeIndex.get(childId(1))?.metadata,
+		).toEqual({ owner: "alice" });
+		expect(revision()).toBe(2);
 	});
 
 	it("rejects the WHOLE batch with per-item failures when any item is invalid — nothing applied", async () => {
@@ -111,6 +146,43 @@ describe("agentRpcHandler — updateNodes batch (v0.7 Phase 2)", () => {
 		expect(idx.get(childId(1))?.status).toBe("not-started");
 		expect(revision()).toBe(1);
 		expect(useEventLogStore.getState().rows.length).toBe(0);
+	});
+
+	it("rejects a configured custom status without mutating state or poisoning save validation", async () => {
+		useRoadmapStore.setState((state) => ({
+			schema: state.schema
+				? {
+						...state.schema,
+						statusConfig: [
+							...(state.schema.statusConfig ?? []),
+							{ id: "custom", label: "Custom" },
+						],
+					}
+				: null,
+		}));
+		const stateBefore = useRoadmapStore.getState();
+		const eventLogBefore = useEventLogStore.getState();
+
+		const result = await handleAgentRequest("updateNodes", {
+			updates: [
+				{ nodeId: childId(1), notes: "must not land" },
+				{ nodeId: childId(2), status: "custom" },
+			],
+		});
+
+		expect(result.ok).toBe(false);
+		expect(result).toMatchObject({
+			code: "batch_validation_failed",
+			data: {
+				failures: [{ index: 1, nodeId: childId(2), code: "invalid_status" }],
+			},
+		});
+		expect(useRoadmapStore.getState()).toBe(stateBefore);
+		expect(useEventLogStore.getState()).toBe(eventLogBefore);
+		expect(revision()).toBe(stateBefore.agentRevision);
+		expect(RoadmapSchemaSchema.safeParse(stateBefore.schema).success).toBe(
+			true,
+		);
 	});
 
 	it("returns stale_write with data.currentRevision when expectedRevision mismatches", async () => {

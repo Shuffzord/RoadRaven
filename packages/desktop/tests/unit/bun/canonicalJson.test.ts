@@ -175,4 +175,55 @@ describe("canonicalizeSchemaJson (v0.7 phase 3)", () => {
 		expect(out).not.toContain('"revision"');
 		expect(out).not.toContain('"children"');
 	});
+
+	it("#8 preserves own __proto__ keys at every reconstructed level", () => {
+		const input = JSON.parse(`{
+			"__proto__": { "scope": "root" },
+			"version": "1.0",
+			"title": "t",
+			"statusConfig": [
+				{ "__proto__": { "scope": "config" }, "id": "done", "label": "Done" }
+			],
+			"nodes": [
+				{
+					"__proto__": { "scope": "node" },
+					"id": "a",
+					"title": "Node",
+					"status": "not-started",
+					"metadata": {
+						"__proto__": { "scope": "metadata" },
+						"nested": [{ "__proto__": { "scope": "array-item" } }]
+					}
+				}
+			]
+		}`);
+
+		const parsed = parse(canonicalizeSchemaJson(input));
+		const config = (parsed.statusConfig as Record<string, unknown>[])[0];
+		const node = (parsed.nodes as Record<string, unknown>[])[0];
+		const metadata = node.metadata as Record<string, unknown>;
+		const nested = (metadata.nested as Record<string, unknown>[])[0];
+
+		expect(Object.getOwnPropertyDescriptor(parsed, "__proto__")?.value).toEqual(
+			{
+				scope: "root",
+			},
+		);
+		expect(Object.getOwnPropertyDescriptor(config, "__proto__")?.value).toEqual(
+			{
+				scope: "config",
+			},
+		);
+		expect(Object.getOwnPropertyDescriptor(node, "__proto__")?.value).toEqual({
+			scope: "node",
+		});
+		expect(
+			Object.getOwnPropertyDescriptor(metadata, "__proto__")?.value,
+		).toEqual({ scope: "metadata" });
+		expect(Object.getOwnPropertyDescriptor(nested, "__proto__")?.value).toEqual(
+			{
+				scope: "array-item",
+			},
+		);
+	});
 });

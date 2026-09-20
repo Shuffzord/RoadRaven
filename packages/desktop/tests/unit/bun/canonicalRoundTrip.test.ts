@@ -28,6 +28,8 @@ import {
 	__resetSaveFileModuleForTests as reset,
 	saveFileHandler,
 } from "../../../src/bun/saveFile";
+import { useRoadmapStore } from "../../../src/mainview/store/roadmapStore";
+import { resetStore } from "../../helpers/resetStore";
 
 const uuid = (seed: string): string =>
 	`${seed.padEnd(8, "0").slice(0, 8)}-bbbb-4ccc-8ddd-000000000000`;
@@ -59,6 +61,7 @@ describe("canonical round-trip (v0.7 phase 3)", () => {
 	let mainPath: string;
 
 	beforeEach(() => {
+		resetStore();
 		tempDir = mkdtempSync(join(tmpdir(), "rr-rt-test-"));
 		mainPath = join(tempDir, "main.roadmap.json");
 		reset();
@@ -67,6 +70,7 @@ describe("canonical round-trip (v0.7 phase 3)", () => {
 	});
 
 	afterEach(() => {
+		resetStore();
 		try {
 			rmSync(tempDir, { recursive: true, force: true });
 		} catch {
@@ -74,21 +78,31 @@ describe("canonical round-trip (v0.7 phase 3)", () => {
 		}
 	});
 
-	it("#1 second save is byte-identical to the first (stable canonical form)", async () => {
+	it("#1 no-edit load/save/reload through the real store is byte-stable", async () => {
 		const load1 = await loadFileHandler({ path: mainPath });
 		expect(load1.errors).toEqual([]);
 		expect(load1.data).not.toBeNull();
+		useRoadmapStore
+			.getState()
+			.loadSchema(load1.data as RoadmapSchema, mainPath);
+		expect(useRoadmapStore.getState().schema?.revision).toBe(2);
 
 		const save1 = await saveFileHandler({
-			schema: load1.data as RoadmapSchema,
+			schema: useRoadmapStore.getState().schema as RoadmapSchema,
 		});
 		expect(save1).toEqual({ ok: true });
 		const bytes1 = readFileSync(mainPath, "utf-8");
 
 		const load2 = await loadFileHandler({ path: mainPath });
 		expect(load2.errors).toEqual([]);
+		const tokenBeforeReload = useRoadmapStore.getState().agentRevision;
+		useRoadmapStore.getState().reloadSchema(load2.data as RoadmapSchema);
+		expect(useRoadmapStore.getState().schema?.revision).toBe(2);
+		expect(useRoadmapStore.getState().agentRevision).toBeGreaterThan(
+			tokenBeforeReload,
+		);
 		const save2 = await saveFileHandler({
-			schema: load2.data as RoadmapSchema,
+			schema: useRoadmapStore.getState().schema as RoadmapSchema,
 		});
 		expect(save2).toEqual({ ok: true });
 		const bytes2 = readFileSync(mainPath, "utf-8");
@@ -123,5 +137,23 @@ describe("canonical round-trip (v0.7 phase 3)", () => {
 
 		const litter = readdirSync(tempDir).filter((f) => f.endsWith(".bak.json"));
 		expect(litter).toEqual([]);
+	});
+
+	it("#4 a store mutation persists one revision and advances the agent token", async () => {
+		const loaded = await loadFileHandler({ path: mainPath });
+		useRoadmapStore
+			.getState()
+			.loadSchema(loaded.data as RoadmapSchema, mainPath);
+		const tokenBefore = useRoadmapStore.getState().agentRevision;
+
+		useRoadmapStore.getState().renameNode(uuid("a1"), "Renamed Root");
+
+		const state = useRoadmapStore.getState();
+		expect(state.schema?.revision).toBe(3);
+		expect(state.agentRevision).toBe(tokenBefore + 1);
+		expect(
+			await saveFileHandler({ schema: state.schema as RoadmapSchema }),
+		).toEqual({ ok: true });
+		expect(JSON.parse(readFileSync(mainPath, "utf-8")).revision).toBe(3);
 	});
 });

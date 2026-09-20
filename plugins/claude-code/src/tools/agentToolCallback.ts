@@ -78,7 +78,12 @@ export function agentToolCallback(
 			// Structured-error path: error came from the Bun handler with a known code
 			// from AGENT_ERROR_CODES — format per RESEARCH §9 and return.
 			if (typeof e.code === "string" && e.code.length > 0) {
-				return formatStructuredError({ ...e, code: e.code });
+				return formatStructuredError({
+					code: e.code,
+					message: e.message,
+					hint: e.hint,
+					data: e.data,
+				});
 			}
 
 			// Transport-failure path: no code → distinguish app-not-running from

@@ -78,7 +78,15 @@ export type RoadmapRPCType = {
 				params: { path: string };
 				response: {
 					data: RoadmapSchema | null;
+					filePath?: string;
 					errors?: Array<{ path: string; message: string; code: string }>;
+					sidecarUpdates?: Array<{
+						nodeId: string;
+						status: RoadmapNode["status"];
+						meta?: Record<string, unknown>;
+						source?: string;
+						lastEventAt: number;
+					}>;
 				};
 			};
 			saveFile: {
@@ -217,7 +225,7 @@ export type RoadmapRPCType = {
 				}>;
 			};
 			pushEventLog: { events: IntegrationEvent[] };
-			pushFileChanged: { path: string };
+			pushFileChanged: { path: string; mainPath?: string };
 			pushOwnershipMap: { entries: Array<[string, string]> };
 			pushEventApiState: {
 				status: "off" | "listening" | "error";

@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { serializeFileOperation } from "../fileOperationQueue";
 import { electroview } from "../rpc";
 import { hasUnsavedEdits, useRoadmapStore } from "../store/roadmapStore";
 
@@ -72,6 +73,12 @@ export function useAutosave(): void {
 }
 
 async function flushNow(): Promise<void> {
+	await serializeFileOperation(flushNowSerialized);
+}
+
+// Explicit autosave state-machine branches are covered by focused tests.
+// fallow-ignore-next-line complexity
+async function flushNowSerialized(): Promise<void> {
 	const state = useRoadmapStore.getState();
 	if (state.autosavePaused) return;
 	if (!state.schema) return;
@@ -135,6 +142,7 @@ async function flushNow(): Promise<void> {
 	try {
 		const result = await electroview.rpc.request.saveFile({
 			schema: state.schema,
+			filePath: state.filePath,
 		});
 		if ("ok" in result && result.ok) {
 			useRoadmapStore.setState({

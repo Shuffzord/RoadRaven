@@ -420,6 +420,17 @@ describe("dataKey discipline", () => {
 		expect(useRoadmapStore.getState().dataKey).toBe(before);
 	});
 
+	it("updateNodeStatus rejects non-core status values without mutation", () => {
+		const before = useRoadmapStore.getState();
+		useRoadmapStore.getState().updateNodeStatus(CHILD_A_ID, "custom");
+		const after = useRoadmapStore.getState();
+
+		expect(after.nodeIndex.get(CHILD_A_ID)?.status).toBe("not-started");
+		expect(after.statusTick).toBe(before.statusTick);
+		expect(after.agentRevision).toBe(before.agentRevision);
+		expect(after.schema).toBe(before.schema);
+	});
+
 	it("addChild ALWAYS bumps dataKey", () => {
 		const before = useRoadmapStore.getState().dataKey;
 		useRoadmapStore.getState().addChild(CHILD_A_ID);

@@ -1,6 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
+import { NodeStatusSchema } from "../../../packages/core/src/schema";
 import { readSentinel } from "./sentinel";
 import { agentToolCallback } from "./tools/agentToolCallback";
 import {
@@ -43,12 +44,7 @@ server.registerTool(
 			"Push a status update to a node. Requires the desktop app to be running and a roadmap loaded. Routes through the agent dispatcher so the change appears in the event-log drawer (Ctrl+Shift+L).",
 		inputSchema: z.object({
 			nodeId: z.string().min(1).describe("The node UUID from the roadmap"),
-			status: z
-				.string()
-				.min(1)
-				.describe(
-					"Status id — must match one in the loaded schema's statusConfig",
-				),
+			status: NodeStatusSchema.describe("Core node status"),
 			meta: z
 				.record(z.string(), z.unknown())
 				.optional()
@@ -126,7 +122,7 @@ server.registerTool(
 	{
 		title: "Get RoadRaven status configuration",
 		description:
-			"Return the loaded roadmap's statusConfig array (the valid status IDs and their labels/colors). Use this before createNode if you don't know what statuses are valid.",
+			"Return the loaded roadmap's statusConfig array (display labels/colors for statuses). Agent mutations accept only core node statuses.",
 		inputSchema: z.object({}),
 	},
 	agentToolCallback("getStatusConfig", wsClient),
@@ -161,7 +157,7 @@ server.registerTool(
 	{
 		title: "Create a new RoadRaven node",
 		description:
-			"Add a child node under parentId with the given title. Optional: id (UUID or slug — supply it when recovering/recreating a node so its identity stays stable and history/metadata continuity survives file churn; duplicate_id if it already exists), type, status (defaults to first statusConfig entry), notes (markdown), metadata. Returns the new node's id. Requires a loaded roadmap.",
+			"Add a child node under parentId with the given title. Optional: id (UUID or slug — supply it when recovering/recreating a node so its identity stays stable and history/metadata continuity survives file churn; duplicate_id if it already exists), type, core status (defaults to not-started), notes (markdown), metadata. Returns the new node's id. Requires a loaded roadmap.",
 		inputSchema: CreateNodeInputSchema,
 	},
 	agentToolCallback("createNode", wsClient),

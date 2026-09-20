@@ -329,6 +329,8 @@ describe("agentRequestHandler — input validation (WR-01)", () => {
 			ok: true,
 			data: { ok: true },
 		}));
+		// Malformed tools are asserted through the full gate.
+		// fallow-ignore-next-line code-duplication
 		await agentRequestHandler(
 			ws,
 			makeRequest("moveNode", {
@@ -373,6 +375,20 @@ describe("agentRequestHandler — input validation (WR-01)", () => {
 		).not.toHaveBeenCalled();
 		const env = JSON.parse(sent[0]);
 		expect(env.error.code).toBe("invalid_input");
+	});
+
+	it("rejects non-core statuses for createNode, updateNodeStatus, and updateNodes", () => {
+		for (const [method, params] of [
+			["createNode", { parentId: "parent", title: "Child", status: "custom" }],
+			["updateNodeStatus", { nodeId: "node", status: "custom" }],
+			["updateNodes", { updates: [{ nodeId: "node", status: "custom" }] }],
+		] as const) {
+			const result = validateToolInput(method, params);
+			expect(result.ok).toBe(false);
+			expect((result as { ok: false; code: string }).code).toBe(
+				"invalid_input",
+			);
+		}
 	});
 
 	// WR-01 forward-compat: tools not in the schema registry pass through

@@ -63,9 +63,11 @@ function orderObject(
 	known: readonly string[],
 	mapValue: (key: string, value: unknown) => unknown,
 ): Rec {
-	const out: Rec = {};
+	const out = Object.create(null) as Rec;
 	for (const key of known) {
-		if (key in obj) out[key] = mapValue(key, obj[key]);
+		if (Object.getOwnPropertyDescriptor(obj, key)) {
+			out[key] = mapValue(key, obj[key]);
+		}
 	}
 	const rest = Object.keys(obj)
 		.filter((key) => !known.includes(key))
@@ -78,7 +80,7 @@ function orderObject(
 function sortKeysDeep(value: unknown): unknown {
 	if (Array.isArray(value)) return value.map(sortKeysDeep);
 	if (!isRecord(value)) return value;
-	const out: Rec = {};
+	const out = Object.create(null) as Rec;
 	for (const key of Object.keys(value).sort()) {
 		out[key] = sortKeysDeep(value[key]);
 	}

@@ -10,15 +10,14 @@
 // unknown_tool.
 import { z } from "zod";
 import { LIFECYCLE_NODE_ID } from "../../../../../packages/core/src/plugin";
-import type {
-	RoadmapNode,
-	RoadmapSchema,
-} from "../../../../../packages/core/src/schema";
+import type { RoadmapNode } from "../../../../../packages/core/src/schema";
 import {
+	NodeStatusSchema,
 	StatusConfigSchema,
 	TypeConfigSchema,
 } from "../../../../../packages/core/src/schema";
 import type { IntegrationEvent } from "../../../../../shared/types";
+import { serializeFileOperation } from "../fileOperationQueue";
 
 export type AgentResult =
 	| { ok: true; data: unknown }
@@ -275,27 +274,45 @@ type BatchUpdateItem = {
  */
 function handleUpdateNodesBatch(
 	args: Record<string, unknown>,
-	schema: RoadmapSchema,
 	store: RoadmapStoreState,
 	roadmapStore: typeof import("../store/roadmapStore").useRoadmapStore,
 	eventLog: LogStoreState,
 ): AgentResult {
 	const updates = args.updates as BatchUpdateItem[];
-	// Only enforce status ids when the schema declares a statusConfig —
-	// config-less files accept any status, matching the single-item
-	// updateNodeStatus path.
-	const statusIds = new Set((schema.statusConfig ?? []).map((s) => s.id));
 	const failures: Array<{ index: number; nodeId: string; code: string }> = [];
+	const stagedMetadata = new Map<string, Record<string, unknown>>();
+	const resolved: Array<{
+		nodeId: string;
+		status?: string;
+		notes?: string;
+		metadata?: Record<string, unknown>;
+	}> = [];
 	updates.forEach((u, index) => {
-		if (!store.nodeIndex.get(u.nodeId)) {
+		const node = store.nodeIndex.get(u.nodeId);
+		if (!node) {
 			failures.push({ index, nodeId: u.nodeId, code: "node_not_found" });
-		} else if (
+			return;
+		}
+		if (
 			u.status !== undefined &&
-			statusIds.size > 0 &&
-			!statusIds.has(u.status)
+			!NodeStatusSchema.safeParse(u.status).success
 		) {
 			failures.push({ index, nodeId: u.nodeId, code: "invalid_status" });
 		}
+		const metadata =
+			u.metadata === undefined
+				? undefined
+				: mergeMetadataPatch(
+						stagedMetadata.get(u.nodeId) ?? node.metadata,
+						u.metadata,
+					);
+		if (metadata !== undefined) stagedMetadata.set(u.nodeId, metadata);
+		resolved.push({
+			nodeId: u.nodeId,
+			status: u.status,
+			notes: u.notes,
+			metadata,
+		});
 	});
 	if (failures.length > 0) {
 		return {
@@ -306,20 +323,6 @@ function handleUpdateNodesBatch(
 			data: { failures },
 		};
 	}
-	// Resolve metadata PATCH semantics (D-04: null deletes the key, unlisted
-	// keys preserved) against the current tree BEFORE the single batch apply.
-	const resolved = updates.map((u) => ({
-		nodeId: u.nodeId,
-		status: u.status,
-		notes: u.notes,
-		metadata:
-			u.metadata === undefined
-				? undefined
-				: mergeMetadataPatch(
-						store.nodeIndex.get(u.nodeId)?.metadata,
-						u.metadata,
-					),
-	}));
 	store.updateNodesBatch(resolved);
 	// Live pulse for every touched node in ONE setState — recordAgentLive/
 	// recordLiveSource bumps statusTick per call, which would break the
@@ -350,7 +353,7 @@ function handleUpdateNodesBatch(
 			updated: updates.length,
 			// Final revision AFTER the single batch bump — agents chain the next
 			// expectedRevision from here without a re-read.
-			revision: schema.revision ?? 1,
+			revision: roadmapStore.getState().agentRevision,
 		},
 	};
 }
@@ -423,7 +426,7 @@ export async function handleAgentRequest(
 		"updateNodes",
 	]);
 	if (WRITE_TOOLS.has(tool) && typeof args.expectedRevision === "number") {
-		const currentRevision = schema?.revision ?? 1;
+		const currentRevision = store.agentRevision;
 		if (args.expectedRevision !== currentRevision) {
 			return {
 				ok: false,
@@ -465,7 +468,7 @@ export async function handleAgentRequest(
 					isUntitled: store.isUntitled,
 					// v0.7 CONC-01: top-level echo so agents can pass it back as
 					// expectedRevision without digging into schema.
-					revision: safeSchema.revision ?? 1,
+					revision: store.agentRevision,
 				},
 			};
 		}
@@ -492,8 +495,7 @@ export async function handleAgentRequest(
 					parentId: ancestry.parentId,
 					ancestorIds: ancestry.ancestorIds,
 					// v0.7 CONC-01: see getRoadmap above.
-					// biome-ignore lint/style/noNonNullAssertion: schema null-checked above
-					revision: schema!.revision ?? 1,
+					revision: store.agentRevision,
 				},
 			};
 		}
@@ -535,6 +537,18 @@ export async function handleAgentRequest(
 		case "createNode": {
 			const parentId = args.parentId as string;
 			const title = args.title as string;
+			const parsedStatus =
+				args.status === undefined
+					? undefined
+					: NodeStatusSchema.safeParse(args.status);
+			if (parsedStatus && !parsedStatus.success) {
+				return {
+					ok: false,
+					error: `Invalid node status '${String(args.status)}'.`,
+					code: "invalid_status",
+					hint: `Use one of: ${NodeStatusSchema.options.join(", ")}.`,
+				};
+			}
 			// v0.7 Phase 4: optional caller-supplied id (format validated by the
 			// Bun gate). Keeps node identity stable across delete/recreate.
 			const requestedId = typeof args.id === "string" ? args.id : undefined;
@@ -546,7 +560,19 @@ export async function handleAgentRequest(
 					hint: "Pick a different id, or omit id to auto-generate one.",
 				};
 			}
-			const newId = store.addChild(parentId, title, requestedId);
+			const meta = (args.meta ?? {}) as Record<string, unknown>;
+			const source =
+				typeof meta.source === "string" ? meta.source : "claude-code";
+			const newId = store.addChild(parentId, title, requestedId, {
+				status: parsedStatus?.data,
+				type: typeof args.type === "string" ? args.type : undefined,
+				notes: typeof args.notes === "string" ? args.notes : undefined,
+				metadata:
+					args.metadata && typeof args.metadata === "object"
+						? (args.metadata as Record<string, unknown>)
+						: undefined,
+				liveEvent: { lastEventAt: Date.now(), source, meta },
+			});
 			if (!newId) {
 				return {
 					ok: false,
@@ -554,24 +580,12 @@ export async function handleAgentRequest(
 					code: "node_not_found",
 				};
 			}
-			if (typeof args.status === "string")
-				store.updateNodeStatus(newId, args.status);
-			if (typeof args.type === "string") store.updateNodeType(newId, args.type);
-			if (typeof args.notes === "string")
-				store.updateNodeNotes(newId, args.notes);
-			if (args.metadata && typeof args.metadata === "object") {
-				store.updateNodeMetadata(
-					newId,
-					args.metadata as Record<string, unknown>,
-				);
-			}
-			recordAgentLive(newId, args, store);
-			appendAgentDrawerEvent("createNode", newId, args, store, eventLog);
+			const post = useRoadmapStore.getState();
+			appendAgentDrawerEvent("createNode", newId, args, post, eventLog);
 			return { ok: true, data: { nodeId: newId } };
 		}
 
 		case "createRoadmap": {
-			store.newUntitledSchema();
 			// Optional title/configs override after creation.
 			//
 			// WR-03 (06-REVIEW): apply overrides via useRoadmapStore.setState
@@ -615,23 +629,32 @@ export async function handleAgentRequest(
 				}
 				updates.typeConfig = parsed.data;
 			}
-			if (Object.keys(updates).length > 0) {
-				useRoadmapStore.setState((s) => ({
-					schema: s.schema ? { ...s.schema, ...updates } : s.schema,
-				}));
-			}
-			const post = useRoadmapStore.getState();
-			appendAgentDrawerEvent(
-				"createRoadmap",
-				LIFECYCLE_NODE_ID,
-				args,
-				post,
-				eventLog,
-			);
-			return {
-				ok: true,
-				data: { schema: post.schema, isUntitled: true },
-			};
+			return serializeFileOperation<AgentResult>(async () => {
+				if (typeof window !== "undefined") {
+					const { electroview } = await import("../rpc");
+					if (electroview?.rpc) {
+						await electroview.rpc.request.newFile({});
+					}
+				}
+				useRoadmapStore.getState().newUntitledSchema();
+				if (Object.keys(updates).length > 0) {
+					useRoadmapStore.setState((s) => ({
+						schema: s.schema ? { ...s.schema, ...updates } : s.schema,
+					}));
+				}
+				const post = useRoadmapStore.getState();
+				appendAgentDrawerEvent(
+					"createRoadmap",
+					LIFECYCLE_NODE_ID,
+					args,
+					post,
+					eventLog,
+				);
+				return {
+					ok: true,
+					data: { schema: post.schema, isUntitled: true },
+				};
+			});
 		}
 
 		// -------- UPDATE TOOLS --------
@@ -652,6 +675,15 @@ export async function handleAgentRequest(
 
 		case "updateNodeStatus": {
 			const nodeId = args.nodeId as string;
+			const parsedStatus = NodeStatusSchema.safeParse(args.status);
+			if (!parsedStatus.success) {
+				return {
+					ok: false,
+					error: `Invalid node status '${String(args.status)}'.`,
+					code: "invalid_status",
+					hint: `Use one of: ${NodeStatusSchema.options.join(", ")}.`,
+				};
+			}
 			if (!store.nodeIndex.get(nodeId)) {
 				return {
 					ok: false,
@@ -659,7 +691,7 @@ export async function handleAgentRequest(
 					code: "node_not_found",
 				};
 			}
-			store.updateNodeStatus(nodeId, args.status as string);
+			store.updateNodeStatus(nodeId, parsedStatus.data);
 			recordAgentLive(nodeId, args, store);
 			appendAgentDrawerEvent("updateNodeStatus", nodeId, args, store, eventLog);
 			return { ok: true, data: { ok: true } };
@@ -734,14 +766,7 @@ export async function handleAgentRequest(
 		// v0.7 Phase 2 — atomic batch write (extracted to keep this dispatcher's
 		// complexity flat; see handleUpdateNodesBatch above the dispatcher).
 		case "updateNodes":
-			return handleUpdateNodesBatch(
-				args,
-				// biome-ignore lint/style/noNonNullAssertion: schema null-checked above
-				schema!,
-				store,
-				useRoadmapStore,
-				eventLog,
-			);
+			return handleUpdateNodesBatch(args, store, useRoadmapStore, eventLog);
 
 		case "moveNode": {
 			const nodeId = args.nodeId as string;
@@ -839,51 +864,61 @@ export async function handleAgentRequest(
 		}
 
 		case "saveFileAs": {
-			// Path-allowlist already passed (Plan 06-03 Bun gate). Delegate to existing Phase 3 RPC.
-			// Cycle agentRpcHandler → rpc → agentRpcHandler is broken at runtime by this
-			// dynamic import(); flagged by fallow's static graph only.
-			const { electroview } = await import("../rpc");
-			if (!electroview?.rpc) {
-				return {
-					ok: false,
-					error: "Renderer RPC not ready.",
-					code: "internal_error",
-				};
-			}
-			if (!schema) {
-				return {
-					ok: false,
-					error: "No schema to save.",
-					code: "no_file_loaded",
-				};
-			}
-			// Phase 3's saveFileAs uses the native save dialog; for agent calls the path
-			// is supplied. v1 wires through the existing dialog-based RPC; if a path-driven
-			// saveFileAs is added later (v1.1) the agent can use it directly.
-			const out = await electroview.rpc.request.saveFileAs({ schema });
-			appendAgentDrawerEvent(
-				"saveFileAs",
-				LIFECYCLE_NODE_ID,
-				args,
-				store,
-				eventLog,
-			);
-			if (!out.filePath) {
-				return {
-					ok: false,
-					error: "User cancelled save dialog.",
-					code: "save_error",
-					hint: "saveFileAs in v1 always opens a native dialog; the args.path argument is not used. The user picks the path interactively. Do not retry with the same path — instead surface the cancellation to the user, or call saveFile to write to the currently loaded path.",
-				};
-			}
-			return { ok: true, data: { filePath: out.filePath } };
+			return serializeFileOperation<AgentResult>(async () => {
+				// Cycle agentRpcHandler → rpc → agentRpcHandler is broken at runtime by
+				// this import; flagged by fallow's static graph only.
+				const { electroview } = await import("../rpc");
+				if (!electroview?.rpc) {
+					return {
+						ok: false,
+						error: "Renderer RPC not ready.",
+						code: "internal_error",
+					};
+				}
+				const current = useRoadmapStore.getState();
+				if (!current.schema) {
+					return {
+						ok: false,
+						error: "No schema to save.",
+						code: "no_file_loaded",
+					};
+				}
+				const out = await electroview.rpc.request.saveFileAs({
+					schema: current.schema,
+				});
+				appendAgentDrawerEvent(
+					"saveFileAs",
+					LIFECYCLE_NODE_ID,
+					args,
+					useRoadmapStore.getState(),
+					eventLog,
+				);
+				if (!out.filePath) {
+					return {
+						ok: false,
+						error: "User cancelled save dialog.",
+						code: "save_error",
+						hint: "saveFileAs in v1 always opens a native dialog; the args.path argument is not used. The user picks the path interactively. Do not retry with the same path — instead surface the cancellation to the user, or call saveFile to write to the currently loaded path.",
+					};
+				}
+				useRoadmapStore.setState({
+					filePath: out.filePath,
+					isUntitled: false,
+					saveState: "saved",
+					failureCount: 0,
+					lastSaveError: null,
+					lastSavedDataKey: current.dataKey,
+					lastSavedStatusTick: current.statusTick,
+				});
+				return { ok: true, data: { filePath: out.filePath } };
+			});
 		}
 
 		case "openFile": {
 			const path = args.path as string;
-			// D-12: auto-flush pending autosave before opening. If hasUnsavedEdits is true,
-			// synchronously trigger a save and wait for saveState === 'saved' (or a 5s timeout)
-			// before invoking electroview.rpc.request.loadFile.
+			// D-12: auto-flush pending autosave before opening. A save is complete
+			// only when the state machine says saved AND its persisted dirty markers
+			// still match; a concurrent edit must not satisfy this wait.
 			//
 			// WR-04 (06-REVIEW): catch the timeout here and return a structured
 			// `autosave_timeout` error rather than letting the throw bubble up
@@ -893,24 +928,30 @@ export async function handleAgentRequest(
 			// schema guard: openFile is SCHEMA_OPTIONAL (v0.7 Phase 4) — with no
 			// schema loaded there is nothing to flush, and waiting on an autosave
 			// that can never fire would time out.
-			if (schema && hasUnsavedEdits(useRoadmapStore.getState())) {
+			if (
+				useRoadmapStore.getState().schema &&
+				hasUnsavedEdits(useRoadmapStore.getState())
+			) {
 				useRoadmapStore.getState().triggerSave();
 				try {
 					await new Promise<void>((resolve, reject) => {
+						const isSavedAndClean = () => {
+							const current = useRoadmapStore.getState();
+							return current.saveState === "saved" && !hasUnsavedEdits(current);
+						};
 						const t = setTimeout(() => {
 							unsub();
 							reject(new Error("autosave timeout"));
 						}, 5000);
-						const unsub = useRoadmapStore.subscribe((s) => {
-							if (s.saveState === "saved") {
+						const unsub = useRoadmapStore.subscribe(() => {
+							if (isSavedAndClean()) {
 								clearTimeout(t);
 								unsub();
 								resolve();
 							}
 						});
-						// Edge case: triggerSave was synchronous (test stub) and saveState is already
-						// 'saved' by the time we subscribe. Check once after subscribing.
-						if (useRoadmapStore.getState().saveState === "saved") {
+						// Edge case: triggerSave was synchronous and completed before subscribe.
+						if (isSavedAndClean()) {
 							clearTimeout(t);
 							unsub();
 							resolve();
@@ -928,31 +969,97 @@ export async function handleAgentRequest(
 				}
 			}
 
-			const { electroview } = await import("../rpc");
-			if (!electroview?.rpc) {
-				return {
-					ok: false,
-					error: "Renderer RPC not ready.",
-					code: "internal_error",
+			// Autosave, load, conflict, and rollback gates are intentionally atomic.
+			// fallow-ignore-next-line complexity
+			return serializeFileOperation<AgentResult>(async () => {
+				const { electroview } = await import("../rpc");
+				if (!electroview?.rpc) {
+					return {
+						ok: false,
+						error: "Renderer RPC not ready.",
+						code: "internal_error",
+					};
+				}
+				// loadFile has Bun-side binding side effects (watchers, ownership map,
+				// cached save path/schema, and event sidecar). Capture the renderer token
+				// and dirty markers immediately before crossing that async boundary.
+				const beforeLoad = useRoadmapStore.getState();
+				const loadSnapshot = {
+					agentRevision: beforeLoad.agentRevision,
+					dataKey: beforeLoad.dataKey,
+					statusTick: beforeLoad.statusTick,
+					filePath: beforeLoad.filePath,
+					hadSchema: beforeLoad.schema !== null,
 				};
-			}
-			const out = await electroview.rpc.request.loadFile({ path });
-			appendAgentDrawerEvent(
-				"openFile",
-				LIFECYCLE_NODE_ID,
-				args,
-				store,
-				eventLog,
-			);
-			if (!out.data) {
+				const out = await electroview.rpc.request.loadFile({ path });
+				if (!out.data) {
+					return {
+						ok: false,
+						error: "Failed to read file.",
+						code: "file_read_error",
+						data: { errors: out.errors },
+					};
+				}
+				const afterLoad = useRoadmapStore.getState();
+				const openConflicted =
+					afterLoad.agentRevision !== loadSnapshot.agentRevision ||
+					afterLoad.dataKey !== loadSnapshot.dataKey ||
+					afterLoad.statusTick !== loadSnapshot.statusTick ||
+					(afterLoad.schema !== null && hasUnsavedEdits(afterLoad));
+				if (openConflicted) {
+					let backendBindingRestored = false;
+					try {
+						if (loadSnapshot.filePath) {
+							const restored = await electroview.rpc.request.loadFile({
+								path: loadSnapshot.filePath,
+							});
+							backendBindingRestored = restored.data !== null;
+						} else if (loadSnapshot.hadSchema || afterLoad.schema) {
+							// Existing RPC clears the cached path, ownership map, and sidecar.
+							await electroview.rpc.request.newFile({});
+							backendBindingRestored = true;
+						}
+					} catch {
+						// The renderer state remains untouched either way. Surface rollback
+						// status so the caller knows whether Bun still targets the new file.
+					}
+					if (!backendBindingRestored) {
+						try {
+							await electroview.rpc.request.newFile({});
+						} catch {
+							// Autosave supplies the renderer path explicitly, so even a failed
+							// unbind cannot redirect a write to the requested target.
+						}
+					}
+					return {
+						ok: false,
+						error: "Roadmap changed while the requested file was loading.",
+						code: "stale_write",
+						hint: "Wait for current edits to save, then retry openFile.",
+						data: {
+							currentRevision: afterLoad.agentRevision,
+							retry: true,
+							backendBindingRestored,
+						},
+					};
+				}
+				const loadedStore = useRoadmapStore.getState();
+				const loadedPath = out.filePath ?? path;
+				loadedStore.loadSchema(out.data, loadedPath);
+				loadedStore.applyEventBatch(out.sidecarUpdates ?? []);
+				const appliedStore = useRoadmapStore.getState();
+				appendAgentDrawerEvent(
+					"openFile",
+					LIFECYCLE_NODE_ID,
+					args,
+					appliedStore,
+					eventLog,
+				);
 				return {
-					ok: false,
-					error: "Failed to read file.",
-					code: "file_read_error",
-					data: { errors: out.errors },
+					ok: true,
+					data: { filePath: loadedPath, schema: appliedStore.schema },
 				};
-			}
-			return { ok: true, data: { filePath: path, schema: out.data } };
+			});
 		}
 
 		// -------- VIEWPORT TOOLS --------
