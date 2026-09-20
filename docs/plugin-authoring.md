@@ -20,7 +20,7 @@ Anything that can speak WebSocket and produce structured status events:
 - A daemon that polls an external API (Linear, GitHub, etc.) and reflects state
   into the roadmap
 - An LLM-driven agent that updates nodes as it makes progress on tasks
-   — the [`@roadraven/plugin-claude-code`](https://www.npmjs.com/package/@roadraven/plugin-claude-code)
+   — the [`@roadraven/mcp`](https://www.npmjs.com/package/@roadraven/mcp)
    MCP wrapper at [`plugins/claude-code/`](https://github.com/Shuffzord/RoadRaven/tree/master/plugins/claude-code)
    is the reference implementation
 
@@ -193,8 +193,8 @@ overlays).
 - **Contract:** `IntegrationEvent` in `@roadraven/core`
 - **Sentinel file:** `<userData>/event-api.json` (`<userData>` per OS — see above)
 - **Default port:** 47921 (with auto-fallback `+1..+9`)
-- **Reference producer:** `@roadraven/plugin-claude-code`
-   — run `bunx @roadraven/plugin-claude-code` or fork from
+- **Reference producer:** `@roadraven/mcp`
+   — run `bunx @roadraven/mcp` or fork from
    [`plugins/claude-code/`](https://github.com/Shuffzord/RoadRaven/tree/master/plugins/claude-code)
 - **App-side architecture:** see [Architecture Overview](architecture-overview.md)
    and [RPC and IPC](rpc-and-ipc.md) for how events flow from WS → Bun

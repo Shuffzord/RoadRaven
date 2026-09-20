@@ -14,6 +14,7 @@ A keyboard-first desktop editor for visual roadmap trees. Built on
 | What | Where |
 |------|-------|
 | Install (Windows + Linux) | [README — install](https://github.com/Shuffzord/RoadRaven#install) |
+| **Connect an MCP host** (Claude Code, OpenCode, etc.) | [MCP install guide](mcp-install.html) |
 | Architecture overview | [Architecture](architecture-overview.html) |
 | Local development | [Development guide](development-guide.html) |
 | RPC contract reference | [RPC and IPC](rpc-and-ipc.html) |
@@ -26,7 +27,7 @@ A keyboard-first desktop editor for visual roadmap trees. Built on
 - Keyboard-first roadmap editor (read + write)
 - JSON schema-driven node types and statuses
 - Live status updates from external producers via WebSocket Event API
-- Reference Event Producer: `@roadraven/plugin-claude-code`
+- Reference Event Producer: `@roadraven/mcp`
    — npm-installable MCP wrapper for Claude Code
 
 ## What's NOT in v1 (deferred to v1.1+)
@@ -44,5 +45,5 @@ for the full v1 vs. v1.1 split.
 
 - [`@roadraven/core`](https://www.npmjs.com/package/@roadraven/core)
    — Zod schemas + types (zero desktop deps)
-- [`@roadraven/plugin-claude-code`](https://www.npmjs.com/package/@roadraven/plugin-claude-code)
+- [`@roadraven/mcp`](https://www.npmjs.com/package/@roadraven/mcp)
    — MCP wrapper that lets Claude Code push live updates to a running app

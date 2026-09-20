@@ -46,7 +46,7 @@ to whatever is actually running, and the tree keeps itself current.
 
 - **🌳 Plan-as-file** — your roadmap is plain `roadmap.json`, living in your repo. Diffable, reviewable, yours. No database, no proprietary format.
 - **📡 Live status from anything** — any process that can send a message updates a node. A GitHub Action finishes → the node turns green. Claude Code completes a task → the node updates. You don't touch a thing.
-- **🤖 Built for agent supervision** — watch Claude Code work through your plan in real time via the [MCP integration](#use-with-claude-code-mcp).
+- **🤖 Built for agent supervision** — watch Claude Code work through your plan in real time via the [MCP integration](#connect-an-mcp-host).
 - **🔒 Local-first** — binds to `127.0.0.1`, works air-gapped. Nothing leaves your machine. No accounts, no cloud, no subscription.
 - **⌨️ Keyboard-first** — navigate and edit the entire tree without reaching for the mouse.
 - **🎚️ Zero-opinion schema** — you define the statuses, types, and hierarchy. The app stays dumb; your tools do the talking.
@@ -112,35 +112,60 @@ Download the latest release from
 bun add @roadraven/core          # available once the first release is published
 ```
 
-`@roadraven/plugin-claude-code` — the MCP wrapper that lets Claude Code (and any MCP
+`@roadraven/mcp` — the MCP wrapper that lets Claude Code (and any MCP
 host) read, edit, and push live status updates to your roadmap. Until it's published,
-build it locally — see [Use with Claude Code (MCP)](#use-with-claude-code-mcp) below.
+build it locally — see [Connect an MCP host](#connect-an-mcp-host) below.
 
 See the [plugin authoring guide](docs/plugin-authoring.md) for the full Event API contract.
 
 ---
 
-## Use with Claude Code (MCP)
+## Connect an MCP host
 
 **Why.** RoadRaven's headline use case is letting an AI agent author and maintain
-your roadmap. `@roadraven/plugin-claude-code` is an MCP server exposing **19 tools**
-so Claude Code can create, edit, move, and delete nodes — and push live status as it
-works. Your plan becomes something the agent keeps current for you.
+your roadmap. `@roadraven/mcp` is an MCP server exposing **19 tools** so any MCP
+host — Claude Code, OpenCode, and others — can create, edit, move, and delete
+nodes, and push live status as it works. Your plan becomes something the agent
+keeps current for you. Three ways to connect it, easiest first.
 
-**How (easiest — the built-in Setup Wizard).** RoadRaven ships an MCP server
+**Path 1 (easiest — the built-in Setup Wizard).** RoadRaven ships an MCP server
 bundle inside the app. On first launch a **Setup Wizard** opens (re-openable any
-time from the ⚙ button in the top bar). Step through to **Install integration**
-and it will:
+time from the ⚙ button in the top bar). It detects installed hosts — Claude Code
+and OpenCode — and registers both with one click:
 
-1. copy the bundled MCP server into your user data directory, and
-2. register it as the `roadraven` server in your Claude Code config
-   (`~/.claude.json`) — without touching any other server you have configured.
+1. copies the bundled MCP server into your user data directory, and
+2. registers it in each detected host's config (`~/.claude.json` for Claude
+   Code, `~/.config/opencode/opencode.json` for OpenCode) — without touching
+   any other server you have configured.
 
-The wizard shows the status of each step as it runs. Afterwards, restart Claude
-Code with RoadRaven running and the tools are live. No clone, no manual JSON edit.
+Zero commands, works fully offline. Restart your MCP host with RoadRaven
+running and the tools are live.
 
-**How (manual — build from source).** Prefer to wire it up yourself? Build the
-MCP server locally:
+**Path 2 (Claude Code plugin).** Install straight from this repo's
+marketplace, from inside Claude Code:
+
+```
+/plugin marketplace add Shuffzord/RoadRaven
+/plugin install roadraven@roadraven
+```
+
+**Path 3 (one-liner — any other host).** Requires **Node.js >= 22** (the npx
+paths below run the published npm package).
+
+```bash
+claude mcp add roadraven -- npx -y @roadraven/mcp
+```
+
+```bash
+opencode mcp add roadraven   # interactive — prompts for the command to run
+```
+
+For Cursor, Codex, Copilot, Gemini, or another MCP host, see the
+[MCP install guide](docs/mcp-install.md) for a generic stdio config block and
+the raw JSON shapes for the hosts above.
+
+**Fallback (build from source).** Prefer to wire it up yourself, or building
+before a release is published:
 
 ```bash
 git clone https://github.com/Shuffzord/RoadRaven.git
@@ -166,12 +191,6 @@ at the built file (use an absolute path). For Claude Code, add it to your MCP co
 > The desktop app **must be running** — the plugin talks to it over the local Event
 > API (`127.0.0.1`). If the app is closed, every tool returns `app_not_running`.
 
-> 📦 **Once the first release is published to npm**, this simplifies to a one-liner —
-> no clone, no build:
-> ```json
-> { "mcpServers": { "roadraven": { "command": "bunx", "args": ["-y", "@roadraven/plugin-claude-code"] } } }
-> ```
-
 Full tool catalog, configuration, kill-switch, and security model:
 [`plugins/claude-code/README.md`](plugins/claude-code/README.md).
 
@@ -188,7 +207,7 @@ Full tool catalog, configuration, kill-switch, and security model:
 | Side-panel CodeMirror notes + metadata | available | — |
 | Atomic autosave + `$ref` write-back | available | — |
 | Event API (WebSocket — external producers push status) | available | — |
-| `@roadraven/plugin-claude-code` (Claude Code MCP wrapper) | available | — |
+| `@roadraven/mcp` (Claude Code MCP wrapper) | available | — |
 | First-run Setup Wizard + one-click MCP install | available | — |
 | Windows installer | available | — |
 | Linux installer (`.tar.gz`) | available | — |

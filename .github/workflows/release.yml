@@ -153,9 +153,7 @@ jobs:
         working-directory: packages/core
 
   publish-npm-mcp:
-    name: Publish @roadraven/plugin-claude-code to npm
-    # Disabled for v0.5.0 alpha — npm trusted publishers not configured yet.
-    if: false
+    name: Publish @roadraven/mcp to npm
     needs: [build-windows, build-linux]
     runs-on: ubuntu-latest
     steps:
@@ -169,10 +167,10 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
       - name: Install workspace dependencies
         run: bun install
-      - name: Build @roadraven/plugin-claude-code (bun build → dist/)
+      - name: Build @roadraven/mcp (bun build → dist/)
         run: bun run --cwd plugins/claude-code build
       # Same CLAUDE.md exception as publish-npm-core above.
-      - name: Publish @roadraven/plugin-claude-code to npm with provenance (OIDC)
+      - name: Publish @roadraven/mcp to npm with provenance (OIDC)
         run: npm publish --access public --provenance
         working-directory: plugins/claude-code
 
