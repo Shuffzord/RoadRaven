@@ -11,13 +11,15 @@ export default {
 		version: "0.8.0",
 	},
 	build: {
-		// Electrobun 2.x defaults mainProcess to "cottontail" (its own runtime).
-		// RoadRaven's main process is Bun-specific — Bun.file, bun build/bun test
-		// in the package scripts, and the process.execPath walk-up in
-		// mcpInstaller.ts — so this must be explicit or the app targets the wrong
-		// runtime. Verified via `bunx electrobun config --env=dev`, which reported
-		// "mainProcess":"cottontail" before this line existed.
-		mainProcess: "bun",
+		// Cottontail is Electrobun 2.x's default main-process runtime and ships a
+		// Bun compatibility layer (runtime_modules/bun: file-io, http-server-runtime).
+		// It covers what this main process needs — Bun.serve in eventServer.ts,
+		// Bun.file, Bun.write, import.meta.dir — so we stay on the framework
+		// default rather than pinning "bun" and carrying the divergence.
+		// Verified by launching the app and exercising the Event API, including
+		// the EADDRINUSE port-fallback path that depends on Bun.serve throwing
+		// synchronously (I-04 in eventServer.ts).
+		mainProcess: "cottontail",
 		copy: {
 			"dist/index.html": "views/mainview/index.html",
 			"dist/assets": "views/mainview/assets",
