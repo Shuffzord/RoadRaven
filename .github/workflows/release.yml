@@ -32,6 +32,16 @@ jobs:
         with:
           path: ~/.bun/install/cache
           key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lock') }}
+      # `bun install` runs the workspace's postinstall, which calls
+      # `bunx electrobun prepare` to materialize the gitignored
+      # packages/desktop/.hutch/devkit/ (Electrobun 2.x's API source, not
+      # published to node_modules). Cache Hutch's own toolchain store so
+      # that doesn't re-download Hutch/Cottontail/CEF/Bun on every run.
+      - name: Cache Hutch toolchain
+        uses: actions/cache@v4
+        with:
+          path: ~/.hutch
+          key: ${{ runner.os }}-hutch-${{ hashFiles('**/bun.lock') }}
       - name: Install workspace dependencies
         run: bun install
       - name: Build webview bundle (vite build → packages/desktop/dist)
@@ -79,6 +89,14 @@ jobs:
         with:
           path: ~/.bun/install/cache
           key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lock') }}
+      # See build-windows: `bun install`'s postinstall runs `bunx electrobun
+      # prepare`, which needs this cached to avoid re-downloading the Hutch
+      # toolchain (Hutch/Cottontail/CEF/Bun) on every run.
+      - name: Cache Hutch toolchain
+        uses: actions/cache@v4
+        with:
+          path: ~/.hutch
+          key: ${{ runner.os }}-hutch-${{ hashFiles('**/bun.lock') }}
       - name: Install workspace dependencies
         run: bun install
       - name: Build webview bundle (vite build → packages/desktop/dist)

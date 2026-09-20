@@ -26,6 +26,15 @@ jobs:
         with:
           path: ~/.bun/install/cache
           key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lock') }}
+      # `bun install` runs the workspace's postinstall, which calls
+      # `bunx electrobun prepare` to materialize the gitignored
+      # packages/desktop/.hutch/devkit/ (Electrobun 2.x's API source, not
+      # published to node_modules). Cache Hutch's own toolchain store so
+      # that doesn't re-download Hutch/Cottontail/CEF/Bun on every run.
+      - uses: actions/cache@v4
+        with:
+          path: ~/.hutch
+          key: ${{ runner.os }}-hutch-${{ hashFiles('**/bun.lock') }}
       - run: bun install
       - name: Verify @roadraven/core dependency allowlist (D-23, T-05-04)
         run: bun run scripts/check-core-deps.ts
@@ -39,6 +48,10 @@ jobs:
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
+      - uses: actions/cache@v4
+        with:
+          path: ~/.hutch
+          key: ${{ runner.os }}-hutch-${{ hashFiles('**/bun.lock') }}
       - run: bun install
       - run: bunx tsc --noEmit
         working-directory: packages/desktop
@@ -51,6 +64,10 @@ jobs:
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
+      - uses: actions/cache@v4
+        with:
+          path: ~/.hutch
+          key: ${{ runner.os }}-hutch-${{ hashFiles('**/bun.lock') }}
       - run: bun install
       - run: bunx vitest run
         working-directory: packages/desktop

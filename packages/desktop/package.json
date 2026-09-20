@@ -3,6 +3,7 @@
 	"version": "0.8.0",
 	"private": true,
 	"scripts": {
+		"prepare:electrobun": "bunx electrobun prepare",
 		"start": "vite build && electrobun dev",
 		"dev": "electrobun dev --watch",
 		"dev:hmr": "concurrently \"bun run hmr\" \"bun run dev:bun\"",
