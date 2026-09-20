@@ -10,6 +10,7 @@ export default defineConfig({
 			"tests/unit/**/*.test.ts",
 			"tests/unit/**/*.test.tsx",
 			"tests/integration/**/*.test.ts",
+			"tests/architecture/**/*.test.ts",
 		],
 		// Exclude files that use Bun-native APIs (Bun.serve, Bun.WebSocket).
 		// These run via `bun test` in the test:bun script — see package.json.

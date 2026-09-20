@@ -1,5 +1,4 @@
 import { resolve as pathResolve } from "node:path";
-import type { BrowserWindow, createRPC } from "electrobun/bun";
 import type {
 	RoadmapNode,
 	RoadmapSchema,
@@ -15,6 +14,7 @@ import {
 import { replayEventLog } from "../eventsLog";
 import { markSelfWrite, stopAllWatchers, watchFile } from "../fileWatcher";
 import { bunLogger } from "../logging";
+import type { createMainWindow, defineMainRpc } from "../platform/window";
 import {
 	buildOwnershipMap,
 	clearOwnershipMap,
@@ -39,28 +39,20 @@ type SidecarUpdate = NonNullable<LoadFileResponse["sidecarUpdates"]>[number];
 
 // The type BrowserView.defineRPC<RoadmapRPCType>({...}) (Side="bun") returns
 // in the composition root (index.ts), derived here independently of that
-// `rpc` value — index.ts's `mainWindow` binding is typed against this same
-// alias, and the RPC handler closures it passes into `rpc`'s own definition
-// capture `mainWindow` by reference, so `mainWindow`'s type cannot depend on
-// `rpc`'s type without becoming circular.
-type LocalRpcSchema = {
-	requests: RoadmapRPCType["bun"]["requests"];
-	messages: RoadmapRPCType["webview"]["messages"];
-};
-type RemoteRpcSchema = {
-	requests: RoadmapRPCType["webview"]["requests"];
-	messages: RoadmapRPCType["bun"]["messages"];
-};
-export type AppRpc = ReturnType<
-	typeof createRPC<LocalRpcSchema, RemoteRpcSchema>
->;
+// `rpc` value via the platform seam's defineMainRpc — index.ts's `mainWindow`
+// binding is typed against this same alias, and the RPC handler closures it
+// passes into `rpc`'s own definition capture `mainWindow` by reference, so
+// `mainWindow`'s type cannot depend on `rpc`'s type without becoming
+// circular.
+export type AppRpc = ReturnType<typeof defineMainRpc<RoadmapRPCType>>;
+export type MainWindow = ReturnType<typeof createMainWindow<AppRpc>>;
 
 type RpcHandler<K extends keyof BunRequests> = (
 	params: BunRequests[K]["params"],
 ) => BunRequests[K]["response"] | Promise<BunRequests[K]["response"]>;
 
 export interface FileRpcContext {
-	getMainWindow: () => BrowserWindow<AppRpc>;
+	getMainWindow: () => MainWindow;
 	getEventServerHandle: () => EventServerHandle | null;
 }
 
@@ -245,7 +237,7 @@ async function resolveNodeRefs(
 }
 
 // Push ownership map to webview for optimistic cross-boundary detection
-function pushOwnershipMapSafely(mainWindow: BrowserWindow<AppRpc>): void {
+function pushOwnershipMapSafely(mainWindow: MainWindow): void {
 	try {
 		mainWindow.webview.rpc?.send.pushOwnershipMap({
 			entries: [...getOwnership().entries()],
@@ -266,7 +258,7 @@ async function resolveRefs(
 	schemaData: RoadmapSchema,
 	filePath: string,
 	resolvedMain: string,
-	mainWindow: BrowserWindow<AppRpc>,
+	mainWindow: MainWindow,
 ): Promise<void> {
 	const fileChangeCallback = (changedPath: string) => {
 		if (changedPath.endsWith(".bak.json")) return;
@@ -333,7 +325,7 @@ function mapOverlayToSidecarUpdates(
 async function hydrateSidecarStatuses(
 	filePath: string,
 	eventServerHandle: EventServerHandle | null,
-	mainWindow: BrowserWindow<AppRpc>,
+	mainWindow: MainWindow,
 ): Promise<SidecarUpdate[]> {
 	const { NodeStatusSchema } = await import(
 		"../../../../../packages/core/src/schema"

@@ -40,5 +40,29 @@
 			"!.claude/worktrees",
 			"!**/*.bak.json"
 		]
-	}
+	},
+	"overrides": [
+		{
+			"includes": [
+				"packages/**",
+				"!packages/desktop/src/bun/platform/**",
+				"!packages/desktop/src/mainview/rpc.ts"
+			],
+			"linter": {
+				"rules": {
+					"style": {
+						"noRestrictedImports": {
+							"level": "error",
+							"options": {
+								"paths": {
+									"electrobun/bun": "Import Electrobun's bun API only inside packages/desktop/src/bun/platform/** (the platform seam).",
+									"electrobun/view": "Import Electrobun's view API only inside packages/desktop/src/mainview/rpc.ts (the platform seam)."
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	]
 }

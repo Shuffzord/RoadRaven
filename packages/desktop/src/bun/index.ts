@@ -1,10 +1,4 @@
 import { getLogger } from "@logtape/logtape";
-import Electrobun, {
-	BrowserView,
-	BrowserWindow,
-	Updater,
-	Utils,
-} from "electrobun/bun";
 import type { RoadmapRPCType } from "../../../../shared/types.ts";
 // atomicWrite + splitSchemaByOwnership are consumed via saveFile.ts which owns
 // the saveFile/flushPending logic. Re-exported below so external callers (and
@@ -24,9 +18,17 @@ import {
 	startEventServer,
 } from "./eventServer";
 import { serverLogger } from "./logging";
+import { onBeforeQuit } from "./platform/lifecycle";
+import { showNotification } from "./platform/notifications";
+import { getReleaseChannel } from "./platform/updater";
+import { createMainWindow, defineMainRpc } from "./platform/window";
 import { createDialogRpcHandlers } from "./rpc/dialogRpc";
 import { createEventApiRpcHandlers } from "./rpc/eventApiRpc";
-import { type AppRpc, createFileRpcHandlers } from "./rpc/fileRpc";
+import {
+	type AppRpc,
+	createFileRpcHandlers,
+	type MainWindow,
+} from "./rpc/fileRpc";
 import { createSetupRpcHandlers } from "./rpc/setupRpc";
 import { deleteSentinel, writeSentinel } from "./sentinel";
 import { loadSettings, saveSettings } from "./settings";
@@ -73,7 +75,7 @@ let eventServerHandle: EventServerHandle | null = null;
 // event server binds and the RPC handlers register before the window is
 // shown, but events/RPC calls require a producer/renderer that arrives
 // later).
-let mainWindow: BrowserWindow<AppRpc>;
+let mainWindow: MainWindow;
 
 // Note: mainWindow is not yet created here. The onFlush/onEvent callbacks use
 // mainWindow which is defined later in this file. This works because the callbacks
@@ -154,12 +156,7 @@ const DEV_SERVER_URL = `http://localhost:${DEV_SERVER_PORT}`;
  * (dev checkout). We catch that and default to "dev" channel.
  */
 async function getMainViewUrl(): Promise<string> {
-	let channel = "dev";
-	try {
-		channel = await Updater.localInfo.channel();
-	} catch {
-		// version.json not found -- treating as dev channel
-	}
+	const channel = await getReleaseChannel();
 
 	if (channel === "dev") {
 		try {
@@ -190,7 +187,7 @@ async function getMainViewUrl(): Promise<string> {
 // before-quit emit) cannot tear an atomicWrite mid-rename — the SIGINT
 // handler's process.exit(0) waits for the same promise the before-quit
 // handler is awaiting.
-Electrobun.events.on("before-quit", async () => {
+onBeforeQuit(async () => {
 	if (eventServerHandle) {
 		await eventServerHandle.stop();
 	}
@@ -226,7 +223,7 @@ process.on("exit", (code) => {
 });
 
 // Define RPC handlers before creating the window (Electrobun pattern)
-const rpc = BrowserView.defineRPC<RoadmapRPCType>({
+const rpc = defineMainRpc<RoadmapRPCType>({
 	maxRequestTime: 120_000, // 2 min — native file dialogs block until user picks a file
 	handlers: {
 		requests: {
@@ -272,7 +269,7 @@ const rpc = BrowserView.defineRPC<RoadmapRPCType>({
 // Create the main application window
 const url = await getMainViewUrl();
 
-mainWindow = new BrowserWindow({
+mainWindow = createMainWindow<AppRpc>({
 	title: "RoadRaven",
 	url,
 	rpc,
@@ -286,7 +283,7 @@ mainWindow = new BrowserWindow({
 
 export { mainWindow };
 
-Utils.showNotification({
+showNotification({
 	title: "RoadRaven",
 	body: "RoadRaven is running.",
 });
