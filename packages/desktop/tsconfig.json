@@ -1,11 +1,5 @@
 {
-	"extends": "./.hutch/devkit/tsconfig.json",
 	"compilerOptions": {
-		// The Hutch devkit tsconfig we extend declares `baseUrl`, which TypeScript 6
-		// deprecates and errors on (TS5101). We are on TS 6, so silence it here
-		// rather than forking the devkit's ~45 path mappings, which would drift
-		// every time the devkit updates. Revisit when upstream drops baseUrl.
-		"ignoreDeprecations": "6.0",
 		"target": "ES2020",
 		"useDefineForClassFields": true,
 		// ES2022 rather than ES2020: the Hutch devkit's own sources typecheck as
@@ -24,7 +18,16 @@
 		"strict": true,
 		"noUnusedLocals": true,
 		"noUnusedParameters": true,
-		"noFallthroughCasesInSwitch": true
+		"noFallthroughCasesInSwitch": true,
+		// Electrobun 2.x resolves its APIs from the Hutch-projected devkit. Only
+		// these two specifiers are ever imported — enforced by biome
+		// noRestrictedImports and tests/architecture/no-direct-electrobun-imports —
+		// so map them directly instead of extending the devkit tsconfig, whose
+		// `baseUrl` TypeScript 6 errors on (TS5101).
+		"paths": {
+			"electrobun/bun": ["./.hutch/devkit/api/sdks/main/index.ts"],
+			"electrobun/view": ["./.hutch/devkit/api/browser/index.ts"]
+		}
 	},
 	"include": ["src", "../../shared"],
 	"exclude": ["node_modules", "dist", "build"]
