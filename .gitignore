@@ -82,3 +82,9 @@ temp/
 
 # Cottontail build scratch (Electrobun 2.x) - per-PID temp, regenerated each build
 .cottontail-tmp/
+
+# Lockfiles from package managers other than bun (see scripts/verify-package-manager.js) -
+# bun.lock is the only lockfile this repo tracks.
+package-lock.json
+pnpm-lock.yaml
+yarn.lock

@@ -28,6 +28,15 @@ toolchain (Hutch/Cottontail) into a gitignored `.hutch/devkit` — this needs
 network access on a cold cache (or an empty `~/.hutch` cache dir) to download
 the devkit, native toolchain, and bundled CEF runtime.
 
+A root `preinstall` (`scripts/verify-package-manager.js`) refuses to run
+under anything but bun — `npm install` / `pnpm install` / `yarn install`
+exit immediately with a message pointing you back to `bun install`. This
+isn't a style preference: a stray `pnpm install` once resolved
+`@biomejs/biome` to a different version than the one `bun.lock` pins and
+broke the pre-commit lint gate. `package-lock.json`, `pnpm-lock.yaml`, and
+`yarn.lock` are gitignored, so a wrong-manager lockfile can't be committed
+even if one gets written before the guard fires.
+
 ### Windows build prerequisite
 
 Building RoadRaven on Windows requires **Developer Mode** (Settings → System
@@ -135,7 +144,8 @@ A few rules that catch new contributors off-guard:
   [`docs/architecture-overview.md`](./docs/architecture-overview.md).
 - **`bun` and `bunx`, not `npm`/`npx`/`yarn`/`pnpm`.** Single explicit
   exception: the release workflow uses `npm publish` (the npm CLI is the
-  only registry client with first-class provenance support).
+  only registry client with first-class provenance support). A `preinstall`
+  guard enforces this for installs — see [Local setup](#local-setup).
 - **`@roadraven/core` zero-desktop-deps invariant.** PRs that add anything
   beyond `zod` to `packages/core/package.json` `dependencies` will fail the
   `Verify @roadraven/core dependency allowlist` CI step. Edit the

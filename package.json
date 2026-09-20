@@ -2,11 +2,13 @@
   "name": "roadraven-workspace",
   "private": true,
   "license": "PolyForm-Noncommercial-1.0.0",
+  "packageManager": "bun@1.3.4",
   "workspaces": [
     "packages/*",
     "plugins/*"
   ],
   "scripts": {
+    "preinstall": "node scripts/verify-package-manager.js",
     "dev:hmr": "bun run --cwd packages/desktop dev:hmr",
     "build:canary": "bun run --cwd packages/desktop build:canary",
     "start": "bun run --cwd packages/desktop start",

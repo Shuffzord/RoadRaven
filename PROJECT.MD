@@ -19,6 +19,10 @@ bun install           # Install dependencies — a root postinstall projects the
                       # network on a cold cache. Windows requires Developer
                       # Mode for this step (Hutch projects the devkit via
                       # symlinks) — see CONTRIBUTING.md.
+                      # A root preinstall guard (scripts/verify-package-manager.js)
+                      # rejects npm/pnpm/yarn install with an explanatory error —
+                      # same version-drift problem as the vitest note below,
+                      # see CONTRIBUTING.md.
 
 bun run start         # One-shot: vite build → electrobun dev (no file watching)
 bun run dev           # Dev with file watching (auto-restarts bun process on changes)
