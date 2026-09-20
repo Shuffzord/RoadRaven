@@ -1,8 +1,17 @@
+import { fileURLToPath } from "node:url";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vitest/config";
+import { electrobunViteAliases } from "./.hutch/devkit/api/config/electrobun-vite";
+
+// Vitest reads this file, not vite.config.ts, so the devkit aliases must be
+// declared here too. Without them any test that transitively imports
+// electrobun/bun or electrobun/view loads the published package's stub, which
+// throws "Electrobun 2.x APIs come from the Hutch devkit, not node_modules".
+const devkitRoot = fileURLToPath(new URL("./.hutch/devkit", import.meta.url));
 
 export default defineConfig({
 	plugins: [react()],
+	resolve: { alias: electrobunViteAliases(devkitRoot) },
 	test: {
 		globals: true,
 		environment: "node",

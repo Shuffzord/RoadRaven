@@ -76,3 +76,6 @@ brag-output*/
 
 # scratch/temp outputs
 temp/
+
+# Hutch/Cottontail vendored toolchain (Electrobun 2.x) - native binaries, not source
+.hutch/

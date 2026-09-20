@@ -25,7 +25,7 @@
 		"lineEnding": "lf"
 	},
 	"files": {
-		"experimentalScannerIgnores": [".claude/worktrees"],
+		"experimentalScannerIgnores": [".claude/worktrees", "**/.hutch"],
 		"includes": [
 			"packages/**",
 			"shared/**",
@@ -38,6 +38,7 @@
 			"!**/playwright-report",
 			"!**/test-results",
 			"!.claude/worktrees",
+			"!**/.hutch",
 			"!**/*.bak.json"
 		]
 	},

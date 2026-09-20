@@ -11,6 +11,13 @@ export default {
 		version: "0.8.0",
 	},
 	build: {
+		// Electrobun 2.x defaults mainProcess to "cottontail" (its own runtime).
+		// RoadRaven's main process is Bun-specific — Bun.file, bun build/bun test
+		// in the package scripts, and the process.execPath walk-up in
+		// mcpInstaller.ts — so this must be explicit or the app targets the wrong
+		// runtime. Verified via `bunx electrobun config --env=dev`, which reported
+		// "mainProcess":"cottontail" before this line existed.
+		mainProcess: "bun",
 		copy: {
 			"dist/index.html": "views/mainview/index.html",
 			"dist/assets": "views/mainview/assets",
