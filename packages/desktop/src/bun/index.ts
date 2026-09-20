@@ -77,11 +77,16 @@ let eventServerHandle: EventServerHandle | null = null;
 // later).
 let mainWindow: MainWindow;
 
-// Note: mainWindow is not yet created here. The onFlush/onEvent callbacks use
-// mainWindow which is defined later in this file. This works because the callbacks
-// are closures — they capture the `mainWindow` binding which will be assigned
-// before any WebSocket events arrive (server binds before window is shown but
-// events require a WS producer to connect after the app is visible).
+// Note: mainWindow is not yet created here. The callbacks below close over the
+// binding and are assigned it later in this file.
+//
+// They must therefore guard it. The event server binds BEFORE the window
+// exists, and a producer can connect in that gap — an MCP server already
+// running from a previous session reconnects on a loop and will hit the port
+// the instant it opens. This previously crashed the main process with
+// "undefined is not an object (evaluating 'mainWindow.webview')". These pushes
+// are fire-and-forget renderer notifications, so dropping them before the
+// window exists is correct: there is nothing to render into yet.
 //
 // I-09 fix (Plan 04-03 Task 6): onError and onConnectionChange now send active
 // pushEventApi* RPC messages. State vars below track current server state so
@@ -99,13 +104,13 @@ const eventServerResult = await startEventServer({
 	// Claude Code plugin) cannot drift silently.
 	appVersion: APP_VERSION,
 	onFlush: (updates) => {
-		mainWindow.webview.rpc?.send.pushStatusUpdate({ updates });
+		mainWindow?.webview.rpc?.send.pushStatusUpdate({ updates });
 	},
 	onEvent: (event) => {
-		mainWindow.webview.rpc?.send.pushEventLog({ events: [event] });
+		mainWindow?.webview.rpc?.send.pushEventLog({ events: [event] });
 	},
 	onError: (err) => {
-		mainWindow.webview.rpc?.send.pushEventApiError({
+		mainWindow?.webview.rpc?.send.pushEventApiError({
 			type: err.type,
 			source: err.source,
 			detail: err.detail,
@@ -113,7 +118,7 @@ const eventServerResult = await startEventServer({
 	},
 	onConnectionChange: (count) => {
 		currentConnectedCount = count;
-		mainWindow.webview.rpc?.send.pushEventApiState({
+		mainWindow?.webview.rpc?.send.pushEventApiState({
 			status: currentStatus,
 			port: currentPort,
 			connectedCount: count,
@@ -125,6 +130,11 @@ const eventServerResult = await startEventServer({
 	// the renderer's agentRpcHandler (Plan 06-04). The mainWindow binding is
 	// captured by closure; same pattern as onFlush/onEvent/onError above.
 	onAgentRequest: (ws, request) => {
+		// Unlike the pushes above, an agent request expects a reply, so it cannot
+		// be silently dropped — but it cannot be served before the renderer
+		// exists either. Ignoring it here lets the caller's request time out and
+		// retry, which is what it already does when the app is not running.
+		if (!mainWindow) return;
 		void agentRequestHandler(ws, request, mainWindow);
 	},
 });
