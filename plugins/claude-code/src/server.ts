@@ -19,9 +19,9 @@ import {
 	UpdateNodesInputSchema,
 	UpdateNodeTypeInputSchema,
 } from "./tools/schemas";
+import { PACKAGE_VERSION } from "./version";
 import { createWsClient } from "./wsClient";
 
-const PACKAGE_VERSION = "0.1.0";
 const SOURCE_NAME = "claude-code";
 
 const wsClient = createWsClient({

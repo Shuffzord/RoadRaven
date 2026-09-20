@@ -10,6 +10,7 @@ import {
 	type Allowlist,
 	classifyEventFrame,
 	type EventFrame,
+	type HelloFrame,
 	parseIncoming,
 } from "./eventSchema";
 import {
@@ -43,10 +44,19 @@ export interface EventServerHandle {
 export interface StartOptions {
 	requestedPort: number;
 	isUserSpecified: boolean; // user override (env/settings) vs default 47921
+	// v0.8: the app's own version, compared against each producer's hello-frame
+	// version so an MCP server installed independently of the app (npm package,
+	// Claude Code plugin) that has drifted out of sync can be flagged.
+	appVersion: string;
 	onFlush: (updates: CoalescedUpdate[]) => void;
 	onEvent: (event: IntegrationEvent) => void; // for pushEventLog streaming to renderer
 	onError: (err: {
-		type: "malformed" | "unknown_node" | "invalid_status" | "disconnect";
+		type:
+			| "malformed"
+			| "unknown_node"
+			| "invalid_status"
+			| "disconnect"
+			| "version_mismatch";
 		source: string;
 		detail?: string;
 	}) => void;
@@ -62,12 +72,59 @@ export interface StartOptions {
 	onAgentRequest: (ws: ServerWebSocket<WsData>, request: AgentRequest) => void;
 }
 
+/** Parse the leading `<major>.<minor>` off a version string, or null if it doesn't match. */
+function parseMajorMinor(
+	version: string,
+): { major: number; minor: number } | null {
+	const match = /^(\d+)\.(\d+)/.exec(version);
+	if (!match) return null;
+	return { major: Number(match[1]), minor: Number(match[2]) };
+}
+
 function isEaddrinuse(err: unknown): boolean {
 	return (
 		!!err &&
 		typeof err === "object" &&
 		(err as NodeJS.ErrnoException).code === "EADDRINUSE"
 	);
+}
+
+/**
+ * Handles a hello frame: records source/version on the connection, then
+ * (v0.8) compares the producer's major.minor version against the app's own
+ * version, firing a version_mismatch error when they diverge. Missing or
+ * unparseable producer versions are logged only — no toast, since there's
+ * nothing to compare.
+ */
+function handleHelloFrame(
+	ws: ServerWebSocket<WsData>,
+	frame: HelloFrame,
+	opts: StartOptions,
+): void {
+	ws.data.source = frame.source;
+	ws.data.version = frame.version;
+	ws.data.helloAt = Date.now();
+	serverLogger.info`Hello frame from source=${frame.source} version=${frame.version ?? "unset"}`;
+
+	const producerVersion = frame.version ? parseMajorMinor(frame.version) : null;
+	if (!producerVersion) {
+		serverLogger.warn`Hello frame from source=${frame.source} has a missing or unparseable version: ${frame.version ?? "unset"}`;
+		return;
+	}
+
+	const appVersion = parseMajorMinor(opts.appVersion);
+	if (
+		appVersion &&
+		(producerVersion.major !== appVersion.major ||
+			producerVersion.minor !== appVersion.minor)
+	) {
+		serverLogger.warn`Version mismatch: source=${frame.source} producerVersion=${frame.version} appVersion=${opts.appVersion}`;
+		opts.onError({
+			type: "version_mismatch",
+			source: frame.source,
+			detail: `${frame.version}|${opts.appVersion}`,
+		});
+	}
 }
 
 export async function startEventServer(
@@ -164,10 +221,7 @@ export async function startEventServer(
 						const frame = parseResult.frame;
 
 						if ("type" in frame && frame.type === "hello") {
-							ws.data.source = frame.source;
-							ws.data.version = frame.version;
-							ws.data.helloAt = Date.now();
-							serverLogger.info`Hello frame from source=${frame.source} version=${frame.version ?? "unset"}`;
+							handleHelloFrame(ws, frame, opts);
 							return;
 						}
 

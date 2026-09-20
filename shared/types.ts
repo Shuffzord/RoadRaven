@@ -46,11 +46,17 @@ export interface AppSettings {
 }
 
 /** One step in the MCP integration install, surfaced live in the Setup Wizard. */
+/** MCP hosts the Setup Wizard can register RoadRaven with (v0.8). */
+export type McpHost = "claude" | "opencode";
+
 export interface McpInstallStep {
 	id: string;
 	label: string;
 	status: "ok" | "error" | "skipped";
 	detail?: string;
+	/** Which host this step belongs to. Absent for host-independent steps
+	 * (locating and copying the bundled server happen once for all hosts). */
+	host?: McpHost;
 }
 
 // -- Zod-inferred types from @roadraven/core --------------------------------
@@ -153,13 +159,23 @@ export type RoadmapRPCType = {
 					mcpServerAvailable: boolean;
 					mcpInstalled: boolean;
 					appVersion: string;
+					// v0.8 multi-host: OpenCode is detected and registered
+					// independently of Claude Code.
+					openCodeDetected: boolean;
+					openCodeInstalled: boolean;
+					// True when the roadraven Claude Code plugin is installed —
+					// the wizard then defers to it instead of registering a
+					// second, duplicate server.
+					pluginInstalled: boolean;
 				};
 			};
 			// installMcpIntegration: copies the bundled MCP server into the user
 			// data dir and registers it under mcpServers.roadraven in the user's
 			// Claude Code config. Returns a per-step trace for the wizard to render.
 			installMcpIntegration: {
-				params: Record<string, never>;
+				// v0.8: hosts selects which configs to write. Omitted = every
+				// detected host.
+				params: { hosts?: McpHost[] };
 				response: {
 					ok: boolean;
 					steps: McpInstallStep[];
@@ -234,7 +250,12 @@ export type RoadmapRPCType = {
 				errorMessage: string | null;
 			};
 			pushEventApiError: {
-				type: "malformed" | "unknown_node" | "invalid_status" | "disconnect";
+				type:
+					| "malformed"
+					| "unknown_node"
+					| "invalid_status"
+					| "disconnect"
+					| "version_mismatch";
 				source: string;
 				detail?: string;
 			};

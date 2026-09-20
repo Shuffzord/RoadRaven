@@ -60,6 +60,23 @@ describe("EventToast (D-23, D-24)", () => {
 		).toBeInTheDocument();
 	});
 
+	it("renders version_mismatch toast copy", () => {
+		render(
+			<EventToast
+				toast={makeToast({ type: "version_mismatch", detail: "0.7.2|0.8.0" })}
+				onDismiss={vi.fn()}
+			/>,
+		);
+		expect(
+			screen.getByText(
+				"MCP server version 0.7.2 does not match RoadRaven 0.8.0.",
+			),
+		).toBeInTheDocument();
+		expect(
+			screen.getByText("Update the RoadRaven plugin or the app."),
+		).toBeInTheDocument();
+	});
+
 	it("renders disconnect info toast with no body per D-23", () => {
 		render(
 			<EventToast

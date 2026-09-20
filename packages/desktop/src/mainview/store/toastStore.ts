@@ -4,7 +4,8 @@ export type ToastType =
 	| "malformed"
 	| "unknown_node"
 	| "invalid_status"
-	| "disconnect";
+	| "disconnect"
+	| "version_mismatch";
 
 export interface ActiveToast {
 	id: string;
