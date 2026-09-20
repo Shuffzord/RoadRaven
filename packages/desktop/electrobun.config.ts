@@ -8,7 +8,7 @@ export default {
 	app: {
 		name: "RoadRaven",
 		identifier: "RoadRaven.electrobun.dev",
-		version: "0.8.0",
+		version: "0.8.0-beta.1",
 	},
 	build: {
 		// Cottontail is Electrobun 2.x's default main-process runtime and ships a
