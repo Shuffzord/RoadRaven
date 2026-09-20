@@ -13,7 +13,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Commands
 
 ```bash
-bun install           # Install dependencies
+bun install           # Install dependencies — a root postinstall projects the
+                      # Electrobun 2.x toolchain (Hutch/Cottontail) into a
+                      # gitignored packages/desktop/.hutch/devkit; needs
+                      # network on a cold cache. Windows requires Developer
+                      # Mode for this step (Hutch projects the devkit via
+                      # symlinks) — see CONTRIBUTING.md.
 
 bun run start         # One-shot: vite build → electrobun dev (no file watching)
 bun run dev           # Dev with file watching (auto-restarts bun process on changes)
@@ -78,6 +83,18 @@ finding in isolation.
 - Load bundled views with `views://mainview/index.html`
 - Main process imports: `import { BrowserWindow, Updater } from "electrobun/bun"`
 - Renderer imports: `import { Electroview } from "electrobun/view"`
+- On Electrobun 2.x, the `electrobun` package is a thin bootstrapper that
+  forwards every CLI invocation to Hutch (`hutch electrobun <cmd>` —
+  `prepare`, `dev`, `build`, `run`, ...). `bunx electrobun prepare` /
+  `dev` / `build` all resolve through it.
+- The main process runs on **Cottontail**, 2.x's default main-process
+  runtime (this app is Bun-compatible via Cottontail's compat layer, not
+  pinned to a Bun-specific runtime).
+- `packages/desktop/.hutch/devkit` is the projected toolchain Electrobun 2.x
+  serves its APIs from (vite/vitest alias `electrobun/*` there; tsconfig maps
+  paths into it). It's gitignored and auto-projected by `electrobun prepare`
+  (run via the root `postinstall`, and implicitly by `dev`/`build`/`run`) —
+  never commit it or hand-edit it.
 
 ## Electrobun documentation
 

@@ -28,7 +28,8 @@ A keyboard-first desktop editor for visual roadmap trees. Built on
 - JSON schema-driven node types and statuses
 - Live status updates from external producers via WebSocket Event API
 - Reference Event Producer: `@roadraven/mcp`
-   — npm-installable MCP wrapper for Claude Code
+   — MCP wrapper for Claude Code and any other MCP host (npm publish pending
+   — see [Packages on npm](#packages-on-npm) below)
 
 ## What's NOT in v1 (deferred to v1.1+)
 
@@ -43,7 +44,12 @@ for the full v1 vs. v1.1 split.
 
 ## Packages on npm
 
-- [`@roadraven/core`](https://www.npmjs.com/package/@roadraven/core)
-   — Zod schemas + types (zero desktop deps)
-- [`@roadraven/mcp`](https://www.npmjs.com/package/@roadraven/mcp)
-   — MCP wrapper that lets Claude Code push live updates to a running app
+> Not published yet. `@roadraven/mcp` will go out as a **prerelease under the
+> `beta` dist-tag** (currently `0.8.0-beta.1`) — see the main README's
+> [Packages](https://github.com/Shuffzord/RoadRaven#packages-for-producers-and-library-consumers)
+> section for what that means for install commands.
+
+- `@roadraven/core` — Zod schemas + types (zero desktop deps)
+- `@roadraven/mcp` — MCP wrapper that lets Claude Code (and any MCP host)
+   push live updates to a running app; see the
+   [MCP install guide](mcp-install.html)

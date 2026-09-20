@@ -2,7 +2,7 @@
 # RoadRaven
 
 [![License: PolyForm Noncommercial 1.0.0](https://img.shields.io/badge/License-PolyForm--Noncommercial--1.0.0-blue.svg)](./LICENSE)
-[![Status: Alpha v0.6](https://img.shields.io/badge/status-alpha%20v0.6-orange.svg)](#feature-status)
+[![Status: Alpha v0.8](https://img.shields.io/badge/status-alpha%20v0.8-orange.svg)](#feature-status)
 [![Platform: Windows | Linux](https://img.shields.io/badge/platform-Windows%20%7C%20Linux-blue.svg)](#install)
 [![Watch the demo](https://img.shields.io/badge/%E2%96%B6-Watch_the_demo-FF4500.svg)](#demo)
 
@@ -18,8 +18,8 @@ no cloud, no accounts. It's just a file, living in your repo.
 
 > Built on **Electrobun** (not Electron). Runtime is **Bun**.
 
-> ⚠️ **Alpha (v0.6).** RoadRaven is an early public release. Core editing and the
-> live Event API work today, but expect rough edges — the data format, APIs, and
+> ⚠️ **Alpha (v0.8.0-beta.1).** RoadRaven is an early public release. Core editing and
+> the live Event API work today, but expect rough edges — the data format, APIs, and
 > packaging may still change before v1.0. Bug reports and feedback are very welcome.
 
 ## Demo
@@ -55,7 +55,7 @@ to whatever is actually running, and the tree keeps itself current.
 
 ## Install
 
-> **This alpha (v0.6) ships Windows + Linux installers.** macOS is planned
+> **This alpha (v0.8) ships Windows + Linux installers.** macOS is planned
 > (see [Feature status](#feature-status) below).
 
 Download the latest release from
@@ -101,15 +101,18 @@ Download the latest release from
 
 ### Packages (for producers and library consumers)
 
-> **Heads-up (alpha v0.6):** these npm packages are **not published yet** — they ship
-> with the first tagged release. For now, clone the repo and build from source. The
-> `bun add` / `bunx` commands below are how it will work once published. RoadRaven is
-> **bun-first**, but these are plain npm packages, so any package manager works.
+> **Heads-up (v0.8.0-beta.1):** these npm packages are **not published yet**. When they
+> are, `@roadraven/mcp` will go out as a **prerelease under the `beta` dist-tag**, so
+> plain `latest` stays unclaimed at `0.8.0` until a stable release ships — a bare
+> `bun add @roadraven/mcp` / `npx -y @roadraven/mcp` won't resolve anything until then.
+> Pin the exact version once it's live, e.g. `@roadraven/mcp@0.8.0-beta.1`. For now,
+> clone the repo and build from source. RoadRaven is **bun-first**, but these are plain
+> npm packages, so any package manager works.
 
 `@roadraven/core` — Zod schemas + types. Use this if you're building an Event Producer:
 
 ```bash
-bun add @roadraven/core          # available once the first release is published
+bun add @roadraven/core          # not published yet — see note above
 ```
 
 `@roadraven/mcp` — the MCP wrapper that lets Claude Code (and any MCP
@@ -138,26 +141,37 @@ and OpenCode — and registers both with one click:
    Code, `~/.config/opencode/opencode.json` for OpenCode) — without touching
    any other server you have configured.
 
-Zero commands, works fully offline. Restart your MCP host with RoadRaven
-running and the tools are live.
+If the RoadRaven Claude Code plugin (Path 2 below) is already installed, the
+wizard defers to it for Claude Code instead of registering a second server —
+two installs would mean two running server processes and a duplicated tool
+set (plugin tools are namespaced `mcp__plugin_roadraven_roadraven__*`, the
+wizard's `mcp__roadraven__*`).
 
-**Path 2 (Claude Code plugin).** Install straight from this repo's
-marketplace, from inside Claude Code:
+Zero commands, works fully offline, **works today** — no npm publish needed.
+Restart your MCP host with RoadRaven running and the tools are live.
+
+**Path 2 (Claude Code plugin).** ⚠️ Not usable yet — the plugin's `.mcp.json`
+runs `npx -y @roadraven/mcp@0.8.0-beta.1`, and `@roadraven/mcp` isn't
+published to npm yet (see [Packages](#packages-for-producers-and-library-consumers)
+above). Once it's published, install straight from this repo's marketplace,
+from inside Claude Code:
 
 ```
 /plugin marketplace add Shuffzord/RoadRaven
 /plugin install roadraven@roadraven
 ```
 
-**Path 3 (one-liner — any other host).** Requires **Node.js >= 22** (the npx
-paths below run the published npm package).
+**Path 3 (one-liner — any other host).** ⚠️ Same caveat — requires the npm
+publish. Requires **Node.js >= 22**. Pin the exact prerelease version; a bare
+`npx -y @roadraven/mcp` resolves `latest`, which won't exist while only betas
+are published:
 
 ```bash
-claude mcp add roadraven -- npx -y @roadraven/mcp
+claude mcp add roadraven -- npx -y @roadraven/mcp@0.8.0-beta.1
 ```
 
 ```bash
-opencode mcp add roadraven   # interactive — prompts for the command to run
+opencode mcp add roadraven   # interactive — prompts for the command to run; give it `npx -y @roadraven/mcp@0.8.0-beta.1`
 ```
 
 For Cursor, Codex, Copilot, Gemini, or another MCP host, see the
@@ -200,25 +214,34 @@ Full tool catalog, configuration, kill-switch, and security model:
 
 ## Feature status
 
-| What | v0.6 (this alpha) | Planned |
+| What | v0.8 (this alpha) | Planned |
 |------|-------------------|---------|
 | Tree canvas + keyboard editor | available | — |
 | Themes (dark / light / high-contrast) | available | — |
 | Side-panel CodeMirror notes + metadata | available | — |
 | Atomic autosave + `$ref` write-back | available | — |
 | Event API (WebSocket — external producers push status) | available | — |
-| `@roadraven/mcp` (Claude Code MCP wrapper) | available | — |
-| First-run Setup Wizard + one-click MCP install | available | — |
+| MCP server version-mismatch warning | available | — |
+| First-run Setup Wizard — one-click MCP install (Claude Code + OpenCode) | available | — |
+| Claude Code marketplace plugin (`@roadraven/mcp`) | ships this release¹ | — |
 | Windows installer | available | — |
 | Linux installer (`.tar.gz`) | available | — |
+| Electrobun 2.x runtime (Cottontail main process) | available | — |
 | macOS installer | deferred | planned |
 | Canary release channel | deferred | planned |
 | Code signing (Authenticode / GPG / notarization) | deferred | planned (when commercial pressure justifies) |
 | `.deb` packaging + apt repo | deferred | possibly |
 | `@roadraven/react` component package | deferred | planned |
 | Smart-adapter Plugin System (`RoadmapPlugin`) | deferred | planned |
+| In-app self-update | deferred | planned — `Updater.checkForUpdate`/`downloadUpdate`/`applyUpdate` exist in the Electrobun SDK but aren't wired into the app yet |
 | Drag-and-drop reordering | deferred | planned |
 | Undo / redo | deferred | planned |
+
+¹ `@roadraven/mcp` is not published to npm yet — see
+[Packages](#packages-for-producers-and-library-consumers) above. The plugin
+manifest and marketplace entry ship in this release, but installing them only
+works once the npm publish lands; the Setup Wizard (bundled server, no
+publish needed) works today.
 
 See the [documentation](docs/) for more detail on current capabilities and
 what's planned next.
