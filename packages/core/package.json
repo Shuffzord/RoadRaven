@@ -1,6 +1,6 @@
 {
 	"name": "@roadraven/core",
-	"version": "0.6.0",
+	"version": "0.8.0",
 	"private": false,
 	"type": "module",
 	"main": "./dist/index.js",
@@ -37,7 +37,7 @@
 	"license": "PolyForm-Noncommercial-1.0.0",
 	"homepage": "https://shuffzord.github.io/RoadRaven/",
 	"bugs": "https://github.com/Shuffzord/RoadRaven/issues",
-	"description": "Type and Zod-schema package for RoadRaven roadmaps. Framework-agnostic; pair with @roadraven/plugin-claude-code or your own producer for live integration.",
+	"description": "Type and Zod-schema package for RoadRaven roadmaps. Framework-agnostic; pair with @roadraven/mcp or your own producer for live integration.",
 	"keywords": [
 		"roadmap",
 		"zod",

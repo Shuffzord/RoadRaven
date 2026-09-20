@@ -68,3 +68,11 @@ scripts/storytelling-video/
 
 # WebSocket event-log runtime output (not source data); *.bak.json already ignored above
 *.events.jsonl
+
+# brag skill (testing) + its output
+.agents/skills/brag
+skills/brag/
+brag-output*/
+
+# scratch/temp outputs
+temp/

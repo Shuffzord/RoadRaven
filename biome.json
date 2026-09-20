@@ -37,7 +37,7 @@
 			"!**/assets/mcp",
 			"!**/playwright-report",
 			"!**/test-results",
-			"!.claude/worktrees/**",
+			"!.claude/worktrees",
 			"!**/*.bak.json"
 		]
 	}
