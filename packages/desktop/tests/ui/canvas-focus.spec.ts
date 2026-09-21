@@ -1,4 +1,6 @@
 import { expect, type Page, type TestInfo, test } from "@playwright/test";
+// The renderer's own constant, so the e2e ceiling and the clamp cannot drift.
+import { SCALE_EXTENT } from "../../src/mainview/lib/viewportMath";
 import {
 	CONTAINER,
 	dragCanvas,
@@ -96,6 +98,12 @@ const WHEEL_TICKS = 4;
 const WHEEL_K_BASELINE = 0.45946;
 const WHEEL_K_TOLERANCE = 0.02;
 
+// Phase 2: how far a `center` reveal may leave the card off the container
+// centre. See the justification on the search case below.
+const CENTRE_TOLERANCE_PX = 2;
+/** Sub-pixel slack on a comfort-zone edge the pan lands exactly on. */
+const ZONE_EPSILON_PX = 1;
+
 function parseTransform(raw: string): Transform {
 	const m = raw.match(
 		/translate\(\s*([-\d.e]+)[ ,]+([-\d.e]+)\s*\)\s*scale\(\s*([-\d.e]+)/,
@@ -104,7 +112,15 @@ function parseTransform(raw: string): Transform {
 	return { x: Number(m[1]), y: Number(m[2]), k: Number(m[3]) };
 }
 
-async function settle(page: Page): Promise<Transform> {
+// A reveal that waits for the SidePanel's 200ms width transition starts
+// moving the camera later than STABLE_FRAMES, so the cases that select a node
+// settle on a window wider than the transition.
+const PANEL_STABLE_FRAMES = 30;
+
+async function settle(
+	page: Page,
+	stableFrames = STABLE_FRAMES,
+): Promise<Transform> {
 	const raw = await page.evaluate(
 		(stableFrames) =>
 			new Promise<string>((resolve) => {
@@ -121,7 +137,7 @@ async function settle(page: Page): Promise<Transform> {
 				};
 				requestAnimationFrame(tick);
 			}),
-		STABLE_FRAMES,
+		stableFrames,
 	);
 	return parseTransform(raw);
 }
@@ -184,36 +200,54 @@ async function clickCard(page: Page, id: string): Promise<void> {
 }
 
 // Records every value written to the rd3t <g> transform attribute, so a
-// one-frame snap cannot slip between two samples.
+// one-frame snap cannot slip between two samples. The canvas width is sampled
+// with each frame: a pan that started before the SidePanel finished resizing
+// the canvas is visible as a first frame taken at the OLD width (RC3).
 async function startRecording(page: Page): Promise<void> {
-	await page.evaluate(() => {
+	await page.evaluate((containerSel) => {
 		const g = document.querySelector("g.rd3t-g");
-		if (!g) throw new Error("no rd3t <g>");
+		const container = document.querySelector(containerSel);
+		if (!g || !container) throw new Error("no rd3t <g> / canvas container");
 		const w = window as unknown as {
-			__p0Frames: string[];
+			__p0Frames: { raw: string; width: number }[];
 			__p0Observer: MutationObserver;
 		};
 		w.__p0Frames = [];
 		w.__p0Observer = new MutationObserver(() => {
-			w.__p0Frames.push(g.getAttribute("transform") ?? "");
+			w.__p0Frames.push({
+				raw: g.getAttribute("transform") ?? "",
+				width: container.getBoundingClientRect().width,
+			});
 		});
 		w.__p0Observer.observe(g, {
 			attributes: true,
 			attributeFilter: ["transform"],
 		});
-	});
+	}, CONTAINER);
 }
 
-async function stopRecording(page: Page): Promise<Transform[]> {
+interface Frame extends Transform {
+	/** Canvas width at the moment this frame was written. */
+	containerWidth: number;
+}
+
+async function stopRecordingFrames(page: Page): Promise<Frame[]> {
 	const raw = await page.evaluate(() => {
 		const w = window as unknown as {
-			__p0Frames: string[];
+			__p0Frames: { raw: string; width: number }[];
 			__p0Observer: MutationObserver;
 		};
 		w.__p0Observer.disconnect();
 		return w.__p0Frames;
 	});
-	return raw.map(parseTransform);
+	return raw.map((f) => ({
+		...parseTransform(f.raw),
+		containerWidth: f.width,
+	}));
+}
+
+async function stopRecording(page: Page): Promise<Transform[]> {
+	return stopRecordingFrames(page);
 }
 
 async function focusedIds(page: Page): Promise<string[]> {
@@ -324,16 +358,9 @@ async function zoomThenArrow(page: Page) {
 	};
 }
 
-async function navigateLR(page: Page) {
-	await seed(page);
-	await page
-		.getByRole("radiogroup", { name: "Tree layout direction" })
-		.getByRole("button", { name: "LR" })
-		.click();
-	await settle(page);
+/** Walk Root -> C1 -> C2 -> C3 -> C4 with the given keys, sampling each step. */
+async function navigateSteps(page: Page, keys: string[]) {
 	await clickCard(page, ROOT);
-	// Right = first child (C1), then Down x3 = siblings C2..C4.
-	const keys = ["ArrowRight", "ArrowDown", "ArrowDown", "ArrowDown"];
 	const steps: {
 		key: string;
 		focused: string[];
@@ -357,6 +384,37 @@ async function navigateLR(page: Page) {
 		});
 	}
 	return { steps, scroll: await containerScroll(page) };
+}
+
+async function navigateLR(page: Page) {
+	await seed(page);
+	await setLayout(page, "LR");
+	// Right = first child (C1), then Down x3 = siblings C2..C4.
+	return navigateSteps(page, [
+		"ArrowRight",
+		"ArrowDown",
+		"ArrowDown",
+		"ArrowDown",
+	]);
+}
+
+async function navigateTB(page: Page) {
+	await seed(page);
+	// TB (the default): Down = first child (C1), then Right x3 = C2..C4.
+	return navigateSteps(page, [
+		"ArrowDown",
+		"ArrowRight",
+		"ArrowRight",
+		"ArrowRight",
+	]);
+}
+
+async function setLayout(page: Page, layout: "TB" | "LR"): Promise<void> {
+	await page
+		.getByRole("radiogroup", { name: "Tree layout direction" })
+		.getByRole("button", { name: layout })
+		.click();
+	await settle(page);
 }
 
 async function createOffscreenChild(page: Page) {
@@ -464,6 +522,170 @@ async function focusOffscreenProbe(page: Page) {
 	return { card, container, ...probe };
 }
 
+// --- Phase 2 scenarios --------------------------------------------------------
+
+/** True when the mouse can reach the box's centre inside the container. */
+function centreIsReachable(box: Box, container: Box): boolean {
+	const c = center(box);
+	return (
+		c.x > container.left &&
+		c.x < container.right &&
+		c.y > container.top &&
+		c.y < container.bottom
+	);
+}
+
+/**
+ * Right-most child card the mouse can still click: the further right it sits,
+ * the more the SidePanel's shrink changes where the reveal has to land it.
+ */
+async function rightmostClickableCard(page: Page, container: Box) {
+	let best: { id: string; box: Box } | null = null;
+	for (const id of CHILDREN) {
+		const box = await boxOf(page, cardSelector(id));
+		if (!centreIsReachable(box, container)) continue;
+		if (!best || box.left > best.box.left) best = { id, box };
+	}
+	if (!best) throw new Error("no on-screen card to click");
+	return best;
+}
+
+/** Click the right-most reachable card while the SidePanel is closed. */
+async function clickCardNearRightEdge(page: Page) {
+	await seed(page);
+	// Nothing is selected yet, so the SidePanel is closed and the canvas has
+	// its full width — clicking opens the panel and shrinks it mid-reveal.
+	const containerBefore = await boxOf(page, CONTAINER);
+	const { id: targetId, box: targetBox } = await rightmostClickableCard(
+		page,
+		containerBefore,
+	);
+	await startRecording(page);
+	const c = center(targetBox);
+	await page.mouse.click(c.x, c.y);
+	await expect(page.locator(cardSelector(targetId))).toHaveAttribute(
+		"data-focused",
+		"true",
+	);
+	const settled = await settle(page, PANEL_STABLE_FRAMES);
+	const frames = await stopRecordingFrames(page);
+	const containerAfter = await boxOf(page, CONTAINER);
+	const card = await boxOf(page, cardSelector(targetId));
+	return {
+		targetId,
+		containerBefore,
+		containerAfter,
+		frames,
+		frameCount: frames.length,
+		firstFrameWidth: frames[0]?.containerWidth ?? null,
+		xReversals: directionReversals(frames.map((f) => f.x)),
+		yReversals: directionReversals(frames.map((f) => f.y)),
+		settled,
+		card,
+		cardCenter: center(card),
+		comfortZone: comfortZone(containerAfter),
+	};
+}
+
+/** Ctrl+F, type a title that only matches inside a collapsed subtree. */
+async function searchIntoCollapsedSubtree(page: Page) {
+	await seed(page);
+	await clickCard(page, C6);
+	await page.keyboard.press("c");
+	await expect(
+		page.locator(`${cardSelector(C6)} button[aria-label="Expand subtree"]`),
+	).toBeAttached();
+	await expect(page.locator(cardSelector(GRANDCHILDREN[0]))).toHaveCount(0);
+	await settle(page);
+
+	await page.keyboard.press("Control+f");
+	await page
+		.getByRole("textbox", { name: "Search nodes" })
+		.pressSequentially("G1");
+	// The controller expands C6 on the way to the match.
+	await expect(page.locator(cardSelector(GRANDCHILDREN[0]))).toHaveCount(1);
+	await expect(page.locator(cardSelector(GRANDCHILDREN[0]))).toHaveAttribute(
+		"data-focused",
+		"true",
+	);
+	const settled = await settle(page);
+	const container = await boxOf(page, CONTAINER);
+	const card = await boxOf(page, cardSelector(GRANDCHILDREN[0]));
+	const cardCenter = center(card);
+	const containerCenter = center(container);
+	return {
+		settled,
+		container,
+		card,
+		offset: {
+			x: cardCenter.x - containerCenter.x,
+			y: cardCenter.y - containerCenter.y,
+		},
+		scroll: await containerScroll(page),
+	};
+}
+
+/** Collapse C6's subtree, then fit the whole tree. */
+async function collapseThenFit(page: Page) {
+	await seed(page);
+	await clickCard(page, C6);
+	await page.keyboard.press("c");
+	await expect(page.locator(cardSelector(GRANDCHILDREN[0]))).toHaveCount(0);
+	await settle(page);
+	await page.evaluate(() =>
+		window.dispatchEvent(new CustomEvent("roadraven:fit-view")),
+	);
+	const settled = await settle(page);
+	const container = await boxOf(page, CONTAINER);
+	const cards = await page.evaluate(() =>
+		Array.from(
+			document.querySelectorAll<HTMLElement>("[data-source-id]"),
+			(el) => {
+				const r = el.getBoundingClientRect();
+				return {
+					id: el.dataset.sourceId ?? "",
+					left: r.left,
+					top: r.top,
+					right: r.right,
+					bottom: r.bottom,
+				};
+			},
+		),
+	);
+	return { settled, container, cards };
+}
+
+/** Reorder the focused node, then flip the layout (A7 re-reveal twice). */
+async function relayoutAroundFocus(page: Page) {
+	await seed(page);
+	await clickCard(page, C8);
+	await page.keyboard.press("Control+ArrowUp");
+	await settle(page);
+	const afterMove = {
+		card: await boxOf(page, cardSelector(C8)),
+		container: await boxOf(page, CONTAINER),
+	};
+	await setLayout(page, "LR");
+	const afterLayout = {
+		card: await boxOf(page, cardSelector(C8)),
+		container: await boxOf(page, CONTAINER),
+	};
+	return { afterMove, afterLayout, scroll: await containerScroll(page) };
+}
+
+/** How often a sequence changes direction (0 = one continuous move). */
+function directionReversals(values: number[]): number {
+	let direction = 0;
+	let count = 0;
+	for (let i = 1; i < values.length; i++) {
+		const step = Math.sign(values[i] - values[i - 1]);
+		if (step === 0) continue;
+		if (direction !== 0 && step !== direction) count++;
+		direction = step;
+	}
+	return count;
+}
+
 // --- Cases ---------------------------------------------------------------------
 
 test.describe("Canvas focus & viewport — v0.8.1 Phase 0 evidence", () => {
@@ -486,10 +708,23 @@ test.describe("Canvas focus & viewport — v0.8.1 Phase 0 evidence", () => {
 			o.maxStepPx,
 			"the pan must continue from the dragged transform, not snap back",
 		).toBeLessThanOrEqual(SNAP_TOLERANCE_PX);
-		expect(o.focusedCardCenter.x).toBeGreaterThanOrEqual(o.comfortZone.left);
-		expect(o.focusedCardCenter.x).toBeLessThanOrEqual(o.comfortZone.right);
-		expect(o.focusedCardCenter.y).toBeGreaterThanOrEqual(o.comfortZone.top);
-		expect(o.focusedCardCenter.y).toBeLessThanOrEqual(o.comfortZone.bottom);
+		// A `nearest` pan clamps the card centre exactly ONTO the zone edge, so
+		// the correct result has zero margin (observed 760.0 against a 760.0
+		// edge); ZONE_EPSILON_PX absorbs sub-pixel rect rounding. The Phase 0
+		// bug was 13px outside the zone after a 219px snap, so 1px of slack
+		// does not weaken the evidence.
+		expect(o.focusedCardCenter.x).toBeGreaterThanOrEqual(
+			o.comfortZone.left - ZONE_EPSILON_PX,
+		);
+		expect(o.focusedCardCenter.x).toBeLessThanOrEqual(
+			o.comfortZone.right + ZONE_EPSILON_PX,
+		);
+		expect(o.focusedCardCenter.y).toBeGreaterThanOrEqual(
+			o.comfortZone.top - ZONE_EPSILON_PX,
+		);
+		expect(o.focusedCardCenter.y).toBeLessThanOrEqual(
+			o.comfortZone.bottom + ZONE_EPSILON_PX,
+		);
 	});
 
 	test("P0-2 (RC1): wheel-zoom, arrow keys — zoom factor unchanged", async ({
@@ -509,7 +744,6 @@ test.describe("Canvas focus & viewport — v0.8.1 Phase 0 evidence", () => {
 		const o = await navigateLR(page);
 		await attachObserved(testInfo, o);
 
-		test.fail(true, "RC2 reproduced in Phase 0 — remove when Phase 2 lands");
 		for (const step of o.steps) {
 			expect(
 				isInside(step.card, step.container),
@@ -676,5 +910,114 @@ test.describe("Canvas focus & viewport — v0.8.1 Phase 0 evidence", () => {
 			o.inputPlain.left,
 			"a plain input.focus() scrolls the container",
 		).toBeGreaterThan(0);
+	});
+
+	// --- Phase 2 guards -------------------------------------------------------
+	// Permanent cases for the focus controller, DOM measurement and explicit
+	// requests. P0-3 above is the LR half of the navigation guard.
+
+	test("P2 (RC11): TB arrow navigation keeps the focused card inside the canvas", async ({
+		page,
+	}, testInfo) => {
+		const o = await navigateTB(page);
+		await attachObserved(testInfo, o);
+
+		for (const step of o.steps) {
+			expect(
+				isInside(step.card, step.container),
+				`after ${step.key}: focused card must be fully inside the canvas`,
+			).toBe(true);
+		}
+	});
+
+	test("P2 (RC3): clicking a card near the right edge pans once, after the SidePanel settles", async ({
+		page,
+	}, testInfo) => {
+		const o = await clickCardNearRightEdge(page);
+		await attachObserved(testInfo, o);
+
+		// Sanity: selecting really did shrink the canvas, and a pan happened.
+		const widthBefore = o.containerBefore.right - o.containerBefore.left;
+		const widthAfter = o.containerAfter.right - o.containerAfter.left;
+		expect(widthAfter, "the SidePanel must shrink the canvas").toBeLessThan(
+			widthBefore,
+		);
+		expect(o.frameCount, "the click must move the camera").toBeGreaterThan(0);
+
+		// One pan, not the old click-pan + resize-re-pan pair: the first frame
+		// is already measured against the SHRUNK canvas...
+		expect(o.firstFrameWidth).toBeCloseTo(widthAfter, 0);
+		// ...and the camera never doubles back.
+		expect(o.xReversals, "x must move in one direction").toBe(0);
+		expect(o.yReversals, "y must move in one direction").toBe(0);
+
+		// A `nearest` reveal clamps the card centre ONTO the zone edge, so the
+		// expected result sits exactly on the boundary (observed: 760.0 against
+		// a 760.0 edge). ZONE_EPSILON_PX keeps a sub-pixel rect rounding from
+		// turning that into a failure without hiding a real mis-pan.
+		expect(isInside(o.card, o.containerAfter)).toBe(true);
+		expect(o.cardCenter.x).toBeGreaterThanOrEqual(
+			o.comfortZone.left - ZONE_EPSILON_PX,
+		);
+		expect(o.cardCenter.x).toBeLessThanOrEqual(
+			o.comfortZone.right + ZONE_EPSILON_PX,
+		);
+		expect(o.cardCenter.y).toBeGreaterThanOrEqual(
+			o.comfortZone.top - ZONE_EPSILON_PX,
+		);
+		expect(o.cardCenter.y).toBeLessThanOrEqual(
+			o.comfortZone.bottom + ZONE_EPSILON_PX,
+		);
+	});
+
+	test("P2: header search reveals a match inside a collapsed subtree and centres it", async ({
+		page,
+	}, testInfo) => {
+		const o = await searchIntoCollapsedSubtree(page);
+		await attachObserved(testInfo, o);
+
+		expect(isInside(o.card, o.container)).toBe(true);
+		// CENTRE_TOLERANCE_PX: the pan lands the card centre exactly on the
+		// container centre, so the only slack is sub-pixel — fractional
+		// getBoundingClientRect values on both rects plus the settle detector
+		// sampling the last animation frame. 2px covers that without hiding a
+		// real mis-centring (the comfort zone alone is +/-180px wide here).
+		expect(Math.abs(o.offset.x)).toBeLessThanOrEqual(CENTRE_TOLERANCE_PX);
+		expect(Math.abs(o.offset.y)).toBeLessThanOrEqual(CENTRE_TOLERANCE_PX);
+	});
+
+	test("P2 (RC5): fit-to-view ignores the cards a collapsed subtree unmounted", async ({
+		page,
+	}, testInfo) => {
+		const o = await collapseThenFit(page);
+		await attachObserved(testInfo, o);
+
+		// Sanity: the grandchildren really are gone from the DOM.
+		expect(o.cards).toHaveLength(NODE_COUNT - GRANDCHILDREN.length);
+
+		expect(o.settled.k).toBeGreaterThanOrEqual(SCALE_EXTENT.min);
+		expect(o.settled.k).toBeLessThanOrEqual(SCALE_EXTENT.max);
+		for (const card of o.cards) {
+			expect(
+				isInside(card, o.container),
+				`${card.id} must be inside the canvas after a fit`,
+			).toBe(true);
+		}
+	});
+
+	test("P2 (A7): reordering and flipping the layout keep the focused card in view", async ({
+		page,
+	}, testInfo) => {
+		const o = await relayoutAroundFocus(page);
+		await attachObserved(testInfo, o);
+
+		expect(
+			isInside(o.afterMove.card, o.afterMove.container),
+			"after Ctrl+ArrowUp",
+		).toBe(true);
+		expect(
+			isInside(o.afterLayout.card, o.afterLayout.container),
+			"after the layout flip",
+		).toBe(true);
 	});
 });

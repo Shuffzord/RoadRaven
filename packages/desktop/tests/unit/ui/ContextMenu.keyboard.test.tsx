@@ -244,16 +244,12 @@ function PitfallHarness() {
 	const containerRef = useRef<HTMLDivElement>(null);
 	useKeyboardRouter({
 		inlineRename: {
-			state: { nodeId: null, title: "", screenPos: null },
+			state: { nodeId: null, title: "" },
 			open: noop,
 			commit: noop,
 			cancel: noop,
 			setTitle: noop,
-			updateForTransform: noop,
 		},
-		getTransform: () => ({ x: 0, y: 0, k: 1 }),
-		getContainerRect: () => ({ left: 0, top: 0 }),
-		getNodePosition: () => null,
 		togglePanelFocus: noop,
 	});
 

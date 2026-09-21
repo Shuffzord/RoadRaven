@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import type { RoadmapNode } from "../../../../../packages/core/src/schema";
+import { requestNodeFocus } from "../lib/focusRequest";
 import { toggleNodeCollapse } from "../lib/nodeCollapse";
 import { useEventLogStore } from "../store/eventLogStore";
 import { findParentAndIndex, useRoadmapStore } from "../store/roadmapStore";
@@ -7,11 +8,6 @@ import { dispatchOpenRename, type useInlineRename } from "./useInlineRename";
 
 interface RouterDeps {
 	inlineRename: ReturnType<typeof useInlineRename>;
-	// Canvas passes the latest transform and a positions map (nodeId -> local x/y)
-	// so F2 / double-click can open rename with the correct screen position.
-	getTransform: () => { x: number; y: number; k: number };
-	getContainerRect: () => { left: number; top: number };
-	getNodePosition: (nodeId: string) => { x: number; y: number } | null;
 	togglePanelFocus: () => void;
 }
 
@@ -45,13 +41,15 @@ function isMenuOpen(): boolean {
 	return !!document.querySelector('[role="menu"]');
 }
 
+// Arrow navigation keeps the comfort zone (`nearest`): recentring on every
+// key press whips the camera (UAT decision, commit aad416e).
 function navigateSibling(nodeId: string, delta: number): void {
 	const schema = useRoadmapStore.getState().schema;
 	if (!schema) return;
 	const found = findParentAndIndex(schema.nodes, nodeId);
 	if (!found) return;
 	const next = found.parentArray[found.index + delta];
-	if (next) useRoadmapStore.getState().setFocusedNode(next.id);
+	if (next) requestNodeFocus(next.id, { align: "nearest" });
 }
 
 function enterChild(nodeId: string): void {
@@ -61,7 +59,7 @@ function enterChild(nodeId: string): void {
 	if (!found) return;
 	const target: RoadmapNode = found.parentArray[found.index];
 	const first = target.children?.[0];
-	if (first) useRoadmapStore.getState().setFocusedNode(first.id);
+	if (first) requestNodeFocus(first.id, { align: "nearest" });
 }
 
 function returnToParent(nodeId: string): void {
@@ -69,7 +67,7 @@ function returnToParent(nodeId: string): void {
 	if (!schema) return;
 	const found = findParentAndIndex(schema.nodes, nodeId);
 	if (!found?.parent) return;
-	useRoadmapStore.getState().setFocusedNode(found.parent.id);
+	requestNodeFocus(found.parent.id, { align: "nearest" });
 }
 
 export function useKeyboardRouter(deps: RouterDeps): void {
@@ -200,16 +198,7 @@ export function useKeyboardRouter(deps: RouterDeps): void {
 			// F2 — inline rename on focused node
 			if (e.key === "F2" && focusedId) {
 				e.preventDefault();
-				const pos = deps.getNodePosition(focusedId);
-				if (pos) {
-					deps.inlineRename.open(
-						focusedId,
-						pos.x,
-						pos.y,
-						deps.getTransform(),
-						deps.getContainerRect(),
-					);
-				}
+				deps.inlineRename.open(focusedId);
 				return;
 			}
 
@@ -253,7 +242,7 @@ export function useKeyboardRouter(deps: RouterDeps): void {
 			if (e.key === " " && focusedId) {
 				e.preventDefault();
 				e.stopPropagation();
-				store.setSelectedNode(focusedId);
+				requestNodeFocus(focusedId, { align: "nearest", select: true });
 				return;
 			}
 

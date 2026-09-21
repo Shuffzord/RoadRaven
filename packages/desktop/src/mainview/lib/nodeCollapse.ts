@@ -13,22 +13,15 @@
  * chevron carries `aria-label="Collapse subtree" | "Expand subtree"`.
  */
 
+import { findNodeCard } from "./nodeCard";
+
 const EXPAND_LABEL = "Expand subtree";
 
 function findChevron(nodeId: string): HTMLButtonElement | null {
-	// Match by dataset value rather than a `[data-source-id="..."]` selector so
-	// arbitrary id characters need no escaping (and `CSS.escape`, absent in
-	// jsdom, is never required).
-	let card: HTMLElement | null = null;
-	for (const el of document.querySelectorAll<HTMLElement>("[data-source-id]")) {
-		if (el.dataset.sourceId === nodeId) {
-			card = el;
-			break;
-		}
-	}
 	return (
-		card?.querySelector<HTMLButtonElement>('button[aria-label$="subtree"]') ??
-		null
+		findNodeCard(nodeId)?.querySelector<HTMLButtonElement>(
+			'button[aria-label$="subtree"]',
+		) ?? null
 	);
 }
 

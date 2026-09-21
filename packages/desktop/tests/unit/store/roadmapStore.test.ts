@@ -126,6 +126,22 @@ describe("loadSchema", () => {
 		expect(nodeIndex.has("aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee")).toBe(true);
 		expect(nodeIndex.has("33333333-4444-4555-8666-777777777777")).toBe(true);
 	});
+
+	// v0.8.1 RC9: loading another file used to clear focus but keep the
+	// selection, so the SidePanel kept showing (and editing) a node id that
+	// belonged to the previous document.
+	it("clears BOTH the selected and the focused node", () => {
+		useRoadmapStore.setState({
+			selectedNodeId: "11111111-2222-4333-8444-555555555555",
+			focusedNodeId: "11111111-2222-4333-8444-555555555555",
+		});
+
+		useRoadmapStore.getState().loadSchema(TEST_SCHEMA, TEST_FILE_PATH);
+
+		const state = useRoadmapStore.getState();
+		expect(state.selectedNodeId).toBeNull();
+		expect(state.focusedNodeId).toBeNull();
+	});
 });
 
 describe("updateNodeStatus", () => {
@@ -232,6 +248,40 @@ describe("reloadSchema", () => {
 		expect(Number(useRoadmapStore.getState().dataKey)).toBeGreaterThan(
 			Number(keyAfterLoad),
 		);
+	});
+
+	// v0.8.1 RC9: an external edit is the SAME document coming back, so the
+	// user's place in it survives — unless the node it pointed at is gone.
+	it("keeps a selection and focus whose node survived the reload", () => {
+		useRoadmapStore.getState().loadSchema(TEST_SCHEMA, TEST_FILE_PATH);
+		useRoadmapStore.setState({
+			selectedNodeId: "11111111-2222-4333-8444-555555555555",
+			focusedNodeId: "33333333-4444-4555-8666-777777777777",
+		});
+
+		useRoadmapStore.getState().reloadSchema(TEST_SCHEMA);
+
+		const state = useRoadmapStore.getState();
+		expect(state.selectedNodeId).toBe("11111111-2222-4333-8444-555555555555");
+		expect(state.focusedNodeId).toBe("33333333-4444-4555-8666-777777777777");
+	});
+
+	it("clears a selection and focus whose node the reload removed", () => {
+		useRoadmapStore.getState().loadSchema(TEST_SCHEMA, TEST_FILE_PATH);
+		useRoadmapStore.setState({
+			selectedNodeId: "11111111-2222-4333-8444-555555555555",
+			focusedNodeId: "33333333-4444-4555-8666-777777777777",
+		});
+		const withoutChildren: RoadmapSchema = {
+			...TEST_SCHEMA,
+			nodes: [{ ...TEST_SCHEMA.nodes[0], children: [] }],
+		};
+
+		useRoadmapStore.getState().reloadSchema(withoutChildren);
+
+		const state = useRoadmapStore.getState();
+		expect(state.selectedNodeId).toBeNull();
+		expect(state.focusedNodeId).toBeNull();
 	});
 });
 

@@ -59,6 +59,11 @@ vi.mock("react-d3-tree", async () => {
 });
 
 import { Canvas } from "../../../src/mainview/components/Canvas";
+import {
+	FOCUS_NODE_EVENT,
+	type NodeFocusRequest,
+	requestNodeFocus,
+} from "../../../src/mainview/lib/focusRequest";
 import { SCALE_EXTENT } from "../../../src/mainview/lib/viewportMath";
 import { useRoadmapStore } from "../../../src/mainview/store/roadmapStore";
 
@@ -78,15 +83,57 @@ const SCHEMA: RoadmapSchema = {
 	],
 };
 
-// Canvas's default dimensions in jsdom (ResizeObserver never fires) are
-// 800x600, so the comfort zone is x 200..600 / y 150..450.
-const VIEW = { width: 800, height: 600 };
-// Root sits at the layout origin; "Far" is outside the comfort zone at every
-// zoom this file uses, so focusing it always triggers a programmatic pan.
+// Both the layout points the fake Tree feeds `renderCustomNodeElement` and
+// the SCREEN rects the canvas now measures (v0.8.1 Phase 2: the DOM is the
+// registry and every pan/fit number comes from getBoundingClientRect, which
+// jsdom always answers 0 for — hence the stub below).
 const LAYOUT = [
 	{ id: ROOT_ID, name: "Root", x: 0, y: 0 },
 	{ id: FAR_ID, name: "Far", x: 1000, y: 1000 },
 ];
+
+interface Box {
+	left: number;
+	top: number;
+	right: number;
+	bottom: number;
+}
+
+/** 800x600 at the origin, so the comfort zone is x 200..600 / y 150..450. */
+const CONTAINER_RECT: Box = { left: 0, top: 0, right: 800, bottom: 600 };
+const ZERO: Box = { left: 0, top: 0, right: 0, bottom: 0 };
+/** Root sits in the comfort zone; "Far" needs a (-100, -70) pan to reach it. */
+const CARD_RECTS: Record<string, Box> = {};
+const DEFAULT_CARD_RECTS: Record<string, Box> = {
+	[ROOT_ID]: { left: 350, top: 280, right: 450, bottom: 320 },
+	[FAR_ID]: { left: 650, top: 500, right: 750, bottom: 540 },
+};
+
+function toDomRect(box: Box): DOMRect {
+	return {
+		...box,
+		x: box.left,
+		y: box.top,
+		width: box.right - box.left,
+		height: box.bottom - box.top,
+		toJSON: () => ({}),
+	} as DOMRect;
+}
+
+/** Give the canvas container and every node card a real-looking rect. */
+function stubLayout(): void {
+	vi.spyOn(Element.prototype, "getBoundingClientRect").mockImplementation(
+		function (this: Element): DOMRect {
+			const el = this as HTMLElement;
+			const id = el.dataset?.sourceId;
+			if (id) return toDomRect(CARD_RECTS[id] ?? ZERO);
+			if (el.getAttribute?.("role") === "application") {
+				return toDomRect(CONTAINER_RECT);
+			}
+			return toDomRect(ZERO);
+		},
+	);
+}
 
 function lastProps(): FakeTreeProps {
 	const props = captured.props.at(-1);
@@ -128,16 +175,10 @@ function renderCanvas(): HTMLElement {
 beforeEach(() => {
 	captured.props.length = 0;
 	captured.nodes = LAYOUT;
+	for (const key of Object.keys(CARD_RECTS)) delete CARD_RECTS[key];
+	Object.assign(CARD_RECTS, DEFAULT_CARD_RECTS);
 	resetStore();
-	// jsdom implements neither of these and Canvas calls both on mount.
-	vi.stubGlobal(
-		"ResizeObserver",
-		class {
-			observe = vi.fn();
-			unobserve = vi.fn();
-			disconnect = vi.fn();
-		},
-	);
+	stubLayout();
 	act(() => {
 		useRoadmapStore.getState().loadSchema(SCHEMA, "/test/viewport.json");
 	});
@@ -145,7 +186,7 @@ beforeEach(() => {
 
 afterEach(() => {
 	vi.useRealTimers();
-	vi.unstubAllGlobals();
+	vi.restoreAllMocks();
 	resetStore();
 });
 
@@ -248,7 +289,7 @@ describe("Canvas programmatic pan (RC1, RC10)", () => {
 
 	function focusFar(): void {
 		act(() => {
-			useRoadmapStore.getState().setFocusedNode(FAR_ID);
+			requestNodeFocus(FAR_ID, { align: "nearest" });
 		});
 	}
 
@@ -272,9 +313,9 @@ describe("Canvas programmatic pan (RC1, RC10)", () => {
 		// The pan continues from where the gesture left the camera...
 		expect(firstFrame.x).toBeCloseTo(10, 0);
 		expect(firstFrame.y).toBeCloseTo(20, 0);
-		// ...and only y needed correcting (1000*0.5 + 20 = 520, below the
-		// comfort zone's 450 edge), so it lands 70px up with x untouched.
-		expect(settled).toEqual({ x: 10, y: -50, k: 0.5 });
+		// ...and moves by exactly the comfort-zone delta the card's measured
+		// rect asks for: centre (700, 520) -> (600, 450).
+		expect(settled).toEqual({ x: -90, y: -50, k: 0.5 });
 		expect(lastProps().zoom).toBe(0.5);
 	});
 
@@ -317,28 +358,134 @@ describe("Canvas zoom extent (RC7)", () => {
 
 		expect(lastProps().scaleExtent).toEqual(SCALE_EXTENT);
 	});
+});
 
-	it("never asks for a zoom outside the extent and pans with the clamped zoom", () => {
+// v0.8.1 Phase 2 (RC5, D3): fit always fits the WHOLE tree, and its bounding
+// box is the union of the cards actually mounted — measured, so a collapsed
+// subtree cannot inflate it and LR coordinates cannot invert it.
+describe("Canvas fit to view (RC5, D3)", () => {
+	/** A tree too big for the viewport, so the fit zoom is not the max. */
+	const WIDE_FAR: Box = { left: 1650, top: 1500, right: 1750, bottom: 1540 };
+	// Union 350..1750 x 280..1540 at transform (400, 50, k 0.8):
+	// local 1750 x 1575 -> zoom = min(680/1750, 510/1575) = 0.323809...
+	const WIDE_FIT = { x: 136.904_761_904, y: -48.095_238_095, k: 0.323_809_523 };
+
+	beforeEach(() => {
 		vi.useFakeTimers({
 			toFake: ["requestAnimationFrame", "cancelAnimationFrame", "performance"],
 		});
-		renderCanvas();
-		act(() => {
-			useRoadmapStore.getState().setFocusedNode(FAR_ID);
-			vi.advanceTimersByTime(1000);
-		});
+	});
 
+	function fit(): void {
 		act(() => {
 			useRoadmapStore.getState().fitView();
-			vi.advanceTimersByTime(1000);
+			vi.advanceTimersByTime(2000);
 		});
+	}
+
+	it("fits the union of the mounted cards' rects", () => {
+		CARD_RECTS[FAR_ID] = WIDE_FAR;
+		renderCanvas();
+
+		fit();
 
 		const settled = viewport();
-		expect(settled.k).toBeLessThanOrEqual(SCALE_EXTENT.max);
+		expect(settled.k).toBeCloseTo(WIDE_FIT.k, 6);
+		expect(settled.x).toBeCloseTo(WIDE_FIT.x, 6);
+		expect(settled.y).toBeCloseTo(WIDE_FIT.y, 6);
+	});
+
+	it("ignores a node whose card is not mounted (collapsed subtree)", () => {
+		CARD_RECTS[FAR_ID] = WIDE_FAR;
+		// Only Root renders: "Far" lives inside a collapsed subtree now.
+		captured.nodes = LAYOUT.slice(0, 1);
+		renderCanvas();
+
+		fit();
+
+		// Root alone would fit far above the extent, so the zoom is the cap and
+		// the camera centres the one card rather than the stale wide box.
+		const settled = viewport();
+		expect(settled.k).toBe(SCALE_EXTENT.max);
+		expect(settled.x).toBeCloseTo(400 - 0 * settled.k, 6);
+	});
+
+	it("never leaves the shared scale extent", () => {
+		CARD_RECTS[FAR_ID] = { left: -9000, top: -9000, right: 9000, bottom: 9000 };
+		renderCanvas();
+
+		fit();
+
+		const settled = viewport();
 		expect(settled.k).toBeGreaterThanOrEqual(SCALE_EXTENT.min);
-		// The close-up translate must be computed with the zoom the tree will
-		// actually render at, not with the unclamped request.
-		expect(settled.x).toBeCloseTo(VIEW.width / 2 - 1000 * settled.k, 1);
-		expect(settled.y).toBeCloseTo(VIEW.height / 2 - 1000 * settled.k, 1);
+		expect(settled.k).toBeLessThanOrEqual(SCALE_EXTENT.max);
+	});
+
+	it("still fits the whole tree when a node is focused and selected (D3)", () => {
+		CARD_RECTS[FAR_ID] = WIDE_FAR;
+		renderCanvas();
+		act(() => {
+			useRoadmapStore.getState().setFocusedNode(ROOT_ID);
+			useRoadmapStore.getState().setSelectedNode(ROOT_ID);
+		});
+
+		fit();
+
+		// The old close-up branch would have zoomed to SCALE_EXTENT.max on Root.
+		expect(viewport().k).toBeCloseTo(WIDE_FIT.k, 6);
+	});
+
+	it("publishes a pending gesture before its first store write", () => {
+		CARD_RECTS[FAR_ID] = WIDE_FAR;
+		renderCanvas();
+		// A wheel gesture with no pointerup: still only in the live mirror.
+		gestureFrame({ x: -90, y: 239.5 }, 0.4595);
+		const writes: { x: number; y: number; k: number }[] = [];
+		const unsubscribe = useRoadmapStore.subscribe((s) =>
+			writes.push({ x: s.translate.x, y: s.translate.y, k: s.zoomLevel }),
+		);
+
+		fit();
+		unsubscribe();
+
+		// Without the flush the gesture would be dropped by the fit's own
+		// setZoomLevel and its translate lost.
+		expect(writes[0]).toEqual({ x: -90, y: 239.5, k: 0.4595 });
+	});
+
+	it("does nothing when no card is mounted", () => {
+		captured.nodes = [];
+		renderCanvas();
+		const before = viewport();
+
+		fit();
+
+		expect(viewport()).toEqual(before);
+	});
+});
+
+describe("Canvas mouse selection (RC3)", () => {
+	it("asks for a nearest reveal and selects, in one explicit request", () => {
+		const requests: NodeFocusRequest[] = [];
+		const listener = (e: Event): void => {
+			requests.push((e as CustomEvent<NodeFocusRequest>).detail);
+		};
+		window.addEventListener(FOCUS_NODE_EVENT, listener);
+		const container = renderCanvas();
+
+		const card = container.querySelector<HTMLElement>(
+			`[data-source-id="${FAR_ID}"]`,
+		);
+		act(() => {
+			card?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+		});
+		window.removeEventListener(FOCUS_NODE_EVENT, listener);
+
+		expect(requests).toEqual([
+			{ nodeId: FAR_ID, align: "nearest", select: true },
+		]);
+		const state = useRoadmapStore.getState();
+		expect(state.selectedNodeId).toBe(FAR_ID);
+		expect(state.focusedNodeId).toBe(FAR_ID);
 	});
 });

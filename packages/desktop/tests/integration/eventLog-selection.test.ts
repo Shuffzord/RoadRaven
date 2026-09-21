@@ -5,7 +5,9 @@
 // selection contract without JSX rendering.
 
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import type { RoadmapSchema } from "../../../../packages/core/src/schema";
 import type { IntegrationEvent } from "../../../../shared/types";
+import { requestNodeFocus } from "../../src/mainview/lib/focusRequest";
 import { useEventApiStore } from "../../src/mainview/store/eventApiStore";
 import { useEventLogStore } from "../../src/mainview/store/eventLogStore";
 import { useRoadmapStore } from "../../src/mainview/store/roadmapStore";
@@ -18,6 +20,26 @@ function makeEvent(nodeId: string, i = 0): IntegrationEvent {
 		timestamp: new Date(Date.now() - i * 1000).toISOString(),
 	};
 }
+
+// The rows' nodes have to exist in the roadmap: a focus request for an id
+// that is not in the index is ignored (an event can name a node from another
+// file, or one deleted since).
+const SCHEMA: RoadmapSchema = {
+	version: "1.0",
+	title: "Event log fixture",
+	nodes: [
+		{
+			id: "n1",
+			title: "n1",
+			status: "not-started",
+			children: ["n2", "n3", "n4", "n5"].map((id) => ({
+				id,
+				title: id,
+				status: "not-started" as const,
+			})),
+		},
+	],
+};
 
 beforeEach(() => {
 	useEventLogStore.setState({
@@ -32,6 +54,7 @@ beforeEach(() => {
 		connectedCount: 0,
 		errorMessage: null,
 	});
+	useRoadmapStore.getState().loadSchema(SCHEMA, "/tmp/event-log.json");
 	useRoadmapStore.setState({ selectedNodeId: null });
 });
 
@@ -46,7 +69,7 @@ afterEach(() => {
 });
 
 describe("EventLog row selection (I-11)", () => {
-	it("row click calls setSelectedNode(row.nodeId); Canvas pans via existing focusedNodeId/selectedNodeId effect (I-11 resolution — no new camera-follow action needed)", () => {
+	it("row click requests a centred focus and selects synchronously (I-11; v0.8.1 RC3)", () => {
 		// Seed 5 events for different nodes
 		const events = ["n1", "n2", "n3", "n4", "n5"].map((id, i) =>
 			makeEvent(id, i),
@@ -57,24 +80,25 @@ describe("EventLog row selection (I-11)", () => {
 		const { rows } = useEventLogStore.getState();
 		expect(rows.length).toBe(5);
 
-		// Simulate what EventLogRow's onClick does:
-		// "I-11 resolution: setSelectedNode triggers Canvas.tsx's existing
-		// `focusedNodeId ?? selectedNodeId` effect (lines 141-143)..."
 		expect(useRoadmapStore.getState().selectedNodeId).toBeNull();
 
 		// Simulate clicking the row for n3
 		const clickedRow = rows.find((r) => r.nodeId === "n3");
 		expect(clickedRow).toBeDefined();
 
-		// This is exactly the handler in EventLogDrawer's onClick:
-		useRoadmapStore.getState().setSelectedNode(clickedRow?.nodeId ?? "n3");
+		// This is exactly the handler in EventLogDrawer's onClick. The reveal
+		// half is the canvas controller's and needs no mounted Canvas here; the
+		// selection contract is that it lands SYNCHRONOUSLY (it drives the
+		// SidePanel).
+		requestNodeFocus(clickedRow?.nodeId ?? "n3", {
+			align: "center",
+			select: true,
+		});
 
-		// After the click handler fires, selectedNodeId updates
 		expect(useRoadmapStore.getState().selectedNodeId).toBe("n3");
-
-		// Camera-follow is NOT asserted here — Canvas.tsx's Phase 3 test suite
-		// already exercises the viewport-pan effect against selectedNodeId changes.
-		// This test only verifies the SELECTION event fires correctly (I-11).
+		// RC3: the row also takes canvas focus, so the camera moves even when a
+		// different node was focused before.
+		expect(useRoadmapStore.getState().focusedNodeId).toBe("n3");
 	});
 
 	it("appendEvents wires through the store (pushEventLog integration)", () => {

@@ -3,8 +3,15 @@ import { fireEvent, renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { RoadmapSchema } from "../../../../../packages/core/src/schema";
 import { useKeyboardRouter } from "../../../src/mainview/hooks/useKeyboardRouter";
+import {
+	FOCUS_NODE_EVENT,
+	type NodeFocusRequest,
+} from "../../../src/mainview/lib/focusRequest";
 import { useRoadmapStore } from "../../../src/mainview/store/roadmapStore";
 import { resetStore } from "../../helpers/resetStore";
+
+/** Listener teardown for tests that observe the focus-request bridge. */
+const cleanups: Array<() => void> = [];
 
 const ROOT_ID = "aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee";
 const CHILD_A_ID = "11111111-2222-4333-8444-555555555555";
@@ -41,7 +48,6 @@ interface RenderOpts {
 		cancel: ReturnType<typeof vi.fn>;
 	};
 	togglePanelFocus?: ReturnType<typeof vi.fn<() => void>>;
-	getNodePosition?: (id: string) => { x: number; y: number } | null;
 }
 
 function renderRouter(opts: RenderOpts = {}) {
@@ -51,16 +57,12 @@ function renderRouter(opts: RenderOpts = {}) {
 		cancel: vi.fn(),
 		commit: vi.fn(),
 		setTitle: vi.fn(),
-		updateForTransform: vi.fn(),
 	};
 	const togglePanelFocus = opts.togglePanelFocus ?? vi.fn<() => void>();
 
 	renderHook(() =>
 		useKeyboardRouter({
 			inlineRename: inlineRename as never,
-			getTransform: () => ({ x: 0, y: 0, k: 1 }),
-			getContainerRect: () => ({ left: 0, top: 0 }),
-			getNodePosition: opts.getNodePosition ?? (() => ({ x: 0, y: 0 })),
 			togglePanelFocus,
 		}),
 	);
@@ -74,17 +76,21 @@ beforeEach(() => {
 
 afterEach(() => {
 	// Cleanup any stray event listeners from renderHook
+	while (cleanups.length) cleanups.pop()?.();
 	resetStore();
 	vi.restoreAllMocks();
 	document.body.innerHTML = "";
 });
 
 describe("useKeyboardRouter", () => {
-	it("F2 with focusedNodeId set opens inline rename", () => {
+	it("F2 with focusedNodeId set opens inline rename on that node", () => {
 		useRoadmapStore.getState().setFocusedNode(CHILD_A_ID);
 		const { inlineRename } = renderRouter();
 		fireEvent.keyDown(document, { key: "F2" });
-		expect(inlineRename.open).toHaveBeenCalled();
+		// v0.8.1 Phase 2: the card-matched input needs no position, and the
+		// router no longer receives one (RouterDeps lost getNodePosition /
+		// getTransform / getContainerRect).
+		expect(inlineRename.open).toHaveBeenCalledWith(CHILD_A_ID);
 	});
 
 	it("Enter adds a child to focusedNodeId", () => {
@@ -296,6 +302,48 @@ describe("useKeyboardRouter", () => {
 			renderRouter();
 			fireEvent.keyDown(document, { key: "ArrowUp" });
 			expect(useRoadmapStore.getState().focusedNodeId).toBe(CHILD_A_ID);
+		});
+	});
+
+	// v0.8.1 Phase 2 (RC3): the canvas no longer guesses its viewport target
+	// from `focusedNodeId ?? selectedNodeId` — each mover states its intent.
+	describe("explicit focus requests", () => {
+		function captureRequests(): NodeFocusRequest[] {
+			const seen: NodeFocusRequest[] = [];
+			const listener = (e: Event): void => {
+				seen.push((e as CustomEvent<NodeFocusRequest>).detail);
+			};
+			window.addEventListener(FOCUS_NODE_EVENT, listener);
+			cleanups.push(() =>
+				window.removeEventListener(FOCUS_NODE_EVENT, listener),
+			);
+			return seen;
+		}
+
+		it("arrow navigation asks for the comfort zone, without selecting", () => {
+			useRoadmapStore.getState().setFocusedNode(CHILD_A_ID);
+			const seen = captureRequests();
+			renderRouter();
+
+			fireEvent.keyDown(document, { key: "ArrowRight" });
+
+			expect(seen).toEqual([
+				{ nodeId: CHILD_B_ID, align: "nearest", select: false },
+			]);
+			expect(useRoadmapStore.getState().selectedNodeId).toBeNull();
+		});
+
+		it("Space promotes the focused node to selected and keeps it in view", () => {
+			useRoadmapStore.getState().setFocusedNode(CHILD_B_ID);
+			const seen = captureRequests();
+			renderRouter();
+
+			fireEvent.keyDown(document, { key: " " });
+
+			expect(seen).toEqual([
+				{ nodeId: CHILD_B_ID, align: "nearest", select: true },
+			]);
+			expect(useRoadmapStore.getState().selectedNodeId).toBe(CHILD_B_ID);
 		});
 	});
 });

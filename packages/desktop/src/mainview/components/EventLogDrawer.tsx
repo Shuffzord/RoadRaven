@@ -1,5 +1,6 @@
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useCallback, useMemo, useRef, useState } from "react";
+import { requestNodeFocus } from "../lib/focusRequest";
 import { useEventApiStore } from "../store/eventApiStore";
 import { getFilteredRows, useEventLogStore } from "../store/eventLogStore";
 import { useRoadmapStore } from "../store/roadmapStore";
@@ -361,12 +362,17 @@ export function EventLogDrawer() {
 									isSelected={row.nodeId === selectedNodeId}
 									expanded={isExpanded}
 									onClick={() => {
-										// I-11 resolution: setSelectedNode triggers Canvas.tsx's
-										// existing `focusedNodeId ?? selectedNodeId` effect (lines
-										// 141-143) which pans the viewport when the target node is
-										// off-screen. Action name verified as `setSelectedNode`
-										// (roadmapStore.ts:702), NOT `setSelectedNodeId`.
-										useRoadmapStore.getState().setSelectedNode(row.nodeId);
+										// I-11: a row click is a jump-to, so it centres its node
+										// (and selects it synchronously, which drives the
+										// SidePanel). v0.8.1 RC3: this used to set only
+										// `selectedNodeId` and relied on Canvas's implicit
+										// `focusedNodeId ?? selectedNodeId` target, so a row click
+										// moved nothing whenever the canvas already had a focused
+										// node.
+										requestNodeFocus(row.nodeId, {
+											align: "center",
+											select: true,
+										});
 									}}
 									onToggleExpand={() => {
 										setExpandedKeys((prev) => {

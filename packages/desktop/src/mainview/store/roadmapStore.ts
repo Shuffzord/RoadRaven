@@ -637,7 +637,10 @@ export const useRoadmapStore = create<RoadmapState>((set, get) => {
 				nodeIndex,
 				dataKey: nextKey,
 				statusTick: 0,
+				// RC9: a different file's ids can never be the target here, so the
+				// selection goes with the focus.
 				focusedNodeId: null,
+				selectedNodeId: null,
 				searchQuery: "",
 				searchMatchIds: [],
 				searchCurrentIndex: -1,
@@ -661,6 +664,11 @@ export const useRoadmapStore = create<RoadmapState>((set, get) => {
 			const nextKey = String(Number(get().dataKey) + 1);
 			const agentRevision =
 				Math.max(schema.revision ?? 0, get().agentRevision) + 1;
+			// RC9: the same file came back from disk, so a target that survived
+			// the edit is still the user's place in the tree. One that did not
+			// must be dropped rather than left pointing at a dead id.
+			const survives = (id: string | null): string | null =>
+				id && nodeIndex.has(id) ? id : null;
 			set({
 				schema: { ...schema },
 				agentRevision,
@@ -668,7 +676,8 @@ export const useRoadmapStore = create<RoadmapState>((set, get) => {
 				nodeIndex,
 				dataKey: nextKey,
 				statusTick: 0,
-				focusedNodeId: null,
+				focusedNodeId: survives(get().focusedNodeId),
+				selectedNodeId: survives(get().selectedNodeId),
 				searchQuery: "",
 				searchMatchIds: [],
 				searchCurrentIndex: -1,

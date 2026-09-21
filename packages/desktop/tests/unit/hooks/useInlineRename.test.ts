@@ -29,19 +29,15 @@ afterEach(() => {
 });
 
 describe("useInlineRename", () => {
-	it("open() sets screenPos to localX*k + tx + rect.left, localY*k + ty + rect.top", () => {
+	// v0.8.1 Phase 2: the input renders inside the node card, so the hook no
+	// longer carries a screen position — `open` takes the node id alone and the
+	// overlay's transform plumbing (`screenPos`, `updateForTransform`) is gone
+	// with Canvas's layout-position cache.
+	it("open() targets the node and seeds the draft from its current title", () => {
 		const { result } = renderHook(() => useInlineRename());
 		act(() => {
-			result.current.open(
-				NODE_ID,
-				100,
-				50,
-				{ x: 20, y: 10, k: 2 },
-				{ left: 30, top: 40 },
-			);
+			result.current.open(NODE_ID);
 		});
-		expect(result.current.state.screenPos?.x).toBe(100 * 2 + 20 + 30); // 250
-		expect(result.current.state.screenPos?.y).toBe(50 * 2 + 10 + 40); // 150
 		expect(result.current.state.nodeId).toBe(NODE_ID);
 		expect(result.current.state.title).toBe("Original");
 	});
@@ -50,13 +46,7 @@ describe("useInlineRename", () => {
 		const renameSpy = vi.spyOn(useRoadmapStore.getState(), "renameNode");
 		const { result } = renderHook(() => useInlineRename());
 		act(() => {
-			result.current.open(
-				NODE_ID,
-				0,
-				0,
-				{ x: 0, y: 0, k: 1 },
-				{ left: 0, top: 0 },
-			);
+			result.current.open(NODE_ID);
 			result.current.setTitle("  New Title  ");
 		});
 		act(() => {
@@ -70,13 +60,7 @@ describe("useInlineRename", () => {
 		const renameSpy = vi.spyOn(useRoadmapStore.getState(), "renameNode");
 		const { result } = renderHook(() => useInlineRename());
 		act(() => {
-			result.current.open(
-				NODE_ID,
-				0,
-				0,
-				{ x: 0, y: 0, k: 1 },
-				{ left: 0, top: 0 },
-			);
+			result.current.open(NODE_ID);
 			result.current.setTitle("   ");
 		});
 		act(() => {
@@ -89,13 +73,7 @@ describe("useInlineRename", () => {
 		const renameSpy = vi.spyOn(useRoadmapStore.getState(), "renameNode");
 		const { result } = renderHook(() => useInlineRename());
 		act(() => {
-			result.current.open(
-				NODE_ID,
-				0,
-				0,
-				{ x: 0, y: 0, k: 1 },
-				{ left: 0, top: 0 },
-			);
+			result.current.open(NODE_ID);
 			result.current.setTitle("Different");
 		});
 		act(() => {
@@ -105,40 +83,10 @@ describe("useInlineRename", () => {
 		expect(result.current.state.nodeId).toBeNull();
 	});
 
-	it("updateForTransform recomputes screenPos when transform changes", () => {
-		const { result } = renderHook(() => useInlineRename());
-		act(() => {
-			result.current.open(
-				NODE_ID,
-				100,
-				50,
-				{ x: 0, y: 0, k: 1 },
-				{ left: 0, top: 0 },
-			);
-		});
-		expect(result.current.state.screenPos?.x).toBe(100);
-		act(() => {
-			result.current.updateForTransform(
-				100,
-				50,
-				{ x: 50, y: 25, k: 2 },
-				{ left: 10, top: 5 },
-			);
-		});
-		expect(result.current.state.screenPos?.x).toBe(100 * 2 + 50 + 10); // 260
-		expect(result.current.state.screenPos?.y).toBe(50 * 2 + 25 + 5); // 130
-	});
-
 	it("state.nodeId is null after commit", () => {
 		const { result } = renderHook(() => useInlineRename());
 		act(() => {
-			result.current.open(
-				NODE_ID,
-				0,
-				0,
-				{ x: 0, y: 0, k: 1 },
-				{ left: 0, top: 0 },
-			);
+			result.current.open(NODE_ID);
 			result.current.setTitle("abc");
 		});
 		act(() => {
