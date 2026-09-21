@@ -76,6 +76,26 @@ jobs:
       - name: Test install.sh against a fake release
         run: bunx vitest run tests/release/install-script.test.ts
 
+  install-ps1:
+    name: Test install.ps1 (Windows)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lock') }}
+      # This job needs only vitest, so skip the postinstall's Electrobun devkit
+      # projection (Hutch toolchain download + symlinks) and use the standalone
+      # release config: the root vitest.config.ts also loads packages/desktop's,
+      # which imports that devkit.
+      - run: bun install --ignore-scripts
+      - name: Test install.ps1 against a fake release
+        run: bunx vitest run --config tests/release/vitest.config.ts tests/release/install-ps1.test.ts
+
   # TODO(fallow): enable once the branch is stable and the post-GSD dead-code
   # cleanup has landed. Intended as a non-blocking signal initially; flip to
   # `--fail-on-regression` after `bunx fallow --save-regression-baseline` is run

@@ -17,13 +17,7 @@ export default defineConfig({
 		projects: [
 			"packages/desktop/vitest.config.ts",
 			"plugins/claude-code/vitest.config.ts",
-			{
-				test: {
-					name: "release",
-					environment: "node",
-					include: ["tests/release/**/*.test.ts"],
-				},
-			},
+			"tests/release/vitest.config.ts",
 		],
 	},
 });

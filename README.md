@@ -63,7 +63,22 @@ Download the latest release from
 
 ### Windows
 
-1. Download `win-x64-RoadRaven-Setup.zip`.
+One line (x64, PowerShell) — downloads the latest release, verifies it against
+the release's `SHA256SUMS`, and runs the installer (click **Close** when it
+finishes):
+
+```powershell
+irm https://raw.githubusercontent.com/Shuffzord/RoadRaven/master/install.ps1 | iex
+```
+
+Pin a version by running `$env:ROADRAVEN_VERSION = 'v0.8.0'` first. Works for
+v0.8.0 and later (earlier releases ship no `SHA256SUMS`).
+
+Or by hand:
+
+1. Download `win-x64-RoadRaven-Setup.zip` and `SHA256SUMS`, then check the
+   download (prints `True` when it matches):
+   `(Get-FileHash win-x64-RoadRaven-Setup.zip).Hash -eq (Select-String -SimpleMatch '  win-x64-RoadRaven-Setup.zip' SHA256SUMS).Line.Split(' ')[0]`
 2. Extract the `.zip`.
 3. Double-click `RoadRaven-Setup.exe`.
 4. **Windows SmartScreen will warn:** "Windows protected your PC."
