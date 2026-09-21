@@ -7,12 +7,20 @@ import { useRoadmapStore } from "../../../src/mainview/store/roadmapStore";
 import { resetStore } from "../../helpers/resetStore";
 
 const NODE_ID = "aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee";
+const OTHER_ID = "11111111-2222-4333-8444-555555555555";
 
 function loadSchema(): void {
 	const schema: RoadmapSchema = {
 		version: "1.0",
 		title: "T",
-		nodes: [{ id: NODE_ID, title: "Original", status: "not-started" }],
+		nodes: [
+			{
+				id: NODE_ID,
+				title: "Original",
+				status: "not-started",
+				children: [{ id: OTHER_ID, title: "Other", status: "not-started" }],
+			},
+		],
 	};
 	useRoadmapStore.getState().loadSchema(schema, "/tmp/t.json");
 }
@@ -81,6 +89,45 @@ describe("useInlineRename", () => {
 		});
 		expect(renameSpy).not.toHaveBeenCalled();
 		expect(result.current.state.nodeId).toBeNull();
+	});
+
+	// v0.8.1 Phase 4: the focus controller is now the only thing that opens a
+	// rename, and a newer request supersedes an older one. React fires no blur
+	// when the input unmounts, so switching the target would silently discard
+	// the draft — while every other way of leaving a rename in this app
+	// commits it (the card's onBlur). Escape stays the one route that discards.
+	it("open() on another node commits the draft in flight", () => {
+		const renameSpy = vi.spyOn(useRoadmapStore.getState(), "renameNode");
+		const { result } = renderHook(() => useInlineRename());
+		act(() => {
+			result.current.open(NODE_ID);
+			result.current.setTitle("Typed but not confirmed");
+		});
+
+		act(() => {
+			result.current.open(OTHER_ID);
+		});
+
+		expect(renameSpy).toHaveBeenCalledWith(NODE_ID, "Typed but not confirmed");
+		expect(result.current.state.nodeId).toBe(OTHER_ID);
+		expect(result.current.state.title).toBe("Other");
+	});
+
+	it("open() on the same node does not commit anything", () => {
+		const renameSpy = vi.spyOn(useRoadmapStore.getState(), "renameNode");
+		const { result } = renderHook(() => useInlineRename());
+		act(() => {
+			result.current.open(NODE_ID);
+			result.current.setTitle("Half typed");
+		});
+
+		act(() => {
+			result.current.open(NODE_ID);
+		});
+
+		expect(renameSpy).not.toHaveBeenCalled();
+		// Re-opening reseeds the draft from the stored title.
+		expect(result.current.state.title).toBe("Original");
 	});
 
 	it("state.nodeId is null after commit", () => {

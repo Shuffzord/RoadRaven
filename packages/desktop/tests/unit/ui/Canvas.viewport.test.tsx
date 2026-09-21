@@ -482,10 +482,57 @@ describe("Canvas mouse selection (RC3)", () => {
 		window.removeEventListener(FOCUS_NODE_EVENT, listener);
 
 		expect(requests).toEqual([
-			{ nodeId: FAR_ID, align: "nearest", select: true },
+			{ nodeId: FAR_ID, align: "nearest", select: true, rename: false },
 		]);
 		const state = useRoadmapStore.getState();
 		expect(state.selectedNodeId).toBe(FAR_ID);
 		expect(state.focusedNodeId).toBe(FAR_ID);
+	});
+});
+
+// v0.8.1 Phase 4 (RC4): Canvas hands the focus controller its `openRename`,
+// so a create-and-rename request ends in a real input inside the new card —
+// no `roadraven:open-rename` bridge, no rAF guesswork about when it is safe.
+describe("Canvas create and rename (RC4)", () => {
+	beforeEach(() => {
+		vi.useFakeTimers({
+			toFake: ["requestAnimationFrame", "cancelAnimationFrame", "performance"],
+		});
+	});
+
+	function renameInput(container: HTMLElement): HTMLElement | null {
+		return container.querySelector<HTMLElement>(
+			'input[aria-label="Rename node"]',
+		);
+	}
+
+	it("opens the inline rename input on the requested card", () => {
+		const container = renderCanvas();
+
+		act(() => {
+			requestNodeFocus(FAR_ID, { align: "center", rename: true });
+		});
+		expect(renameInput(container), "not inside the requesting tick").toBeNull();
+
+		act(() => {
+			vi.advanceTimersByTime(16 * 10);
+		});
+
+		const input = renameInput(container);
+		expect(input).not.toBeNull();
+		expect(
+			input?.closest("[data-source-id]")?.getAttribute("data-source-id"),
+		).toBe(FAR_ID);
+	});
+
+	it("leaves a plain reveal alone", () => {
+		const container = renderCanvas();
+
+		act(() => {
+			requestNodeFocus(FAR_ID, { align: "nearest" });
+			vi.advanceTimersByTime(16 * 10);
+		});
+
+		expect(renameInput(container)).toBeNull();
 	});
 });

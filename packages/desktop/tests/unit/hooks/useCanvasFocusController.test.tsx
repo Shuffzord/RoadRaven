@@ -113,12 +113,41 @@ function mountCollapsedCard(nodeId: string, onExpand: () => void): void {
 	card.appendChild(chevron);
 }
 
+/**
+ * A card whose chevron reads "Collapse subtree" and, when clicked, unmounts
+ * the cards of `descendants` — what react-d3-tree does on a real collapse.
+ */
+function mountExpandedCard(nodeId: string, descendants: string[]): void {
+	const card = mountCard(nodeId, rect(0, 0, 10, 10));
+	const chevron = document.createElement("button");
+	chevron.type = "button";
+	chevron.setAttribute("aria-label", "Collapse subtree");
+	chevron.addEventListener("click", () => {
+		chevron.setAttribute("aria-label", "Expand subtree");
+		for (const id of descendants) findCard(id)?.remove();
+	});
+	card.appendChild(chevron);
+}
+
+function findCard(nodeId: string): HTMLElement | null {
+	return canvasEl.querySelector<HTMLElement>(`[data-source-id="${nodeId}"]`);
+}
+
+function clickChevron(nodeId: string): void {
+	act(() => {
+		findCard(nodeId)
+			?.querySelector<HTMLButtonElement>('button[aria-label$="subtree"]')
+			?.click();
+	});
+}
+
 const expansions: string[] = [];
 const panBy = vi.fn<(dx: number, dy: number) => void>();
+const openRename = vi.fn<(nodeId: string) => void>();
 
 function Harness(): React.ReactElement {
 	const containerRef = useRef<HTMLElement | null>(canvasEl);
-	useCanvasFocusController({ containerRef, panBy });
+	useCanvasFocusController({ containerRef, panBy, openRename });
 	return <></>;
 }
 
@@ -144,6 +173,7 @@ beforeEach(() => {
 	document.body.appendChild(canvasEl);
 	expansions.length = 0;
 	panBy.mockClear();
+	openRename.mockClear();
 	logged.warn.mockClear();
 	useRoadmapStore.getState().loadSchema(SCHEMA, "/tmp/controller.json");
 });
@@ -561,5 +591,265 @@ describe("useCanvasFocusController — DOM focus (RC8)", () => {
 		frames(40);
 
 		expect(lateFocus).not.toHaveBeenCalled();
+	});
+});
+
+// v0.8.1 Phase 4 (RC4) — one create-and-rename path.
+//
+// Creating a node used to be two unrelated things: a store mutation plus a
+// `roadraven:open-rename` window event that Canvas answered one rAF later,
+// knowing nothing about where the new card had landed. The rename input could
+// therefore open ~518px outside the canvas (P0-4) while focus stayed on the
+// parent. The reveal already waits for the card, measures it and pans to it,
+// so it is also the only place that knows when a rename input can safely open.
+describe("useCanvasFocusController — create and rename (RC4)", () => {
+	it("opens the rename input on the revealed node, once", () => {
+		renderController();
+
+		act(() => {
+			requestNodeFocus(CHILD_ID, { align: "center", rename: true });
+		});
+		mountCard(CHILD_ID, OUTSIDE);
+		frames(10);
+
+		expect(openRename).toHaveBeenCalledTimes(1);
+		expect(openRename).toHaveBeenCalledWith(CHILD_ID);
+		expect(panBy).toHaveBeenCalledTimes(1);
+	});
+
+	// The Radix race, kept closed by construction. A ContextMenu item's
+	// `onSelect` runs while the menu's FocusScope is still mounted and
+	// trapping: its `focusin` listener pulls focus straight back out of
+	// anything outside the menu (@radix-ui/react-focus-scope 1.1.9), which
+	// blurs a freshly opened rename input and blur-commits the placeholder.
+	// The old fix was a one-rAF defer in Canvas; the rule now is that a
+	// rename request never takes the controller's synchronous fast path, so
+	// the input cannot open before the menu has closed and finished with
+	// focus (its unmount restore is itself a setTimeout(0)).
+	it("never opens the rename inside the dispatch that asked for it", () => {
+		mountCard(CHILD_ID, OUTSIDE);
+		renderController();
+
+		act(() => {
+			requestNodeFocus(CHILD_ID, { align: "nearest", rename: true });
+		});
+
+		expect(openRename).not.toHaveBeenCalled();
+		// ...and not on the next frame either — the container has to agree
+		// with itself for SETTLE_FRAMES first.
+		frames(1);
+		expect(openRename).not.toHaveBeenCalled();
+
+		frames(6);
+		expect(openRename).toHaveBeenCalledWith(CHILD_ID);
+	});
+
+	it("opens the rename only after the SidePanel has finished resizing", () => {
+		mountCard(CHILD_ID, OUTSIDE);
+		renderController();
+
+		act(() => {
+			requestNodeFocus(CHILD_ID, {
+				align: "center",
+				select: true,
+				rename: true,
+			});
+		});
+		frames(1);
+		containerRect = rect(0, 0, 600, 600);
+		frames(6);
+
+		expect(openRename).toHaveBeenCalledTimes(1);
+		// Measured against the SHRUNK container, exactly as the pan is.
+		expect(panBy).toHaveBeenCalledWith(-400, 0);
+	});
+
+	// A rename is explicit user intent: F2 or a menu item. The never-steal
+	// guard protects DOM focus the user placed elsewhere, but it must not
+	// swallow the rename itself — the input focuses itself (RoadmapNode.tsx).
+	it("opens the rename even when focus sits outside the canvas", () => {
+		const card = mountCard(CHILD_ID, OUTSIDE);
+		renderController();
+		const input = document.createElement("input");
+		document.body.appendChild(input);
+		input.focus();
+
+		act(() => {
+			requestNodeFocus(CHILD_ID, { align: "nearest", rename: true });
+		});
+		frames(6);
+
+		expect(openRename).toHaveBeenCalledWith(CHILD_ID);
+		expect(document.activeElement).not.toBe(card);
+	});
+
+	it("never opens the rename of a superseded request", () => {
+		mountCard(CHILD_ID, OUTSIDE);
+		mountCard(SIBLING_ID, OUTSIDE);
+		renderController();
+
+		act(() => {
+			requestNodeFocus(CHILD_ID, { align: "center", rename: true });
+		});
+		act(() => {
+			requestNodeFocus(SIBLING_ID, { align: "nearest" });
+		});
+		frames(10);
+
+		expect(openRename).not.toHaveBeenCalled();
+	});
+
+	it("does not open a rename for a card that never mounts", () => {
+		renderController();
+
+		act(() => {
+			requestNodeFocus(CHILD_ID, { align: "center", rename: true });
+		});
+		frames(40);
+
+		expect(openRename).not.toHaveBeenCalled();
+		expect(logged.warn).toHaveBeenCalledTimes(1);
+	});
+
+	// Creating bumps `dataKey`, so the A7 re-reveal fires on the very commit
+	// that mounts the new card — and a plain `nearest` re-reveal that
+	// superseded the create's request would drop its rename intent on the
+	// floor. A request already in flight for the same node measures after
+	// the new layout anyway, so it wins.
+	it("survives the A7 re-reveal the create's own dataKey bump triggers", () => {
+		mountCard(CHILD_ID, OUTSIDE);
+		renderController();
+
+		act(() => {
+			useRoadmapStore.getState().addChild(ROOT_ID);
+			requestNodeFocus(CHILD_ID, { align: "center", rename: true });
+		});
+		frames(10);
+
+		expect(openRename).toHaveBeenCalledTimes(1);
+		expect(openRename).toHaveBeenCalledWith(CHILD_ID);
+	});
+});
+
+// v0.8.1 Phase 4 (RC6) — the invariant: `focusedNodeId` always names a card
+// that is mounted.
+//
+// Collapsing a subtree unmounts every descendant card. Phase 0 recorded what
+// that costs when focus was inside it: NO card shows focus, and the next
+// sibling key resolves inside the hidden subtree too, so the canvas stays
+// blank-focused until a mouse click. All three collapse entry points (the `C`
+// key, the context menu's "Collapse subtree" and the mouse) end in the same
+// chevron click, so one delegated listener covers them all.
+describe("useCanvasFocusController — focus survives a collapse (RC6)", () => {
+	function mountFamily(): void {
+		mountExpandedCard(ROOT_ID, [CHILD_ID, GRANDCHILD_ID]);
+		mountExpandedCard(CHILD_ID, [GRANDCHILD_ID]);
+		mountCard(GRANDCHILD_ID, OUTSIDE);
+		mountCard(SIBLING_ID, OUTSIDE);
+	}
+
+	it("moves focus to the collapsed node when the focused descendant unmounts", () => {
+		mountFamily();
+		renderController();
+		act(() => {
+			useRoadmapStore.getState().setFocusedNode(GRANDCHILD_ID);
+		});
+
+		clickChevron(CHILD_ID);
+		frames(4);
+
+		expect(useRoadmapStore.getState().focusedNodeId).toBe(CHILD_ID);
+	});
+
+	it("moves focus up to the collapsed ancestor, not just one level", () => {
+		mountFamily();
+		renderController();
+		act(() => {
+			useRoadmapStore.getState().setFocusedNode(GRANDCHILD_ID);
+		});
+
+		clickChevron(ROOT_ID);
+		frames(4);
+
+		expect(useRoadmapStore.getState().focusedNodeId).toBe(ROOT_ID);
+	});
+
+	// Selection drives the SidePanel — what the user chose to INSPECT. A
+	// collapse is a structural/camera action, not a change of subject, and a
+	// selected-but-hidden node is harmless (the panel still shows it, and
+	// re-expanding restores the highlight). Invisible FOCUS is what strands
+	// the keyboard, so only focus is corrected.
+	it("leaves the selection where the user put it", () => {
+		mountFamily();
+		renderController();
+		act(() => {
+			useRoadmapStore.getState().setFocusedNode(GRANDCHILD_ID);
+			useRoadmapStore.getState().setSelectedNode(GRANDCHILD_ID);
+		});
+
+		clickChevron(CHILD_ID);
+		frames(4);
+
+		expect(useRoadmapStore.getState().selectedNodeId).toBe(GRANDCHILD_ID);
+	});
+
+	it("leaves focus alone when the focused node is not a descendant", () => {
+		mountFamily();
+		renderController();
+		act(() => {
+			useRoadmapStore.getState().setFocusedNode(SIBLING_ID);
+		});
+
+		clickChevron(CHILD_ID);
+		frames(4);
+
+		expect(useRoadmapStore.getState().focusedNodeId).toBe(SIBLING_ID);
+	});
+
+	it("leaves focus alone when the collapsed node IS the focused node", () => {
+		mountFamily();
+		renderController();
+		act(() => {
+			useRoadmapStore.getState().setFocusedNode(CHILD_ID);
+		});
+		panBy.mockClear();
+
+		clickChevron(CHILD_ID);
+		frames(4);
+
+		expect(useRoadmapStore.getState().focusedNodeId).toBe(CHILD_ID);
+		expect(panBy).not.toHaveBeenCalled();
+	});
+
+	it("stands down when something else claimed focus before the frame landed", () => {
+		mountFamily();
+		renderController();
+		act(() => {
+			useRoadmapStore.getState().setFocusedNode(GRANDCHILD_ID);
+		});
+
+		clickChevron(CHILD_ID);
+		act(() => {
+			useRoadmapStore.getState().setFocusedNode(SIBLING_ID);
+		});
+		frames(4);
+
+		expect(useRoadmapStore.getState().focusedNodeId).toBe(SIBLING_ID);
+	});
+
+	it("does nothing when the click left the focused card mounted", () => {
+		mountExpandedCard(CHILD_ID, []);
+		mountCard(GRANDCHILD_ID, OUTSIDE);
+		renderController();
+		act(() => {
+			useRoadmapStore.getState().setFocusedNode(GRANDCHILD_ID);
+		});
+		panBy.mockClear();
+
+		clickChevron(CHILD_ID);
+		frames(4);
+
+		expect(useRoadmapStore.getState().focusedNodeId).toBe(GRANDCHILD_ID);
+		expect(panBy).not.toHaveBeenCalled();
 	});
 });

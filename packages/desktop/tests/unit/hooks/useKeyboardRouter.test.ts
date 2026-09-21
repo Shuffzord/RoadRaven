@@ -13,6 +13,57 @@ import { resetStore } from "../../helpers/resetStore";
 /** Listener teardown for tests that observe the focus-request bridge. */
 const cleanups: Array<() => void> = [];
 
+/** Record every focus request the router issues until the test ends. */
+function captureRequests(): NodeFocusRequest[] {
+	const seen: NodeFocusRequest[] = [];
+	const listener = (e: Event): void => {
+		seen.push((e as CustomEvent<NodeFocusRequest>).detail);
+	};
+	window.addEventListener(FOCUS_NODE_EVENT, listener);
+	cleanups.push(() => window.removeEventListener(FOCUS_NODE_EVENT, listener));
+	return seen;
+}
+
+/** Child ids of a node, in order, read back from the live store. */
+function childIdsOf(nodeId: string): string[] {
+	return (
+		useRoadmapStore
+			.getState()
+			.nodeIndex.get(nodeId)
+			?.children?.map((c) => c.id) ?? []
+	);
+}
+
+/**
+ * Stand in for the canvas card react-d3-tree renders, with the chevron
+ * `lib/nodeCollapse.ts` reads and clicks. The click flips the label the way
+ * the real toggle does, so a second key press sees the new state.
+ */
+function mountCardWithChevron(
+	nodeId: string,
+	collapsed: boolean,
+): ReturnType<typeof vi.fn> {
+	const card = document.createElement("div");
+	card.setAttribute("data-source-id", nodeId);
+	const chevron = document.createElement("button");
+	chevron.setAttribute(
+		"aria-label",
+		collapsed ? "Expand subtree" : "Collapse subtree",
+	);
+	const onClick = vi.fn(() => {
+		chevron.setAttribute(
+			"aria-label",
+			chevron.getAttribute("aria-label") === "Expand subtree"
+				? "Collapse subtree"
+				: "Expand subtree",
+		);
+	});
+	chevron.addEventListener("click", onClick);
+	card.appendChild(chevron);
+	document.body.appendChild(card);
+	return onClick;
+}
+
 const ROOT_ID = "aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee";
 const CHILD_A_ID = "11111111-2222-4333-8444-555555555555";
 const CHILD_B_ID = "22222222-3333-4444-8555-666666666666";
@@ -83,14 +134,20 @@ afterEach(() => {
 });
 
 describe("useKeyboardRouter", () => {
-	it("F2 with focusedNodeId set opens inline rename on that node", () => {
+	it("F2 with focusedNodeId set asks the canvas to reveal and rename it", () => {
 		useRoadmapStore.getState().setFocusedNode(CHILD_A_ID);
+		const seen = captureRequests();
 		const { inlineRename } = renderRouter();
 		fireEvent.keyDown(document, { key: "F2" });
-		// v0.8.1 Phase 2: the card-matched input needs no position, and the
-		// router no longer receives one (RouterDeps lost getNodePosition /
-		// getTransform / getContainerRect).
-		expect(inlineRename.open).toHaveBeenCalledWith(CHILD_A_ID);
+		// v0.8.1 Phase 4: one create-and-rename path. `nearest`, not `center`:
+		// renaming a node the user is looking at must not whip the camera, but
+		// an off-screen one is revealed before its input opens. The router no
+		// longer opens the input itself — the controller does, once the card is
+		// mounted and measured.
+		expect(seen).toEqual([
+			{ nodeId: CHILD_A_ID, align: "nearest", select: false, rename: true },
+		]);
+		expect(inlineRename.open).not.toHaveBeenCalled();
 	});
 
 	it("Enter adds a child to focusedNodeId", () => {
@@ -308,18 +365,6 @@ describe("useKeyboardRouter", () => {
 	// v0.8.1 Phase 2 (RC3): the canvas no longer guesses its viewport target
 	// from `focusedNodeId ?? selectedNodeId` — each mover states its intent.
 	describe("explicit focus requests", () => {
-		function captureRequests(): NodeFocusRequest[] {
-			const seen: NodeFocusRequest[] = [];
-			const listener = (e: Event): void => {
-				seen.push((e as CustomEvent<NodeFocusRequest>).detail);
-			};
-			window.addEventListener(FOCUS_NODE_EVENT, listener);
-			cleanups.push(() =>
-				window.removeEventListener(FOCUS_NODE_EVENT, listener),
-			);
-			return seen;
-		}
-
 		it("arrow navigation asks for the comfort zone, without selecting", () => {
 			useRoadmapStore.getState().setFocusedNode(CHILD_A_ID);
 			const seen = captureRequests();
@@ -328,7 +373,12 @@ describe("useKeyboardRouter", () => {
 			fireEvent.keyDown(document, { key: "ArrowRight" });
 
 			expect(seen).toEqual([
-				{ nodeId: CHILD_B_ID, align: "nearest", select: false },
+				{
+					nodeId: CHILD_B_ID,
+					align: "nearest",
+					select: false,
+					rename: false,
+				},
 			]);
 			expect(useRoadmapStore.getState().selectedNodeId).toBeNull();
 		});
@@ -341,9 +391,132 @@ describe("useKeyboardRouter", () => {
 			fireEvent.keyDown(document, { key: " " });
 
 			expect(seen).toEqual([
-				{ nodeId: CHILD_B_ID, align: "nearest", select: true },
+				{ nodeId: CHILD_B_ID, align: "nearest", select: true, rename: false },
 			]);
 			expect(useRoadmapStore.getState().selectedNodeId).toBe(CHILD_B_ID);
+		});
+	});
+
+	// v0.8.1 Phase 4 (RC4): every create shortcut goes through the one
+	// create-and-rename path. Before, `dispatchOpenRename(store.addChild(id))`
+	// left focus on the parent and let the rename input open ~518px outside
+	// the canvas (P0-4). `center` because a new node is a jump-to, not a
+	// neighbour; `rename` because the reveal is the only thing that knows when
+	// the card exists and where it landed.
+	describe("create and rename (RC4)", () => {
+		const CREATED = { align: "center", select: false, rename: true };
+
+		function pressAndCapture(init: KeyboardEventInit): NodeFocusRequest[] {
+			useRoadmapStore.getState().setFocusedNode(CHILD_A_ID);
+			const seen = captureRequests();
+			renderRouter();
+			fireEvent.keyDown(document, init);
+			return seen;
+		}
+
+		it("Enter requests a centred create-and-rename on the new child", () => {
+			const seen = pressAndCapture({ key: "Enter" });
+
+			expect(seen).toEqual([{ nodeId: childIdsOf(CHILD_A_ID)[0], ...CREATED }]);
+			expect(useRoadmapStore.getState().focusedNodeId).toBe(seen[0].nodeId);
+		});
+
+		it("Shift+Enter requests it on the sibling above", () => {
+			const seen = pressAndCapture({ key: "Enter", shiftKey: true });
+
+			expect(seen).toEqual([{ nodeId: childIdsOf(ROOT_ID)[0], ...CREATED }]);
+			expect(useRoadmapStore.getState().focusedNodeId).toBe(seen[0].nodeId);
+		});
+
+		it("Tab requests it on the sibling below", () => {
+			const seen = pressAndCapture({ key: "Tab" });
+
+			expect(seen).toEqual([{ nodeId: childIdsOf(ROOT_ID)[1], ...CREATED }]);
+			expect(useRoadmapStore.getState().focusedNodeId).toBe(seen[0].nodeId);
+		});
+
+		it("Ctrl+D requests it on the duplicate", () => {
+			const seen = pressAndCapture({ key: "d", ctrlKey: true });
+
+			expect(seen).toEqual([{ nodeId: childIdsOf(ROOT_ID)[1], ...CREATED }]);
+			expect(useRoadmapStore.getState().focusedNodeId).toBe(seen[0].nodeId);
+		});
+
+		it("asks for nothing when the store refuses the create", () => {
+			// With no schema loaded addChild returns null, and a null id must
+			// not become a focus request — or a rename on nothing.
+			resetStore();
+			useRoadmapStore.getState().setFocusedNode(CHILD_A_ID);
+			const seen = captureRequests();
+			renderRouter();
+
+			fireEvent.keyDown(document, { key: "Enter" });
+
+			expect(seen).toEqual([]);
+		});
+	});
+
+	// v0.8.1 Phase 4 (A6 / RC6): a child-direction key must never put focus on
+	// a card that is not mounted. On a COLLAPSED node it expands and keeps
+	// focus (WAI-ARIA tree); the next press enters the first child. The
+	// parent-direction key is unchanged — `C` is the only key that collapses.
+	describe("collapse-aware navigation (A6)", () => {
+		it("child key on a collapsed node expands it and keeps focus", () => {
+			useRoadmapStore.getState().setFocusedNode(CHILD_B_ID);
+			const onClick = mountCardWithChevron(CHILD_B_ID, true);
+			const seen = captureRequests();
+			renderRouter();
+
+			fireEvent.keyDown(document, { key: "ArrowDown" });
+
+			expect(onClick).toHaveBeenCalledTimes(1);
+			expect(useRoadmapStore.getState().focusedNodeId).toBe(CHILD_B_ID);
+			expect(seen).toEqual([]);
+		});
+
+		it("the next child key then enters the first child", () => {
+			useRoadmapStore.getState().setFocusedNode(CHILD_B_ID);
+			mountCardWithChevron(CHILD_B_ID, true);
+			renderRouter();
+
+			fireEvent.keyDown(document, { key: "ArrowDown" });
+			fireEvent.keyDown(document, { key: "ArrowDown" });
+
+			expect(useRoadmapStore.getState().focusedNodeId).toBe(CHILD_B1_ID);
+		});
+
+		it("child key on an expanded node enters the first child straight away", () => {
+			useRoadmapStore.getState().setFocusedNode(CHILD_B_ID);
+			const onClick = mountCardWithChevron(CHILD_B_ID, false);
+			renderRouter();
+
+			fireEvent.keyDown(document, { key: "ArrowDown" });
+
+			expect(onClick).not.toHaveBeenCalled();
+			expect(useRoadmapStore.getState().focusedNodeId).toBe(CHILD_B1_ID);
+		});
+
+		it("parent key never collapses the node it leaves", () => {
+			useRoadmapStore.getState().setFocusedNode(CHILD_B1_ID);
+			const onClick = mountCardWithChevron(CHILD_B_ID, false);
+			renderRouter();
+
+			fireEvent.keyDown(document, { key: "ArrowUp" });
+
+			expect(onClick).not.toHaveBeenCalled();
+			expect(useRoadmapStore.getState().focusedNodeId).toBe(CHILD_B_ID);
+		});
+
+		it("LR: the child key expands a collapsed node too", () => {
+			useRoadmapStore.getState().setLayout("LR");
+			useRoadmapStore.getState().setFocusedNode(CHILD_B_ID);
+			const onClick = mountCardWithChevron(CHILD_B_ID, true);
+			renderRouter();
+
+			fireEvent.keyDown(document, { key: "ArrowRight" });
+
+			expect(onClick).toHaveBeenCalledTimes(1);
+			expect(useRoadmapStore.getState().focusedNodeId).toBe(CHILD_B_ID);
 		});
 	});
 });

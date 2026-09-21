@@ -1,10 +1,10 @@
 import { useEffect, useRef } from "react";
 import type { RoadmapNode } from "../../../../../packages/core/src/schema";
 import { requestNodeFocus } from "../lib/focusRequest";
-import { toggleNodeCollapse } from "../lib/nodeCollapse";
+import { getNodeCollapseState, toggleNodeCollapse } from "../lib/nodeCollapse";
 import { useEventLogStore } from "../store/eventLogStore";
 import { findParentAndIndex, useRoadmapStore } from "../store/roadmapStore";
-import { dispatchOpenRename, type useInlineRename } from "./useInlineRename";
+import type { useInlineRename } from "./useInlineRename";
 
 interface RouterDeps {
 	inlineRename: ReturnType<typeof useInlineRename>;
@@ -69,6 +69,18 @@ function navigateSibling(nodeId: string, delta: number): void {
 }
 
 function enterChild(nodeId: string): void {
+	// A6: on a COLLAPSED node the child-direction key expands it and keeps
+	// focus (WAI-ARIA tree); the next press enters the first child. Entering
+	// straight away would put `focusedNodeId` on a card that is not mounted,
+	// and Phase 0 showed the user is then stranded — the canvas shows no
+	// focus at all and the next sibling key resolves inside the hidden
+	// subtree too (RC6). The collapse state lives in react-d3-tree, so it is
+	// read from the rendered chevron (lib/nodeCollapse.ts).
+	const { hasChildren, collapsed } = getNodeCollapseState(nodeId);
+	if (hasChildren && collapsed) {
+		toggleNodeCollapse(nodeId);
+		return;
+	}
 	const schema = useRoadmapStore.getState().schema;
 	if (!schema) return;
 	const found = findParentAndIndex(schema.nodes, nodeId);
@@ -78,12 +90,27 @@ function enterChild(nodeId: string): void {
 	if (first) requestNodeFocus(first.id, { align: "nearest" });
 }
 
+// A6: the parent-direction key means "go to the parent" in a spatial canvas.
+// It never collapses — `C` is the only key that does.
 function returnToParent(nodeId: string): void {
 	const schema = useRoadmapStore.getState().schema;
 	if (!schema) return;
 	const found = findParentAndIndex(schema.nodes, nodeId);
 	if (!found?.parent) return;
 	requestNodeFocus(found.parent.id, { align: "nearest" });
+}
+
+/**
+ * Create-and-rename: reveal the new node in the middle of the canvas and open
+ * its rename input there (RC4).
+ *
+ * `center` because a freshly created node is a jump-to, not a neighbour, and
+ * because only a jump-to may expand collapsed ancestors on the way. The store
+ * returns null when it refused the create (no schema, unknown parent).
+ */
+function renameNewNode(newId: string | null | undefined): void {
+	if (!newId) return;
+	requestNodeFocus(newId, { align: "center", rename: true });
 }
 
 export function useKeyboardRouter(deps: RouterDeps): void {
@@ -190,7 +217,7 @@ export function useKeyboardRouter(deps: RouterDeps): void {
 			if ((e.ctrlKey || e.metaKey) && e.key === "d") {
 				if (focusedId) {
 					e.preventDefault();
-					dispatchOpenRename(store.duplicateNode(focusedId));
+					renameNewNode(store.duplicateNode(focusedId));
 				}
 				return;
 			}
@@ -211,24 +238,26 @@ export function useKeyboardRouter(deps: RouterDeps): void {
 				return;
 			}
 
-			// F2 — inline rename on focused node
+			// F2 — inline rename on focused node. `nearest`, not `center`:
+			// renaming a node the user is looking at must not whip the camera,
+			// but an off-screen one is revealed before its input opens.
 			if (e.key === "F2" && focusedId) {
 				e.preventDefault();
-				deps.inlineRename.open(focusedId);
+				requestNodeFocus(focusedId, { align: "nearest", rename: true });
 				return;
 			}
 
-			// Enter / Shift+Enter / Tab — creation shortcuts. Each dispatches
-			// the rename bridge so the new node gets an inline rename input
-			// focused immediately (create-then-rename UX).
+			// Enter / Shift+Enter / Tab — creation shortcuts. Each states one
+			// create-and-rename intent, so the new node becomes the focus, the
+			// camera reaches it and only then does its input open (RC4).
 			if (e.key === "Enter" && !e.shiftKey && focusedId) {
 				e.preventDefault();
-				dispatchOpenRename(store.addChild(focusedId));
+				renameNewNode(store.addChild(focusedId));
 				return;
 			}
 			if (e.key === "Enter" && e.shiftKey && focusedId) {
 				e.preventDefault();
-				dispatchOpenRename(store.addSiblingAbove(focusedId));
+				renameNewNode(store.addSiblingAbove(focusedId));
 				return;
 			}
 			// BUG-2: must guard against Shift+Tab. Without !e.shiftKey,
@@ -239,7 +268,7 @@ export function useKeyboardRouter(deps: RouterDeps): void {
 			// state via initialDepth (a separate bug, BUG-3, deferred).
 			if (e.key === "Tab" && !e.shiftKey && focusedId) {
 				e.preventDefault();
-				dispatchOpenRename(store.addSiblingBelow(focusedId));
+				renameNewNode(store.addSiblingBelow(focusedId));
 				return;
 			}
 

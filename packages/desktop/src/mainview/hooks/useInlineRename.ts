@@ -1,25 +1,16 @@
 import { useCallback, useRef, useState } from "react";
 import { useRoadmapStore } from "../store/roadmapStore";
 
-export const OPEN_RENAME_EVENT = "roadraven:open-rename";
-
-export interface OpenRenameEventDetail {
-	nodeId: string;
-}
-
-/** Dispatch the cross-component bridge so Canvas opens inline rename on a node. */
-export function dispatchOpenRename(nodeId: string | null | undefined): void {
-	if (!nodeId) return;
-	window.dispatchEvent(
-		new CustomEvent<OpenRenameEventDetail>(OPEN_RENAME_EVENT, {
-			detail: { nodeId },
-		}),
-	);
-}
-
 export interface InlineRenameState {
 	nodeId: string | null;
 	title: string;
+}
+
+/** Write a non-empty draft back to the store. Shared by `commit` and `open`. */
+function commitDraft(draft: InlineRenameState): void {
+	if (draft.nodeId && draft.title.trim()) {
+		useRoadmapStore.getState().renameNode(draft.nodeId, draft.title.trim());
+	}
 }
 
 /**
@@ -44,6 +35,14 @@ export function useInlineRename() {
 	stateRef.current = state;
 
 	const open = useCallback((nodeId: string) => {
+		// Moving the rename to another node commits the draft in flight
+		// instead of dropping it: React fires no blur when the input
+		// unmounts, and every other way of leaving a rename in this app
+		// commits (the card's onBlur). Escape stays the one route that
+		// discards. Reachable since v0.8.1 Phase 4 made the focus controller
+		// the only opener — a newer request supersedes an older one.
+		const current = stateRef.current;
+		if (current.nodeId && current.nodeId !== nodeId) commitDraft(current);
 		const node = useRoadmapStore.getState().nodeIndex.get(nodeId);
 		const next: InlineRenameState = { nodeId, title: node?.title ?? "" };
 		stateRef.current = next;
@@ -57,12 +56,7 @@ export function useInlineRename() {
 	}, []);
 
 	const commit = useCallback(() => {
-		const current = stateRef.current;
-		if (current.nodeId && current.title.trim()) {
-			useRoadmapStore
-				.getState()
-				.renameNode(current.nodeId, current.title.trim());
-		}
+		commitDraft(stateRef.current);
 		const next: InlineRenameState = { nodeId: null, title: "" };
 		stateRef.current = next;
 		setState(next);

@@ -3,8 +3,25 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { useState } from "react";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { RoadRavenContextMenu } from "../../../src/mainview/components/ContextMenu";
+import {
+	FOCUS_NODE_EVENT,
+	type NodeFocusRequest,
+} from "../../../src/mainview/lib/focusRequest";
 import { useRoadmapStore } from "../../../src/mainview/store/roadmapStore";
 import { resetStore } from "../../helpers/resetStore";
+
+/** Listener teardown for the tests that observe the focus-request bridge. */
+const cleanups: Array<() => void> = [];
+
+function captureRequests(): NodeFocusRequest[] {
+	const seen: NodeFocusRequest[] = [];
+	const listener = (e: Event): void => {
+		seen.push((e as CustomEvent<NodeFocusRequest>).detail);
+	};
+	window.addEventListener(FOCUS_NODE_EVENT, listener);
+	cleanups.push(() => window.removeEventListener(FOCUS_NODE_EVENT, listener));
+	return seen;
+}
 
 // Radix relies on PointerEvent APIs that jsdom does not implement.
 const noop = (): void => {
@@ -24,6 +41,7 @@ beforeAll(() => {
 });
 
 afterEach(() => {
+	while (cleanups.length) cleanups.pop()?.();
 	resetStore();
 	vi.restoreAllMocks();
 });
@@ -265,6 +283,102 @@ describe("Canvas menu — Add Root Child disabled when no schema", () => {
 		).find((el) => el.textContent?.includes("Add Root Child"));
 		expect(addRoot).toBeTruthy();
 		expect(addRoot?.getAttribute("aria-disabled")).toBe("true");
+	});
+});
+
+// v0.8.1 Phase 4 (RC4): every menu entry that renames — the Rename item and
+// the five create items — states ONE intent through `requestNodeFocus`. It
+// used to be `setFocusedNode` plus a `roadraven:open-rename` window event that
+// Canvas answered one rAF later, knowing nothing about where the new card had
+// landed. Now the reveal owns both: it waits for the card, measures it, pans
+// to it and only then opens the input — which is also what keeps the Radix
+// close-autofocus race shut (the menu's FocusScope is long gone by then).
+describe("RoadRavenContextMenu — create and rename intents (RC4)", () => {
+	function clickItem(menuName: RegExp, label: string): void {
+		const menu = screen.getByRole("menu", { name: menuName });
+		const item = Array.from(
+			menu.querySelectorAll<HTMLElement>('[role="menuitem"]'),
+		).find((el) => el.textContent?.startsWith(label));
+		if (!item) throw new Error(`no menu item "${label}"`);
+		fireEvent.click(item);
+	}
+
+	function childIdsOf(nodeId: string): string[] {
+		return (
+			useRoadmapStore
+				.getState()
+				.nodeIndex.get(nodeId)
+				?.children?.map((c) => c.id) ?? []
+		);
+	}
+
+	function openNodeMenu(nodeId: string): NodeFocusRequest[] {
+		seedSchema();
+		const seen = captureRequests();
+		render(<NodeHarness nodeId={nodeId} />);
+		openMenu(screen.getByTestId("trigger"));
+		return seen;
+	}
+
+	const CREATED = { align: "center", select: false, rename: true };
+
+	it("Rename reveals the node in place and opens its input", () => {
+		const seen = openNodeMenu("child-1");
+
+		clickItem(/node actions/i, "Rename");
+
+		expect(seen).toEqual([
+			{ nodeId: "child-1", align: "nearest", select: false, rename: true },
+		]);
+		expect(useRoadmapStore.getState().focusedNodeId).toBe("child-1");
+	});
+
+	it("Add Child centres the new child and renames it", () => {
+		const seen = openNodeMenu("child-1");
+
+		clickItem(/node actions/i, "Add Child");
+
+		expect(seen).toEqual([{ nodeId: childIdsOf("child-1")[0], ...CREATED }]);
+		expect(useRoadmapStore.getState().focusedNodeId).toBe(seen[0].nodeId);
+	});
+
+	it("Add Sibling Above centres the new sibling and renames it", () => {
+		const seen = openNodeMenu("child-1");
+
+		clickItem(/node actions/i, "Add Sibling Above");
+
+		expect(seen).toEqual([{ nodeId: childIdsOf("root-id")[0], ...CREATED }]);
+		expect(useRoadmapStore.getState().focusedNodeId).toBe(seen[0].nodeId);
+	});
+
+	it("Add Sibling Below centres the new sibling and renames it", () => {
+		const seen = openNodeMenu("child-1");
+
+		clickItem(/node actions/i, "Add Sibling Below");
+
+		expect(seen).toEqual([{ nodeId: childIdsOf("root-id")[1], ...CREATED }]);
+		expect(useRoadmapStore.getState().focusedNodeId).toBe(seen[0].nodeId);
+	});
+
+	it("Duplicate centres the copy and renames it", () => {
+		const seen = openNodeMenu("child-1");
+
+		clickItem(/node actions/i, "Duplicate");
+
+		expect(seen).toEqual([{ nodeId: childIdsOf("root-id")[1], ...CREATED }]);
+		expect(useRoadmapStore.getState().focusedNodeId).toBe(seen[0].nodeId);
+	});
+
+	it("Add Root Child centres the new child and renames it", () => {
+		seedSchema();
+		const seen = captureRequests();
+		render(<CanvasHarness />);
+		openMenu(screen.getByTestId("trigger"));
+
+		clickItem(/canvas actions/i, "Add Root Child");
+
+		expect(seen).toEqual([{ nodeId: childIdsOf("root-id")[1], ...CREATED }]);
+		expect(useRoadmapStore.getState().focusedNodeId).toBe(seen[0].nodeId);
 	});
 });
 

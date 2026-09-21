@@ -1,8 +1,12 @@
 import { getLogger } from "@logtape/logtape";
 import { type RefObject, useCallback, useEffect, useRef } from "react";
-import { FOCUS_NODE_EVENT, type NodeFocusRequest } from "../lib/focusRequest";
+import {
+	FOCUS_NODE_EVENT,
+	type NodeFocusRequest,
+	requestNodeFocus,
+} from "../lib/focusRequest";
 import { findNodeCard } from "../lib/nodeCard";
-import { expandAncestors } from "../lib/nodeCollapse";
+import { CHEVRON_SELECTOR, expandAncestors } from "../lib/nodeCollapse";
 import { computePanDelta } from "../lib/viewportMath";
 import { getAncestorPath, useRoadmapStore } from "../store/roadmapStore";
 
@@ -107,21 +111,79 @@ function focusCard(card: HTMLElement, container: HTMLElement): void {
 	}
 }
 
+/**
+ * Keep `focusedNodeId` on a card that is mounted, across a collapse (RC6).
+ *
+ * Collapsing a subtree unmounts every descendant card. Phase 0 recorded what
+ * that costs when focus was inside it: NO card shows focus, and the next
+ * sibling key resolves inside the hidden subtree too, so the canvas stays
+ * blank-focused until a mouse click. All three collapse entry points — the
+ * `C` key, the context menu's "Collapse subtree" and the mouse — end in a
+ * click on the card's chevron (lib/nodeCollapse.ts drives the real button),
+ * so one delegated listener covers all of them.
+ *
+ * Only FOCUS is corrected. Selection drives the SidePanel — what the user
+ * chose to inspect — and a collapse is a structural action, not a change of
+ * subject; a selected-but-hidden node still shows correctly and lights up
+ * again when its ancestor re-expands. Invisible focus is what strands the
+ * keyboard.
+ *
+ * Collapse and expand share the one chevron, and its `aria-label` may or may
+ * not already have flipped by the time a handler runs, so the two are told
+ * apart by what they do to the DOM rather than by state: the listener runs in
+ * CAPTURE phase, before the toggle renders, and only arms itself while the
+ * focused card is still on screen — an expand can never take it off. The
+ * verdict is then read one frame later, which also makes it independent of
+ * whether React flushed the toggle inside the click or batched it.
+ */
+function keepFocusMounted(e: Event): void {
+	const toggledId = chevronNodeId(e);
+	if (!toggledId) return;
+	const { focusedNodeId, schema } = useRoadmapStore.getState();
+	if (!focusedNodeId || focusedNodeId === toggledId) return;
+	if (!findNodeCard(focusedNodeId)) return;
+	if (!getAncestorPath(schema?.nodes ?? [], focusedNodeId).includes(toggledId))
+		return;
+	requestAnimationFrame(() => rescueFocus(focusedNodeId, toggledId));
+}
+
+/** The node whose chevron this click landed on, or null for any other click. */
+function chevronNodeId(e: Event): string | null {
+	const chevron = (e.target as Element | null)?.closest?.(CHEVRON_SELECTOR);
+	return (
+		chevron?.closest<HTMLElement>("[data-source-id]")?.dataset.sourceId ?? null
+	);
+}
+
+/** One frame after a toggle: did it take the focused card off screen? */
+function rescueFocus(focusedNodeId: string, toggledId: string): void {
+	// Still mounted: nothing was hidden, so nobody was stranded.
+	if (findNodeCard(focusedNodeId)) return;
+	// Something else claimed focus in the meantime; leave it alone.
+	if (useRoadmapStore.getState().focusedNodeId !== focusedNodeId) return;
+	requestNodeFocus(toggledId, { align: "nearest" });
+}
+
 export interface CanvasFocusControllerDeps {
 	containerRef: RefObject<HTMLElement | null>;
 	/** Move the camera by a screen-space delta. Canvas animates it. */
 	panBy: (dx: number, dy: number) => void;
+	/** Open the inline rename input on a node. Canvas owns that state. */
+	openRename: (nodeId: string) => void;
 }
 
 export function useCanvasFocusController({
 	containerRef,
 	panBy,
+	openRename,
 }: CanvasFocusControllerDeps): void {
 	const dataKey = useRoadmapStore((s) => s.dataKey);
 	const layoutOrientation = useRoadmapStore((s) => s.layoutOrientation);
 	// At most one request is in flight; a newer one supersedes it (the same
 	// cancel discipline expandAncestors uses for overlapping rAF walks).
 	const cancelRef = useRef<(() => void) | null>(null);
+	/** Node the in-flight request is for, so A7 does not supersede it. */
+	const pendingRef = useRef<string | null>(null);
 
 	const reveal = useCallback(
 		(request: NodeFocusRequest) => {
@@ -131,6 +193,7 @@ export function useCanvasFocusController({
 			let cancelled = false;
 			let frame: number | null = null;
 			let cancelExpand: (() => void) | null = null;
+			pendingRef.current = request.nodeId;
 			cancelRef.current = () => {
 				cancelled = true;
 				cancelExpand?.();
@@ -139,6 +202,7 @@ export function useCanvasFocusController({
 
 			const measure = (): void => {
 				cancelRef.current = null;
+				pendingRef.current = null;
 				const card = findNodeCard(request.nodeId);
 				const container = containerRef.current;
 				if (!card || !container) return;
@@ -150,14 +214,26 @@ export function useCanvasFocusController({
 					container.getBoundingClientRect(),
 					request.align,
 				);
-				if (dx === 0 && dy === 0) return;
-				panBy(dx, dy);
+				if (dx !== 0 || dy !== 0) panBy(dx, dy);
+				// Last, so the measurement above is taken on the card as the
+				// reveal found it. A rename is explicit user intent, so it runs
+				// whether or not `focusCard` was allowed to move DOM focus — the
+				// input focuses itself (RoadmapNode.tsx).
+				if (request.rename) openRename(request.nodeId);
 			};
 
 			// Nothing to wait for: reveal in the same tick so key-repeat
 			// navigation stays crisp. A `select` request is excluded because it
-			// may open the SidePanel and shrink the canvas under us.
-			if (!request.select && findNodeCard(request.nodeId)) {
+			// may open the SidePanel and shrink the canvas under us. A `rename`
+			// request is excluded because the input must not open inside the
+			// dispatch that asked for it: a Radix menu item's `onSelect` runs
+			// while the menu's FocusScope is still mounted and trapping, and it
+			// pulls focus straight back out of anything outside the menu
+			// (@radix-ui/react-focus-scope 1.1.9 `handleFocusIn`) — which blurs
+			// the input and blur-commits its placeholder. Polling costs
+			// SETTLE_FRAMES+1 frames, long past the menu's unmount and the
+			// setTimeout(0) its focus restore runs in.
+			if (!request.select && !request.rename && findNodeCard(request.nodeId)) {
 				measure();
 				return;
 			}
@@ -181,6 +257,7 @@ export function useCanvasFocusController({
 				waited += 1;
 				if (waited >= MAX_WAIT_FRAMES) {
 					cancelRef.current = null;
+					pendingRef.current = null;
 					log.warn("Focus request dropped: {nodeId} never became visible.", {
 						nodeId: request.nodeId,
 					});
@@ -204,7 +281,7 @@ export function useCanvasFocusController({
 			}
 			frame = requestAnimationFrame(poll);
 		},
-		[containerRef, panBy],
+		[containerRef, panBy, openRename],
 	);
 
 	useEffect(() => {
@@ -216,10 +293,14 @@ export function useCanvasFocusController({
 		// commits a rename inside the same focusout dispatch.
 		window.addEventListener("focusout", trackFocusTransfer, true);
 		window.addEventListener("focusin", trackFocusTransfer, true);
+		// Capture, so the chevron's own handler has not rendered yet and the
+		// focused card can still be seen on screen (RC6).
+		window.addEventListener("click", keepFocusMounted, true);
 		return () => {
 			window.removeEventListener(FOCUS_NODE_EVENT, handler);
 			window.removeEventListener("focusout", trackFocusTransfer, true);
 			window.removeEventListener("focusin", trackFocusTransfer, true);
+			window.removeEventListener("click", keepFocusMounted, true);
 			focusIsMoving = false;
 			cancelRef.current?.();
 		};
@@ -233,6 +314,17 @@ export function useCanvasFocusController({
 	useEffect(() => {
 		const { focusedNodeId } = useRoadmapStore.getState();
 		if (!focusedNodeId) return;
-		reveal({ nodeId: focusedNodeId, align: "nearest", select: false });
+		// A request already in flight for this node measures after the new
+		// layout anyway, and it may carry intent this re-reveal does not — a
+		// create's `center` + `rename`. Creating bumps `dataKey` itself, so
+		// without this every create-and-rename would be superseded on the very
+		// commit that mounts its card (RC4).
+		if (pendingRef.current === focusedNodeId) return;
+		reveal({
+			nodeId: focusedNodeId,
+			align: "nearest",
+			select: false,
+			rename: false,
+		});
 	}, [dataKey, layoutOrientation, reveal]);
 }

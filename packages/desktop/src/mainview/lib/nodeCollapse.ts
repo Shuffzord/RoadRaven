@@ -17,11 +17,20 @@ import { findNodeCard } from "./nodeCard";
 
 const EXPAND_LABEL = "Expand subtree";
 
+/**
+ * The one chevron button a node card renders, by accessible name.
+ *
+ * Exported because every collapse in the app — the `C` key, the context
+ * menu's "Collapse subtree" and the mouse — ends in a click on this button,
+ * which makes it the single place a delegated listener can watch to keep
+ * focus on a mounted card (RC6, useCanvasFocusController.ts).
+ */
+export const CHEVRON_SELECTOR = 'button[aria-label$="subtree"]';
+
 function findChevron(nodeId: string): HTMLButtonElement | null {
 	return (
-		findNodeCard(nodeId)?.querySelector<HTMLButtonElement>(
-			'button[aria-label$="subtree"]',
-		) ?? null
+		findNodeCard(nodeId)?.querySelector<HTMLButtonElement>(CHEVRON_SELECTOR) ??
+		null
 	);
 }
 

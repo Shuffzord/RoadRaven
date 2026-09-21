@@ -80,7 +80,9 @@ describe("requestNodeFocus", () => {
 
 		requestNodeFocus(CHILD_ID, { align: "center", select: true });
 
-		expect(seen).toEqual([{ nodeId: CHILD_ID, align: "center", select: true }]);
+		expect(seen).toEqual([
+			{ nodeId: CHILD_ID, align: "center", select: true, rename: false },
+		]);
 	});
 
 	it("defaults select to false in the event detail", () => {
@@ -89,8 +91,26 @@ describe("requestNodeFocus", () => {
 		requestNodeFocus(ROOT_ID, { align: "nearest" });
 
 		expect(seen).toEqual([
-			{ nodeId: ROOT_ID, align: "nearest", select: false },
+			{ nodeId: ROOT_ID, align: "nearest", select: false, rename: false },
 		]);
+	});
+
+	// v0.8.1 Phase 4 (RC4): create-and-rename is one request, not a create
+	// followed by a separate rename bridge that knew nothing about the camera.
+	it("carries the rename intent in the event detail", () => {
+		const seen = captureRequests();
+
+		requestNodeFocus(CHILD_ID, { align: "center", rename: true });
+
+		expect(seen).toEqual([
+			{ nodeId: CHILD_ID, align: "center", select: false, rename: true },
+		]);
+	});
+
+	it("still writes logical focus synchronously for a rename request", () => {
+		requestNodeFocus(CHILD_ID, { align: "nearest", rename: true });
+
+		expect(useRoadmapStore.getState().focusedNodeId).toBe(CHILD_ID);
 	});
 
 	it("is a no-op for an id that is not in the node index", () => {

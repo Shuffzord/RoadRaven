@@ -7,7 +7,7 @@ import ravenLogo from "../assets/raven-logo.svg";
 import { useCanvasFocusController } from "../hooks/useCanvasFocusController";
 import { useCanvasViewport } from "../hooks/useCanvasViewport";
 import { useFileActions } from "../hooks/useFileActions";
-import { OPEN_RENAME_EVENT, useInlineRename } from "../hooks/useInlineRename";
+import { useInlineRename } from "../hooks/useInlineRename";
 import { useKeyboardRouter } from "../hooks/useKeyboardRouter";
 import { useRecentFiles } from "../hooks/useRecentFiles";
 import { requestNodeFocus } from "../lib/focusRequest";
@@ -181,7 +181,13 @@ export function Canvas() {
 		},
 		[getTransform, animatePanTo],
 	);
-	useCanvasFocusController({ containerRef, panBy });
+	// `inlineRename.open` is a stable useCallback, so handing it over does not
+	// re-register the controller on every rename keystroke.
+	useCanvasFocusController({
+		containerRef,
+		panBy,
+		openRename: inlineRename.open,
+	});
 
 	// Search highlight derivations. Set membership drives the per-card dim /
 	// outline; the current match drives the pulse + camera follow.
@@ -203,33 +209,6 @@ export function Canvas() {
 		if (!searchCurrentId) return;
 		requestNodeFocus(searchCurrentId, { align: "center", select: true });
 	}, [searchCurrentId]);
-
-	// Inline rename bridge: any caller that wants to enter rename mode on a
-	// node dispatches a window CustomEvent with the node's id. Sources:
-	//   - ContextMenu "Rename" item
-	//   - ContextMenu Add Child / Add Sibling / Duplicate (auto-rename after
-	//     create)
-	//   - useKeyboardRouter F2 + creation shortcuts
-	//   - MutationsPanel create buttons
-	useEffect(() => {
-		const handler = (e: Event) => {
-			const detail = (e as CustomEvent<{ nodeId: string }>).detail;
-			if (!detail?.nodeId) return;
-			// Defer by one frame so Radix ContextMenu's onCloseAutoFocus can
-			// finish returning focus to the trigger BEFORE we focus the input.
-			// Without this, menu-sourced create-then-rename races: Radix's
-			// focus restore fires blur on the input, the blur handler commits
-			// and closes rename. Keyboard-sourced creates have no menu to
-			// close and therefore no race; the defer is a no-op for them.
-			requestAnimationFrame(() => {
-				inlineRename.open(detail.nodeId);
-			});
-		};
-		window.addEventListener(OPEN_RENAME_EVENT, handler);
-		return () => window.removeEventListener(OPEN_RENAME_EVENT, handler);
-		// inlineRename.open is stable (useCallback with empty deps), so this effect
-		// registers exactly once and is not torn down on every rename keystroke.
-	}, [inlineRename.open]);
 
 	// Wire the keyboard router
 	useKeyboardRouter({

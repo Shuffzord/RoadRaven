@@ -137,7 +137,9 @@ describe("EventLogDrawer (D-18, D-19)", () => {
 		window.removeEventListener(FOCUS_NODE_EVENT, listener);
 
 		expect(useRoadmapStore.getState().selectedNodeId).toBe("node-b");
-		expect(seen).toEqual([{ nodeId: "node-b", align: "center", select: true }]);
+		expect(seen).toEqual([
+			{ nodeId: "node-b", align: "center", select: true, rename: false },
+		]);
 	});
 
 	it("collapsed state shows 24px header strip when drawerHeightPx=24", () => {

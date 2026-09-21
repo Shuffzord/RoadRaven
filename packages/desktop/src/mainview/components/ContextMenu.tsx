@@ -1,7 +1,7 @@
 import * as ContextMenuPrimitive from "@radix-ui/react-context-menu";
 import { type ReactNode, useState } from "react";
 import { useShallow } from "zustand/react/shallow";
-import { dispatchOpenRename } from "../hooks/useInlineRename";
+import { requestNodeFocus } from "../lib/focusRequest";
 import { getNodeCollapseState, toggleNodeCollapse } from "../lib/nodeCollapse";
 import { useRoadmapStore } from "../store/roadmapStore";
 
@@ -118,7 +118,12 @@ function NodeMenuItems({ nodeId }: { nodeId: string }) {
 		<>
 			<ContextMenuPrimitive.Item
 				className={ITEM_CLASS}
-				onSelect={() => openRename(nodeId)}
+				// `nearest`: renaming a node the user is looking at must not whip
+				// the camera, but an off-screen one is revealed before its input
+				// opens. The reveal also defers past the menu's focus trap (RC4).
+				onSelect={() =>
+					requestNodeFocus(nodeId, { align: "nearest", rename: true })
+				}
 			>
 				<span>Rename</span>
 				<span className={HINT_CLASS}>F2</span>
@@ -140,21 +145,21 @@ function NodeMenuItems({ nodeId }: { nodeId: string }) {
 			)}
 			<ContextMenuPrimitive.Item
 				className={ITEM_CLASS}
-				onSelect={() => autoRename(addChild(nodeId))}
+				onSelect={() => renameNewNode(addChild(nodeId))}
 			>
 				<span>Add Child</span>
 				<span className={HINT_CLASS}>Enter</span>
 			</ContextMenuPrimitive.Item>
 			<ContextMenuPrimitive.Item
 				className={ITEM_CLASS}
-				onSelect={() => autoRename(addSiblingAbove(nodeId))}
+				onSelect={() => renameNewNode(addSiblingAbove(nodeId))}
 			>
 				<span>Add Sibling Above</span>
 				<span className={HINT_CLASS}>Shift+Enter</span>
 			</ContextMenuPrimitive.Item>
 			<ContextMenuPrimitive.Item
 				className={ITEM_CLASS}
-				onSelect={() => autoRename(addSiblingBelow(nodeId))}
+				onSelect={() => renameNewNode(addSiblingBelow(nodeId))}
 			>
 				<span>Add Sibling Below</span>
 				<span className={HINT_CLASS}>Tab</span>
@@ -162,7 +167,7 @@ function NodeMenuItems({ nodeId }: { nodeId: string }) {
 			<ContextMenuPrimitive.Separator className={SEP_CLASS} />
 			<ContextMenuPrimitive.Item
 				className={ITEM_CLASS}
-				onSelect={() => autoRename(duplicateNode(nodeId))}
+				onSelect={() => renameNewNode(duplicateNode(nodeId))}
 			>
 				<span>Duplicate</span>
 				<span className={HINT_CLASS}>Ctrl+D</span>
@@ -281,7 +286,7 @@ function CanvasMenuItems() {
 				className={ITEM_CLASS}
 				disabled={!rootId}
 				onSelect={() => {
-					if (rootId) autoRename(addChild(rootId));
+					if (rootId) renameNewNode(addChild(rootId));
 				}}
 			>
 				<span>Add Root Child</span>
@@ -304,12 +309,16 @@ function CanvasMenuItems() {
 	);
 }
 
-function openRename(nodeId: string) {
-	useRoadmapStore.getState().setFocusedNode(nodeId);
-	dispatchOpenRename(nodeId);
-}
-
-function autoRename(newId: string | null | undefined) {
+/**
+ * Create-and-rename: reveal the new node in the middle of the canvas and open
+ * its rename input there (RC4).
+ *
+ * One request replaces the old `setFocusedNode` + `roadraven:open-rename`
+ * pair, which left the camera out of it entirely. `center` because a fresh
+ * node is a jump-to, not a neighbour. The store returns null when it refused
+ * the create (no schema, unknown parent), so the guard stays.
+ */
+function renameNewNode(newId: string | null | undefined) {
 	if (!newId) return;
-	openRename(newId);
+	requestNodeFocus(newId, { align: "center", rename: true });
 }

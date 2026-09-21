@@ -4,6 +4,10 @@ import { useRef, useState } from "react";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { RoadRavenContextMenu } from "../../../src/mainview/components/ContextMenu";
 import { useKeyboardRouter } from "../../../src/mainview/hooks/useKeyboardRouter";
+import {
+	FOCUS_NODE_EVENT,
+	type NodeFocusRequest,
+} from "../../../src/mainview/lib/focusRequest";
 import { useRoadmapStore } from "../../../src/mainview/store/roadmapStore";
 import { resetStore } from "../../helpers/resetStore";
 
@@ -307,5 +311,60 @@ describe("RoadRavenContextMenu — Pitfall 7 no double-fire", () => {
 		// Grep anchor for the must_have truth:
 		// expect(addChildSpy).toHaveBeenCalledTimes(1)
 		expect(addChildSpy).toHaveBeenCalledTimes(1);
+	});
+});
+
+/**
+ * v0.8.1 Phase 4 (RC4) — the Radix close-autofocus race, kept shut.
+ *
+ * A menu item's `onSelect` runs while the menu's Content is STILL mounted, so
+ * @radix-ui/react-focus-scope's `handleFocusIn` is still trapping: anything
+ * outside the menu that takes focus is immediately pulled back, which blurs a
+ * freshly opened rename input and blur-commits its placeholder. (Its unmount
+ * restore is separately a `setTimeout(0)`, and this app already prevents it
+ * with `onCloseAutoFocus`.) The old mitigation was a one-rAF defer inside
+ * Canvas's rename bridge; the bridge is gone, so this case records the fact
+ * the new guarantee rests on — the request is issued while the trap is live —
+ * and `useCanvasFocusController.test.tsx` proves the controller never opens
+ * the input in that tick.
+ */
+describe("RoadRavenContextMenu — create-and-rename defers past the focus trap", () => {
+	it("issues the request while the menu is still mounted and trapping focus", async () => {
+		seedSchema();
+		const observed: {
+			menuMounted: boolean;
+			detail: NodeFocusRequest;
+		}[] = [];
+		const listener = (e: Event): void => {
+			observed.push({
+				menuMounted: !!document.querySelector('[role="menu"]'),
+				detail: (e as CustomEvent<NodeFocusRequest>).detail,
+			});
+		};
+		window.addEventListener(FOCUS_NODE_EVENT, listener);
+		try {
+			render(<NodeHarness nodeId="child-1" />);
+			openMenu(screen.getByTestId("trigger"));
+			const menu = await screen.findByRole("menu", { name: /node actions/i });
+			pressKey(menu, "ArrowDown"); // Rename
+			pressKey(menu, "ArrowDown"); // Add Child
+			await waitFor(() => {
+				const highlighted = menu.querySelector("[data-highlighted]");
+				expect(highlighted?.textContent).toContain("Add Child");
+			});
+			pressKey(menu, "Enter");
+			await waitFor(() => {
+				expect(observed).toHaveLength(1);
+			});
+		} finally {
+			window.removeEventListener(FOCUS_NODE_EVENT, listener);
+		}
+
+		expect(observed[0].detail.align).toBe("center");
+		expect(observed[0].detail.rename).toBe(true);
+		expect(
+			observed[0].menuMounted,
+			"the request is issued from inside the menu's own dispatch",
+		).toBe(true);
 	});
 });

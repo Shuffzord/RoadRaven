@@ -24,11 +24,22 @@ export interface NodeFocusRequest {
 	nodeId: string;
 	align: PanAlign;
 	select: boolean;
+	/**
+	 * Open the inline rename input on this node once it is revealed (RC4).
+	 *
+	 * Creating used to be a store mutation plus a separate
+	 * `roadraven:open-rename` window event that Canvas answered one frame
+	 * later, knowing nothing about where the new card had landed — so the
+	 * input could open outside the viewport while focus stayed on the parent
+	 * (P0-4). The reveal is the only thing that knows when the card exists
+	 * and where it is, so it owns the rename too.
+	 */
+	rename: boolean;
 }
 
 export function requestNodeFocus(
 	nodeId: string,
-	opts: { align: PanAlign; select?: boolean },
+	opts: { align: PanAlign; select?: boolean; rename?: boolean },
 ): void {
 	const store = useRoadmapStore.getState();
 	// A stale id (deleted between a search query and its follow, an event-log
@@ -38,7 +49,12 @@ export function requestNodeFocus(
 	if (opts.select) store.setSelectedNode(nodeId);
 	window.dispatchEvent(
 		new CustomEvent<NodeFocusRequest>(FOCUS_NODE_EVENT, {
-			detail: { nodeId, align: opts.align, select: opts.select === true },
+			detail: {
+				nodeId,
+				align: opts.align,
+				select: opts.select === true,
+				rename: opts.rename === true,
+			},
 		}),
 	);
 }
