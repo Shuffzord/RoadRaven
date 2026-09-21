@@ -1,8 +1,122 @@
+import { useState } from "react";
+import type { MismatchRemedy } from "../../../../../shared/types";
 import type { ActiveToast, ToastType } from "../store/toastStore";
 
 interface Props {
 	toast: ActiveToast;
 	onDismiss: () => void;
+}
+
+interface Remedy {
+	body: string;
+	/** Shown in a monospace line with a Copy button. */
+	command?: string;
+}
+
+const INSTALLER_BASE_URL =
+	"https://raw.githubusercontent.com/Shuffzord/RoadRaven/master";
+
+/** One-line RoadRaven installer for this platform; none exists for macOS. */
+function appInstallCommand(): string | undefined {
+	const ua = navigator.userAgent;
+	if (ua.includes("Windows"))
+		return `irm ${INSTALLER_BASE_URL}/install.ps1 | iex`;
+	if (ua.includes("Linux"))
+		return `curl -fsSL ${INSTALLER_BASE_URL}/install.sh | sh`;
+	return undefined;
+}
+
+/** v0.8 version-mismatch remedies, keyed by the remedy the Bun process picked. */
+const MISMATCH_REMEDY: Record<
+	MismatchRemedy,
+	(producerVersion: string, appVersion: string) => Remedy
+> = {
+	"update-app": (producerVersion) => ({
+		body: `Update RoadRaven to ${producerVersion}.`,
+		command: appInstallCommand(),
+	}),
+	"restart-agent": () => ({
+		body: "RoadRaven updated its MCP server — restart your agent session to load it.",
+	}),
+	"update-plugin": () => ({
+		body: "Update the RoadRaven plugin, then restart Claude Code:",
+		command:
+			"claude plugin marketplace update roadraven; claude plugin update roadraven@roadraven",
+	}),
+	"update-npm": (_producerVersion, appVersion) => ({
+		body: `Re-register the MCP server at ${appVersion}, then restart your agent:`,
+		command: `claude mcp remove roadraven; claude mcp add -s user roadraven -- npx -y @roadraven/mcp@${appVersion}`,
+	}),
+	reinstall: () => ({
+		body: "Re-run the Setup Wizard and install the integration.",
+	}),
+};
+
+/**
+ * Remedy carried in a version_mismatch detail (`<producer>|<app>|<remedy>`),
+ * or null for a detail without one (pre-remedy shape).
+ */
+function renderMismatchRemedy(detail?: string): Remedy | null {
+	const [producerVersion = "?", appVersion = "?", remedy = ""] = (
+		detail ?? ""
+	).split("|");
+	if (!Object.hasOwn(MISMATCH_REMEDY, remedy)) return null;
+	return MISMATCH_REMEDY[remedy as MismatchRemedy](producerVersion, appVersion);
+}
+
+/**
+ * Monospace command with a Copy button — same navigator.clipboard path and
+ * "Copied ✓" feedback as the Event API URL copy buttons.
+ */
+function CopyCommand({ command }: { command: string }) {
+	const [copied, setCopied] = useState(false);
+	return (
+		<div
+			style={{
+				display: "flex",
+				alignItems: "flex-start",
+				gap: 6,
+				marginTop: 6,
+			}}
+		>
+			<code
+				style={{
+					flex: 1,
+					fontFamily: "ui-monospace, monospace",
+					fontSize: 11,
+					color: "var(--rv-text-secondary)",
+					wordBreak: "break-all",
+				}}
+			>
+				{command}
+			</code>
+			<button
+				type="button"
+				onClick={() => {
+					navigator.clipboard.writeText(command).then(
+						() => {
+							setCopied(true);
+							setTimeout(() => setCopied(false), 1200);
+						},
+						() => {
+							/* clipboard denied — silent */
+						},
+					);
+				}}
+				style={{
+					background: "none",
+					border: "none",
+					cursor: "pointer",
+					color: copied ? "var(--rv-status-completed)" : "var(--rv-accent)",
+					fontSize: 11,
+					padding: "0 2px",
+					flexShrink: 0,
+				}}
+			>
+				{copied ? "Copied ✓" : "Copy"}
+			</button>
+		</div>
+	);
 }
 
 /** D-23 exact single-event headline strings, keyed by toast type. */
@@ -102,9 +216,15 @@ export function EventToast({ toast, onDismiss }: Props) {
 	const headline = isMerged
 		? renderMergedHeadline(toast.type, toast.source, toast.count)
 		: renderSingleHeadline(toast.type, toast.source, toast.detail);
-	const body = isMerged
-		? renderMergedBody(toast.type)
-		: renderSingleBody(toast.type);
+	// v0.8: a version_mismatch toast (single or merged) shows the remedy the
+	// app picked, from the latest detail.
+	const remedy =
+		toast.type === "version_mismatch"
+			? renderMismatchRemedy(toast.detail)
+			: null;
+	const body =
+		remedy?.body ??
+		(isMerged ? renderMergedBody(toast.type) : renderSingleBody(toast.type));
 	const isInfo = toast.type === "disconnect";
 	const stripe = isInfo
 		? "var(--rv-text-tertiary)"
@@ -145,6 +265,7 @@ export function EventToast({ toast, onDismiss }: Props) {
 						{body}
 					</div>
 				)}
+				{remedy?.command && <CopyCommand command={remedy.command} />}
 			</div>
 			<button
 				type="button"

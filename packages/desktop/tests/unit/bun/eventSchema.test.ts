@@ -51,6 +51,54 @@ describe("EventSchema (Zod boundary validation)", () => {
 		}
 	});
 
+	it("accepts a v0.8 hello frame carrying install", () => {
+		for (const install of ["plugin", "npm", "local"]) {
+			const result = parseIncoming(
+				JSON.stringify({
+					type: "hello",
+					source: "claude-code",
+					version: "0.8.0",
+					install,
+				}),
+			);
+			expect(result.ok).toBe(true);
+			if (result.ok) expect(result.frame).toMatchObject({ install });
+		}
+	});
+
+	it("still accepts a pre-v0.8 hello frame without install", () => {
+		const result = parseIncoming(
+			JSON.stringify({
+				type: "hello",
+				source: "claude-code",
+				version: "0.1.0",
+			}),
+		);
+		expect(result.ok).toBe(true);
+		if (result.ok) {
+			expect(result.frame).toMatchObject({ type: "hello", version: "0.1.0" });
+			expect("install" in result.frame && result.frame.install).toBeFalsy();
+		}
+	});
+
+	it("keeps a hello frame whose install value it doesn't know, dropping install", () => {
+		// A newer server may report an install kind this app predates. Rejecting
+		// the frame would also lose the version check that tells the user to update.
+		const result = parseIncoming(
+			JSON.stringify({
+				type: "hello",
+				source: "claude-code",
+				version: "0.9.0",
+				install: "some-future-kind",
+			}),
+		);
+		expect(result.ok).toBe(true);
+		if (result.ok) {
+			expect(result.frame).toMatchObject({ type: "hello", version: "0.9.0" });
+			expect("install" in result.frame && result.frame.install).toBeFalsy();
+		}
+	});
+
 	it("caps meta at 8KB — classify as malformed when meta exceeds limit", () => {
 		// Build a meta payload that exceeds META_MAX_BYTES when serialized
 		const bigValue = "x".repeat(META_MAX_BYTES + 100);

@@ -18,6 +18,11 @@ import {
 	startEventServer,
 } from "./eventServer";
 import { serverLogger } from "./logging";
+import {
+	getInstalledMcpServerPath,
+	isInstalledMcpServerCurrent,
+	refreshInstalledMcpServer,
+} from "./mcpInstaller";
 import { onBeforeQuit } from "./platform/lifecycle";
 import { showNotification } from "./platform/notifications";
 import { getReleaseChannel } from "./platform/updater";
@@ -96,6 +101,21 @@ let currentPort: number | null = null;
 let currentErrorMessage: string | null = null;
 let currentConnectedCount = 0;
 
+// v0.8: bring a stale Setup Wizard copy of the MCP server up to date with the
+// one bundled in this app, before the event server starts judging producer
+// versions. Skipped on the dev channel so `bun run dev` never overwrites the
+// user's installed copy with a workspace build.
+if ((await getReleaseChannel()) === "dev") {
+	bunLogger.info("MCP server refresh skipped on the dev channel");
+} else {
+	try {
+		const refresh = refreshInstalledMcpServer();
+		bunLogger.info`MCP server refresh: ${refresh} (${getInstalledMcpServerPath()})`;
+	} catch (e) {
+		bunLogger.warn`MCP server refresh failed: ${String(e)}`;
+	}
+}
+
 const eventServerResult = await startEventServer({
 	requestedPort,
 	isUserSpecified,
@@ -103,6 +123,7 @@ const eventServerResult = await startEventServer({
 	// hello frame so an MCP server installed independently of the app (npm /
 	// Claude Code plugin) cannot drift silently.
 	appVersion: APP_VERSION,
+	isWizardCopyCurrent: isInstalledMcpServerCurrent,
 	onFlush: (updates) => {
 		mainWindow?.webview.rpc?.send.pushStatusUpdate({ updates });
 	},

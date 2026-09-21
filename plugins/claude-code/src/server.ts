@@ -2,6 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
 import { NodeStatusSchema } from "../../../packages/core/src/schema";
+import { detectInstallKind } from "./installKind";
 import { readSentinel } from "./sentinel";
 import { agentToolCallback } from "./tools/agentToolCallback";
 import {
@@ -27,6 +28,10 @@ const SOURCE_NAME = "claude-code";
 const wsClient = createWsClient({
 	source: SOURCE_NAME,
 	version: PACKAGE_VERSION,
+	install: detectInstallKind(
+		process.env.ROADRAVEN_MCP_INSTALL,
+		process.argv[1],
+	),
 });
 
 const server = new McpServer({

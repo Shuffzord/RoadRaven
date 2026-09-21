@@ -99,6 +99,35 @@ Consult your host's docs for where that block goes — most read a
 `mcpServers` map keyed by server name (`roadraven` is a good default), the
 same shape as the Claude Code raw config above.
 
+## Version mismatch
+
+When the MCP server connects, RoadRaven compares its version with the app's.
+If the major.minor differs, a toast says so and tells you what to do; where
+there is a command, it has a **Copy** button. The fix depends on how the
+server was installed (the server reports this itself since v0.8):
+
+- **Setup Wizard.** Nothing to reinstall: at startup RoadRaven updates its
+  installed copy of the server
+  (`%LOCALAPPDATA%\RoadRaven\mcp\roadraven-mcp.mjs` on Windows) to the one
+  bundled with the app. Restart your agent session so it loads the new copy.
+  If there's no wizard copy to update, re-run the Setup Wizard and install
+  the integration.
+- **Claude Code plugin.** Update the plugin, then restart Claude Code:
+
+  ```
+  claude plugin marketplace update roadraven; claude plugin update roadraven@roadraven
+  ```
+
+- **npm (`npx`).** Re-register the server pinned to the app's version (the
+  toast fills it in), then restart your agent:
+
+  ```
+  claude mcp remove roadraven; claude mcp add -s user roadraven -- npx -y @roadraven/mcp@<app version>
+  ```
+
+If the server is *newer* than the app, update RoadRaven instead — the toast
+shows the installer one-liner for your platform.
+
 ## Full tool catalog
 
 For the complete tool list, configuration, kill-switch, and security model,

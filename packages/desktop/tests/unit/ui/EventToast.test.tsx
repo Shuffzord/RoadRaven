@@ -3,8 +3,8 @@
 // Sources: D-22, D-23, D-24 in 04-CONTEXT.md, PLUG-06, I-05.
 
 import "@testing-library/jest-dom";
-import { fireEvent, render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { act, fireEvent, render, screen } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { EventToast } from "../../../src/mainview/components/EventToast";
 import type { ActiveToast } from "../../../src/mainview/store/toastStore";
 
@@ -110,5 +110,132 @@ describe("EventToast (D-23, D-24)", () => {
 		render(<EventToast toast={makeToast()} onDismiss={onDismiss} />);
 		fireEvent.click(screen.getByText("Dismiss"));
 		expect(onDismiss).toHaveBeenCalledOnce();
+	});
+});
+
+// v0.8: the Bun process appends the remedy to the detail
+// (`<producer>|<app>|<remedy>`); the toast only displays it.
+describe("EventToast version_mismatch remedy (v0.8)", () => {
+	beforeEach(() => {
+		Object.defineProperty(navigator, "clipboard", {
+			value: { writeText: vi.fn().mockResolvedValue(undefined) },
+			writable: true,
+			configurable: true,
+		});
+	});
+
+	afterEach(() => {
+		vi.restoreAllMocks();
+	});
+
+	function renderMismatch(detail: string, count = 1) {
+		render(
+			<EventToast
+				toast={makeToast({ type: "version_mismatch", detail, count })}
+				onDismiss={vi.fn()}
+			/>,
+		);
+	}
+
+	it("update-plugin shows the verified plugin update command with a working Copy button", async () => {
+		renderMismatch("0.7.2|0.8.0|update-plugin");
+		const command =
+			"claude plugin marketplace update roadraven; claude plugin update roadraven@roadraven";
+		expect(
+			screen.getByText(
+				"MCP server version 0.7.2 does not match RoadRaven 0.8.0.",
+			),
+		).toBeInTheDocument();
+		expect(
+			screen.getByText(
+				"Update the RoadRaven plugin, then restart Claude Code:",
+			),
+		).toBeInTheDocument();
+		expect(screen.getByText(command)).toBeInTheDocument();
+
+		await act(async () => {
+			fireEvent.click(screen.getByText("Copy"));
+		});
+		expect(navigator.clipboard.writeText).toHaveBeenCalledWith(command);
+		expect(screen.getByText("Copied ✓")).toBeInTheDocument();
+	});
+
+	it("update-npm re-registers the server pinned to the app version", () => {
+		renderMismatch("0.7.2|0.8.0-beta.1|update-npm");
+		expect(
+			screen.getByText(
+				"Re-register the MCP server at 0.8.0-beta.1, then restart your agent:",
+			),
+		).toBeInTheDocument();
+		expect(
+			screen.getByText(
+				"claude mcp remove roadraven; claude mcp add -s user roadraven -- npx -y @roadraven/mcp@0.8.0-beta.1",
+			),
+		).toBeInTheDocument();
+	});
+
+	it("update-app on Windows shows the PowerShell installer one-liner", () => {
+		vi.spyOn(navigator, "userAgent", "get").mockReturnValue(
+			"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+		);
+		renderMismatch("0.9.1|0.8.0|update-app");
+		expect(screen.getByText("Update RoadRaven to 0.9.1.")).toBeInTheDocument();
+		expect(
+			screen.getByText(
+				"irm https://raw.githubusercontent.com/Shuffzord/RoadRaven/master/install.ps1 | iex",
+			),
+		).toBeInTheDocument();
+	});
+
+	it("update-app on Linux shows the shell installer one-liner", () => {
+		vi.spyOn(navigator, "userAgent", "get").mockReturnValue(
+			"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36",
+		);
+		renderMismatch("0.9.1|0.8.0|update-app");
+		expect(
+			screen.getByText(
+				"curl -fsSL https://raw.githubusercontent.com/Shuffzord/RoadRaven/master/install.sh | sh",
+			),
+		).toBeInTheDocument();
+	});
+
+	it("update-app without an installer for the platform shows text only", () => {
+		vi.spyOn(navigator, "userAgent", "get").mockReturnValue(
+			"Mozilla/5.0 (Macintosh; Intel Mac OS X 14_0) AppleWebKit/605.1.15",
+		);
+		renderMismatch("0.9.1|0.8.0|update-app");
+		expect(screen.getByText("Update RoadRaven to 0.9.1.")).toBeInTheDocument();
+		expect(screen.queryByText("Copy")).not.toBeInTheDocument();
+	});
+
+	it("restart-agent is text only", () => {
+		renderMismatch("0.1.0|0.8.0|restart-agent");
+		expect(
+			screen.getByText(
+				"RoadRaven updated its MCP server — restart your agent session to load it.",
+			),
+		).toBeInTheDocument();
+		expect(screen.queryByText("Copy")).not.toBeInTheDocument();
+	});
+
+	it("reinstall points at the Setup Wizard, text only", () => {
+		renderMismatch("0.1.0|0.8.0|reinstall");
+		expect(
+			screen.getByText("Re-run the Setup Wizard and install the integration."),
+		).toBeInTheDocument();
+		expect(screen.queryByText("Copy")).not.toBeInTheDocument();
+	});
+
+	it("a merged toast shows the same remedy", () => {
+		renderMismatch("0.7.2|0.8.0|update-plugin", 3);
+		expect(
+			screen.getByText("3 version mismatches from claude-code."),
+		).toBeInTheDocument();
+		expect(
+			screen.getByText(
+				"Update the RoadRaven plugin, then restart Claude Code:",
+			),
+		).toBeInTheDocument();
+		expect(screen.getByText("Copy")).toBeInTheDocument();
 	});
 });

@@ -152,6 +152,49 @@ export function resolveBundledMcpServer(anchorDirs?: string[]): string | null {
 	return candidates.find((p) => existsSync(p)) ?? null;
 }
 
+/**
+ * True when the Setup Wizard's copy of the MCP server exists and is
+ * byte-identical to the server bundled with this app. Never throws — an
+ * unreadable file counts as not current.
+ */
+export function isInstalledMcpServerCurrent(): boolean {
+	const dest = getInstalledMcpServerPath();
+	const source = resolveBundledMcpServer();
+	if (!source || !existsSync(dest)) return false;
+	try {
+		return readFileSync(source).equals(readFileSync(dest));
+	} catch {
+		return false;
+	}
+}
+
+/**
+ * Bring the Setup Wizard's copy of the MCP server up to date with the server
+ * bundled in this app. A copy made by an older app goes stale when the app
+ * updates and keeps reporting the old version. Only an existing copy is ever
+ * overwritten — never created (the user didn't opt in) — and no host config
+ * is touched: registrations point at the same path. MCP processes already
+ * running keep the old code until their agent host restarts them.
+ */
+export function refreshInstalledMcpServer():
+	| "absent"
+	| "no-bundle"
+	| "current"
+	| "refreshed" {
+	const dest = getInstalledMcpServerPath();
+	if (!existsSync(dest)) return "absent";
+	const source = resolveBundledMcpServer();
+	if (!source) return "no-bundle";
+	const bundled = readFileSync(source);
+	if (bundled.equals(readFileSync(dest))) return "current";
+	// Temp file + rename, like writeClaudeConfig, so a crash can't leave a
+	// truncated server behind.
+	const tmp = `${dest}.roadraven-tmp`;
+	writeFileSync(tmp, bundled);
+	renameSync(tmp, dest);
+	return "refreshed";
+}
+
 /** Build the stdio server entry that points Claude Code at our server file. */
 export function buildMcpServerEntry(serverPath: string): McpServerEntry {
 	// `node` must be on the PATH of the shell Claude Code spawns MCP servers in.

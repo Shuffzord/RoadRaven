@@ -19,10 +19,12 @@ import {
 	getOpenCodeJsoncPath,
 	getSetupStatus,
 	installMcpIntegration,
+	isInstalledMcpServerCurrent,
 	isMcpInstalled,
 	MCP_SERVER_NAME,
 	mergeMcpConfig,
 	mergeOpenCodeConfig,
+	refreshInstalledMcpServer,
 	resolveBundledMcpServer,
 } from "../../../src/bun/mcpInstaller";
 
@@ -311,5 +313,63 @@ describe("installMcpIntegration (sandboxed)", () => {
 		mkdirSync(dirname(path), { recursive: true });
 		writeFileSync(path, "{ not json", "utf-8");
 		expect(detectPluginInstall()).toBe(false);
+	});
+
+	// --- v0.8: refreshing a stale wizard copy at startup ----------------------
+
+	/** Writes a wizard copy with the given content, as an older app would have. */
+	function writeWizardCopy(content: string): string {
+		const installed = getInstalledMcpServerPath();
+		mkdirSync(dirname(installed), { recursive: true });
+		writeFileSync(installed, content, "utf-8");
+		return installed;
+	}
+
+	it("refreshInstalledMcpServer never creates the wizard copy when absent", () => {
+		expect(refreshInstalledMcpServer()).toBe("absent");
+		expect(existsSync(getInstalledMcpServerPath())).toBe(false);
+		expect(isInstalledMcpServerCurrent()).toBe(false);
+	});
+
+	it("refreshInstalledMcpServer overwrites a stale wizard copy with the bundled server", () => {
+		const installed = writeWizardCopy(
+			"// stale mcp server from an older app\n",
+		);
+		expect(isInstalledMcpServerCurrent()).toBe(false);
+
+		expect(refreshInstalledMcpServer()).toBe("refreshed");
+
+		expect(readFileSync(installed, "utf-8")).toBe(
+			readFileSync(sourceServer, "utf-8"),
+		);
+		expect(existsSync(`${installed}.roadraven-tmp`)).toBe(false);
+		expect(isInstalledMcpServerCurrent()).toBe(true);
+	});
+
+	it("refreshInstalledMcpServer leaves a current wizard copy alone", () => {
+		writeWizardCopy(readFileSync(sourceServer, "utf-8"));
+		expect(isInstalledMcpServerCurrent()).toBe(true);
+		expect(refreshInstalledMcpServer()).toBe("current");
+	});
+
+	it("refreshInstalledMcpServer does not touch any host config", () => {
+		writeWizardCopy("// stale\n");
+		refreshInstalledMcpServer();
+		expect(existsSync(getClaudeConfigPath())).toBe(false);
+		expect(existsSync(getOpenCodeConfigPath())).toBe(false);
+	});
+
+	it("refreshInstalledMcpServer reports no-bundle and keeps the copy when no bundled server is found", () => {
+		const installed = writeWizardCopy("// stale\n");
+		process.env.ROADRAVEN_MCP_SERVER_PATH = join(sandbox, "does-not-exist.mjs");
+		const originalCwd = process.cwd();
+		process.chdir(sandbox);
+		try {
+			expect(refreshInstalledMcpServer()).toBe("no-bundle");
+			expect(isInstalledMcpServerCurrent()).toBe(false);
+		} finally {
+			process.chdir(originalCwd);
+		}
+		expect(readFileSync(installed, "utf-8")).toBe("// stale\n");
 	});
 });

@@ -6,6 +6,10 @@ const HelloFrameSchema = z.object({
 	type: z.literal("hello"),
 	source: z.string().min(1).max(64),
 	version: z.string().optional(),
+	// v0.8: how the MCP server was installed. Servers older than v0.8 omit it.
+	// An unknown value from a newer server is dropped rather than rejecting the
+	// whole hello frame — the version check is what tells that user to update.
+	install: z.enum(["plugin", "npm", "local"]).optional().catch(undefined),
 });
 
 const EventFrameSchema = z.object({

@@ -39,6 +39,8 @@ const result = await startEventServer({
 	// v0.8: headless E2E entry has no renderer/app bootstrap to source this
 	// from — keep in sync with APP_VERSION in bun/index.ts.
 	appVersion: "0.8.0",
+	// No Setup Wizard copy in headless E2E runs.
+	isWizardCopyCurrent: () => false,
 	onFlush: () => {
 		/* no renderer */
 	},

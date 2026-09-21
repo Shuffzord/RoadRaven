@@ -90,6 +90,18 @@ describe("WsClient reconnect strategy", () => {
 		await client.close();
 	});
 
+	// v0.8: install rides along in the hello frame; left out when unset.
+	it.each([
+		["npm", '{"type":"hello","source":"cc","version":"0.8.0","install":"npm"}'],
+		[undefined, '{"type":"hello","source":"cc","version":"0.8.0"}'],
+	] as const)("hello frame with install=%s is %s", async (install, frame) => {
+		const client = createWsClient({ source: "cc", version: "0.8.0", install });
+		await vi.waitFor(() => MockWebSocket.instances.length > 0);
+		MockWebSocket.instances[0].emit("open");
+		expect(MockWebSocket.instances[0].send).toHaveBeenNthCalledWith(1, frame);
+		await client.close();
+	});
+
 	it("isConnected() returns true after open, false after close", async () => {
 		const client = createWsClient({ source: "claude-code", version: "0.1.0" });
 

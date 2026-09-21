@@ -9,6 +9,9 @@ import { DEFAULT_PORT, startEventServer } from "../../../src/bun/eventServer";
 
 const NO_OP_OPTS = {
 	appVersion: "0.8.0",
+	// v0.8: StartOptions now requires isWizardCopyCurrent (consulted on each
+	// version mismatch to pick the remedy).
+	isWizardCopyCurrent: () => false,
 	onFlush: () => {
 		/* noop */
 	},
@@ -38,14 +41,15 @@ async function connectWs(port: number): Promise<WebSocket> {
 	return ws;
 }
 
-/** Connects, sends a hello frame with the given version, waits for it to be processed, then closes. */
+/** Connects, sends a hello frame with the given version (and v0.8 install, if any), waits for it to be processed, then closes. */
 async function helloAndClose(
 	port: number,
 	version: string,
 	source = "test-agent",
+	install?: string,
 ): Promise<void> {
 	const ws = await connectWs(port);
-	ws.send(JSON.stringify({ type: "hello", source, version }));
+	ws.send(JSON.stringify({ type: "hello", source, version, install }));
 	// Small delay for message to be processed
 	await new Promise((r) => setTimeout(r, 50));
 	ws.close();
@@ -190,5 +194,31 @@ describe("EventServer (WebSocket lifecycle)", () => {
 		await helloAndClose(handle.port, "0.8.3");
 
 		expect(errors.filter((e) => e.type === "version_mismatch")).toHaveLength(0);
+	});
+
+	// v0.8 end-to-end: a fake producer connects over the real socket and the
+	// emitted detail carries the remedy as its third field.
+	it.each([
+		["0.7.2", "plugin", false, "0.7.2|0.8.0|update-plugin"],
+		["0.7.2", "npm", false, "0.7.2|0.8.0|update-npm"],
+		["0.7.2", "local", true, "0.7.2|0.8.0|restart-agent"],
+		["0.1.0", undefined, true, "0.1.0|0.8.0|restart-agent"],
+		["0.1.0", undefined, false, "0.1.0|0.8.0|reinstall"],
+		["0.9.1", "plugin", true, "0.9.1|0.8.0|update-app"],
+	])("hello version=%s install=%s wizardCopyCurrent=%s → detail %s", async (version, install, wizardCopyCurrent, expectedDetail) => {
+		const errors: Array<{ type: string; source: string; detail?: string }> = [];
+		const handle = await startTestServer({
+			appVersion: "0.8.0",
+			isWizardCopyCurrent: () => wizardCopyCurrent,
+			onError: (err) => errors.push(err),
+		});
+		if (!handle) return;
+
+		await helloAndClose(handle.port, version, "claude-code", install);
+
+		const mismatch = errors.filter((e) => e.type === "version_mismatch");
+		expect(mismatch).toHaveLength(1);
+		expect(mismatch[0]?.source).toBe("claude-code");
+		expect(mismatch[0]?.detail).toBe(expectedDetail);
 	});
 });

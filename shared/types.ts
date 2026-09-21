@@ -59,6 +59,18 @@ export interface McpInstallStep {
 	host?: McpHost;
 }
 
+/**
+ * What the user should do about an MCP server version mismatch (v0.8). The
+ * Bun process decides it; the renderer only displays it. Carried as the third
+ * field of the version_mismatch toast detail: `<producer>|<app>|<remedy>`.
+ */
+export type MismatchRemedy =
+	| "update-app"
+	| "restart-agent"
+	| "update-plugin"
+	| "update-npm"
+	| "reinstall";
+
 // -- Zod-inferred types from @roadraven/core --------------------------------
 // Used internally by the RPC contract below. Consumers needing these types
 // should import directly from "packages/core/src/schema" — re-exporting them

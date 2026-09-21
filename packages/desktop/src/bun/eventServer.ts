@@ -1,5 +1,8 @@
 import type { Server, ServerWebSocket } from "bun";
-import type { IntegrationEvent } from "../../../../shared/types";
+import type {
+	IntegrationEvent,
+	MismatchRemedy,
+} from "../../../../shared/types";
 import {
 	type CoalescedUpdate,
 	EventCoalescer,
@@ -48,6 +51,10 @@ export interface StartOptions {
 	// version so an MCP server installed independently of the app (npm package,
 	// Claude Code plugin) that has drifted out of sync can be flagged.
 	appVersion: string;
+	// v0.8: whether the Setup Wizard's copy of the MCP server exists and
+	// matches the app's bundled server. Consulted on each version mismatch to
+	// pick the remedy shown to the user (see mismatchRemedy).
+	isWizardCopyCurrent: () => boolean;
 	onFlush: (updates: CoalescedUpdate[]) => void;
 	onEvent: (event: IntegrationEvent) => void; // for pushEventLog streaming to renderer
 	onError: (err: {
@@ -72,10 +79,10 @@ export interface StartOptions {
 	onAgentRequest: (ws: ServerWebSocket<WsData>, request: AgentRequest) => void;
 }
 
+type MajorMinor = { major: number; minor: number };
+
 /** Parse the leading `<major>.<minor>` off a version string, or null if it doesn't match. */
-function parseMajorMinor(
-	version: string,
-): { major: number; minor: number } | null {
+function parseMajorMinor(version: string): MajorMinor | null {
 	const match = /^(\d+)\.(\d+)/.exec(version);
 	if (!match) return null;
 	return { major: Number(match[1]), minor: Number(match[2]) };
@@ -104,7 +111,7 @@ function handleHelloFrame(
 	ws.data.source = frame.source;
 	ws.data.version = frame.version;
 	ws.data.helloAt = Date.now();
-	serverLogger.info`Hello frame from source=${frame.source} version=${frame.version ?? "unset"}`;
+	serverLogger.info`Hello frame from source=${frame.source} version=${frame.version ?? "unset"} install=${frame.install ?? "unset"}`;
 
 	const producerVersion = frame.version ? parseMajorMinor(frame.version) : null;
 	if (!producerVersion) {
@@ -118,13 +125,43 @@ function handleHelloFrame(
 		(producerVersion.major !== appVersion.major ||
 			producerVersion.minor !== appVersion.minor)
 	) {
-		serverLogger.warn`Version mismatch: source=${frame.source} producerVersion=${frame.version} appVersion=${opts.appVersion}`;
+		const remedy = mismatchRemedy(
+			producerVersion,
+			appVersion,
+			frame.install,
+			opts.isWizardCopyCurrent(),
+		);
+		serverLogger.warn`Version mismatch: source=${frame.source} producerVersion=${frame.version} appVersion=${opts.appVersion} remedy=${remedy}`;
 		opts.onError({
 			type: "version_mismatch",
 			source: frame.source,
-			detail: `${frame.version}|${opts.appVersion}`,
+			detail: `${frame.version}|${opts.appVersion}|${remedy}`,
 		});
 	}
+}
+
+/**
+ * Decide what the user should do about a version mismatch (v0.8) — the
+ * renderer only displays the result. `install` is how the producer says it
+ * was installed (absent from servers older than v0.8); `wizardCopyCurrent` is
+ * whether the Setup Wizard's copy of the MCP server exists and matches the
+ * server bundled with this app (it is refreshed at startup).
+ */
+export function mismatchRemedy(
+	producer: MajorMinor,
+	app: MajorMinor,
+	install: HelloFrame["install"],
+	wizardCopyCurrent: boolean,
+): MismatchRemedy {
+	const producerIsNewer =
+		producer.major !== app.major
+			? producer.major > app.major
+			: producer.minor > app.minor;
+	if (producerIsNewer) return "update-app";
+	if (install === "plugin") return "update-plugin";
+	if (install === "npm") return "update-npm";
+	// "local" or absent: most likely the wizard copy, already refreshed on disk.
+	return wizardCopyCurrent ? "restart-agent" : "reinstall";
 }
 
 export async function startEventServer(
