@@ -39,7 +39,7 @@ bun run test                          # Full suite across all workspaces
 bun run test:desktop                  # Desktop package only (faster)
 bun run test:file path/to/file.test.ts  # Single file
 bun run test:typecheck                # tsc --noEmit
-bun run test:typecheck:tests          # tsc over the tests allowlist (packages/desktop/tsconfig.tests.json)
+bun run test:typecheck:tests          # tsc over src + all test files (vitest strips types)
 bun run test:coverage                 # vitest + istanbul -> packages/desktop/coverage/coverage-final.json
 bun run test:e2e:ui                   # Playwright ui project (Vite dev server, single worker)
 bun run test:lint                     # biome lint (matches CI)

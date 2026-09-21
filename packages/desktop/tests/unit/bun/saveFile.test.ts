@@ -15,16 +15,18 @@
  * bun/index.ts and flips this suite GREEN.
  */
 
-import {
-	mkdirSync,
-	mkdtempSync,
-	readFileSync,
-	rmSync,
-	writeFileSync,
-} from "node:fs";
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+	afterEach,
+	beforeEach,
+	describe,
+	expect,
+	it,
+	type MockInstance,
+	vi,
+} from "vitest";
 import type { RoadmapSchema } from "../../../../../packages/core/src/schema";
 import * as atomicWriteModule from "../../../src/bun/atomicWrite";
 import { getOwnership, resetRefMap } from "../../../src/bun/refMap";
@@ -60,7 +62,7 @@ function validSchema(): RoadmapSchema {
 describe("saveFile handler (T-03.04-01 + T-03.04-07)", () => {
 	let tempDir: string;
 	let mainPath: string;
-	let atomicWriteSpy: ReturnType<typeof vi.spyOn>;
+	let atomicWriteSpy: MockInstance<typeof atomicWriteModule.atomicWrite>;
 
 	beforeEach(() => {
 		tempDir = mkdtempSync(join(tmpdir(), "rr-sf-test-"));

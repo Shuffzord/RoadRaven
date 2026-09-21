@@ -9,6 +9,10 @@ import type { CoalescedUpdate } from "../../src/bun/eventCoalescer";
 import { startEventServer } from "../../src/bun/eventServer";
 
 const NO_OP = {
+	appVersion: "0.8.0",
+	// v0.8: StartOptions now requires isWizardCopyCurrent (consulted on each
+	// version mismatch to pick the remedy).
+	isWizardCopyCurrent: () => false,
 	onFlush: () => {
 		/* noop */
 	},

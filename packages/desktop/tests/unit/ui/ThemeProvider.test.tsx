@@ -1,7 +1,6 @@
 // @vitest-environment jsdom
 
 import { act, cleanup, render } from "@testing-library/react";
-import React from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // Mock the rpc module
@@ -123,7 +122,8 @@ describe("ThemeProvider", () => {
 	});
 
 	it("calls loadSettings on mount and applies saved theme preference", async () => {
-		vi.mocked(electroview.rpc.request.loadSettings).mockResolvedValueOnce({
+		expect(electroview?.rpc).toBeDefined();
+		vi.mocked(electroview!.rpc!.request.loadSettings).mockResolvedValueOnce({
 			settings: { theme: "light" },
 		});
 
@@ -136,12 +136,13 @@ describe("ThemeProvider", () => {
 		await act(async () => {
 			await new Promise((r) => setTimeout(r, 10));
 		});
-		expect(electroview.rpc.request.loadSettings).toHaveBeenCalled();
+		expect(electroview!.rpc!.request.loadSettings).toHaveBeenCalled();
 		expect(useThemeStore.getState().preference).toBe("light");
 	});
 
 	it("uses default 'dark' when loadSettings RPC fails", async () => {
-		vi.mocked(electroview.rpc.request.loadSettings).mockRejectedValueOnce(
+		expect(electroview?.rpc).toBeDefined();
+		vi.mocked(electroview!.rpc!.request.loadSettings).mockRejectedValueOnce(
 			new Error("RPC not available"),
 		);
 

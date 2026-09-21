@@ -14,6 +14,7 @@ const defaultProps = {
 	onOpenFile: vi.fn(),
 	onOpenRecent: vi.fn(),
 	onOpenSample: vi.fn(),
+	onNewRoadmap: vi.fn(),
 };
 
 describe("WelcomeScreen", () => {

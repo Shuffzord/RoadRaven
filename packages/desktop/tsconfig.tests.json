@@ -1,34 +1,14 @@
 {
-	// Typecheck gate for tests. Not wired into `tsc --noEmit` (the base
-	// tsconfig.json), pre-commit, or CI — a separate `typecheck:tests` script
-	// (see package.json) so it can be adopted per-directory as test files are
-	// cleaned up. The `include` list below is an ALLOWLIST: it only contains
-	// test directories/files that typecheck cleanly today. Grow it as more
-	// test files are fixed; do not add a directory/file here until it is
-	// clean (`bun run test:typecheck:tests` must stay green).
+	// Typecheck gate for the whole tests folder. Vitest strips types at run
+	// time and the base tsconfig.json only includes src + shared, so without
+	// this config test files are never typechecked. A separate
+	// `typecheck:tests` script (see package.json) runs this — wired into the
+	// root `verify` script alongside `typecheck` — so it can be told apart
+	// from the app build's own typecheck.
 	"extends": "./tsconfig.json",
 	"compilerOptions": {
 		"types": ["vitest/globals", "node"]
 	},
-	"include": [
-		"src",
-		"../../shared",
-		"tests/ui",
-		"tests/helpers",
-		"tests/unit/hooks",
-		"tests/unit/lib",
-		"tests/unit/store",
-		"tests/unit/mainview",
-		"tests/unit/ui/Canvas.viewport.test.tsx",
-		"tests/unit/ui/components.test.tsx",
-		"tests/unit/ui/ContextMenu.test.tsx",
-		"tests/unit/ui/ContextMenu.keyboard.test.tsx",
-		"tests/unit/ui/EventLogDrawer.test.tsx",
-		"tests/unit/ui/SidePanel.edit-mode.test.tsx",
-		"tests/unit/ui/TopBar.test.tsx",
-		"tests/unit/ui/viewer-smoke.test.tsx",
-		"tests/unit/ui/RoadmapNodePulse.test.tsx",
-		"tests/integration/eventLog-selection.test.ts"
-	],
+	"include": ["src", "../../shared", "tests"],
 	"exclude": ["node_modules", "dist", "build"]
 }
