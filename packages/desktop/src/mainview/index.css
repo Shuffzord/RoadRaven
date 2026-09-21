@@ -751,6 +751,21 @@
 	background-color: var(--rv-bg-base);
 }
 
+/* Canvas container — unscrollable at the root (v0.8.1 Phase 3).
+   `overflow: hidden` only stops the USER scrolling an element; it still gives
+   it a scrolling box, so a programmatic focus() on a card the camera has not
+   reached scrolled the whole canvas sideways by the watermark's overflow
+   (40px with the SidePanel open — P0-6a/b). `overflow: clip` has no scrolling
+   box at all, which is the layer native Tab focus needs, since Tab cannot pass
+   `preventScroll`. The `hidden` declaration stays FIRST as the fallback: an
+   engine that does not know `clip` would otherwise drop to `visible` and let
+   the 800px watermark spill over the sidebar. */
+.rv-canvas {
+	overflow: hidden;
+	/* biome-ignore lint/suspicious/noDuplicateProperties: deliberate fallback pair — `hidden` first for engines without `clip`, which would otherwise compute to `visible` */
+	overflow: clip;
+}
+
 /* Base font */
 body {
 	font-family: "Inter", system-ui, -apple-system, sans-serif;

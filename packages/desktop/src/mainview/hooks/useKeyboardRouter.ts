@@ -11,6 +11,22 @@ interface RouterDeps {
 	togglePanelFocus: () => void;
 }
 
+/**
+ * Marks the app as being driven by the keyboard right now.
+ *
+ * Added on keydown and removed on mousedown, both in capture phase and both
+ * BEFORE the browser runs that event's own focus default action — so anything
+ * reacting to a `focus` event can ask which device caused it. Drives the
+ * dashed focus ring (index.css) and whether a card that receives native focus
+ * also asks the camera to reveal it (RoadmapNode.tsx).
+ */
+export const KEYBOARD_NAV_CLASS = "keyboard-nav-active";
+
+/** True when the last input the app saw was a key, not a pointer. */
+export function isKeyboardNav(): boolean {
+	return document.body.classList.contains(KEYBOARD_NAV_CLASS);
+}
+
 function isInTextInput(active: Element | null): boolean {
 	if (!active) return false;
 	const el = active as HTMLElement;
@@ -333,10 +349,10 @@ export function useKeyboardRouter(deps: RouterDeps): void {
 	// during arrow navigation.
 	useEffect(() => {
 		const onKey = (): void => {
-			document.body.classList.add("keyboard-nav-active");
+			document.body.classList.add(KEYBOARD_NAV_CLASS);
 		};
 		const onMouse = (): void => {
-			document.body.classList.remove("keyboard-nav-active");
+			document.body.classList.remove(KEYBOARD_NAV_CLASS);
 		};
 		document.addEventListener("keydown", onKey, true);
 		document.addEventListener("mousedown", onMouse);

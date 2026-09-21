@@ -259,6 +259,40 @@ async function focusedIds(page: Page): Promise<string[]> {
 	);
 }
 
+/** The node whose card holds real DOM focus, or null. */
+async function activeCardId(page: Page): Promise<string | null> {
+	return page.evaluate(
+		() =>
+			(document.activeElement as HTMLElement | null)?.dataset.sourceId ?? null,
+	);
+}
+
+/** Enough of `document.activeElement` to name it in a failure message. */
+async function activeElementInfo(
+	page: Page,
+): Promise<{ tag: string | null; label: string | null; card: string | null }> {
+	return page.evaluate(() => {
+		const el = document.activeElement as HTMLElement | null;
+		return {
+			tag: el?.tagName ?? null,
+			label: el?.getAttribute("aria-label") ?? null,
+			card: el?.dataset.sourceId ?? null,
+		};
+	});
+}
+
+/** Node ids of the cards that are in the document tab order. */
+async function tabStopIds(page: Page): Promise<string[]> {
+	return page.evaluate(() =>
+		Array.from(
+			document.querySelectorAll<HTMLElement>("[data-source-id]"),
+			(el) => ({ id: el.dataset.sourceId ?? "", tab: el.tabIndex }),
+		)
+			.filter((c) => c.tab === 0)
+			.map((c) => c.id),
+	);
+}
+
 async function containerScroll(
 	page: Page,
 ): Promise<{ left: number; top: number }> {
@@ -364,6 +398,8 @@ async function navigateSteps(page: Page, keys: string[]) {
 	const steps: {
 		key: string;
 		focused: string[];
+		/** The card that holds real DOM focus after the key (RC8). */
+		active: string | null;
 		card: Box;
 		container: Box;
 		transform: Transform;
@@ -378,6 +414,7 @@ async function navigateSteps(page: Page, keys: string[]) {
 		steps.push({
 			key,
 			focused: await focusedIds(page),
+			active: await activeCardId(page),
 			card: await boxOf(page, cardSelector(CHILDREN[i])),
 			container: await boxOf(page, CONTAINER),
 			transform,
@@ -493,6 +530,12 @@ async function focusOffscreenProbe(page: Page) {
 				target.focus(options);
 				return { left: box.scrollLeft, top: box.scrollTop };
 			};
+			const style = getComputedStyle(box);
+			const overflow = { x: style.overflowX, y: style.overflowY };
+			// Chrome still reports a scrollable overflow RECTANGLE for an
+			// `overflow: clip` box (the 800px watermark is still bigger than
+			// the canvas); what `clip` removes is the scrolling box, so
+			// scrollLeft/scrollTop can never leave 0. Kept as evidence.
 			const scrollableOverflow = {
 				x: box.scrollWidth - box.clientWidth,
 				y: box.scrollHeight - box.clientHeight,
@@ -510,6 +553,7 @@ async function focusOffscreenProbe(page: Page) {
 			input.remove();
 			reset();
 			return {
+				overflow,
 				scrollableOverflow,
 				cardPreventScroll,
 				cardPlain,
@@ -673,6 +717,178 @@ async function relayoutAroundFocus(page: Page) {
 	return { afterMove, afterLayout, scroll: await containerScroll(page) };
 }
 
+// --- Phase 3 scenarios --------------------------------------------------------
+
+/** F2 on C8, retype the title, then finish with `key` (Enter or Escape). */
+async function renameThen(page: Page, key: "Enter" | "Escape") {
+	await seed(page);
+	await clickCard(page, C8);
+	await page.keyboard.press("F2");
+	const input = page.locator('input[aria-label="Rename node"]');
+	await input.waitFor();
+	await page.keyboard.type("C8 renamed");
+	await page.keyboard.press(key);
+	await expect(input).toHaveCount(0);
+	await settle(page);
+	return {
+		active: await activeElementInfo(page),
+		title: await page
+			.locator(cardSelector(C8))
+			.locator("span")
+			.first()
+			.textContent(),
+		focused: await focusedIds(page),
+		scroll: await containerScroll(page),
+	};
+}
+
+/**
+ * Commit a rename by clicking a SidePanel field (A8): a blur means the user
+ * went somewhere else on purpose, so nothing may pull focus back.
+ */
+async function renameThenClickPanelField(page: Page) {
+	await seed(page);
+	await clickCard(page, ROOT);
+	// Put the panel into edit mode so it owns a real text input to click.
+	await page.getByRole("button", { name: "Edit node" }).click();
+	const panelTitle = page.getByRole("textbox", { name: "Title" });
+	await panelTitle.waitFor();
+
+	await clickCard(page, ROOT);
+	await page.keyboard.press("F2");
+	const input = page.locator('input[aria-label="Rename node"]');
+	await input.waitFor();
+	await page.keyboard.type("Root renamed");
+	await panelTitle.click();
+	await expect(input).toHaveCount(0);
+	await settle(page);
+	return {
+		active: await activeElementInfo(page),
+		title: await page
+			.locator(cardSelector(ROOT))
+			.locator("span")
+			.first()
+			.textContent(),
+		scroll: await containerScroll(page),
+	};
+}
+
+/** Tab into the tree from the canvas container with nothing focused. */
+async function tabIntoTree(page: Page) {
+	await seed(page);
+	const beforeFocus = await focusedIds(page);
+	const stopsWhileUnfocused = await tabStopIds(page);
+	await page.locator(CONTAINER).focus();
+	await page.keyboard.press("Tab");
+	const landedOn = await activeCardId(page);
+	// Now give the tree a focused node and re-read the tab order.
+	await clickCard(page, ROOT);
+	await page.keyboard.press("ArrowDown");
+	await expect(page.locator(cardSelector(CHILDREN[0]))).toHaveAttribute(
+		"data-focused",
+		"true",
+	);
+	await settle(page);
+	return {
+		beforeFocus,
+		stopsWhileUnfocused,
+		landedOn,
+		stopsWhileFocused: await tabStopIds(page),
+		focusedAfterArrow: await focusedIds(page),
+		scroll: await containerScroll(page),
+	};
+}
+
+/**
+ * Pan the tab-stop card out of view, then Tab back into the tree from outside
+ * the canvas. Shift+Tab is the direction that works from the SidePanel (the
+ * router owns plain Tab while a node is focused — it creates a sibling), and
+ * the only tabbable card is the focused one, so the previous tab stop before
+ * the panel IS that card.
+ */
+async function tabBackToAnOffscreenCard(page: Page) {
+	await seed(page);
+	await clickCard(page, C8);
+	// The click's own reveal waits for the SidePanel's 200ms width transition,
+	// which outlasts clickCard's settle window — let it land before measuring,
+	// or the card starts off screen for a reason that has nothing to do with
+	// Tab (and that pending pan would bring it back on its own).
+	await settle(page, PANEL_STABLE_FRAMES);
+	// Drag until the tab stop is off screen. One gesture cannot cover more
+	// than the container's width, and how far the card has to travel depends
+	// on where the comfort zone parked it, so loop instead of guessing.
+	const drags: Box[] = [];
+	let before = {
+		card: await boxOf(page, cardSelector(C8)),
+		container: await boxOf(page, CONTAINER),
+	};
+	for (let i = 0; i < 5 && isInside(before.card, before.container); i++) {
+		await dragCanvas(page, -300, 0);
+		await settle(page);
+		before = {
+			card: await boxOf(page, cardSelector(C8)),
+			container: await boxOf(page, CONTAINER),
+		};
+		drags.push(before.card);
+	}
+	// The SidePanel is open (the click selected the node), so Shift+Tab from
+	// its Edit button walks backwards through the panel chrome and into the
+	// canvas. Loop rather than hard-code the number of stops: the panel's own
+	// controls are not this case's contract, and Shift+Tab is the one Tab the
+	// router never intercepts.
+	await page.getByRole("button", { name: "Edit node" }).focus();
+	const stops: (string | null)[] = [];
+	for (let i = 0; i < 5 && (await activeCardId(page)) === null; i++) {
+		await page.keyboard.press("Shift+Tab");
+		stops.push(await activeElementInfo(page).then((a) => a.label ?? a.tag));
+	}
+	await expect(page.locator(cardSelector(C8))).toBeFocused();
+	await settle(page);
+	return {
+		before,
+		drags,
+		offscreenBefore: !isInside(before.card, before.container),
+		stops,
+		active: await activeCardId(page),
+		card: await boxOf(page, cardSelector(C8)),
+		container: await boxOf(page, CONTAINER),
+		focused: await focusedIds(page),
+		scroll: await containerScroll(page),
+	};
+}
+
+/** Computed focus-ring styles for a keyboard-focused and a clicked card. */
+async function focusRingStyles(page: Page) {
+	await seed(page);
+	await clickCard(page, C8);
+	const mouse = await ringOf(page, C8);
+	await page.keyboard.press("ArrowRight");
+	await expect(page.locator(cardSelector(C9))).toHaveAttribute(
+		"data-focused",
+		"true",
+	);
+	await settle(page);
+	const keyboard = await ringOf(page, C9);
+	return { mouse, keyboard };
+}
+
+async function ringOf(page: Page, id: string) {
+	return page.evaluate((sel) => {
+		const el = document.querySelector<HTMLElement>(sel);
+		if (!el) throw new Error(`no card ${sel}`);
+		const s = getComputedStyle(el);
+		return {
+			isActiveElement: document.activeElement === el,
+			focusVisible: el.matches(":focus-visible"),
+			keyboardNav: document.body.classList.contains("keyboard-nav-active"),
+			outlineStyle: s.outlineStyle,
+			outlineWidth: s.outlineWidth,
+			outlineOffset: s.outlineOffset,
+			boxShadow: s.boxShadow,
+		};
+	}, cardSelector(id));
+}
+
 /** How often a sequence changes direction (0 = one continuous move). */
 function directionReversals(values: number[]): number {
 	let direction = 0;
@@ -802,10 +1018,6 @@ test.describe("Canvas focus & viewport — v0.8.1 Phase 0 evidence", () => {
 		};
 		await attachObserved(testInfo, scrolls);
 
-		test.fail(
-			true,
-			"Scroll probe reproduced in Phase 0: the rename input's focus() (RoadmapNode.tsx, no preventScroll) scrolls the container on off-screen create — remove when Phase 3 lands",
-		);
 		for (const [label, scroll] of Object.entries(scrolls)) {
 			expect(scroll, label).toEqual({ left: 0, top: 0 });
 		}
@@ -877,39 +1089,36 @@ test.describe("Canvas focus & viewport — v0.8.1 Phase 0 evidence", () => {
 		).toBeLessThanOrEqual(WHEEL_K_TOLERANCE);
 	});
 
-	test("P0-6b (probe): preventScroll is required — a plain focus() scrolls the canvas container", async ({
+	test("P0-6b (probe): the canvas container cannot be scrolled, even by a plain focus()", async ({
 		page,
 	}, testInfo) => {
 		const o = await focusOffscreenProbe(page);
 		await attachObserved(testInfo, o);
 
-		// Sanity: the probe is only meaningful if the container CAN scroll
-		// toward the card and the card really is off-screen on that side.
-		// The overflow comes from the 800px watermark inside a container that
-		// is narrower than that once the SidePanel is open — `overflow-hidden`
-		// does not make an element unscrollable, only unscrollable by the user.
-		expect(o.scrollableOverflow.x).toBeGreaterThan(0);
+		// Sanity: the probe is only meaningful if the card really is off-screen
+		// on the side the container used to scroll toward.
 		expect(o.card.left).toBeGreaterThan(o.container.right);
 
-		// The mitigation the plan prescribes — holds today, must keep holding.
+		// Phase 0 recorded 40px of scrollable x overflow here (the 800px
+		// watermark inside a container narrowed by the open SidePanel) and a
+		// plain focus() consuming all of it: `overflow-hidden` leaves an
+		// element scrollable programmatically, only not by the user. Phase 3
+		// made the container `overflow: clip` (index.css .rv-canvas), which
+		// takes the scrolling box away — the overflow RECTANGLE is still
+		// there (Chrome keeps reporting scrollWidth > clientWidth, see the
+		// attachment), but scrollLeft/scrollTop can no longer leave 0, so
+		// NEITHER focus() moves the canvas. That is the layer native Tab
+		// focus needs, because Tab cannot pass `preventScroll`; the app's own
+		// preventScroll options are the second layer, kept as well.
 		const zero = { left: 0, top: 0 };
+		expect(o.overflow, "the container must not be a scroll container").toEqual({
+			x: "clip",
+			y: "clip",
+		});
 		expect(o.cardPreventScroll, "card preventScroll").toEqual(zero);
 		expect(o.inputPreventScroll, "input preventScroll").toEqual(zero);
-
-		// The hazard itself, asserted positively rather than with test.fail():
-		// this probe owns the focus() call, so no phase of the plan can flip
-		// it — an app-side preventScroll leaves a probe-issued plain focus()
-		// scrolling exactly as it does now. P0-6a is the case that tracks the
-		// app's own focus() calls; this one proves preventScroll is the
-		// difference and guards against the mitigation being dropped.
-		expect(
-			o.cardPlain.left,
-			"a plain card.focus() scrolls the container",
-		).toBeGreaterThan(0);
-		expect(
-			o.inputPlain.left,
-			"a plain input.focus() scrolls the container",
-		).toBeGreaterThan(0);
+		expect(o.cardPlain, "plain card.focus()").toEqual(zero);
+		expect(o.inputPlain, "plain input.focus()").toEqual(zero);
 	});
 
 	// --- Phase 2 guards -------------------------------------------------------
@@ -1019,5 +1228,147 @@ test.describe("Canvas focus & viewport — v0.8.1 Phase 0 evidence", () => {
 			isInside(o.afterLayout.card, o.afterLayout.container),
 			"after the layout flip",
 		).toBe(true);
+	});
+
+	// --- Phase 3 guards (RC8 + the scroll hazard) -----------------------------
+	// Logical focus and DOM focus are one thing now: the card the store calls
+	// focused is the card `document.activeElement` points at, and the camera
+	// can no longer be scrolled out from under either of them.
+
+	test("P3 (RC8): arrow navigation moves DOM focus with logical focus", async ({
+		page,
+	}, testInfo) => {
+		const o = await navigateTB(page);
+		await attachObserved(testInfo, o);
+
+		for (const [i, step] of o.steps.entries()) {
+			expect(step.focused, `after ${step.key}: one logical focus`).toEqual([
+				CHILDREN[i],
+			]);
+			expect(
+				step.active,
+				`after ${step.key}: document.activeElement is that card`,
+			).toBe(CHILDREN[i]);
+		}
+		// The later steps need a pan; the transform must have moved at least once.
+		const xs = new Set(o.steps.map((s) => s.transform.x));
+		expect(xs.size, "at least one step must pan the camera").toBeGreaterThan(1);
+		expect(o.scroll).toEqual({ left: 0, top: 0 });
+	});
+
+	test("P3 (A8): Enter on a rename leaves DOM focus on the renamed card", async ({
+		page,
+	}, testInfo) => {
+		const o = await renameThen(page, "Enter");
+		await attachObserved(testInfo, o);
+
+		expect(o.title, "the commit must land").toBe("C8 renamed");
+		expect(o.active.card, "the renamed card holds DOM focus").toBe(C8);
+		expect(o.focused).toEqual([C8]);
+		expect(o.scroll).toEqual({ left: 0, top: 0 });
+	});
+
+	test("P3 (A8): Escape on a rename leaves DOM focus on the card", async ({
+		page,
+	}, testInfo) => {
+		const o = await renameThen(page, "Escape");
+		await attachObserved(testInfo, o);
+
+		expect(o.title, "the title must be unchanged").toBe("C8");
+		expect(o.active.card, "the card holds DOM focus").toBe(C8);
+		expect(o.focused).toEqual([C8]);
+		expect(o.scroll).toEqual({ left: 0, top: 0 });
+	});
+
+	test("P3 (A8): a blur-commit leaves focus in the field the user clicked", async ({
+		page,
+	}, testInfo) => {
+		const o = await renameThenClickPanelField(page);
+		await attachObserved(testInfo, o);
+
+		expect(o.title, "the blur must still commit").toBe("Root renamed");
+		expect(o.active.label, "focus stays in the SidePanel title field").toBe(
+			"Title",
+		);
+		expect(o.active.card).toBeNull();
+		expect(o.scroll).toEqual({ left: 0, top: 0 });
+	});
+
+	test("P3 (RC8): the header search keeps focus while matches are revealed", async ({
+		page,
+	}, testInfo) => {
+		const o = await searchIntoCollapsedSubtree(page);
+		const active = await activeElementInfo(page);
+		await attachObserved(testInfo, { ...o, active });
+
+		// The match was expanded, focused and centred (the P2 case above) — but
+		// the user is still typing, so nothing may take the caret off them.
+		expect(isInside(o.card, o.container)).toBe(true);
+		expect(active.label).toBe("Search nodes");
+		expect(active.card).toBeNull();
+	});
+
+	test("P3 (RC8): exactly one card is in the tab order, and Tab enters the tree", async ({
+		page,
+	}, testInfo) => {
+		const o = await tabIntoTree(page);
+		await attachObserved(testInfo, o);
+
+		// Nothing focused yet: the root is the way in.
+		expect(o.beforeFocus).toEqual([]);
+		expect(o.stopsWhileUnfocused).toEqual([ROOT]);
+		expect(o.landedOn, "Tab from the canvas lands on the root card").toBe(ROOT);
+
+		// Once the tree has a focused node, that node is the only tab stop.
+		expect(o.focusedAfterArrow).toEqual([CHILDREN[0]]);
+		expect(o.stopsWhileFocused).toEqual([CHILDREN[0]]);
+		expect(o.scroll).toEqual({ left: 0, top: 0 });
+	});
+
+	test("P3 (RC8): tabbing back into the tree reveals an off-screen card", async ({
+		page,
+	}, testInfo) => {
+		const o = await tabBackToAnOffscreenCard(page);
+		await attachObserved(testInfo, o);
+
+		// Sanity: the pan really did take the tab stop off screen, so Tab had
+		// somewhere invisible to land.
+		expect(o.offscreenBefore, "the card must start off screen").toBe(true);
+
+		expect(o.active, "Tab lands on the tab-stop card").toBe(C8);
+		expect(o.focused).toEqual([C8]);
+		// ...and the camera brought it back: `overflow: clip` means the browser
+		// cannot scroll it into view, so the reveal is the only thing that can.
+		expect(isInside(o.card, o.container), "the card must be revealed").toBe(
+			true,
+		);
+		expect(o.scroll).toEqual({ left: 0, top: 0 });
+	});
+
+	test("P3 (RC8): a focused card paints one ring, and a clicked one gains none", async ({
+		page,
+	}, testInfo) => {
+		const o = await focusRingStyles(page);
+		await attachObserved(testInfo, o);
+
+		// Keyboard: :focus-visible matches AND .keyboard-nav-active does, but
+		// the more specific keyboard-nav rule owns `outline`, so exactly one
+		// ring paints — the dashed one the app has always drawn on the focused
+		// card, not a second solid :focus-visible outline stacked on it.
+		expect(o.keyboard.isActiveElement).toBe(true);
+		expect(o.keyboard.focusVisible).toBe(true);
+		expect(o.keyboard.keyboardNav).toBe(true);
+		expect(o.keyboard.outlineStyle).toBe("dashed");
+		expect(o.keyboard.outlineWidth).toBe("2px");
+		expect(o.keyboard.outlineOffset).toBe("2px");
+
+		// Mouse: the card holds DOM focus too, but :focus-visible does not
+		// match a pointer-driven focus, so the card keeps exactly the solid
+		// selection outline it had before Phase 3 (-1px inset, from Tailwind).
+		expect(o.mouse.isActiveElement).toBe(true);
+		expect(o.mouse.focusVisible).toBe(false);
+		expect(o.mouse.keyboardNav).toBe(false);
+		expect(o.mouse.outlineStyle).toBe("solid");
+		expect(o.mouse.outlineOffset).toBe("-1px");
 	});
 });

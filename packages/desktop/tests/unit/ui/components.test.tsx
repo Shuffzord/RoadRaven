@@ -2,9 +2,10 @@
 
 import fs from "node:fs";
 import path from "node:path";
-import { render, screen } from "@testing-library/react";
-import React from "react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { fireEvent, render, screen } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import type { RoadmapSchema } from "../../../../../packages/core/src/schema";
+import { resetStore } from "../../helpers/resetStore";
 
 // Mock the rpc module to prevent Electroview import
 vi.mock("../../../src/mainview/rpc", () => ({
@@ -20,6 +21,8 @@ vi.mock("../../../src/mainview/rpc", () => ({
 
 import { RoadmapNodeCard } from "../../../src/mainview/components/RoadmapNode";
 import { SidePanel } from "../../../src/mainview/components/SidePanel";
+import { KEYBOARD_NAV_CLASS } from "../../../src/mainview/hooks/useKeyboardRouter";
+import { FOCUS_NODE_EVENT } from "../../../src/mainview/lib/focusRequest";
 import { useRoadmapStore } from "../../../src/mainview/store/roadmapStore";
 
 describe("RoadmapNodeCard", () => {
@@ -67,6 +70,226 @@ describe("RoadmapNodeCard", () => {
 		const label = card.getAttribute("aria-label") ?? "";
 		expect(label).toBe("My Task");
 		expect(label).not.toContain(nodeId);
+	});
+});
+
+// v0.8.1 Phase 3 (RC8 + the scroll hazard) —
+// .planning/v0.8.1-canvas-focus-PLAN.md.
+//
+// Logical focus (`focusedNodeId`) and DOM focus used to be two unrelated
+// things: every card was `tabIndex={0}`, arrow keys only moved the store, and
+// a rename commit dropped DOM focus on `<body>`. The card's half of the fix is
+// the WAI-ARIA roving tabindex, an `onFocus` that keeps the store honest about
+// natively-arriving focus, and `preventScroll` on every focus() it issues
+// (a plain focus() scrolls the canvas container — P0-6a/b).
+describe("RoadmapNodeCard — roving tabindex and DOM focus (RC8)", () => {
+	const ROOT_ID = "aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee";
+	const CHILD_ID = "11111111-2222-4333-8444-555555555555";
+
+	const SCHEMA: RoadmapSchema = {
+		version: "1.0",
+		title: "Card focus fixture",
+		nodes: [
+			{
+				id: ROOT_ID,
+				title: "Root",
+				status: "not-started",
+				children: [{ id: CHILD_ID, title: "Child", status: "not-started" }],
+			},
+		],
+	};
+
+	beforeEach(() => {
+		useRoadmapStore.getState().loadSchema(SCHEMA, "/tmp/cards.json");
+	});
+
+	afterEach(() => {
+		document.body.classList.remove(KEYBOARD_NAV_CLASS);
+		vi.restoreAllMocks();
+		resetStore();
+	});
+
+	it("is the single tab stop when isTabStop is set", () => {
+		render(
+			<RoadmapNodeCard
+				nodeId={CHILD_ID}
+				title="Child"
+				status="not-started"
+				isTabStop
+			/>,
+		);
+		expect(screen.getByRole("treeitem").getAttribute("tabindex")).toBe("0");
+	});
+
+	it("leaves the tab order when another card is the tab stop", () => {
+		render(
+			<RoadmapNodeCard nodeId={CHILD_ID} title="Child" status="not-started" />,
+		);
+		expect(screen.getByRole("treeitem").getAttribute("tabindex")).toBe("-1");
+	});
+
+	// BUG-1 (a11y walkthrough 2026-05-04): only the treeitem is tabbable, never
+	// the chevron. Roving tabindex must not resurrect it.
+	it("keeps the chevron out of the tab order even on the tab stop", () => {
+		render(
+			<RoadmapNodeCard
+				nodeId={ROOT_ID}
+				title="Root"
+				status="not-started"
+				hasChildren
+				isTabStop
+			/>,
+		);
+		expect(
+			screen.getByLabelText("Collapse subtree").getAttribute("tabindex"),
+		).toBe("-1");
+	});
+
+	it("syncs logical focus when focus arrives natively", () => {
+		render(
+			<RoadmapNodeCard nodeId={CHILD_ID} title="Child" status="not-started" />,
+		);
+		expect(useRoadmapStore.getState().focusedNodeId).toBeNull();
+
+		fireEvent.focus(screen.getByRole("treeitem"));
+
+		expect(useRoadmapStore.getState().focusedNodeId).toBe(CHILD_ID);
+	});
+
+	// The controller focuses the card it just revealed, so onFocus fires on a
+	// card that is ALREADY the logical target. Re-announcing it would cancel
+	// the very request that is mid-reveal.
+	it("does not re-announce a card that is already the logical focus", () => {
+		useRoadmapStore.getState().setFocusedNode(CHILD_ID);
+		const requests = vi.fn();
+		window.addEventListener(FOCUS_NODE_EVENT, requests);
+		render(
+			<RoadmapNodeCard nodeId={CHILD_ID} title="Child" status="not-started" />,
+		);
+
+		fireEvent.focus(screen.getByRole("treeitem"));
+
+		expect(requests).not.toHaveBeenCalled();
+		window.removeEventListener(FOCUS_NODE_EVENT, requests);
+	});
+
+	/** Collect the `align` of every focus request a case produces. */
+	function recordAligns(): { aligns: string[]; stop: () => void } {
+		const aligns: string[] = [];
+		const listener = (e: Event): void => {
+			aligns.push((e as CustomEvent<{ align: string }>).detail.align);
+		};
+		window.addEventListener(FOCUS_NODE_EVENT, listener);
+		return {
+			aligns,
+			stop: () => window.removeEventListener(FOCUS_NODE_EVENT, listener),
+		};
+	}
+
+	it("never pans on a pointer-originated focus", () => {
+		const rec = recordAligns();
+		render(
+			<RoadmapNodeCard nodeId={CHILD_ID} title="Child" status="not-started" />,
+		);
+
+		fireEvent.focus(screen.getByRole("treeitem"));
+
+		// A pointer focus lands BEFORE the click handler's own `nearest` +
+		// `select` request; a camera move here would be the double-pan RC3
+		// removed — and the user can see what they clicked anyway.
+		expect(rec.aligns).toEqual(["none"]);
+		rec.stop();
+	});
+
+	// Tab can put focus on a card the camera never went to, and `overflow: clip`
+	// means the browser will not scroll it into view either.
+	it("reveals the card when focus arrives from the keyboard", () => {
+		document.body.classList.add(KEYBOARD_NAV_CLASS);
+		const rec = recordAligns();
+		render(
+			<RoadmapNodeCard nodeId={CHILD_ID} title="Child" status="not-started" />,
+		);
+
+		fireEvent.focus(screen.getByRole("treeitem"));
+
+		expect(rec.aligns).toEqual(["nearest"]);
+		expect(useRoadmapStore.getState().focusedNodeId).toBe(CHILD_ID);
+		rec.stop();
+	});
+
+	// Tabbing back to a card that is ALREADY the logical target still has to
+	// bring it on screen — the "already focused" short-circuit is for the
+	// pointer path only.
+	it("reveals an already-focused card when the keyboard tabs back to it", () => {
+		useRoadmapStore.getState().setFocusedNode(CHILD_ID);
+		document.body.classList.add(KEYBOARD_NAV_CLASS);
+		const rec = recordAligns();
+		render(
+			<RoadmapNodeCard nodeId={CHILD_ID} title="Child" status="not-started" />,
+		);
+
+		fireEvent.focus(screen.getByRole("treeitem"));
+
+		expect(rec.aligns).toEqual(["nearest"]);
+		rec.stop();
+	});
+
+	it("focuses the rename input without scrolling the canvas (P0-6a)", () => {
+		const focus = vi.spyOn(HTMLElement.prototype, "focus");
+		render(
+			<RoadmapNodeCard
+				nodeId={CHILD_ID}
+				title="Child"
+				status="not-started"
+				isRenaming
+				renameValue="Child"
+			/>,
+		);
+
+		expect(focus).toHaveBeenCalledWith({ preventScroll: true });
+		focus.mockRestore();
+	});
+
+	// A8: Enter and Escape put focus back on the card. A blur-commit must not —
+	// a blur means the user clicked something else.
+	it.each(["Enter", "Escape"] as const)("restores card focus on %s", (key) => {
+		const { container } = render(
+			<RoadmapNodeCard
+				nodeId={CHILD_ID}
+				title="Child"
+				status="not-started"
+				isRenaming
+				renameValue="Child"
+			/>,
+		);
+		const card = container.querySelector<HTMLElement>(".node");
+		if (!card) throw new Error("no card");
+		const focus = vi.spyOn(card, "focus");
+
+		fireEvent.keyDown(screen.getByLabelText("Rename node"), { key });
+
+		expect(focus).toHaveBeenCalledWith({ preventScroll: true });
+		focus.mockRestore();
+	});
+
+	it("does not grab focus back when the rename is committed by a blur", () => {
+		const { container } = render(
+			<RoadmapNodeCard
+				nodeId={CHILD_ID}
+				title="Child"
+				status="not-started"
+				isRenaming
+				renameValue="Child"
+			/>,
+		);
+		const card = container.querySelector<HTMLElement>(".node");
+		if (!card) throw new Error("no card");
+		const focus = vi.spyOn(card, "focus");
+
+		fireEvent.blur(screen.getByLabelText("Rename node"));
+
+		expect(focus).not.toHaveBeenCalled();
+		focus.mockRestore();
 	});
 });
 

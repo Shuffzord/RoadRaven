@@ -19,6 +19,20 @@ import { RoadmapNodeCard } from "./RoadmapNode";
 import { SchemaErrorPanel } from "./SchemaErrorPanel";
 import { WelcomeScreen } from "./WelcomeScreen";
 
+/**
+ * Roving tabindex (WAI-ARIA tree): exactly one card sits in the document tab
+ * order — the focused one, or the root while nothing is focused, so Tab can
+ * still get into the tree. `__rd3t.depth` is react-d3-tree's own depth, which
+ * names the root without a second store read.
+ */
+function isTabStop(
+	focusedNodeId: string | null,
+	nodeId: string,
+	depth: number | undefined,
+): boolean {
+	return focusedNodeId ? focusedNodeId === nodeId : depth === 0;
+}
+
 /** Stop an in-flight pan animation, if any. */
 function cancelPan(ref: { current: number | null }): void {
 	if (ref.current !== null) {
@@ -254,7 +268,7 @@ export function Canvas() {
 			const nodeId = nodeDatum.attributes?.id as string;
 			const children = nodeDatum.children ?? [];
 			const hasChildren = children.length > 0;
-			const isCollapsed = nodeDatum.__rd3t?.collapsed;
+			const rd3t = nodeDatum.__rd3t;
 
 			return (
 				<foreignObject
@@ -270,11 +284,12 @@ export function Canvas() {
 						nodeId={nodeId}
 						isSelected={selectedNodeId === nodeId}
 						isFocused={focusedNodeId === nodeId}
+						isTabStop={isTabStop(focusedNodeId, nodeId, rd3t?.depth)}
 						isSearchMatch={searchMatchSet.has(nodeId)}
 						isSearchCurrent={searchCurrentId === nodeId}
 						isSearchDimmed={searchActive && !searchMatchSet.has(nodeId)}
 						hasChildren={hasChildren}
-						isCollapsed={!!isCollapsed}
+						isCollapsed={!!rd3t?.collapsed}
 						childCount={children.length}
 						onToggle={toggleNode}
 						onSelect={() => {
@@ -309,7 +324,7 @@ export function Canvas() {
 		>
 			<div
 				ref={containerRef}
-				className="[grid-area:canvas] bg-rv-bg-canvas relative overflow-hidden"
+				className="[grid-area:canvas] bg-rv-bg-canvas relative rv-canvas"
 				role="application"
 				// biome-ignore lint/a11y/noNoninteractiveTabindex: role="application" is an interactive ARIA widget — must be focusable so Escape/onKeyDown reaches the canvas.
 				tabIndex={0}

@@ -36,6 +36,77 @@ const MAX_WAIT_FRAMES = 30;
  */
 const SETTLE_FRAMES = 3;
 
+/** Controls the user may be typing into — never take focus from one. */
+function isEditable(el: Element): boolean {
+	return (
+		el.tagName === "INPUT" ||
+		el.tagName === "TEXTAREA" ||
+		(el as HTMLElement).isContentEditable
+	);
+}
+
+/**
+ * True while the browser is handing focus from one element to another.
+ *
+ * `document.activeElement` reads `<body>` twice over: when focus really is
+ * nowhere (a rename commit unmounted its input) and, for one moment, in the
+ * middle of a transfer — `focusout` fires with `activeElement` already reset
+ * to `<body>`, and only afterwards does the new element get `focusin`. A
+ * blur-commit runs inside exactly that window: the commit bumps `dataKey`,
+ * React flushes the A7 re-reveal synchronously from the `focusout` handler,
+ * and a canvas that only checked `activeElement` would win a race against the
+ * field the user clicked (A8). `relatedTarget` is what tells the two apart —
+ * a removal leaves it null.
+ */
+let focusIsMoving = false;
+
+function trackFocusTransfer(e: FocusEvent): void {
+	focusIsMoving = e.type === "focusout" && e.relatedTarget !== null;
+}
+
+/**
+ * True while the controller itself is moving DOM focus.
+ *
+ * `card.focus()` dispatches `focusin` synchronously, and the card answers a
+ * keyboard-originated focus with a `nearest` request of its own, so Tab never
+ * lands on a card the user cannot see. Without this the reveal would re-enter
+ * itself and pan twice off one key press, the second time measuring a card
+ * that is already mid-animation.
+ */
+let revealingFocus = false;
+
+/**
+ * Hand the revealed card real DOM focus — without ever stealing it (RC8).
+ *
+ * Logical focus and DOM focus used to be two unrelated things: arrow keys
+ * moved only the store, and a rename commit unmounted its input and dropped
+ * focus on `<body>`. The reveal is the one place that knows which card just
+ * became the target, so it is also where the two are joined.
+ *
+ * The guard is the whole design: take focus only when it is nowhere (`<body>`
+ * or null — exactly what a rename commit leaves behind) or already on the
+ * canvas. The header search box while matches are followed, a SidePanel field
+ * after a blur-commit (A8), the event-log drawer, an open Radix menu and the
+ * card's own rename input are all places the user put focus on purpose.
+ *
+ * `preventScroll` because `overflow-hidden` never made the container
+ * unscrollable programmatically (P0-6a/b); the container is `overflow: clip`
+ * now as well, which is the layer native Tab focus needs.
+ */
+function focusCard(card: HTMLElement, container: HTMLElement): void {
+	if (focusIsMoving) return;
+	const active = document.activeElement;
+	if (active && active !== document.body) {
+		if (!container.contains(active) || isEditable(active)) return;
+	}
+	revealingFocus = true;
+	try {
+		card.focus({ preventScroll: true });
+	} finally {
+		revealingFocus = false;
+	}
+}
+
 export interface CanvasFocusControllerDeps {
 	containerRef: RefObject<HTMLElement | null>;
 	/** Move the camera by a screen-space delta. Canvas animates it. */
@@ -54,6 +125,8 @@ export function useCanvasFocusController({
 
 	const reveal = useCallback(
 		(request: NodeFocusRequest) => {
+			// Our own focus() call, answered by the card — already being served.
+			if (revealingFocus) return;
 			cancelRef.current?.();
 			let cancelled = false;
 			let frame: number | null = null;
@@ -69,6 +142,9 @@ export function useCanvasFocusController({
 				const card = findNodeCard(request.nodeId);
 				const container = containerRef.current;
 				if (!card || !container) return;
+				// Before the pan, and unconditionally: a card that needs no
+				// camera move still needs DOM focus to follow the store.
+				focusCard(card, container);
 				const { dx, dy } = computePanDelta(
 					card.getBoundingClientRect(),
 					container.getBoundingClientRect(),
@@ -136,8 +212,15 @@ export function useCanvasFocusController({
 			reveal((e as CustomEvent<NodeFocusRequest>).detail);
 		};
 		window.addEventListener(FOCUS_NODE_EVENT, handler);
+		// Capture, so the flag is already set when React runs the onBlur that
+		// commits a rename inside the same focusout dispatch.
+		window.addEventListener("focusout", trackFocusTransfer, true);
+		window.addEventListener("focusin", trackFocusTransfer, true);
 		return () => {
 			window.removeEventListener(FOCUS_NODE_EVENT, handler);
+			window.removeEventListener("focusout", trackFocusTransfer, true);
+			window.removeEventListener("focusin", trackFocusTransfer, true);
+			focusIsMoving = false;
 			cancelRef.current?.();
 		};
 	}, [reveal]);

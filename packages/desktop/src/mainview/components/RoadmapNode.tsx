@@ -1,5 +1,7 @@
 import { useEffect, useRef } from "react";
 import type { NodeStatus } from "../../../../../packages/core/src/schema";
+import { isKeyboardNav } from "../hooks/useKeyboardRouter";
+import { requestNodeFocus } from "../lib/focusRequest";
 import { useIsNodeLive, useRoadmapStore } from "../store/roadmapStore";
 
 // Typed as Record<NodeStatus, ...> so the schema's status enum is the single
@@ -79,6 +81,12 @@ interface RoadmapNodeCardProps {
 	nodeId?: string;
 	isSelected?: boolean;
 	isFocused?: boolean;
+	/**
+	 * Roving tabindex (WAI-ARIA tree): exactly one card is in the document tab
+	 * order — the focused one, or the root while nothing is focused, so Tab can
+	 * still get into the tree. Canvas decides; the card only renders it.
+	 */
+	isTabStop?: boolean;
 	/** True when a node search is active and this node matches the query. */
 	isSearchMatch?: boolean;
 	/** True when this node is the current (camera-followed) search match. */
@@ -107,6 +115,7 @@ export function RoadmapNodeCard({
 	nodeId,
 	isSelected,
 	isFocused,
+	isTabStop,
 	isSearchMatch,
 	isSearchCurrent,
 	isSearchDimmed,
@@ -122,10 +131,16 @@ export function RoadmapNodeCard({
 	onRenameCommit,
 	onRenameCancel,
 }: RoadmapNodeCardProps) {
+	const cardRef = useRef<HTMLDivElement>(null);
 	const renameInputRef = useRef<HTMLInputElement>(null);
 	useEffect(() => {
 		if (isRenaming) {
-			renameInputRef.current?.focus();
+			// preventScroll: `overflow-hidden` does not stop an element being
+			// scrolled programmatically, and a plain focus() on a card the camera
+			// has not reached yet scrolled the canvas container by the watermark's
+			// overflow (P0-6a: scrollLeft 40 on an off-screen create). The
+			// container is `overflow: clip` now too — both layers, per the plan.
+			renameInputRef.current?.focus({ preventScroll: true });
 			renameInputRef.current?.select();
 		}
 	}, [isRenaming]);
@@ -187,6 +202,7 @@ export function RoadmapNodeCard({
 
 	return (
 		<div
+			ref={cardRef}
 			className={`node relative min-w-[180px] max-w-[220px] rounded-[var(--node-radius,8px)] border-[length:var(--rv-border-width,1px)] border-[color:var(--rv-border)] bg-[var(--rv-bg-node)] pl-4 pr-3 py-[10px] select-none transition-[box-shadow,border-color,background] duration-150 hover:bg-[var(--rv-bg-node-hover)] group ${isSelected ? "outline outline-2 -outline-offset-1 outline-[var(--rv-accent)]" : ""}`}
 			data-source-id={nodeId}
 			data-selected={dataFlag(isSelected)}
@@ -206,10 +222,29 @@ export function RoadmapNodeCard({
 			}
 			role="treeitem"
 			aria-selected={isSelected}
-			tabIndex={0}
+			tabIndex={isTabStop ? 0 : -1}
 			aria-label={title}
 			onClick={onSelect}
 			onDoubleClick={onDoubleClick}
+			onFocus={(e) => {
+				// Focus that arrives natively — Tab into the tree, Shift+Tab back,
+				// a mouse-down before the click handler runs — must not leave the
+				// store behind (RC8). `focusin` bubbles, so ignore the rename
+				// input's own focus.
+				if (!nodeId || e.target !== e.currentTarget) return;
+				// The device decides whether the camera moves too. A pointer
+				// focus lands BEFORE the click handler's own `nearest` + `select`
+				// request, so revealing here would be the double-pan RC3 removed;
+				// it also cannot land on a card the user cannot see, because the
+				// user clicked it. Keyboard focus is the opposite: Tab can put
+				// focus on an off-screen card, and `overflow: clip` means the
+				// browser will not scroll it into view either — so it reveals,
+				// even when this card is already the logical target.
+				const keyboard = isKeyboardNav();
+				if (!keyboard && useRoadmapStore.getState().focusedNodeId === nodeId)
+					return;
+				requestNodeFocus(nodeId, { align: keyboard ? "nearest" : "none" });
+			}}
 			onKeyDown={(e) => {
 				if (e.key === "Enter" || e.key === " ") {
 					e.preventDefault();
@@ -251,12 +286,18 @@ export function RoadmapNodeCard({
 					onMouseDown={(e) => e.stopPropagation()}
 					onKeyDown={(e) => {
 						e.stopPropagation();
+						// A8: Enter and Escape hand focus back to the card, so the
+						// keyboard user is never dropped on <body>. The blur path
+						// below deliberately does not — a blur means the user
+						// clicked somewhere else and meant it.
 						if (e.key === "Enter") {
 							e.preventDefault();
 							onRenameCommit?.();
+							cardRef.current?.focus({ preventScroll: true });
 						} else if (e.key === "Escape") {
 							e.preventDefault();
 							onRenameCancel?.();
+							cardRef.current?.focus({ preventScroll: true });
 						}
 					}}
 					onBlur={() => onRenameCommit?.()}
