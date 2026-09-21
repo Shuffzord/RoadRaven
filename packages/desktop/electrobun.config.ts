@@ -1,8 +1,13 @@
 import type { ElectrobunConfig } from "electrobun";
 
-// Default: CEF (Chromium) on all platforms — consistent rendering, avoids WebKitGTK bugs.
-// Override locally: set ROADRAVEN_RENDERER=webkit in .env.local to use native WebKit.
-const bundleCEF = process.env.ROADRAVEN_RENDERER !== "webkit";
+// Linux/macOS default: bundled CEF (Chromium) — WebKitGTK renders the app incorrectly.
+// Windows default: the system WebView2 (itself Chromium), so no CEF bundle and a
+// much smaller installer.
+// Override in .env.local: ROADRAVEN_RENDERER=cef bundles CEF, =webkit uses the
+// system webview (WebKitGTK / WKWebView / WebView2).
+const renderer = process.env.ROADRAVEN_RENDERER;
+const bundleCEF = renderer !== "webkit";
+const bundleCEFWin = renderer === "cef";
 
 export default {
 	app: {
@@ -31,7 +36,7 @@ export default {
 		watchIgnore: ["dist/**"],
 		mac: { bundleCEF },
 		linux: { bundleCEF, icon: "assets/icon.png" },
-		win: { bundleCEF, icon: "assets/icon.ico" },
+		win: { bundleCEF: bundleCEFWin, icon: "assets/icon.ico" },
 	},
 	release: {
 		// Strategy A from RESEARCH.md Pattern 5 — GitHub Releases /latest/download

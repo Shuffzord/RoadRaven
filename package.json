@@ -11,6 +11,7 @@
     "preinstall": "node scripts/verify-package-manager.js",
     "dev:hmr": "bun run --cwd packages/desktop dev:hmr",
     "build:canary": "bun run --cwd packages/desktop build:canary",
+    "build:canary:lite": "bun run --cwd packages/desktop build:canary:lite",
     "start": "bun run --cwd packages/desktop start",
     "dev": "bun run --cwd packages/desktop dev",
     "test": "bun run --filter '*' test",

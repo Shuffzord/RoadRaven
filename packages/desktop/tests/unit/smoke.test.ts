@@ -50,11 +50,14 @@ describe("SCAF-08: bundleCEF configuration", () => {
 		);
 		// Config must derive bundleCEF from ROADRAVEN_RENDERER env var (not hardcoded)
 		expect(content).toMatch(/process\.env\.ROADRAVEN_RENDERER/);
-		// All three platforms must reference the shared bundleCEF variable
+		// mac + linux default to bundled CEF (WebKitGTK renders incorrectly);
+		// windows defaults to the system WebView2 and bundles CEF only on opt-in
 		// (additional per-platform fields like `icon` are allowed)
 		expect(content).toMatch(/mac:\s*\{\s*bundleCEF[\s,}]/);
 		expect(content).toMatch(/linux:\s*\{\s*bundleCEF[\s,}]/);
-		expect(content).toMatch(/win:\s*\{\s*bundleCEF[\s,}]/);
+		expect(content).toMatch(/win:\s*\{\s*bundleCEF:\s*bundleCEFWin[\s,}]/);
+		expect(content).toMatch(/bundleCEF\s*=\s*renderer !== "webkit"/);
+		expect(content).toMatch(/bundleCEFWin\s*=\s*renderer === "cef"/);
 		// Must NOT have hardcoded false
 		expect(content).not.toMatch(/bundleCEF:\s*false/);
 	});

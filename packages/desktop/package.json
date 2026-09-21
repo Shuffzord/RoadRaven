@@ -10,6 +10,7 @@
 		"dev:bun": "electrobun dev",
 		"hmr": "vite --port 5173",
 		"build:canary": "vite build && bun run build:mcp && electrobun build --env=canary",
+		"build:canary:lite": "ROADRAVEN_RENDERER=webkit bun run build:canary",
 		"icons": "bun run scripts/build-icons.ts",
 		"build:mcp": "bun build ../../plugins/claude-code/src/index.ts --outdir assets/mcp --target node",
 		"build:stable": "vite build && bun run build:mcp && electrobun build --env=stable",
