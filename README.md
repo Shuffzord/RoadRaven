@@ -63,7 +63,7 @@ Download the latest release from
 
 ### Windows
 
-1. Download `stable-win-x64-RoadRaven-Setup.zip`.
+1. Download `win-x64-RoadRaven-Setup.zip`.
 2. Extract the `.zip`.
 3. Double-click `RoadRaven-Setup.exe`.
 4. **Windows SmartScreen will warn:** "Windows protected your PC."
@@ -73,9 +73,26 @@ Download the latest release from
    - Click **Run anyway**.
 5. Follow the installer prompts.
 
+RoadRaven renders through the system **WebView2** runtime on Windows
+(preinstalled on Windows 11 and current Windows 10), so the download carries no
+bundled browser engine.
+
 ### Linux
 
-1. Download `stable-linux-x64-RoadRaven-Setup.tar.gz`.
+One line (x86_64) — downloads the latest release, verifies it against the
+release's `SHA256SUMS`, and runs the installer:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/Shuffzord/RoadRaven/master/install.sh | sh
+```
+
+Pin a version with `ROADRAVEN_VERSION=v0.8.0` in front of `sh`. Works for
+v0.8.0 and later (earlier releases ship no `SHA256SUMS`).
+
+Or by hand:
+
+1. Download `linux-x64-RoadRaven-Setup.tar.gz` and `SHA256SUMS`, then check
+   the download: `sha256sum -c SHA256SUMS --ignore-missing`.
 2. Extract and run the self-extracting installer:
 
    <!-- The extracted file is literally named `installer` (no extension). This is the
@@ -86,7 +103,7 @@ Download the latest release from
         against electrobun@1.18.1. If a future Electrobun version renames this binary,
         update both this section and `tests/release/installer-artifacts.test.ts`. -->
    ```bash
-   tar -xzf stable-linux-x64-RoadRaven-Setup.tar.gz
+   tar -xzf linux-x64-RoadRaven-Setup.tar.gz
    chmod +x ./installer        # ensure self-extractor is executable (per RESEARCH.md Pitfall 6)
    ./installer
    ```

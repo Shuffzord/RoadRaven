@@ -71,6 +71,10 @@ jobs:
       - run: bun install
       - run: bunx vitest run
         working-directory: packages/desktop
+      # Single file on purpose: installer-artifacts.test.ts in the same folder
+      # throws under CI=true when no Electrobun build has produced artifacts.
+      - name: Test install.sh against a fake release
+        run: bunx vitest run tests/release/install-script.test.ts
 
   # TODO(fallow): enable once the branch is stable and the post-GSD dead-code
   # cleanup has landed. Intended as a non-blocking signal initially; flip to

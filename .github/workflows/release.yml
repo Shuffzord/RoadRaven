@@ -13,10 +13,12 @@ on:
 # All jobs that publish or upload need explicit permissions (least-privilege).
 # id-token: write — required for npm provenance OIDC token mint (R-03)
 # contents: write — required for gh release create + asset upload
+# attestations: write — required for actions/attest-build-provenance
 # NOTE: deploy-docs job (Task 4) overrides these with pages-specific permissions.
 permissions:
   contents: write
   id-token: write
+  attestations: write
 
 jobs:
   build-windows:
@@ -140,6 +142,16 @@ jobs:
         with:
           path: artifacts
           merge-multiple: true
+      - name: Generate SHA256SUMS
+        # install.sh and package-manager manifests verify downloads against
+        # this. Written outside the glob first so it never hashes itself.
+        run: sha256sum * > ../SHA256SUMS && mv ../SHA256SUMS .
+        working-directory: artifacts
+      - name: Attest build provenance
+        # Verify with: gh attestation verify <file> --repo Shuffzord/RoadRaven
+        uses: actions/attest-build-provenance@v4
+        with:
+          subject-path: artifacts/*
       - name: Create release and attach artifacts
         uses: softprops/action-gh-release@v2
         with:
@@ -163,7 +175,8 @@ jobs:
           bun-version: latest
       - uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          # Trusted publishing needs npm >= 11.5.1; Node 22 bundles npm 10.
+          node-version: '24'
           registry-url: 'https://registry.npmjs.org'
       - name: Install workspace dependencies
         run: bun install
@@ -180,6 +193,11 @@ jobs:
 
   publish-npm-mcp:
     name: Publish @roadraven/mcp to npm
+    # Disabled until @roadraven/mcp exists on npm with a trusted publisher
+    # configured for this workflow — the first publish has to be manual, and an
+    # OIDC publish without that setup fails the release run. Remove this line
+    # once npmjs.com → package → Settings → Trusted Publisher is filled in.
+    if: false
     needs: [build-windows, build-linux]
     runs-on: ubuntu-latest
     steps:
@@ -189,7 +207,8 @@ jobs:
           bun-version: latest
       - uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          # Trusted publishing needs npm >= 11.5.1; Node 22 bundles npm 10.
+          node-version: '24'
           registry-url: 'https://registry.npmjs.org'
       - name: Install workspace dependencies
         run: bun install
