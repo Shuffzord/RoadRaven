@@ -55,6 +55,7 @@ jobs:
       - run: bun install
       - run: bunx tsc --noEmit
         working-directory: packages/desktop
+      - run: bun run test:typecheck:tests
 
   test:
     name: Unit Tests
@@ -95,6 +96,55 @@ jobs:
       - run: bun install --ignore-scripts
       - name: Test install.ps1 against a fake release
         run: bunx vitest run --config tests/release/vitest.config.ts tests/release/install-ps1.test.ts
+
+  e2e-ui:
+    name: E2E (Playwright ui)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lock') }}
+      - uses: actions/cache@v4
+        with:
+          path: ~/.hutch
+          key: ${{ runner.os }}-hutch-${{ hashFiles('**/bun.lock') }}
+      - run: bun install
+      # Browser binaries aren't part of bun's install cache; cache them
+      # separately keyed on the lockfile so a pinned @playwright/test bump
+      # invalidates it automatically.
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('**/bun.lock') }}
+      - name: Install Playwright browser (Chromium)
+        run: bunx playwright install --with-deps chromium
+        working-directory: packages/desktop
+      - name: E2E functional specs (ui project)
+        run: bunx playwright test --project=ui tests/ui/canvas-focus.spec.ts tests/ui/keyboard-routing.spec.ts
+        working-directory: packages/desktop
+      # context-menu-50ms.spec.ts and canvas-drag-perf.spec.ts assert
+      # wall-clock budgets (75ms dev ceiling / p95 <= 34ms) tuned on a
+      # developer machine. Shared 2-vCPU GitHub runners are noisy enough to
+      # flake them, so they run for signal only and must not block a merge.
+      - name: E2E perf budgets (ui project, non-blocking)
+        continue-on-error: true
+        run: bunx playwright test --project=ui tests/ui/context-menu-50ms.spec.ts tests/ui/canvas-drag-perf.spec.ts
+        working-directory: packages/desktop
+      - name: Upload Playwright report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: |
+            packages/desktop/playwright-report/
+            packages/desktop/test-results/
+          retention-days: 7
 
   # TODO(fallow): enable once the branch is stable and the post-GSD dead-code
   # cleanup has landed. Intended as a non-blocking signal initially; flip to
