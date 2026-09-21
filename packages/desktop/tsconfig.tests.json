@@ -25,6 +25,7 @@
 		"tests/unit/ui/ContextMenu.keyboard.test.tsx",
 		"tests/unit/ui/EventLogDrawer.test.tsx",
 		"tests/unit/ui/SidePanel.edit-mode.test.tsx",
+		"tests/unit/ui/TopBar.test.tsx",
 		"tests/unit/ui/viewer-smoke.test.tsx",
 		"tests/unit/ui/RoadmapNodePulse.test.tsx",
 		"tests/integration/eventLog-selection.test.ts"

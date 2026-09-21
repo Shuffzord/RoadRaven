@@ -431,7 +431,6 @@ interface RoadmapState {
 	pasteFromClipboard: (parentId: string | null) => Promise<string | null>;
 
 	// Viewport actions
-	resetView: () => void;
 	fitView: () => void;
 	setTranslate: (translate: { x: number; y: number }) => void;
 	setZoomLevel: (zoom: number) => void;
@@ -1145,22 +1144,12 @@ export const useRoadmapStore = create<RoadmapState>((set, get) => {
 
 		// --- Viewport ------------------------------------------------------------
 
-		resetView: () => {
-			// Center the root node in the canvas area.
-			const canvasWidth =
-				typeof window !== "undefined" ? window.innerWidth - 40 : 800;
-			const canvasHeight =
-				typeof window !== "undefined" ? window.innerHeight - 50 - 26 : 600;
-			set({
-				translate: { x: canvasWidth / 2, y: canvasHeight / 3 },
-				zoomLevel: 0.8,
-			});
-		},
-
-		// Fit the entire tree into the viewport by computing a bounding box from
-		// the cached node positions inside Canvas and applying a fit-zoom + center.
-		// Implementation lives in Canvas (it owns nodePositionsRef); the store
-		// dispatches a CustomEvent the Canvas listener consumes.
+		// The one camera command (v0.8.1 D3): fit the whole tree. The bounding
+		// box is the union of the cards actually mounted, so only the Canvas can
+		// compute it — the store dispatches a CustomEvent its listener consumes.
+		// `resetView` used to sit beside this, setting a translate from
+		// window.innerWidth and zoom 0.8 under a "Fit to View" label; TopBar and
+		// the canvas context menu both call `fitView` now, so it is gone.
 		fitView: () => {
 			if (typeof window === "undefined") return;
 			window.dispatchEvent(new CustomEvent("roadraven:fit-view"));

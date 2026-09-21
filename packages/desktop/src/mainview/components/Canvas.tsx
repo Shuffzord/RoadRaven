@@ -10,6 +10,7 @@ import { useFileActions } from "../hooks/useFileActions";
 import { useInlineRename } from "../hooks/useInlineRename";
 import { useKeyboardRouter } from "../hooks/useKeyboardRouter";
 import { useRecentFiles } from "../hooks/useRecentFiles";
+import { togglePanelFocus } from "../lib/focusHandoff";
 import { requestNodeFocus } from "../lib/focusRequest";
 import { listNodeCards } from "../lib/nodeCard";
 import { computeFit, SCALE_EXTENT } from "../lib/viewportMath";
@@ -210,20 +211,10 @@ export function Canvas() {
 		requestNodeFocus(searchCurrentId, { align: "center", select: true });
 	}, [searchCurrentId]);
 
-	// Wire the keyboard router
-	useKeyboardRouter({
-		inlineRename,
-		togglePanelFocus: () => {
-			// Placeholder — Plan 03 implements panel-focus handoff. For now, move
-			// focus between selected node (panel) and focused node (canvas).
-			const store = useRoadmapStore.getState();
-			if (store.selectedNodeId && !store.focusedNodeId) {
-				store.setFocusedNode(store.selectedNodeId);
-			} else if (store.focusedNodeId) {
-				store.setSelectedNode(store.focusedNodeId);
-			}
-		},
-	});
+	// Wire the keyboard router. F6 moves REAL DOM focus between the canvas and
+	// the SidePanel (v0.8.1 Phase 5); it used to shuffle store ids here and
+	// leave the caret wherever it already was.
+	useKeyboardRouter({ inlineRename, togglePanelFocus });
 
 	const { openFile, openRecent, openSample, newRoadmap } = useFileActions();
 

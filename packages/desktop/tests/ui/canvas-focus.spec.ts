@@ -105,6 +105,12 @@ const CENTRE_TOLERANCE_PX = 2;
 /** Sub-pixel slack on a comfort-zone edge the pan lands exactly on. */
 const ZONE_EPSILON_PX = 1;
 
+// Phase 5: the SidePanel's `<aside>` keeps its 1px left border while shut, so
+// "closed" is measured as "narrower than anything it could show" and "open" as
+// at least the 320px minimum the resize handle enforces.
+const PANEL_CLOSED_MAX_PX = 2;
+const PANEL_MIN_OPEN_PX = 320;
+
 function parseTransform(raw: string): Transform {
 	const m = raw.match(
 		/translate\(\s*([-\d.e]+)[ ,]+([-\d.e]+)\s*\)\s*scale\(\s*([-\d.e]+)/,
@@ -847,19 +853,9 @@ async function searchIntoCollapsedSubtree(page: Page) {
 	};
 }
 
-/** Collapse C6's subtree, then fit the whole tree. */
-async function collapseThenFit(page: Page) {
-	await seed(page);
-	await clickCard(page, C6);
-	await page.keyboard.press("c");
-	await expect(page.locator(cardSelector(GRANDCHILDREN[0]))).toHaveCount(0);
-	await settle(page);
-	await page.evaluate(() =>
-		window.dispatchEvent(new CustomEvent("roadraven:fit-view")),
-	);
-	const settled = await settle(page);
-	const container = await boxOf(page, CONTAINER);
-	const cards = await page.evaluate(() =>
+/** Every mounted card's id and screen rect. */
+async function mountedCards(page: Page): Promise<(Box & { id: string })[]> {
+	return page.evaluate(() =>
 		Array.from(
 			document.querySelectorAll<HTMLElement>("[data-source-id]"),
 			(el) => {
@@ -874,6 +870,21 @@ async function collapseThenFit(page: Page) {
 			},
 		),
 	);
+}
+
+/** Collapse C6's subtree, then fit the whole tree. */
+async function collapseThenFit(page: Page) {
+	await seed(page);
+	await clickCard(page, C6);
+	await page.keyboard.press("c");
+	await expect(page.locator(cardSelector(GRANDCHILDREN[0]))).toHaveCount(0);
+	await settle(page);
+	await page.evaluate(() =>
+		window.dispatchEvent(new CustomEvent("roadraven:fit-view")),
+	);
+	const settled = await settle(page);
+	const container = await boxOf(page, CONTAINER);
+	const cards = await mountedCards(page);
 	return { settled, container, cards };
 }
 
@@ -1065,6 +1076,157 @@ async function ringOf(page: Page, id: string) {
 			boxShadow: s.boxShadow,
 		};
 	}, cardSelector(id));
+}
+
+// --- Phase 5 scenarios --------------------------------------------------------
+
+/**
+ * Scatter the camera with a real drag AND a real wheel-zoom, then fit from the
+ * control under test. The gesture first is the point: the fit reads the live
+ * transform, so a viewport command issued inside the trailing-sync window has
+ * to flush the pending gesture before its own first store write, or RC1 comes
+ * back through this path.
+ */
+async function fitFrom(page: Page, how: "topbar" | "menu") {
+	await seed(page);
+	await dragCanvas(page, -220, 140);
+	const p = await emptyCanvasPoint(page);
+	await page.mouse.move(p.x, p.y);
+	for (let i = 0; i < 3; i++) await page.mouse.wheel(0, 100);
+	const scattered = await settle(page);
+	const before = await mountedCards(page);
+	const containerBefore = await boxOf(page, CONTAINER);
+
+	if (how === "topbar") {
+		await page.getByRole("button", { name: "Fit", exact: true }).click();
+	} else {
+		const c = await emptyCanvasPoint(page);
+		await page.mouse.click(c.x, c.y, { button: "right" });
+		const menu = page.getByRole("menu", { name: "Canvas actions" });
+		await menu.waitFor();
+		await menu.getByRole("menuitem", { name: "Fit to View" }).click();
+		await expect(page.getByRole("menu")).toHaveCount(0);
+	}
+	const settled = await settle(page, PANEL_STABLE_FRAMES);
+	const container = await boxOf(page, CONTAINER);
+	const cards = await mountedCards(page);
+	return {
+		scattered,
+		settled,
+		anyCardOffscreenBefore: before.some((c) => !isInside(c, containerBefore)),
+		container,
+		cards,
+		active: await activeElementInfo(page),
+		scroll: await containerScroll(page),
+	};
+}
+
+/** Is the SidePanel showing anything (its width animates from 0)? */
+async function panelWidth(page: Page): Promise<number> {
+	return page.evaluate(() => {
+		const el = document.querySelector('aside[aria-label="Node details"]');
+		return el ? el.getBoundingClientRect().width : 0;
+	});
+}
+
+/**
+ * F6 from a CLOSED panel and back. Tab is the way onto the canvas without a
+ * click, so nothing is selected yet and the first F6 has to open the panel
+ * before it has a control to land on.
+ */
+async function paneSwitchBothWays(page: Page) {
+	await seed(page);
+	await page.locator(CONTAINER).focus();
+	await page.keyboard.press("Tab");
+	await expect(page.locator(cardSelector(ROOT))).toBeFocused();
+	const onCanvas = {
+		active: await activeElementInfo(page),
+		panelWidth: await panelWidth(page),
+		selected: await page.locator('[data-selected="true"]').count(),
+	};
+
+	await page.keyboard.press("F6");
+	const editButton = page.getByRole("button", { name: "Edit node" });
+	await expect(editButton).toBeFocused();
+	await settle(page, PANEL_STABLE_FRAMES);
+	const inPanel = {
+		active: await activeElementInfo(page),
+		panelWidth: await panelWidth(page),
+		selected: await page.locator('[data-selected="true"]').count(),
+	};
+
+	await page.keyboard.press("F6");
+	await expect(page.locator(cardSelector(ROOT))).toBeFocused();
+	await settle(page, PANEL_STABLE_FRAMES);
+	return {
+		onCanvas,
+		inPanel,
+		backOnCanvas: {
+			active: await activeElementInfo(page),
+			focused: await focusedIds(page),
+			card: await boxOf(page, cardSelector(ROOT)),
+			container: await boxOf(page, CONTAINER),
+		},
+		scroll: await containerScroll(page),
+	};
+}
+
+/** `E` on a selected node: caret into the panel title, then finish the edit. */
+async function editTitleFromPanel(page: Page, finish: "Enter" | "Escape") {
+	await seed(page);
+	await clickCard(page, C8);
+	await settle(page, PANEL_STABLE_FRAMES);
+
+	await page.keyboard.press("e");
+	const input = page.getByRole("textbox", { name: "Title" });
+	await input.waitFor();
+	const opened = {
+		active: await activeElementInfo(page),
+		selection: await input.evaluate((el: HTMLInputElement) => ({
+			start: el.selectionStart,
+			end: el.selectionEnd,
+			value: el.value,
+		})),
+	};
+
+	await page.keyboard.type("C8 from the panel");
+	const typed = await input.inputValue();
+	await page.keyboard.press(finish);
+	await expect(page.getByRole("textbox", { name: "Title" })).toHaveCount(0);
+	await settle(page, PANEL_STABLE_FRAMES);
+	return {
+		opened,
+		typed,
+		title: await page
+			.locator(cardSelector(C8))
+			.locator("span")
+			.first()
+			.textContent(),
+		active: await activeElementInfo(page),
+		focused: await focusedIds(page),
+		scroll: await containerScroll(page),
+	};
+}
+
+/** Open a node's context menu and dismiss it with Escape — no action taken. */
+async function menuThenEscape(page: Page) {
+	await seed(page);
+	await clickCard(page, C8);
+	await settle(page, PANEL_STABLE_FRAMES);
+
+	await openNodeMenu(page, C8);
+	const activeInMenu = await activeElementInfo(page);
+	await page.keyboard.press("Escape");
+	await expect(page.getByRole("menu")).toHaveCount(0);
+	await settle(page, PANEL_STABLE_FRAMES);
+	return {
+		activeInMenu,
+		active: await activeElementInfo(page),
+		focused: await focusedIds(page),
+		card: await boxOf(page, cardSelector(C8)),
+		container: await boxOf(page, CONTAINER),
+		scroll: await containerScroll(page),
+	};
 }
 
 /** How often a sequence changes direction (0 = one continuous move). */
@@ -1648,14 +1810,130 @@ test.describe("Canvas focus & viewport — v0.8.1 Phase 0 evidence", () => {
 				// Chrome focuses a card on right-click, so the menu path has
 				// already landed on C6 before "Collapse subtree" runs — the
 				// invariant is a no-op here and the end state is right anyway.
-				// DOM focus is `<body>` because the app prevents Radix's
-				// close-autofocus (ContextMenu.tsx); the first arrow key above
-				// recovers it.
+				// Phase 5: DOM focus used to be `<body>` afterwards (the app
+				// prevents Radix's close-autofocus); the menu's close now hands
+				// it back to the focused card itself.
 				expect(o.focusedAfterOpen).toEqual([C6]);
-				expect(o.activeAfterCollapse).toBeNull();
+				expect(o.activeAfterCollapse).toBe(C6);
 			}
 		});
 	}
+
+	// --- Phase 5 guards (one fit, and real focus handoffs) --------------------
+
+	for (const how of ["topbar", "menu"] as const) {
+		test(`P5 (D3): Fit to View from the ${how} fits every mounted card, after a drag and a wheel`, async ({
+			page,
+		}, testInfo) => {
+			const o = await fitFrom(page, how);
+			await attachObserved(testInfo, o);
+
+			// Sanity: the gestures really did push part of the tree out of view,
+			// so the fit has work to do (and RC1 has somewhere to come back).
+			expect(
+				o.anyCardOffscreenBefore,
+				"the drag + wheel must leave a card off screen",
+			).toBe(true);
+			expect(o.cards).toHaveLength(NODE_COUNT);
+
+			for (const card of o.cards) {
+				expect(
+					isInside(card, o.container),
+					`${card.id} must be inside the canvas after the fit`,
+				).toBe(true);
+			}
+			expect(o.settled.k).toBeGreaterThanOrEqual(SCALE_EXTENT.min);
+			expect(o.settled.k).toBeLessThanOrEqual(SCALE_EXTENT.max);
+			expect(o.scroll).toEqual({ left: 0, top: 0 });
+
+			if (how === "menu") {
+				// ...and the menu closing without a focus intent handed DOM focus
+				// back to the tree instead of dropping it on <body>, WITHOUT
+				// disturbing the fit that is still animating (`align: "none"`).
+				expect(o.active.card).toBe(ROOT);
+			}
+		});
+	}
+
+	test("P5 (F6): canvas to panel to canvas moves document.activeElement each way", async ({
+		page,
+	}, testInfo) => {
+		const o = await paneSwitchBothWays(page);
+		await attachObserved(testInfo, o);
+
+		// Starting state: Tab put DOM focus on the root card and the panel is
+		// still closed — nothing is selected.
+		expect(o.onCanvas.active.card).toBe(ROOT);
+		// A shut panel still measures its 1px left border, so "closed" is
+		// "narrower than anything it can show" rather than exactly zero; open it
+		// is at least the 320px minimum ResizeHandle enforces.
+		expect(o.onCanvas.panelWidth).toBeLessThanOrEqual(PANEL_CLOSED_MAX_PX);
+		expect(o.onCanvas.selected).toBe(0);
+
+		// F6 selects the focused node (which is what opens the panel) and lands
+		// on its first real control — never the resize grip.
+		expect(o.inPanel.active.label).toBe("Edit node");
+		expect(o.inPanel.active.card).toBeNull();
+		expect(o.inPanel.panelWidth).toBeGreaterThanOrEqual(PANEL_MIN_OPEN_PX);
+		expect(o.inPanel.selected).toBe(1);
+
+		// F6 back: the card holds real DOM focus and the reveal kept it visible.
+		expect(o.backOnCanvas.active.card).toBe(ROOT);
+		expect(o.backOnCanvas.focused).toEqual([ROOT]);
+		expect(
+			isInside(o.backOnCanvas.card, o.backOnCanvas.container),
+			"the card F6 returns to must be on screen",
+		).toBe(true);
+		expect(o.scroll).toEqual({ left: 0, top: 0 });
+	});
+
+	test("P5: E puts a selected caret in the panel title and Enter commits it", async ({
+		page,
+	}, testInfo) => {
+		const o = await editTitleFromPanel(page, "Enter");
+		await attachObserved(testInfo, o);
+
+		expect(o.opened.active.label, "E focuses the title input").toBe("Title");
+		expect(
+			{ start: o.opened.selection.start, end: o.opened.selection.end },
+			"and selects what is there, so typing replaces it",
+		).toEqual({ start: 0, end: o.opened.selection.value.length });
+		expect(o.typed).toBe("C8 from the panel");
+		expect(o.title, "Enter commits the new title").toBe("C8 from the panel");
+		expect(o.active.card, "focus returns to the card E came from").toBe(C8);
+		expect(o.scroll).toEqual({ left: 0, top: 0 });
+	});
+
+	test("P5: Escape leaves the title untouched and hands focus back", async ({
+		page,
+	}, testInfo) => {
+		const o = await editTitleFromPanel(page, "Escape");
+		await attachObserved(testInfo, o);
+
+		expect(o.typed).toBe("C8 from the panel");
+		expect(o.title, "Escape must not commit").toBe("C8");
+		expect(o.active.card).toBe(C8);
+		expect(o.focused).toEqual([C8]);
+		expect(o.scroll).toEqual({ left: 0, top: 0 });
+	});
+
+	test("P5: a context menu dismissed with Escape leaves focus on the card", async ({
+		page,
+	}, testInfo) => {
+		const o = await menuThenEscape(page);
+		await attachObserved(testInfo, o);
+
+		// Radix moves focus into the menu while it is open...
+		expect(o.activeInMenu.card, "the menu owns focus while open").toBeNull();
+		// ...and used to leave it on <body> afterwards, because the app prevents
+		// Radix's close-autofocus (it would restore to the pre-menu element,
+		// which for a create item is the OLD card and would cancel the new
+		// node's rename). The close hands focus back itself now.
+		expect(o.active.card).toBe(C8);
+		expect(o.focused).toEqual([C8]);
+		expect(isInside(o.card, o.container)).toBe(true);
+		expect(o.scroll).toEqual({ left: 0, top: 0 });
+	});
 
 	test("P3 (RC8): a focused card paints one ring, and a clicked one gains none", async ({
 		page,

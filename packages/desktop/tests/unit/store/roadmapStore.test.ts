@@ -285,25 +285,35 @@ describe("reloadSchema", () => {
 	});
 });
 
-describe("resetView", () => {
-	it("resets translate and zoomLevel to defaults", () => {
-		// Move viewport away from defaults
-		useRoadmapStore.getState().setTranslate({ x: 999, y: 999 });
-		useRoadmapStore.getState().setZoomLevel(2.5);
-
-		// Reset
-		useRoadmapStore.getState().resetView();
-
+// v0.8.1 Phase 5: there is ONE "Fit to View". `resetView` set a translate
+// computed from window.innerWidth and zoom 0.8 — a fixed camera that ignored
+// where the tree actually was — and TopBar and the canvas context menu both
+// called it under a "Fit to View" label. Both call `fitView` now, which the
+// canvas answers by measuring the cards that are really mounted (D3), so the
+// store action is gone rather than left as a second, wrong camera command.
+describe("viewport commands", () => {
+	it("no longer exposes resetView", () => {
 		const state = useRoadmapStore.getState();
-		expect(state.zoomLevel).toBe(0.8);
-		// translate.y should be roughly canvasHeight/3 (calculation depends on window size)
-		expect(state.translate.y).toBeGreaterThan(0);
-		expect(state.translate.x).toBeGreaterThan(0);
+		expect(state).not.toHaveProperty("resetView");
 	});
 
 	it("does not contain viewResetKey in state", () => {
 		const state = useRoadmapStore.getState();
 		expect(state).not.toHaveProperty("viewResetKey");
+	});
+
+	// Runs in the `node` environment, where the action's own `typeof window`
+	// guard is the behaviour under test: fitView is a message to the canvas,
+	// never a camera write of its own.
+	it("fitView is a no-op on the camera with no window to dispatch into", () => {
+		useRoadmapStore.getState().setTranslate({ x: 999, y: 999 });
+		useRoadmapStore.getState().setZoomLevel(0.5);
+
+		useRoadmapStore.getState().fitView();
+
+		const state = useRoadmapStore.getState();
+		expect(state.translate).toEqual({ x: 999, y: 999 });
+		expect(state.zoomLevel).toBe(0.5);
 	});
 });
 

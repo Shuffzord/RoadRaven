@@ -1,6 +1,7 @@
 import * as ContextMenuPrimitive from "@radix-ui/react-context-menu";
 import { type ReactNode, useState } from "react";
 import { useShallow } from "zustand/react/shallow";
+import { trackMenuFocus } from "../lib/focusHandoff";
 import { requestNodeFocus } from "../lib/focusRequest";
 import { getNodeCollapseState, toggleNodeCollapse } from "../lib/nodeCollapse";
 import { useRoadmapStore } from "../store/roadmapStore";
@@ -37,6 +38,10 @@ export function RoadRavenContextMenu({
 		<ContextMenuPrimitive.Root
 			onOpenChange={(open) => {
 				if (!open) onOpen(null);
+				// A menu that closes without stating a focus intent hands DOM
+				// focus back to the canvas card, one frame later — see
+				// lib/focusHandoff.ts for why Radix's own restore stays off.
+				trackMenuFocus(open);
 			}}
 		>
 			<ContextMenuPrimitive.Trigger
@@ -257,15 +262,14 @@ function NodeMenuItems({ nodeId }: { nodeId: string }) {
 }
 
 function CanvasMenuItems() {
-	const { pasteFromClipboard, setLayout, resetView, addChild } =
-		useRoadmapStore(
-			useShallow((s) => ({
-				pasteFromClipboard: s.pasteFromClipboard,
-				setLayout: s.setLayout,
-				resetView: s.resetView,
-				addChild: s.addChild,
-			})),
-		);
+	const { pasteFromClipboard, setLayout, fitView, addChild } = useRoadmapStore(
+		useShallow((s) => ({
+			pasteFromClipboard: s.pasteFromClipboard,
+			setLayout: s.setLayout,
+			fitView: s.fitView,
+			addChild: s.addChild,
+		})),
+	);
 	const layoutOrientation = useRoadmapStore((s) => s.layoutOrientation);
 	const canPaste = useRoadmapStore((s) => s.lastCopiedSubtree !== null);
 	const rootId = useRoadmapStore((s) => s.schema?.nodes?.[0]?.id ?? null);
@@ -293,9 +297,11 @@ function CanvasMenuItems() {
 				<span className={HINT_CLASS}>Enter</span>
 			</ContextMenuPrimitive.Item>
 			<ContextMenuPrimitive.Separator className={SEP_CLASS} />
+			{/* v0.8.1 D3: the bounding-box fit over the mounted cards, the same
+			    command the TopBar's Fit button and MCP cameraFitView issue. */}
 			<ContextMenuPrimitive.Item
 				className={ITEM_CLASS}
-				onSelect={() => resetView()}
+				onSelect={() => fitView()}
 			>
 				<span>Fit to View</span>
 			</ContextMenuPrimitive.Item>

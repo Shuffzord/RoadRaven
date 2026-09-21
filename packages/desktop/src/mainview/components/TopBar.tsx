@@ -23,8 +23,12 @@ export function TopBar() {
 		}
 	};
 
+	// v0.8.1 Phase 5 (D3): one "Fit to View". This used to call `resetView`,
+	// which set a translate from window.innerWidth and zoom 0.8 — a fixed
+	// camera that never looked at where the tree was. `fitView` asks the canvas
+	// to fit the bounding box of the cards that are actually mounted.
 	const handleFitView = () => {
-		useRoadmapStore.getState().resetView();
+		useRoadmapStore.getState().fitView();
 	};
 
 	return (

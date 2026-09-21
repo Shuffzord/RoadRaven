@@ -171,6 +171,18 @@ export function useKeyboardRouter(deps: RouterDeps): void {
 				return;
 			}
 
+			// F6 — the WAI-ARIA pane-switch key: move real DOM focus between the
+			// canvas and the SidePanel. Global, ABOVE the text-input guard
+			// below, because switching panes is exactly what a user editing a
+			// panel field needs and a function key can never be part of what
+			// they are typing. Escape and every printable key still return
+			// first when a field has the caret.
+			if (e.key === "F6") {
+				e.preventDefault();
+				deps.togglePanelFocus();
+				return;
+			}
+
 			// Context-aware Ctrl+C / Ctrl+V — defers to native when typing in a text input
 			if ((e.ctrlKey || e.metaKey) && (e.key === "c" || e.key === "v")) {
 				if (inTextInput) return;
@@ -202,13 +214,6 @@ export function useKeyboardRouter(deps: RouterDeps): void {
 				focusedId
 			) {
 				if (toggleNodeCollapse(focusedId)) e.preventDefault();
-				return;
-			}
-
-			// F6 — global toggle between canvas and side panel focus
-			if (e.key === "F6") {
-				e.preventDefault();
-				deps.togglePanelFocus();
 				return;
 			}
 

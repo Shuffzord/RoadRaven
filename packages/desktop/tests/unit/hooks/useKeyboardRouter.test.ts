@@ -362,6 +362,49 @@ describe("useKeyboardRouter", () => {
 		});
 	});
 
+	// v0.8.1 Phase 5: F6 is the WAI-ARIA pane-switch key, and a pane switch is
+	// expected to work from inside a text field — that is most of the point of
+	// having one. The router's blanket `inTextInput` early return used to swallow
+	// it, so a user editing the SidePanel title had no keyboard route back to the
+	// canvas. F6 is a function key: it can never be part of what someone is
+	// typing, so hoisting it above that guard costs no typing behaviour, and
+	// Escape and every printable key still return first.
+	describe("F6 pane switching", () => {
+		it("hands over to the panel-focus handoff", () => {
+			const { togglePanelFocus } = renderRouter();
+
+			fireEvent.keyDown(document, { key: "F6" });
+
+			expect(togglePanelFocus).toHaveBeenCalledTimes(1);
+		});
+
+		it("works while a text input has focus", () => {
+			const { togglePanelFocus } = renderRouter();
+			const input = document.createElement("input");
+			document.body.appendChild(input);
+			input.focus();
+
+			fireEvent.keyDown(input, { key: "F6" });
+
+			expect(togglePanelFocus).toHaveBeenCalledTimes(1);
+		});
+
+		it("still leaves Escape and printable keys to the field being typed in", () => {
+			useRoadmapStore.getState().setFocusedNode(CHILD_A_ID);
+			useRoadmapStore.getState().setSelectedNode(CHILD_A_ID);
+			renderRouter();
+			const input = document.createElement("input");
+			document.body.appendChild(input);
+			input.focus();
+
+			fireEvent.keyDown(input, { key: "Escape" });
+			fireEvent.keyDown(input, { key: "Delete" });
+
+			expect(useRoadmapStore.getState().selectedNodeId).toBe(CHILD_A_ID);
+			expect(useRoadmapStore.getState().nodeIndex.has(CHILD_A_ID)).toBe(true);
+		});
+	});
+
 	// v0.8.1 Phase 2 (RC3): the canvas no longer guesses its viewport target
 	// from `focusedNodeId ?? selectedNodeId` — each mover states its intent.
 	describe("explicit focus requests", () => {

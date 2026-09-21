@@ -260,23 +260,29 @@ describe("Canvas viewport truth (RC1)", () => {
 		expect(notifications).toBe(0);
 	});
 
-	it("reset view -> gesture -> reset view moves the camera the second time", () => {
+	// The RC1 regression in its original shape: "reset view, drag, reset view
+	// again" was a no-op, because the gesture never reached the store and the
+	// second command therefore wrote a value the store already held (its own
+	// guard then dropped it). Phase 5 deleted `resetView`, so the same
+	// round-trip is expressed with the viewport command that survived.
+	it("command -> gesture -> the same command moves the camera the second time", () => {
 		const container = renderCanvas();
+		const HOME = { x: 400, y: 50 };
 		act(() => {
-			useRoadmapStore.getState().resetView();
+			useRoadmapStore.getState().setViewport(HOME, 0.8);
 		});
-		const afterFirstReset = { ...lastProps().translate };
+		const afterFirst = { ...lastProps().translate };
 
 		gesture(container, { x: -90, y: 239.5 }, 0.4595);
-		const beforeSecondReset = { ...lastProps().translate };
+		const beforeSecond = { ...lastProps().translate };
 
 		act(() => {
-			useRoadmapStore.getState().resetView();
+			useRoadmapStore.getState().setViewport(HOME, 0.8);
 		});
 
-		expect(beforeSecondReset).not.toEqual(afterFirstReset);
-		expect(lastProps().translate).not.toEqual(beforeSecondReset);
-		expect(lastProps().translate).toEqual(afterFirstReset);
+		expect(beforeSecond).not.toEqual(afterFirst);
+		expect(lastProps().translate).not.toEqual(beforeSecond);
+		expect(lastProps().translate).toEqual(afterFirst);
 	});
 });
 

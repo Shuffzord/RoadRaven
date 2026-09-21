@@ -193,7 +193,12 @@ describe("useCanvasViewport — a command beats a pending gesture", () => {
 	// Without this, a trailing write landing after the command would silently
 	// undo it (reset view, MCP camera, or a pan animation frame).
 	const commands: [string, () => void][] = [
-		["resetView", () => useRoadmapStore.getState().resetView()],
+		// `setViewport` is what a fit or an MCP camera command lands through
+		// (Phase 5 removed `resetView`, the old fixed-camera stand-in here).
+		[
+			"setViewport",
+			() => useRoadmapStore.getState().setViewport({ x: 5, y: 6 }, 0.9),
+		],
 		[
 			"setTranslate",
 			() => useRoadmapStore.getState().setTranslate({ x: 7, y: 8 }),

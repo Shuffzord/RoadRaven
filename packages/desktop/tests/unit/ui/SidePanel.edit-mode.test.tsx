@@ -179,6 +179,38 @@ describe("SidePanel — edit mode", () => {
 		expect(screen.queryByLabelText("Title")).toBeNull();
 	});
 
+	it("selecting a new type calls updateNodeType and flashes", () => {
+		seedStore();
+		render(<SidePanel isOpen onClose={vi.fn()} />);
+		fireEvent.click(screen.getByLabelText("Edit node"));
+
+		fireEvent.change(screen.getByLabelText("Type"), {
+			target: { value: "task" },
+		});
+
+		expect(useRoadmapStore.getState().nodeIndex.get(ROOT_ID)?.type).toBe(
+			"task",
+		);
+		expect(screen.getByText("saved")).toBeTruthy();
+	});
+
+	it("editing a metadata value calls updateNodeMetadata and flashes", () => {
+		seedStore({}, { metadata: { priority: "high" } });
+		render(<SidePanel isOpen onClose={vi.fn()} />);
+		fireEvent.click(screen.getByLabelText("Edit node"));
+
+		fireEvent.change(screen.getByPlaceholderText("value"), {
+			target: { value: "low" },
+		});
+
+		expect(useRoadmapStore.getState().nodeIndex.get(ROOT_ID)?.metadata).toEqual(
+			{
+				priority: "low",
+			},
+		);
+		expect(screen.getByText("saved")).toBeTruthy();
+	});
+
 	it("metadata editor renders in edit mode with existing metadata", () => {
 		seedStore({}, { metadata: { priority: "high" } });
 		render(<SidePanel isOpen onClose={vi.fn()} />);
@@ -294,6 +326,76 @@ describe("SidePanel — edit mode", () => {
 			useRoadmapStore.getState().setSelectedNode(B_ID);
 		});
 		expect(screen.queryByLabelText("Title")).toBeNull();
+	});
+
+	// v0.8.1 Phase 5: `E` is one keystroke to retype a node's name, and leaving
+	// edit mode never drops the keyboard user on <body>. The branches live in
+	// hooks/useEditModeFocus.ts (SidePanel is already fallow's 34/40 hot spot);
+	// these cases pin the contract through the real component.
+	it("pressing E focuses the title input and selects its text", () => {
+		seedStore({}, { title: "My Root" });
+		render(<SidePanel isOpen onClose={vi.fn()} />);
+
+		fireEvent.keyDown(window, { key: "e" });
+
+		const input = screen.getByLabelText("Title") as HTMLInputElement;
+		expect(document.activeElement).toBe(input);
+		expect(input.selectionStart).toBe(0);
+		expect(input.selectionEnd).toBe("My Root".length);
+	});
+
+	it("Escape hands focus back to where the user came from", () => {
+		seedStore({}, { title: "Stay" });
+		render(<SidePanel isOpen onClose={vi.fn()} />);
+		const card = document.createElement("div");
+		card.setAttribute("data-source-id", ROOT_ID);
+		card.tabIndex = 0;
+		document.body.appendChild(card);
+		card.focus();
+
+		fireEvent.keyDown(window, { key: "e" });
+		fireEvent.keyDown(document, { key: "Escape" });
+
+		expect(screen.queryByLabelText("Title")).toBeNull();
+		expect(document.activeElement).toBe(card);
+	});
+
+	it("committing with Enter hands focus back the same way", () => {
+		seedStore({}, { title: "Old" });
+		render(<SidePanel isOpen onClose={vi.fn()} />);
+		const card = document.createElement("div");
+		card.setAttribute("data-source-id", ROOT_ID);
+		card.tabIndex = 0;
+		document.body.appendChild(card);
+		card.focus();
+
+		fireEvent.keyDown(window, { key: "e" });
+		const input = screen.getByLabelText("Title") as HTMLInputElement;
+		fireEvent.change(input, { target: { value: "New" } });
+		fireEvent.keyDown(input, { key: "Enter" });
+
+		expect(useRoadmapStore.getState().nodeIndex.get(ROOT_ID)?.title).toBe(
+			"New",
+		);
+		expect(document.activeElement).toBe(card);
+	});
+
+	it("does not steal focus when the user leaves edit mode from elsewhere", () => {
+		seedStore({}, { title: "Stay" });
+		render(<SidePanel isOpen onClose={vi.fn()} />);
+		const card = document.createElement("div");
+		card.setAttribute("data-source-id", ROOT_ID);
+		card.tabIndex = 0;
+		document.body.appendChild(card);
+		card.focus();
+		fireEvent.keyDown(window, { key: "e" });
+		const elsewhere = document.createElement("input");
+		document.body.appendChild(elsewhere);
+		elsewhere.focus();
+
+		fireEvent.keyDown(document, { key: "Escape" });
+
+		expect(document.activeElement).toBe(elsewhere);
 	});
 
 	it("copy-ID button still works in preview mode (Phase 2 regression check)", () => {

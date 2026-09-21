@@ -1,5 +1,5 @@
 /** @vitest-environment jsdom */
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { useState } from "react";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { RoadRavenContextMenu } from "../../../src/mainview/components/ContextMenu";
@@ -40,7 +40,18 @@ beforeAll(() => {
 	}
 });
 
-afterEach(() => {
+/** One animation frame, for the menu-close focus restore (Phase 5). */
+function nextFrame(): Promise<void> {
+	return new Promise((resolve) => {
+		requestAnimationFrame(() => resolve());
+	});
+}
+
+afterEach(async () => {
+	// A menu closing without a focus intent schedules its restore one frame
+	// later. Drain it here so it cannot land inside the NEXT test's listener.
+	await nextFrame();
+	await nextFrame();
 	while (cleanups.length) cleanups.pop()?.();
 	resetStore();
 	vi.restoreAllMocks();
@@ -379,6 +390,74 @@ describe("RoadRavenContextMenu — create and rename intents (RC4)", () => {
 
 		expect(seen).toEqual([{ nodeId: childIdsOf("root-id")[1], ...CREATED }]);
 		expect(useRoadmapStore.getState().focusedNodeId).toBe(seen[0].nodeId);
+	});
+});
+
+// v0.8.1 Phase 5 (D3): ONE "Fit to View". The item used to call `resetView`,
+// a fixed camera derived from window.innerWidth — never a fit.
+describe("Canvas menu — Fit to View", () => {
+	it("asks the store to fit the whole tree", () => {
+		seedSchema();
+		const fitView = vi.spyOn(useRoadmapStore.getState(), "fitView");
+		render(<CanvasHarness />);
+		openMenu(screen.getByTestId("trigger"));
+		const menu = screen.getByRole("menu", { name: /canvas actions/i });
+		const item = Array.from(
+			menu.querySelectorAll<HTMLElement>('[role="menuitem"]'),
+		).find((el) => el.textContent?.includes("Fit to View"));
+
+		fireEvent.click(item as HTMLElement);
+
+		expect(fitView).toHaveBeenCalledTimes(1);
+	});
+});
+
+// v0.8.1 Phase 5: a menu that closes without an action used to leave
+// `document.activeElement` on `<body>` — `onCloseAutoFocus` is prevented (it
+// would restore focus to the element that had it when the Content mounted,
+// which for a create item is the OLD card, cancelling the new node's pending
+// rename). The close therefore hands focus back itself, one frame later, as an
+// `align: "none"` request so the canvas controller's never-steal guard decides
+// and a "Fit to View" animation is not disturbed.
+describe("RoadRavenContextMenu — focus after a plain close", () => {
+	it("asks the canvas to take its card back when Escape closes the menu", async () => {
+		seedSchema();
+		useRoadmapStore.getState().setFocusedNode("child-1");
+		const seen = captureRequests();
+		render(<NodeHarness nodeId="child-1" />);
+		openMenu(screen.getByTestId("trigger"));
+		const menu = screen.getByRole("menu", { name: /node actions/i });
+
+		fireEvent.keyDown(document.activeElement ?? menu, { key: "Escape" });
+
+		await waitFor(() => expect(seen).toHaveLength(1));
+		expect(seen[0]).toEqual({
+			nodeId: "child-1",
+			align: "none",
+			select: false,
+			rename: false,
+		});
+	});
+
+	it("stands down when the item that closed it already stated an intent", async () => {
+		seedSchema();
+		useRoadmapStore.getState().setFocusedNode("child-1");
+		const seen = captureRequests();
+		render(<NodeHarness nodeId="child-1" />);
+		openMenu(screen.getByTestId("trigger"));
+		const menu = screen.getByRole("menu", { name: /node actions/i });
+		const addChild = Array.from(
+			menu.querySelectorAll<HTMLElement>('[role="menuitem"]'),
+		).find((el) => el.textContent?.startsWith("Add Child"));
+
+		fireEvent.click(addChild as HTMLElement);
+		await waitFor(() => expect(seen).toHaveLength(1));
+		await nextFrame();
+
+		// Only the create's own centre+rename request: a restore here would
+		// supersede it and the new node would never get its input.
+		expect(seen).toHaveLength(1);
+		expect(seen[0].rename).toBe(true);
 	});
 });
 
