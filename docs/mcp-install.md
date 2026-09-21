@@ -38,10 +38,11 @@ registering a second server.
 /plugin install roadraven@roadraven
 ```
 
-**CLI one-liner.**
+**CLI one-liner.** `-s user` registers it for every project, like the Setup
+Wizard and the plugin do (`claude mcp add` defaults to the current project only):
 
 ```bash
-claude mcp add roadraven -- npx -y @roadraven/mcp@0.8.0-beta.1
+claude mcp add -s user roadraven -- npx -y @roadraven/mcp@0.8.0-beta.1
 ```
 
 **Raw config.** Add this to `~/.claude.json` (or a project's `.mcp.json`) by hand:

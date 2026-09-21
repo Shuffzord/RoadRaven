@@ -199,7 +199,7 @@ publish. Requires **Node.js >= 22**. Pin the exact prerelease version; a bare
 are published:
 
 ```bash
-claude mcp add roadraven -- npx -y @roadraven/mcp@0.8.0-beta.1
+claude mcp add -s user roadraven -- npx -y @roadraven/mcp@0.8.0-beta.1
 ```
 
 ```bash
