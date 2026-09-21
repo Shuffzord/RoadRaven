@@ -1,4 +1,9 @@
 import { expect, type Page, type TestInfo, test } from "@playwright/test";
+import {
+	CONTAINER,
+	dragCanvas,
+	emptyCanvasPoint,
+} from "./helpers/canvasGestures";
 import { seedSchema } from "./helpers/seed";
 
 // v0.8.1 Phase 0 — evidence gate for .planning/v0.8.1-canvas-focus-PLAN.md.
@@ -81,6 +86,16 @@ const STABLE_FRAMES = 10;
 const SNAP_TOLERANCE_PX = 60;
 const DRAG = { dx: -150, dy: 160 };
 
+// Phase 1 gesture-integrity guards (P1-* cases at the bottom of this file).
+const P1_DRAG = { dx: -180, dy: 120 };
+const DRAG_DELTA_TOLERANCE_PX = 1;
+// Four deltaY=100 ticks from the default zoom 0.8 — d3-zoom's wheelDelta is
+// -deltaY * 0.002, so k *= 2^-0.2 per tick: 0.8 * 2^-0.8 = 0.45946. Recorded
+// on the unmodified renderer (commit c6a4566) before the Phase 1 change.
+const WHEEL_TICKS = 4;
+const WHEEL_K_BASELINE = 0.45946;
+const WHEEL_K_TOLERANCE = 0.02;
+
 function parseTransform(raw: string): Transform {
 	const m = raw.match(
 		/translate\(\s*([-\d.e]+)[ ,]+([-\d.e]+)\s*\)\s*scale\(\s*([-\d.e]+)/,
@@ -127,7 +142,6 @@ async function boxOf(page: Page, selector: string): Promise<Box> {
 }
 
 const cardSelector = (id: string): string => `[data-source-id="${id}"]`;
-const CONTAINER = '[role="application"]';
 
 function isInside(inner: Box, outer: Box): boolean {
 	return (
@@ -167,50 +181,6 @@ async function clickCard(page: Page, id: string): Promise<void> {
 		"true",
 	);
 	await settle(page);
-}
-
-// A point whose topmost element is the rd3t <svg> itself: d3-zoom's filter
-// (hasInteractiveNodes) only accepts pan/zoom gestures that start there.
-// (dx, dy) reserves room so a drag from the point ends inside the canvas.
-async function emptyCanvasPoint(
-	page: Page,
-	dx = 0,
-	dy = 0,
-): Promise<{ x: number; y: number }> {
-	return page.evaluate(
-		([containerSel, offX, offY]) => {
-			const container = document.querySelector(containerSel);
-			if (!container) throw new Error("no canvas container");
-			const r = container.getBoundingClientRect();
-			for (let fy = 0.9; fy > 0.1; fy -= 0.1) {
-				for (let fx = 0.1; fx < 0.9; fx += 0.1) {
-					const x = r.left + r.width * fx;
-					const y = r.top + r.height * fy;
-					const endsInside =
-						x + offX > r.left &&
-						x + offX < r.right &&
-						y + offY > r.top &&
-						y + offY < r.bottom;
-					if (
-						endsInside &&
-						document.elementFromPoint(x, y)?.classList.contains("rd3t-svg")
-					) {
-						return { x, y };
-					}
-				}
-			}
-			throw new Error("no empty canvas point found");
-		},
-		[CONTAINER, dx, dy] as const,
-	);
-}
-
-async function dragCanvas(page: Page, dx: number, dy: number): Promise<void> {
-	const p = await emptyCanvasPoint(page, dx, dy);
-	await page.mouse.move(p.x, p.y);
-	await page.mouse.down();
-	await page.mouse.move(p.x + dx, p.y + dy, { steps: 12 });
-	await page.mouse.up();
 }
 
 // Records every value written to the rd3t <g> transform attribute, so a
@@ -512,7 +482,6 @@ test.describe("Canvas focus & viewport — v0.8.1 Phase 0 evidence", () => {
 		expect(o.dragged.x - o.beforeDrag.x).toBeCloseTo(DRAG.dx, 0);
 		expect(o.dragged.y - o.beforeDrag.y).toBeCloseTo(DRAG.dy, 0);
 
-		test.fail(true, "RC1 reproduced in Phase 0 — remove when Phase 1 lands");
 		expect(
 			o.maxStepPx,
 			"the pan must continue from the dragged transform, not snap back",
@@ -529,7 +498,6 @@ test.describe("Canvas focus & viewport — v0.8.1 Phase 0 evidence", () => {
 		const o = await zoomThenArrow(page);
 		await attachObserved(testInfo, o);
 
-		test.fail(true, "RC1 reproduced in Phase 0 — remove when Phase 1 lands");
 		for (const t of o.afterEachArrow) {
 			expect(Math.abs(t.k - o.zoomed.k)).toBeLessThanOrEqual(0.001);
 		}
@@ -607,6 +575,72 @@ test.describe("Canvas focus & viewport — v0.8.1 Phase 0 evidence", () => {
 		for (const [label, scroll] of Object.entries(scrolls)) {
 			expect(scroll, label).toEqual({ left: 0, top: 0 });
 		}
+	});
+
+	// --- Phase 1 gesture-integrity guards ------------------------------------
+	// Feeding every gesture frame back into the store re-renders Tree, and
+	// react-d3-tree's componentDidUpdate then calls bindZoomListener — which
+	// rewrites d3's internal __zoom — in the middle of the gesture. d3's drag
+	// translate is absolute (pointer vs. gesture-start point) so it should
+	// survive; the wheel handler derives k from __zoom and could lose a tick.
+	// Both cases were recorded on the unmodified renderer (commit c6a4566) and
+	// must keep producing the same numbers afterwards.
+
+	test("P1 (RC1): a scripted drag moves the transform by exactly the drag delta", async ({
+		page,
+	}, testInfo) => {
+		await seed(page);
+		const before = await settle(page);
+		await dragCanvas(page, P1_DRAG.dx, P1_DRAG.dy);
+		const after = await settle(page);
+		const delta = {
+			x: after.x - before.x,
+			y: after.y - before.y,
+			k: after.k - before.k,
+		};
+		await attachObserved(testInfo, { before, after, delta, want: P1_DRAG });
+
+		expect(Math.abs(delta.x - P1_DRAG.dx)).toBeLessThanOrEqual(
+			DRAG_DELTA_TOLERANCE_PX,
+		);
+		expect(Math.abs(delta.y - P1_DRAG.dy)).toBeLessThanOrEqual(
+			DRAG_DELTA_TOLERANCE_PX,
+		);
+		expect(delta.k, "a drag must not change the zoom factor").toBe(0);
+	});
+
+	test("P1 (RC1): a rapid wheel sequence keeps every tick", async ({
+		page,
+	}, testInfo) => {
+		await seed(page);
+		const before = await settle(page);
+		const p = await emptyCanvasPoint(page);
+		await page.mouse.move(p.x, p.y);
+		await startRecording(page);
+		// Back-to-back, with no settle between ticks: that is the sequence a
+		// mid-gesture rebind could drop a tick from.
+		for (let i = 0; i < WHEEL_TICKS; i++) await page.mouse.wheel(0, 100);
+		const after = await settle(page);
+		const ks = (await stopRecording(page)).map((f) => f.k);
+		await attachObserved(testInfo, {
+			before,
+			after,
+			ks,
+			expected: WHEEL_K_BASELINE,
+		});
+
+		expect(ks.length, "the wheel must move the transform").toBeGreaterThan(0);
+		for (let i = 1; i < ks.length; i++) {
+			expect(
+				ks[i],
+				`wheel frame ${i} must not zoom back in`,
+			).toBeLessThanOrEqual(ks[i - 1]);
+		}
+		expect(after.k).toBeLessThan(before.k);
+		expect(
+			Math.abs(after.k - WHEEL_K_BASELINE) / WHEEL_K_BASELINE,
+			"final zoom must stay within 2% of the pre-change value",
+		).toBeLessThanOrEqual(WHEEL_K_TOLERANCE);
 	});
 
 	test("P0-6b (probe): preventScroll is required — a plain focus() scrolls the canvas container", async ({

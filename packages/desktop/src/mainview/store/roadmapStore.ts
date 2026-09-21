@@ -435,6 +435,7 @@ interface RoadmapState {
 	fitView: () => void;
 	setTranslate: (translate: { x: number; y: number }) => void;
 	setZoomLevel: (zoom: number) => void;
+	setViewport: (translate: { x: number; y: number }, zoom: number) => void;
 
 	// Schema error actions
 	setSchemaErrors: (
@@ -1162,7 +1163,27 @@ export const useRoadmapStore = create<RoadmapState>((set, get) => {
 			set({ translate });
 		},
 
-		setZoomLevel: (zoom) => set({ zoomLevel: zoom }),
+		setZoomLevel: (zoom) => {
+			if (get().zoomLevel === zoom) return;
+			set({ zoomLevel: zoom });
+		},
+
+		// Single write for a d3 gesture: the canvas learns translate and zoom
+		// in the same event and must not publish a half-updated viewport.
+		// The no-op guard is load-bearing — react-d3-tree echoes the props it
+		// was just handed back through onUpdate, and an unguarded write would
+		// turn that echo into a render loop.
+		setViewport: (translate, zoom) => {
+			const cur = get();
+			if (
+				cur.translate.x === translate.x &&
+				cur.translate.y === translate.y &&
+				cur.zoomLevel === zoom
+			) {
+				return;
+			}
+			set({ translate, zoomLevel: zoom });
+		},
 
 		setSchemaErrors: (errors) => set({ schemaErrors: errors }),
 

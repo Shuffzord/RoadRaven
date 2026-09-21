@@ -4,16 +4,26 @@ import Tree from "react-d3-tree";
 import { useShallow } from "zustand/react/shallow";
 import type { NodeStatus } from "../../../../../packages/core/src/schema";
 import ravenLogo from "../assets/raven-logo.svg";
+import { useCanvasViewport } from "../hooks/useCanvasViewport";
 import { useFileActions } from "../hooks/useFileActions";
 import { OPEN_RENAME_EVENT, useInlineRename } from "../hooks/useInlineRename";
 import { useKeyboardRouter } from "../hooks/useKeyboardRouter";
 import { useRecentFiles } from "../hooks/useRecentFiles";
 import { expandAncestors } from "../lib/nodeCollapse";
+import { clampZoom, SCALE_EXTENT } from "../lib/viewportMath";
 import { getAncestorPath, useRoadmapStore } from "../store/roadmapStore";
 import { RoadRavenContextMenu } from "./ContextMenu";
 import { RoadmapNodeCard } from "./RoadmapNode";
 import { SchemaErrorPanel } from "./SchemaErrorPanel";
 import { WelcomeScreen } from "./WelcomeScreen";
+
+/** Stop an in-flight pan animation, if any. */
+function cancelPan(ref: { current: number | null }): void {
+	if (ref.current !== null) {
+		cancelAnimationFrame(ref.current);
+		ref.current = null;
+	}
+}
 
 export function Canvas() {
 	const {
@@ -46,12 +56,9 @@ export function Canvas() {
 	const containerRef = useRef<HTMLDivElement>(null);
 	const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
 
-	// Track the current Tree transform (zoom + pan) via onUpdate
-	const transformRef = useRef<{ x: number; y: number; k: number }>({
-		x: 0,
-		y: 0,
-		k: 1,
-	});
+	// Viewport truth (RC1) — the store is the single owner; this hook keeps it
+	// honest about d3 gestures without paying a full tree re-render per frame.
+	const { getTransform, flushViewport, syncGesture } = useCanvasViewport();
 
 	// Cache node positions (in react-d3-tree local coords) keyed by nodeId
 	const nodePositionsRef = useRef<Map<string, { x: number; y: number }>>(
@@ -83,14 +90,13 @@ export function Canvas() {
 	const panAnimRef = useRef<number | null>(null);
 	const animatePanTo = useCallback(
 		(target: { x: number; y: number }) => {
-			if (panAnimRef.current !== null) {
-				cancelAnimationFrame(panAnimRef.current);
-				panAnimRef.current = null;
-			}
-			const start = {
-				x: transformRef.current.x,
-				y: transformRef.current.y,
-			};
+			cancelPan(panAnimRef);
+			// Programmatic pans start from the live transform, and publish it as
+			// one translate+zoom write so a gesture that has not been synced yet
+			// cannot be undone halfway through the animation. No-op (guarded in
+			// the store) whenever the store is already up to date.
+			const start = getTransform();
+			flushViewport();
 			const reduced =
 				typeof window !== "undefined" &&
 				window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
@@ -121,15 +127,27 @@ export function Canvas() {
 			};
 			panAnimRef.current = requestAnimationFrame(step);
 		},
-		[setTranslate],
+		[setTranslate, getTransform, flushViewport],
 	);
+
+	// RC10: user input wins over an in-flight animation. Capture phase so the
+	// gesture is caught even though it starts on the rd3t <svg> deeper in the
+	// tree, which stops propagation of its own pan/zoom events. `pointerup`
+	// ends a drag, which is the earliest point the store can be made truthful
+	// without paying for a re-render per gesture frame.
 	useEffect(() => {
+		const el = containerRef.current;
+		const cancel = (): void => cancelPan(panAnimRef);
+		el?.addEventListener("pointerdown", cancel, true);
+		el?.addEventListener("wheel", cancel, true);
+		el?.addEventListener("pointerup", flushViewport, true);
 		return () => {
-			if (panAnimRef.current !== null) {
-				cancelAnimationFrame(panAnimRef.current);
-			}
+			el?.removeEventListener("pointerdown", cancel, true);
+			el?.removeEventListener("wheel", cancel, true);
+			el?.removeEventListener("pointerup", flushViewport, true);
+			cancelPan(panAnimRef);
 		};
-	}, []);
+	}, [flushViewport]);
 
 	// Fit-to-view: if a node is focused/selected, zoom in close on it; otherwise
 	// fall back to fitting the whole tree (Act 4 pullback for the storytelling
@@ -145,7 +163,10 @@ export function Canvas() {
 
 			if (targetPos) {
 				// Close-up on a single node — zoom in tight, center the node card.
-				const FOCUS_ZOOM = 1.6;
+				// Clamped, because the tree renders at most SCALE_EXTENT.max and
+				// a translate computed for a zoom it never reaches mis-centres
+				// the card (RC7).
+				const FOCUS_ZOOM = clampZoom(1.6);
 				setZoomLevel(FOCUS_ZOOM);
 				animatePanTo({
 					x: dimensions.width / 2 - targetPos.x * FOCUS_ZOOM,
@@ -173,8 +194,7 @@ export function Canvas() {
 			const treeW = maxX - minX + NODE_W;
 			const treeH = maxY - minY + NODE_H;
 			const MARGIN = 0.85; // leave 15% breathing room
-			const targetZoom = Math.min(
-				1,
+			const targetZoom = clampZoom(
 				Math.max(
 					0.2,
 					Math.min(
@@ -217,7 +237,7 @@ export function Canvas() {
 		if (!targetNodeId) return;
 		const pos = nodePositionsRef.current.get(targetNodeId);
 		if (!pos) return;
-		const t = transformRef.current;
+		const t = getTransform();
 		const screenX = pos.x * t.k + t.x;
 		const screenY = pos.y * t.k + t.y;
 		const clamp = (v: number, lo: number, hi: number): number =>
@@ -237,7 +257,7 @@ export function Canvas() {
 			x: t.x + (targetScreenX - screenX),
 			y: t.y + (targetScreenY - screenY),
 		});
-	}, [targetNodeId, dimensions, animatePanTo]);
+	}, [targetNodeId, dimensions, animatePanTo, getTransform]);
 
 	// Search match follow: when the current match changes (type or Enter/F3),
 	// expand any collapsed ancestors so the node is mounted, then select +
@@ -300,7 +320,7 @@ export function Canvas() {
 	// Wire the keyboard router
 	useKeyboardRouter({
 		inlineRename,
-		getTransform: () => transformRef.current,
+		getTransform,
 		getContainerRect: () => {
 			const rect = containerRef.current?.getBoundingClientRect();
 			return { left: rect?.left ?? 0, top: rect?.top ?? 0 };
@@ -327,24 +347,24 @@ export function Canvas() {
 			zoom: number;
 			translate: { x: number; y: number };
 		}) => {
-			transformRef.current = {
-				x: target.translate.x,
-				y: target.translate.y,
-				k: target.zoom,
-			};
+			// RC1: the gesture is the only place d3 tells us where the camera
+			// actually is.
+			syncGesture(target.translate, target.zoom);
 			// When a rename is open, keep the input anchored to the node as the user pans/zooms
 			if (inlineRename.state.nodeId) {
 				const pos = nodePositionsRef.current.get(inlineRename.state.nodeId);
 				const rect = containerRef.current?.getBoundingClientRect();
 				if (pos && rect) {
-					inlineRename.updateForTransform(pos.x, pos.y, transformRef.current, {
-						left: rect.left,
-						top: rect.top,
-					});
+					inlineRename.updateForTransform(
+						pos.x,
+						pos.y,
+						{ x: target.translate.x, y: target.translate.y, k: target.zoom },
+						{ left: rect.left, top: rect.top },
+					);
 				}
 			}
 		},
-		[inlineRename],
+		[inlineRename, syncGesture],
 	);
 
 	const renderNode = useCallback(
@@ -393,7 +413,7 @@ export function Canvas() {
 							const pos = nodePositionsRef.current.get(nodeId);
 							const rect = containerRef.current?.getBoundingClientRect();
 							if (pos && rect) {
-								inlineRename.open(nodeId, pos.x, pos.y, transformRef.current, {
+								inlineRename.open(nodeId, pos.x, pos.y, getTransform(), {
 									left: rect.left,
 									top: rect.top,
 								});
@@ -417,6 +437,7 @@ export function Canvas() {
 			setSelectedNode,
 			setFocusedNode,
 			inlineRename,
+			getTransform,
 		],
 	);
 
@@ -489,6 +510,7 @@ export function Canvas() {
 							nodeSize={{ x: 240, y: 100 }}
 							renderCustomNodeElement={renderNode}
 							zoom={zoomLevel}
+							scaleExtent={SCALE_EXTENT}
 							enableLegacyTransitions={false}
 							centeringTransitionDuration={800}
 							collapsible={true}

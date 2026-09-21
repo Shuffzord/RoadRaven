@@ -256,3 +256,62 @@ describe("resetView", () => {
 		expect(state).not.toHaveProperty("viewResetKey");
 	});
 });
+
+// v0.8.1 Phase 1 (RC1) — the store is the single truthful viewport owner, so
+// every d3 gesture reports translate AND zoom back through one guarded write.
+// The guards matter: react-d3-tree echoes the values it was just given back
+// through onUpdate (componentDidUpdate), and an unguarded write would turn
+// that echo into an infinite render loop.
+describe("setViewport", () => {
+	it("writes translate and zoom in a single store update", () => {
+		let notifications = 0;
+		const unsubscribe = useRoadmapStore.subscribe(() => {
+			notifications++;
+		});
+
+		useRoadmapStore.getState().setViewport({ x: 12, y: 34 }, 0.55);
+
+		const state = useRoadmapStore.getState();
+		expect(state.translate).toEqual({ x: 12, y: 34 });
+		expect(state.zoomLevel).toBe(0.55);
+		expect(notifications).toBe(1);
+		unsubscribe();
+	});
+
+	it("does not write when translate and zoom are both unchanged (echo guard)", () => {
+		useRoadmapStore.getState().setViewport({ x: 12, y: 34 }, 0.55);
+
+		let notifications = 0;
+		const unsubscribe = useRoadmapStore.subscribe(() => {
+			notifications++;
+		});
+		useRoadmapStore.getState().setViewport({ x: 12, y: 34 }, 0.55);
+		unsubscribe();
+
+		expect(notifications).toBe(0);
+	});
+
+	it("writes when only the zoom changed", () => {
+		useRoadmapStore.getState().setViewport({ x: 12, y: 34 }, 0.55);
+		useRoadmapStore.getState().setViewport({ x: 12, y: 34 }, 0.6);
+
+		expect(useRoadmapStore.getState().zoomLevel).toBe(0.6);
+		expect(useRoadmapStore.getState().translate).toEqual({ x: 12, y: 34 });
+	});
+});
+
+describe("setZoomLevel", () => {
+	it("does not write when the zoom is unchanged", () => {
+		useRoadmapStore.getState().setZoomLevel(0.42);
+
+		let notifications = 0;
+		const unsubscribe = useRoadmapStore.subscribe(() => {
+			notifications++;
+		});
+		useRoadmapStore.getState().setZoomLevel(0.42);
+		unsubscribe();
+
+		expect(notifications).toBe(0);
+		expect(useRoadmapStore.getState().zoomLevel).toBe(0.42);
+	});
+});
