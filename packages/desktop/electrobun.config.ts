@@ -12,7 +12,7 @@ const bundleCEFWin = renderer === "cef";
 export default {
 	app: {
 		name: "RoadRaven",
-		identifier: "RoadRaven.electrobun.dev",
+		identifier: "io.github.shuffzord.roadraven",
 		version: "0.8.0-beta.1",
 	},
 	build: {
