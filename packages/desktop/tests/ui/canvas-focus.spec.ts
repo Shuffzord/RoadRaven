@@ -83,6 +83,12 @@ const FIXTURE = {
 // consecutive animation frames (pan animations run up to 900 ms and start one
 // or two frames after the triggering event).
 const STABLE_FRAMES = 10;
+// Test audit (2026-09-21): settle() used to poll forever, so a genuinely
+// stuck animation hung the case until Playwright's global 30s test timeout
+// with no clue why. 10s is generous next to the longest real wait here (a
+// 900ms pan plus the SidePanel's 200ms transition) and well under 30s, so it
+// still fails fast with a useful message instead of a bare timeout.
+const MAX_SETTLE_MS = 10_000;
 // Largest frame-to-frame translate step P0-1 accepts. The correct pan there is
 // ~42px in total, so no legitimate step can exceed this however janky the
 // frames are; the snap back to the pre-drag transform is ~219px in one step.
@@ -129,22 +135,34 @@ async function settle(
 	stableFrames = STABLE_FRAMES,
 ): Promise<Transform> {
 	const raw = await page.evaluate(
-		(stableFrames) =>
-			new Promise<string>((resolve) => {
+		([stableFrames, maxMs]) =>
+			new Promise<string>((resolve, reject) => {
 				const read = (): string =>
 					document.querySelector("g.rd3t-g")?.getAttribute("transform") ?? "";
+				const start = performance.now();
 				let last = read();
 				let stable = 0;
 				const tick = (): void => {
 					const cur = read();
 					stable = cur === last ? stable + 1 : 0;
 					last = cur;
-					if (stable >= stableFrames) resolve(cur);
-					else requestAnimationFrame(tick);
+					if (stable >= stableFrames) {
+						resolve(cur);
+						return;
+					}
+					if (performance.now() - start >= maxMs) {
+						reject(
+							new Error(
+								`settle() did not stabilize within ${maxMs}ms; last transform: "${cur}"`,
+							),
+						);
+						return;
+					}
+					requestAnimationFrame(tick);
 				};
 				requestAnimationFrame(tick);
 			}),
-		stableFrames,
+		[stableFrames, MAX_SETTLE_MS] as const,
 	);
 	return parseTransform(raw);
 }
@@ -682,6 +700,40 @@ async function collapseThenChildKeyTwice(page: Page) {
 		card: await boxOf(page, cardSelector(GRANDCHILDREN[0])),
 		container: await boxOf(page, CONTAINER),
 		scroll: await containerScroll(page),
+	};
+}
+
+/**
+ * Test audit gap (2026-09-21): focus C8 (a leaf, so Delete removes it
+ * immediately, no cascade prompt) and delete it. `roadmapStore.ts`'s
+ * `deleteNode` resolves a successor (previous sibling > next sibling >
+ * parent) and writes it as the new `focusedNodeId` in the same tick as the
+ * structural mutation that bumps `dataKey`, which is what the A7 re-reveal
+ * effect (`useCanvasFocusController.ts`) keys off — so the successor must
+ * both regain DOM focus and be panned into view, exactly like a re-layout.
+ */
+async function deleteFocusedLeaf(page: Page) {
+	await seed(page);
+	await clickCard(page, C8);
+	await page.keyboard.press("Delete");
+	await expect(page.locator(cardSelector(C8))).toHaveCount(0);
+	await settle(page, PANEL_STABLE_FRAMES);
+	const successor = await activeCardId(page);
+	const container = await boxOf(page, CONTAINER);
+	const successorBox = successor
+		? await boxOf(page, cardSelector(successor))
+		: null;
+	const scroll = await containerScroll(page);
+	const focused = await focusedIds(page);
+	await page.keyboard.press("ArrowRight");
+	await settle(page);
+	return {
+		successor,
+		successorBox,
+		container,
+		scroll,
+		focused,
+		afterArrow: await focusedIds(page),
 	};
 }
 
@@ -1281,6 +1333,7 @@ test.describe("Canvas focus & viewport — v0.8.1 Phase 0 evidence", () => {
 		expect(o.focusedCardCenter.y).toBeLessThanOrEqual(
 			o.comfortZone.bottom + ZONE_EPSILON_PX,
 		);
+		expect(o.scroll).toEqual({ left: 0, top: 0 });
 	});
 
 	test("P0-2 (RC1): wheel-zoom, arrow keys — zoom factor unchanged", async ({
@@ -1292,6 +1345,7 @@ test.describe("Canvas focus & viewport — v0.8.1 Phase 0 evidence", () => {
 		for (const t of o.afterEachArrow) {
 			expect(Math.abs(t.k - o.zoomed.k)).toBeLessThanOrEqual(0.001);
 		}
+		expect(o.scroll).toEqual({ left: 0, top: 0 });
 	});
 
 	test("P0-3 (RC2): LR navigation — focused card ends inside the viewport", async ({
@@ -1306,6 +1360,7 @@ test.describe("Canvas focus & viewport — v0.8.1 Phase 0 evidence", () => {
 				`after ${step.key}: focused card must be fully inside the canvas`,
 			).toBe(true);
 		}
+		expect(o.scroll).toEqual({ left: 0, top: 0 });
 	});
 
 	test("P0-4 (RC4): Enter creates an off-screen child — rename visible, new node focused", async ({
@@ -1355,23 +1410,6 @@ test.describe("Canvas focus & viewport — v0.8.1 Phase 0 evidence", () => {
 		expect(o.afterChildKey).toEqual([C6]);
 		expect(o.expandedByChildKey).toBe(true);
 		expect(o.scroll).toEqual({ left: 0, top: 0 });
-	});
-
-	test("P0-6a (probe): the interactions above never scroll the canvas container", async ({
-		page,
-	}, testInfo) => {
-		const scrolls = {
-			"P0-1 drag + arrow": (await dragThenArrow(page)).scroll,
-			"P0-2 zoom + arrows": (await zoomThenArrow(page)).scroll,
-			"P0-3 LR navigation": (await navigateLR(page)).scroll,
-			"P0-4 off-screen create": (await createOffscreenChild(page)).scroll,
-			"P0-5 collapse + child key": (await collapseThenChildKey(page)).scroll,
-		};
-		await attachObserved(testInfo, scrolls);
-
-		for (const [label, scroll] of Object.entries(scrolls)) {
-			expect(scroll, label).toEqual({ left: 0, top: 0 });
-		}
 	});
 
 	// --- Phase 1 gesture-integrity guards ------------------------------------
@@ -1476,20 +1514,6 @@ test.describe("Canvas focus & viewport — v0.8.1 Phase 0 evidence", () => {
 	// Permanent cases for the focus controller, DOM measurement and explicit
 	// requests. P0-3 above is the LR half of the navigation guard.
 
-	test("P2 (RC11): TB arrow navigation keeps the focused card inside the canvas", async ({
-		page,
-	}, testInfo) => {
-		const o = await navigateTB(page);
-		await attachObserved(testInfo, o);
-
-		for (const step of o.steps) {
-			expect(
-				isInside(step.card, step.container),
-				`after ${step.key}: focused card must be fully inside the canvas`,
-			).toBe(true);
-		}
-	});
-
 	test("P2 (RC3): clicking a card near the right edge pans once, after the SidePanel settles", async ({
 		page,
 	}, testInfo) => {
@@ -1528,22 +1552,6 @@ test.describe("Canvas focus & viewport — v0.8.1 Phase 0 evidence", () => {
 		expect(o.cardCenter.y).toBeLessThanOrEqual(
 			o.comfortZone.bottom + ZONE_EPSILON_PX,
 		);
-	});
-
-	test("P2: header search reveals a match inside a collapsed subtree and centres it", async ({
-		page,
-	}, testInfo) => {
-		const o = await searchIntoCollapsedSubtree(page);
-		await attachObserved(testInfo, o);
-
-		expect(isInside(o.card, o.container)).toBe(true);
-		// CENTRE_TOLERANCE_PX: the pan lands the card centre exactly on the
-		// container centre, so the only slack is sub-pixel — fractional
-		// getBoundingClientRect values on both rects plus the settle detector
-		// sampling the last animation frame. 2px covers that without hiding a
-		// real mis-centring (the comfort zone alone is +/-180px wide here).
-		expect(Math.abs(o.offset.x)).toBeLessThanOrEqual(CENTRE_TOLERANCE_PX);
-		expect(Math.abs(o.offset.y)).toBeLessThanOrEqual(CENTRE_TOLERANCE_PX);
 	});
 
 	test("P2 (RC5): fit-to-view ignores the cards a collapsed subtree unmounted", async ({
@@ -1600,6 +1608,12 @@ test.describe("Canvas focus & viewport — v0.8.1 Phase 0 evidence", () => {
 				step.active,
 				`after ${step.key}: document.activeElement is that card`,
 			).toBe(CHILDREN[i]);
+			// Merged from P2 (RC11): TB arrow navigation must also keep the
+			// focused card fully inside the canvas.
+			expect(
+				isInside(step.card, step.container),
+				`after ${step.key}: focused card must be fully inside the canvas`,
+			).toBe(true);
 		}
 		// The later steps need a pan; the transform must have moved at least once.
 		const xs = new Set(o.steps.map((s) => s.transform.x));
@@ -1652,9 +1666,18 @@ test.describe("Canvas focus & viewport — v0.8.1 Phase 0 evidence", () => {
 		const active = await activeElementInfo(page);
 		await attachObserved(testInfo, { ...o, active });
 
-		// The match was expanded, focused and centred (the P2 case above) — but
-		// the user is still typing, so nothing may take the caret off them.
+		// The match was expanded, focused and centred — but the user is still
+		// typing, so nothing may take the caret off them.
 		expect(isInside(o.card, o.container)).toBe(true);
+		// Merged from "P2: header search reveals a match inside a collapsed
+		// subtree and centres it". CENTRE_TOLERANCE_PX: the pan lands the card
+		// centre exactly on the container centre, so the only slack is
+		// sub-pixel — fractional getBoundingClientRect values on both rects
+		// plus the settle detector sampling the last animation frame. 2px
+		// covers that without hiding a real mis-centring (the comfort zone
+		// alone is +/-180px wide here).
+		expect(Math.abs(o.offset.x)).toBeLessThanOrEqual(CENTRE_TOLERANCE_PX);
+		expect(Math.abs(o.offset.y)).toBeLessThanOrEqual(CENTRE_TOLERANCE_PX);
 		expect(active.label).toBe("Search nodes");
 		expect(active.card).toBeNull();
 	});
@@ -1819,6 +1842,33 @@ test.describe("Canvas focus & viewport — v0.8.1 Phase 0 evidence", () => {
 		});
 	}
 
+	// Test audit gap (2026-09-21): deleting the focused node must not strand
+	// the keyboard — the successor roadmapStore.ts picks has to be both
+	// revealed (on screen, container unscrolled) and given real DOM focus, the
+	// same guarantee a re-layout gets (A7).
+	test("deleting the focused node reveals the successor and gives it DOM focus", async ({
+		page,
+	}, testInfo) => {
+		const o = await deleteFocusedLeaf(page);
+		await attachObserved(testInfo, o);
+
+		// C8's previous sibling (C7) is the successor (roadmapStore.ts:
+		// prevSibling > nextSibling > parent).
+		expect(o.successor, "DOM focus lands on the successor card").toBe(C7);
+		expect(o.focused, "logical focus follows too").toEqual([C7]);
+		expect(
+			o.successorBox,
+			"the successor's card must be on screen",
+		).not.toBeNull();
+		if (o.successorBox) {
+			expect(isInside(o.successorBox, o.container)).toBe(true);
+		}
+		expect(o.scroll).toEqual({ left: 0, top: 0 });
+		// ...and the keyboard keeps working: ArrowRight moves off the successor
+		// (C8 is gone, so C7's next sibling is now C9).
+		expect(o.afterArrow, "arrow navigation still works").toEqual([C9]);
+	});
+
 	// --- Phase 5 guards (one fit, and real focus handoffs) --------------------
 
 	for (const how of ["topbar", "menu"] as const) {
@@ -1935,30 +1985,31 @@ test.describe("Canvas focus & viewport — v0.8.1 Phase 0 evidence", () => {
 		expect(o.scroll).toEqual({ left: 0, top: 0 });
 	});
 
-	test("P3 (RC8): a focused card paints one ring, and a clicked one gains none", async ({
+	// Test audit (2026-09-21): reduced from pinning the exact dashed/2px/2px
+	// (keyboard) and solid/-1px (mouse) outline values — a CSS detail, not the
+	// behavioural contract — to the two things that actually matter: a
+	// keyboard-focused card paints exactly one non-default ring, and a
+	// pointer-focused card gains none of it.
+	test("P3 (RC8): exactly one outline applies to a keyboard-focused card; a clicked card gains none from focus", async ({
 		page,
 	}, testInfo) => {
 		const o = await focusRingStyles(page);
 		await attachObserved(testInfo, o);
 
-		// Keyboard: :focus-visible matches AND .keyboard-nav-active does, but
-		// the more specific keyboard-nav rule owns `outline`, so exactly one
-		// ring paints — the dashed one the app has always drawn on the focused
-		// card, not a second solid :focus-visible outline stacked on it.
+		// Keyboard: :focus-visible matches AND .keyboard-nav-active does, so
+		// together they must resolve to exactly one painted ring (not "none").
 		expect(o.keyboard.isActiveElement).toBe(true);
 		expect(o.keyboard.focusVisible).toBe(true);
 		expect(o.keyboard.keyboardNav).toBe(true);
-		expect(o.keyboard.outlineStyle).toBe("dashed");
-		expect(o.keyboard.outlineWidth).toBe("2px");
-		expect(o.keyboard.outlineOffset).toBe("2px");
+		expect(o.keyboard.outlineStyle).not.toBe("none");
 
-		// Mouse: the card holds DOM focus too, but :focus-visible does not
-		// match a pointer-driven focus, so the card keeps exactly the solid
-		// selection outline it had before Phase 3 (-1px inset, from Tailwind).
+		// Mouse: the card holds DOM focus too, but a pointer-driven focus never
+		// matches :focus-visible or the keyboard-nav rule, so it gains none of
+		// the keyboard ring — whatever outline it shows is unrelated to focus
+		// (e.g. a pre-existing selection indicator) and must differ from it.
 		expect(o.mouse.isActiveElement).toBe(true);
 		expect(o.mouse.focusVisible).toBe(false);
 		expect(o.mouse.keyboardNav).toBe(false);
-		expect(o.mouse.outlineStyle).toBe("solid");
-		expect(o.mouse.outlineOffset).toBe("-1px");
+		expect(o.mouse.outlineStyle).not.toBe(o.keyboard.outlineStyle);
 	});
 });

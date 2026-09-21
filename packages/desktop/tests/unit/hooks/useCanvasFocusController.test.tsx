@@ -403,6 +403,34 @@ describe("useCanvasFocusController — re-reveal after a re-layout (A7)", () => 
 	});
 });
 
+// Test audit gap (2026-09-21): deleting the focused node is a re-layout too —
+// roadmapStore.ts's deleteNode resolves a successor (previous sibling > next
+// sibling > parent) and writes it as focusedNodeId in the same tick as the
+// dataKey bump, which is exactly what the A7 effect above keys off. The
+// Playwright case on the real fixture (canvas-focus.spec.ts) proves the same
+// contract end to end; this is the cheaper, more honest place to pin the
+// dataKey-bump-plus-focus-moved-to-successor mechanics in isolation.
+describe("useCanvasFocusController — delete-successor re-reveal (A7)", () => {
+	it("reveals the successor and gives it DOM focus after deleting the focused node", () => {
+		mountCard(CHILD_ID, OUTSIDE);
+		mountCard(SIBLING_ID, rect(0, 0, 10, 10));
+		renderController();
+		act(() => {
+			useRoadmapStore.getState().setFocusedNode(CHILD_ID);
+		});
+
+		act(() => {
+			useRoadmapStore.getState().deleteNode(CHILD_ID);
+		});
+		frames(6);
+
+		// CHILD_ID has no previous sibling under ROOT, so its next sibling
+		// (SIBLING_ID) is the successor (roadmapStore.ts deleteNode).
+		expect(useRoadmapStore.getState().focusedNodeId).toBe(SIBLING_ID);
+		expect(document.activeElement).toBe(findCard(SIBLING_ID));
+	});
+});
+
 // v0.8.1 Phase 3 (RC8) — DOM focus follows logical focus, and never steals it.
 //
 // The reveal already knows which card it just made visible, so it is also the
@@ -626,6 +654,16 @@ describe("useCanvasFocusController — create and rename (RC4)", () => {
 	// rename request never takes the controller's synchronous fast path, so
 	// the input cannot open before the menu has closed and finished with
 	// focus (its unmount restore is itself a setTimeout(0)).
+	//
+	// Test audit (2026-09-21): moved here from
+	// ContextMenu.keyboard.test.tsx's "issues the request while the menu is
+	// still mounted and trapping focus" (dropped as Radix internal detail —
+	// the menu item's onSelect really does dispatch requestNodeFocus while
+	// `[role="menu"]` is still in the DOM, which is what makes THIS case's
+	// guarantee — the input does not open in that same tick — the one that
+	// actually matters. The request being issued mid-trap is the premise;
+	// the controller never opening the input synchronously for it is the
+	// guarantee this case proves.
 	it("never opens the rename inside the dispatch that asked for it", () => {
 		mountCard(CHILD_ID, OUTSIDE);
 		renderController();
@@ -748,30 +786,23 @@ describe("useCanvasFocusController — focus survives a collapse (RC6)", () => {
 		mountCard(SIBLING_ID, OUTSIDE);
 	}
 
-	it("moves focus to the collapsed node when the focused descendant unmounts", () => {
+	// Test audit (2026-09-21): merged near-duplicate pair — both mount the
+	// same family, focus the grandchild and collapse an ancestor; only the
+	// collapsed ancestor (immediate parent vs. grandparent) differs.
+	it.each([
+		["the immediate parent", CHILD_ID],
+		["a grandparent, not just one level up", ROOT_ID],
+	])("moves focus to the collapsed node when it is %s", (_label, toggled) => {
 		mountFamily();
 		renderController();
 		act(() => {
 			useRoadmapStore.getState().setFocusedNode(GRANDCHILD_ID);
 		});
 
-		clickChevron(CHILD_ID);
+		clickChevron(toggled);
 		frames(4);
 
-		expect(useRoadmapStore.getState().focusedNodeId).toBe(CHILD_ID);
-	});
-
-	it("moves focus up to the collapsed ancestor, not just one level", () => {
-		mountFamily();
-		renderController();
-		act(() => {
-			useRoadmapStore.getState().setFocusedNode(GRANDCHILD_ID);
-		});
-
-		clickChevron(ROOT_ID);
-		frames(4);
-
-		expect(useRoadmapStore.getState().focusedNodeId).toBe(ROOT_ID);
+		expect(useRoadmapStore.getState().focusedNodeId).toBe(toggled);
 	});
 
 	// Selection drives the SidePanel — what the user chose to INSPECT. A

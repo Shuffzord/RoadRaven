@@ -72,14 +72,4 @@ describe("listNodeCards", () => {
 	it("returns an empty list when nothing is mounted", () => {
 		expect(listNodeCards()).toEqual([]);
 	});
-
-	it("omits cards a collapsed subtree has unmounted (RC5)", () => {
-		mountCards("root", "collapsed-parent", "child");
-		findNodeCard("child")?.remove();
-
-		expect(listNodeCards().map((el) => el.dataset.sourceId)).toEqual([
-			"root",
-			"collapsed-parent",
-		]);
-	});
 });

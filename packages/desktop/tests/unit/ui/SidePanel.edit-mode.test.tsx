@@ -410,4 +410,33 @@ describe("SidePanel — edit mode", () => {
 		fireEvent.click(screen.getByLabelText("Copy node ID"));
 		expect(mockWrite).toHaveBeenCalledWith(ROOT_ID);
 	});
+
+	// Test audit gap (2026-09-21): lib/focusHandoff.ts looks up
+	// `[data-panel-focus]` inside `aside[aria-label="Node details"]` to know
+	// where F6 lands in the panel — both selectors are module-private (not
+	// exported), so the literals are asserted directly here rather than
+	// imported. Pins that the REAL SidePanel renders the marker on the
+	// control focusHandoff.ts expects, in both preview and edit mode.
+	describe("data-panel-focus target (focusHandoff.ts)", () => {
+		function panelFocusTarget(): Element | null {
+			return (
+				document
+					.querySelector('aside[aria-label="Node details"]')
+					?.querySelector("[data-panel-focus]") ?? null
+			);
+		}
+
+		it("marks the Edit node button in preview mode", () => {
+			seedStore();
+			render(<SidePanel isOpen onClose={vi.fn()} />);
+			expect(panelFocusTarget()).toBe(screen.getByLabelText("Edit node"));
+		});
+
+		it("marks the Title input in edit mode", () => {
+			seedStore();
+			render(<SidePanel isOpen onClose={vi.fn()} />);
+			fireEvent.click(screen.getByLabelText("Edit node"));
+			expect(panelFocusTarget()).toBe(screen.getByLabelText("Title"));
+		});
+	});
 });

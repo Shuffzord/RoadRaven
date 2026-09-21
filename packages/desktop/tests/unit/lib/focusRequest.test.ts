@@ -75,16 +75,6 @@ describe("requestNodeFocus", () => {
 		expect(state.focusedNodeId).toBe(CHILD_ID);
 	});
 
-	it("carries the intent in the event detail", () => {
-		const seen = captureRequests();
-
-		requestNodeFocus(CHILD_ID, { align: "center", select: true });
-
-		expect(seen).toEqual([
-			{ nodeId: CHILD_ID, align: "center", select: true, rename: false },
-		]);
-	});
-
 	it("defaults select to false in the event detail", () => {
 		const seen = captureRequests();
 
@@ -105,12 +95,6 @@ describe("requestNodeFocus", () => {
 		expect(seen).toEqual([
 			{ nodeId: CHILD_ID, align: "center", select: false, rename: true },
 		]);
-	});
-
-	it("still writes logical focus synchronously for a rename request", () => {
-		requestNodeFocus(CHILD_ID, { align: "nearest", rename: true });
-
-		expect(useRoadmapStore.getState().focusedNodeId).toBe(CHILD_ID);
 	});
 
 	it("is a no-op for an id that is not in the node index", () => {

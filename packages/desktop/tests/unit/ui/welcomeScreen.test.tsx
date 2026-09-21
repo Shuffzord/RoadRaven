@@ -74,4 +74,14 @@ describe("WelcomeScreen", () => {
 		fireEvent.click(screen.getByText("Hello World"));
 		expect(onOpenSample).toHaveBeenCalledWith("hello-world");
 	});
+
+	// Test audit gap (2026-09-21): a type-fix pass found onNewRoadmap was not
+	// even being passed to WelcomeScreen from Canvas.tsx — this action had
+	// never been tested.
+	it("calls onNewRoadmap once when New Roadmap button is clicked", () => {
+		const onNewRoadmap = vi.fn();
+		render(<WelcomeScreen {...defaultProps} onNewRoadmap={onNewRoadmap} />);
+		fireEvent.click(screen.getByText("New Roadmap"));
+		expect(onNewRoadmap).toHaveBeenCalledOnce();
+	});
 });

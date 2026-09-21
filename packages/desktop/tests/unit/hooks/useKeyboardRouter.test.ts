@@ -457,31 +457,19 @@ describe("useKeyboardRouter", () => {
 			return seen;
 		}
 
-		it("Enter requests a centred create-and-rename on the new child", () => {
-			const seen = pressAndCapture({ key: "Enter" });
+		it.each([
+			["Enter", { key: "Enter" }, () => childIdsOf(CHILD_A_ID)[0]],
+			[
+				"Shift+Enter",
+				{ key: "Enter", shiftKey: true },
+				() => childIdsOf(ROOT_ID)[0],
+			],
+			["Tab", { key: "Tab" }, () => childIdsOf(ROOT_ID)[1]],
+			["Ctrl+D", { key: "d", ctrlKey: true }, () => childIdsOf(ROOT_ID)[1]],
+		] as const)("%s requests a centred create-and-rename on the new node", (_label, init, expectedId) => {
+			const seen = pressAndCapture(init);
 
-			expect(seen).toEqual([{ nodeId: childIdsOf(CHILD_A_ID)[0], ...CREATED }]);
-			expect(useRoadmapStore.getState().focusedNodeId).toBe(seen[0].nodeId);
-		});
-
-		it("Shift+Enter requests it on the sibling above", () => {
-			const seen = pressAndCapture({ key: "Enter", shiftKey: true });
-
-			expect(seen).toEqual([{ nodeId: childIdsOf(ROOT_ID)[0], ...CREATED }]);
-			expect(useRoadmapStore.getState().focusedNodeId).toBe(seen[0].nodeId);
-		});
-
-		it("Tab requests it on the sibling below", () => {
-			const seen = pressAndCapture({ key: "Tab" });
-
-			expect(seen).toEqual([{ nodeId: childIdsOf(ROOT_ID)[1], ...CREATED }]);
-			expect(useRoadmapStore.getState().focusedNodeId).toBe(seen[0].nodeId);
-		});
-
-		it("Ctrl+D requests it on the duplicate", () => {
-			const seen = pressAndCapture({ key: "d", ctrlKey: true });
-
-			expect(seen).toEqual([{ nodeId: childIdsOf(ROOT_ID)[1], ...CREATED }]);
+			expect(seen).toEqual([{ nodeId: expectedId(), ...CREATED }]);
 			expect(useRoadmapStore.getState().focusedNodeId).toBe(seen[0].nodeId);
 		});
 
@@ -504,13 +492,17 @@ describe("useKeyboardRouter", () => {
 	// focus (WAI-ARIA tree); the next press enters the first child. The
 	// parent-direction key is unchanged — `C` is the only key that collapses.
 	describe("collapse-aware navigation (A6)", () => {
-		it("child key on a collapsed node expands it and keeps focus", () => {
+		it.each([
+			["TB", undefined, "ArrowDown"],
+			["LR", "LR", "ArrowRight"],
+		] as const)("%s: child key on a collapsed node expands it and keeps focus", (_label, layout, key) => {
+			if (layout) useRoadmapStore.getState().setLayout(layout);
 			useRoadmapStore.getState().setFocusedNode(CHILD_B_ID);
 			const onClick = mountCardWithChevron(CHILD_B_ID, true);
 			const seen = captureRequests();
 			renderRouter();
 
-			fireEvent.keyDown(document, { key: "ArrowDown" });
+			fireEvent.keyDown(document, { key });
 
 			expect(onClick).toHaveBeenCalledTimes(1);
 			expect(useRoadmapStore.getState().focusedNodeId).toBe(CHILD_B_ID);
@@ -547,18 +539,6 @@ describe("useKeyboardRouter", () => {
 			fireEvent.keyDown(document, { key: "ArrowUp" });
 
 			expect(onClick).not.toHaveBeenCalled();
-			expect(useRoadmapStore.getState().focusedNodeId).toBe(CHILD_B_ID);
-		});
-
-		it("LR: the child key expands a collapsed node too", () => {
-			useRoadmapStore.getState().setLayout("LR");
-			useRoadmapStore.getState().setFocusedNode(CHILD_B_ID);
-			const onClick = mountCardWithChevron(CHILD_B_ID, true);
-			renderRouter();
-
-			fireEvent.keyDown(document, { key: "ArrowRight" });
-
-			expect(onClick).toHaveBeenCalledTimes(1);
 			expect(useRoadmapStore.getState().focusedNodeId).toBe(CHILD_B_ID);
 		});
 	});

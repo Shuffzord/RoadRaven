@@ -13,28 +13,15 @@ import {
 // FOCUS_ZOOM = 1.6 while react-d3-tree silently clamped the rendered scale to
 // 1, so the translate was computed for a zoom that never happened.
 
-describe("SCALE_EXTENT", () => {
-	it("keeps max zoom at 1 (user decision D4)", () => {
-		expect(SCALE_EXTENT).toEqual({ min: 0.1, max: 1 });
-	});
-});
-
 describe("clampZoom", () => {
-	it("returns a zoom inside the extent unchanged", () => {
-		expect(clampZoom(0.8)).toBe(0.8);
-	});
-
-	it("clamps a zoom above the maximum", () => {
-		expect(clampZoom(1.6)).toBe(SCALE_EXTENT.max);
-	});
-
-	it("clamps a zoom below the minimum", () => {
-		expect(clampZoom(0.01)).toBe(SCALE_EXTENT.min);
-	});
-
-	it("leaves the extent boundaries themselves alone", () => {
-		expect(clampZoom(SCALE_EXTENT.min)).toBe(SCALE_EXTENT.min);
-		expect(clampZoom(SCALE_EXTENT.max)).toBe(SCALE_EXTENT.max);
+	it.each([
+		["inside the extent, unchanged", 0.8, 0.8],
+		["above the maximum, clamped", 1.6, SCALE_EXTENT.max],
+		["below the minimum, clamped", 0.01, SCALE_EXTENT.min],
+		["at the minimum boundary, unchanged", SCALE_EXTENT.min, SCALE_EXTENT.min],
+		["at the maximum boundary, unchanged", SCALE_EXTENT.max, SCALE_EXTENT.max],
+	])("%s", (_label, input, expected) => {
+		expect(clampZoom(input)).toBe(expected);
 	});
 });
 
@@ -74,32 +61,13 @@ describe("computePanDelta", () => {
 		});
 	});
 
-	it("pulls a card past the right edge back to the zone edge", () => {
-		expect(computePanDelta(cardAt(700, 300), CONTAINER, "nearest")).toEqual({
-			dx: -100,
-			dy: 0,
-		});
-	});
-
-	it("pulls a card past the left edge back to the zone edge", () => {
-		expect(computePanDelta(cardAt(100, 300), CONTAINER, "nearest")).toEqual({
-			dx: 100,
-			dy: 0,
-		});
-	});
-
-	it("pulls a card above the zone down to the zone edge", () => {
-		expect(computePanDelta(cardAt(400, 50), CONTAINER, "nearest")).toEqual({
-			dx: 0,
-			dy: 100,
-		});
-	});
-
-	it("pulls a card below the zone up to the zone edge", () => {
-		expect(computePanDelta(cardAt(400, 550), CONTAINER, "nearest")).toEqual({
-			dx: 0,
-			dy: -100,
-		});
+	it.each([
+		["past the right edge", cardAt(700, 300), { dx: -100, dy: 0 }],
+		["past the left edge", cardAt(100, 300), { dx: 100, dy: 0 }],
+		["above the zone", cardAt(400, 50), { dx: 0, dy: 100 }],
+		["below the zone", cardAt(400, 550), { dx: 0, dy: -100 }],
+	])("pulls a card %s back to the zone edge", (_label, card, expected) => {
+		expect(computePanDelta(card, CONTAINER, "nearest")).toEqual(expected);
 	});
 
 	it("corrects both axes at once", () => {

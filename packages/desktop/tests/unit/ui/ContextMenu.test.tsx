@@ -331,6 +331,14 @@ describe("RoadRavenContextMenu — create and rename intents (RC4)", () => {
 		return seen;
 	}
 
+	function openCanvasMenu(): NodeFocusRequest[] {
+		seedSchema();
+		const seen = captureRequests();
+		render(<CanvasHarness />);
+		openMenu(screen.getByTestId("trigger"));
+		return seen;
+	}
+
 	const CREATED = { align: "center", select: false, rename: true };
 
 	it("Rename reveals the node in place and opens its input", () => {
@@ -344,51 +352,43 @@ describe("RoadRavenContextMenu — create and rename intents (RC4)", () => {
 		expect(useRoadmapStore.getState().focusedNodeId).toBe("child-1");
 	});
 
-	it("Add Child centres the new child and renames it", () => {
-		const seen = openNodeMenu("child-1");
+	it.each([
+		[
+			"Add Child",
+			/node actions/i,
+			() => openNodeMenu("child-1"),
+			() => childIdsOf("child-1")[0],
+		],
+		[
+			"Add Sibling Above",
+			/node actions/i,
+			() => openNodeMenu("child-1"),
+			() => childIdsOf("root-id")[0],
+		],
+		[
+			"Add Sibling Below",
+			/node actions/i,
+			() => openNodeMenu("child-1"),
+			() => childIdsOf("root-id")[1],
+		],
+		[
+			"Duplicate",
+			/node actions/i,
+			() => openNodeMenu("child-1"),
+			() => childIdsOf("root-id")[1],
+		],
+		[
+			"Add Root Child",
+			/canvas actions/i,
+			() => openCanvasMenu(),
+			() => childIdsOf("root-id")[1],
+		],
+	] as const)("%s centres the new node and renames it", (label, menuName, open, expectedId) => {
+		const seen = open();
 
-		clickItem(/node actions/i, "Add Child");
+		clickItem(menuName, label);
 
-		expect(seen).toEqual([{ nodeId: childIdsOf("child-1")[0], ...CREATED }]);
-		expect(useRoadmapStore.getState().focusedNodeId).toBe(seen[0].nodeId);
-	});
-
-	it("Add Sibling Above centres the new sibling and renames it", () => {
-		const seen = openNodeMenu("child-1");
-
-		clickItem(/node actions/i, "Add Sibling Above");
-
-		expect(seen).toEqual([{ nodeId: childIdsOf("root-id")[0], ...CREATED }]);
-		expect(useRoadmapStore.getState().focusedNodeId).toBe(seen[0].nodeId);
-	});
-
-	it("Add Sibling Below centres the new sibling and renames it", () => {
-		const seen = openNodeMenu("child-1");
-
-		clickItem(/node actions/i, "Add Sibling Below");
-
-		expect(seen).toEqual([{ nodeId: childIdsOf("root-id")[1], ...CREATED }]);
-		expect(useRoadmapStore.getState().focusedNodeId).toBe(seen[0].nodeId);
-	});
-
-	it("Duplicate centres the copy and renames it", () => {
-		const seen = openNodeMenu("child-1");
-
-		clickItem(/node actions/i, "Duplicate");
-
-		expect(seen).toEqual([{ nodeId: childIdsOf("root-id")[1], ...CREATED }]);
-		expect(useRoadmapStore.getState().focusedNodeId).toBe(seen[0].nodeId);
-	});
-
-	it("Add Root Child centres the new child and renames it", () => {
-		seedSchema();
-		const seen = captureRequests();
-		render(<CanvasHarness />);
-		openMenu(screen.getByTestId("trigger"));
-
-		clickItem(/canvas actions/i, "Add Root Child");
-
-		expect(seen).toEqual([{ nodeId: childIdsOf("root-id")[1], ...CREATED }]);
+		expect(seen).toEqual([{ nodeId: expectedId(), ...CREATED }]);
 		expect(useRoadmapStore.getState().focusedNodeId).toBe(seen[0].nodeId);
 	});
 });

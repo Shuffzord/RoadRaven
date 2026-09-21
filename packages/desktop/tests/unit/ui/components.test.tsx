@@ -23,6 +23,7 @@ import { RoadmapNodeCard } from "../../../src/mainview/components/RoadmapNode";
 import { SidePanel } from "../../../src/mainview/components/SidePanel";
 import { KEYBOARD_NAV_CLASS } from "../../../src/mainview/hooks/useKeyboardRouter";
 import { FOCUS_NODE_EVENT } from "../../../src/mainview/lib/focusRequest";
+import { CHEVRON_SELECTOR } from "../../../src/mainview/lib/nodeCollapse";
 import { useRoadmapStore } from "../../../src/mainview/store/roadmapStore";
 
 describe("RoadmapNodeCard", () => {
@@ -290,6 +291,33 @@ describe("RoadmapNodeCard — roving tabindex and DOM focus (RC8)", () => {
 
 		expect(focus).not.toHaveBeenCalled();
 		focus.mockRestore();
+	});
+});
+
+// Test audit gap (2026-09-21): unit tests elsewhere fabricate the chevron
+// contract (`aria-label="Expand subtree" | "Collapse subtree"`) as plain DOM
+// they build by hand (e.g. useKeyboardRouter.test.ts's mountCardWithChevron).
+// This pins it against the REAL rendered card, matched by the exact selector
+// lib/nodeCollapse.ts drives every programmatic collapse through, so a
+// selector or label drift here would be caught here rather than silently
+// making those fabricated-DOM unit tests lie.
+describe("RoadmapNodeCard — chevron contract (nodeCollapse.ts)", () => {
+	it.each([
+		[false, "Collapse subtree"],
+		[true, "Expand subtree"],
+	])("isCollapsed=%s renders a chevron matched by CHEVRON_SELECTOR with that aria-label", (isCollapsed, label) => {
+		const { container } = render(
+			<RoadmapNodeCard
+				nodeId="node-1"
+				title="Parent"
+				status="not-started"
+				hasChildren
+				isCollapsed={isCollapsed}
+			/>,
+		);
+		const chevron = container.querySelector(CHEVRON_SELECTOR);
+		expect(chevron).not.toBeNull();
+		expect(chevron?.getAttribute("aria-label")).toBe(label);
 	});
 });
 

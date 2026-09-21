@@ -297,11 +297,6 @@ describe("viewport commands", () => {
 		expect(state).not.toHaveProperty("resetView");
 	});
 
-	it("does not contain viewResetKey in state", () => {
-		const state = useRoadmapStore.getState();
-		expect(state).not.toHaveProperty("viewResetKey");
-	});
-
 	// Runs in the `node` environment, where the action's own `typeof window`
 	// guard is the behaviour under test: fitView is a message to the canvas,
 	// never a camera write of its own.

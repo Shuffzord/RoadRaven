@@ -325,7 +325,12 @@ describe("Canvas programmatic pan (RC1, RC10)", () => {
 		expect(lastProps().zoom).toBe(0.5);
 	});
 
-	it("cancels an in-flight pan on pointerdown inside the canvas", () => {
+	// Test audit (2026-09-21): merged near-duplicate pair — identical setup,
+	// only the interrupting event type differs.
+	it.each([
+		"pointerdown",
+		"wheel",
+	])("cancels an in-flight pan on %s inside the canvas", (eventType) => {
 		const container = renderCanvas();
 		focusFar();
 		act(() => {
@@ -334,27 +339,75 @@ describe("Canvas programmatic pan (RC1, RC10)", () => {
 		const interrupted = viewport();
 
 		act(() => {
-			container.dispatchEvent(new Event("pointerdown", { bubbles: true }));
+			container.dispatchEvent(new Event(eventType, { bubbles: true }));
 			vi.advanceTimersByTime(1000);
 		});
 
 		expect(viewport()).toEqual(interrupted);
 	});
+});
 
-	it("cancels an in-flight pan on wheel inside the canvas", () => {
-		const container = renderCanvas();
+// Test audit gap (2026-09-21): `animatePanTo`'s prefers-reduced-motion branch
+// (Canvas.tsx) was never stubbed. `flushViewport()` runs unconditionally
+// before the branch, so a pending gesture must land first; the reduced-motion
+// path then calls `setTranslate(target)` directly — a single, synchronous
+// store write with no rAF loop — which is also why it never touches
+// `zoomLevel` (a completely separate store field `setTranslate` does not
+// write).
+describe("Canvas programmatic pan — prefers-reduced-motion", () => {
+	beforeEach(() => {
+		vi.useFakeTimers({
+			toFake: ["requestAnimationFrame", "cancelAnimationFrame", "performance"],
+		});
+		vi.stubGlobal("matchMedia", (query: string) => ({
+			matches: query.includes("prefers-reduced-motion"),
+			media: query,
+			addEventListener: vi.fn(),
+			removeEventListener: vi.fn(),
+			addListener: vi.fn(),
+			removeListener: vi.fn(),
+			dispatchEvent: vi.fn(),
+			onchange: null,
+		}));
+	});
+
+	afterEach(() => {
+		vi.unstubAllGlobals();
+	});
+
+	function focusFar(): void {
+		act(() => {
+			requestNodeFocus(FAR_ID, { align: "nearest" });
+		});
+	}
+
+	it("flushes a pending gesture first, then lands the pan on the target in one write with zoom untouched", () => {
+		renderCanvas();
+		// A pending gesture not yet flushed (no pointerup): still only in the
+		// live mirror.
+		gestureFrame({ x: 10, y: 20 }, 0.5);
+
+		// Filtered on what actually changed: `requestNodeFocus` itself writes
+		// `focusedNodeId` first (an unrelated notification with the viewport
+		// still unchanged), before the reveal ever touches the camera.
+		const writes: { x: number; y: number; k: number }[] = [];
+		const unsubscribe = useRoadmapStore.subscribe((s, prev) => {
+			if (s.translate !== prev.translate || s.zoomLevel !== prev.zoomLevel) {
+				writes.push({ x: s.translate.x, y: s.translate.y, k: s.zoomLevel });
+			}
+		});
 		focusFar();
-		act(() => {
-			vi.advanceTimersByTime(16);
-		});
-		const interrupted = viewport();
+		unsubscribe();
 
-		act(() => {
-			container.dispatchEvent(new Event("wheel", { bubbles: true }));
-			vi.advanceTimersByTime(1000);
-		});
-
-		expect(viewport()).toEqual(interrupted);
+		// First write flushes the pending gesture (animatePanTo's
+		// flushViewport() runs before the reduced-motion check)...
+		expect(writes[0]).toEqual({ x: 10, y: 20, k: 0.5 });
+		// ...and the pan lands on the SAME target the eased animation reaches
+		// (see "starts from the gesture transform..." above), in exactly one
+		// more write — no rAF loop — with zoom unchanged from the flush.
+		expect(writes[1]).toEqual({ x: -90, y: -50, k: 0.5 });
+		expect(writes).toHaveLength(2);
+		expect(lastProps().zoom).toBe(0.5);
 	});
 });
 

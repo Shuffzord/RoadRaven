@@ -113,19 +113,18 @@ afterEach(() => {
 	resetStore();
 });
 
+// Test audit (2026-09-21): "E enters edit mode and puts a selected caret in
+// the title" and "the Edit button opens the same focused, selected input"
+// were dropped — both entry points call the identical `beginEdit` (this
+// file's source: entering here just flips a boolean and calls it), and
+// SidePanel.edit-mode.test.tsx's "pressing E focuses the title input and
+// selects its text" already exercises that exact effect through the real
+// component. "hands focus back to the control the user came from" and
+// "never steals focus from wherever the user clicked instead" were dropped
+// the same way — `restoreEditOrigin` does not care why `isEditing` went
+// false, and SidePanel.edit-mode.test.tsx's Escape/Enter-commit and
+// "does not steal focus" cases already exercise it end to end.
 describe("useEditModeFocus — entering edit mode", () => {
-	it("E enters edit mode and puts a selected caret in the title", () => {
-		render(<Harness />);
-
-		fireEvent.keyDown(window, { key: "e" });
-
-		const input = titleInput();
-		expect(input).not.toBeNull();
-		expect(document.activeElement).toBe(input);
-		expect(input?.selectionStart).toBe(0);
-		expect(input?.selectionEnd).toBe("Root".length);
-	});
-
 	it("E is ignored with a modifier, while typing, closed, or without a node", () => {
 		const { unmount } = render(<Harness />);
 		const textbox = document.createElement("input");
@@ -142,31 +141,9 @@ describe("useEditModeFocus — entering edit mode", () => {
 		fireEvent.keyDown(window, { key: "e" });
 		expect(titleInput(), "panel closed").toBeNull();
 	});
-
-	it("the Edit button opens the same focused, selected input", () => {
-		render(<Harness />);
-
-		fireEvent.click(button("Edit node"));
-
-		expect(document.activeElement).toBe(titleInput());
-	});
 });
 
 describe("useEditModeFocus — leaving edit mode", () => {
-	it("hands focus back to the control the user came from", () => {
-		render(<Harness />);
-		const canvasCard = mountCard(ROOT_ID);
-		canvasCard.focus();
-
-		fireEvent.keyDown(window, { key: "e" });
-		expect(document.activeElement).toBe(titleInput());
-		act(() => {
-			button("Leave").click();
-		});
-
-		expect(document.activeElement).toBe(canvasCard);
-	});
-
 	it("falls back to the canvas tab stop when that control is gone", () => {
 		render(<Harness />);
 		mountCard(ROOT_ID);
@@ -183,21 +160,5 @@ describe("useEditModeFocus — leaving edit mode", () => {
 		expect(seen).toEqual([
 			{ nodeId: ROOT_ID, align: "none", select: false, rename: false },
 		]);
-	});
-
-	it("never steals focus from wherever the user clicked instead", () => {
-		render(<Harness />);
-		const canvasCard = mountCard(ROOT_ID);
-		canvasCard.focus();
-		fireEvent.keyDown(window, { key: "e" });
-		const elsewhere = document.createElement("input");
-		document.body.appendChild(elsewhere);
-
-		elsewhere.focus();
-		act(() => {
-			button("Leave").click();
-		});
-
-		expect(document.activeElement).toBe(elsewhere);
 	});
 });
