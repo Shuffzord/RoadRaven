@@ -19,6 +19,7 @@
 		"tests/unit/lib",
 		"tests/unit/store",
 		"tests/unit/mainview",
+		"tests/unit/ui/Canvas.viewport.test.tsx",
 		"tests/unit/ui/ContextMenu.test.tsx",
 		"tests/unit/ui/ContextMenu.keyboard.test.tsx",
 		"tests/unit/ui/EventLogDrawer.test.tsx",
