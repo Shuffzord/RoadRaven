@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { expect, type Page, test } from "@playwright/test";
+import { seedSchema } from "./helpers/seed";
 
 // Phase 5 a11y manual-walkthrough findings — BUG-1 and BUG-2 from
 // .planning/debug/05-05-a11y-keyboard-routing.md.
@@ -22,22 +23,7 @@ const SMALL_FIXTURE = join(__dirname, "../fixtures/basic-schema.json");
 
 async function seedBasicSchema(page: Page): Promise<void> {
 	const schema = JSON.parse(readFileSync(SMALL_FIXTURE, "utf-8"));
-	await page.goto("/");
-	await page.waitForFunction(() =>
-		Boolean(
-			(window as { __ROADRAVEN_TEST__?: { loadSchema?: unknown } })
-				.__ROADRAVEN_TEST__?.loadSchema,
-		),
-	);
-	await page.evaluate(
-		(s) =>
-			(
-				window as {
-					__ROADRAVEN_TEST__: { loadSchema: (schema: unknown) => void };
-				}
-			).__ROADRAVEN_TEST__.loadSchema(s),
-		schema,
-	);
+	await seedSchema(page, schema);
 	await page.waitForSelector("[data-source-id]");
 	// Wait for all three cards (root + 2 children) to render.
 	await expect(page.locator("[data-source-id]")).toHaveCount(3);

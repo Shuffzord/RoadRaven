@@ -41,6 +41,7 @@
 			"!**/assets/mcp",
 			"!**/playwright-report",
 			"!**/test-results",
+			"!**/coverage",
 			"!.claude/worktrees",
 			"!**/.hutch",
 			"!**/.cottontail-tmp",

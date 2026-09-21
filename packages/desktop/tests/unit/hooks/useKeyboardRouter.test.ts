@@ -40,7 +40,7 @@ interface RenderOpts {
 		open: ReturnType<typeof vi.fn>;
 		cancel: ReturnType<typeof vi.fn>;
 	};
-	togglePanelFocus?: ReturnType<typeof vi.fn>;
+	togglePanelFocus?: ReturnType<typeof vi.fn<() => void>>;
 	getNodePosition?: (id: string) => { x: number; y: number } | null;
 }
 
@@ -53,7 +53,7 @@ function renderRouter(opts: RenderOpts = {}) {
 		setTitle: vi.fn(),
 		updateForTransform: vi.fn(),
 	};
-	const togglePanelFocus = opts.togglePanelFocus ?? vi.fn();
+	const togglePanelFocus = opts.togglePanelFocus ?? vi.fn<() => void>();
 
 	renderHook(() =>
 		useKeyboardRouter({

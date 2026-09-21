@@ -20,7 +20,9 @@
 		"test:e2e": "playwright test",
 		"test:release": "cd ../.. && vitest run tests/release/",
 		"test:a11y": "playwright test --config=tests/a11y/playwright.config.ts",
+		"test:coverage": "vitest run --coverage --coverage.provider=istanbul --coverage.reporter=json --coverage.reporter=text-summary --coverage.reportsDirectory=coverage --coverage.include='src/**/*.{ts,tsx}'",
 		"typecheck": "tsc --noEmit",
+		"typecheck:tests": "tsc --noEmit -p tsconfig.tests.json",
 		"build": "vite build"
 	},
 	"dependencies": {

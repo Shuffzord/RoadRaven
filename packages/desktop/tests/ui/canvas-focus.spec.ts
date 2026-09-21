@@ -1,4 +1,5 @@
 import { expect, type Page, type TestInfo, test } from "@playwright/test";
+import { seedSchema } from "./helpers/seed";
 
 // v0.8.1 Phase 0 — evidence gate for .planning/v0.8.1-canvas-focus-PLAN.md.
 //
@@ -111,22 +112,7 @@ async function settle(page: Page): Promise<Transform> {
 }
 
 async function seed(page: Page): Promise<void> {
-	await page.goto("/");
-	await page.waitForFunction(() =>
-		Boolean(
-			(window as { __ROADRAVEN_TEST__?: { loadSchema?: unknown } })
-				.__ROADRAVEN_TEST__?.loadSchema,
-		),
-	);
-	await page.evaluate(
-		(s) =>
-			(
-				window as unknown as {
-					__ROADRAVEN_TEST__: { loadSchema: (schema: unknown) => void };
-				}
-			).__ROADRAVEN_TEST__.loadSchema(s),
-		FIXTURE,
-	);
+	await seedSchema(page, FIXTURE);
 	await expect(page.locator("[data-source-id]")).toHaveCount(NODE_COUNT);
 	await settle(page);
 }
