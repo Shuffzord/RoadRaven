@@ -2,6 +2,7 @@ import { fileURLToPath } from "node:url";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vitest/config";
 import { electrobunViteAliases } from "./.hutch/devkit/api/config/electrobun-vite";
+import pkg from "./package.json" with { type: "json" };
 
 // Vitest reads this file, not vite.config.ts, so the devkit aliases must be
 // declared here too. Without them any test that transitively imports
@@ -12,6 +13,8 @@ const devkitRoot = fileURLToPath(new URL("./.hutch/devkit", import.meta.url));
 export default defineConfig({
 	plugins: [react()],
 	resolve: { alias: electrobunViteAliases(devkitRoot) },
+	// Same `__APP_VERSION__` define as vite.config.ts, for the same reason.
+	define: { __APP_VERSION__: JSON.stringify(pkg.version) },
 	test: {
 		globals: true,
 		environment: "node",

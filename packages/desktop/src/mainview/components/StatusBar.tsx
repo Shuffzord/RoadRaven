@@ -1,9 +1,10 @@
+import { APP_VERSION } from "../lib/appVersion";
 import { useRoadmapStore } from "../store/roadmapStore";
 import { EventApiPill } from "./EventApiPill";
 import { SaveIndicator } from "./SaveIndicator";
 
 // v0.8.2 D3: the filename moved to the top-bar DocumentChip; the footer keeps
-// the Event API pill, the save indicator and the node count.
+// the Event API pill, the save indicator, the node count and the app version.
 export function StatusBar() {
 	const nodeCount = useRoadmapStore((s) => s.getNodeCount());
 
@@ -22,6 +23,12 @@ export function StatusBar() {
 			<div className="flex items-center gap-2.5">
 				<SaveIndicator />
 				<span>{nodeCount} nodes</span>
+				<span
+					className="text-[11px] text-rv-text-tertiary"
+					title={`RoadRaven ${APP_VERSION}`}
+				>
+					v{APP_VERSION}
+				</span>
 				<svg
 					aria-hidden="true"
 					width="12"

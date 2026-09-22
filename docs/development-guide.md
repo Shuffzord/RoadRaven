@@ -252,6 +252,7 @@ canvas; the `Ctrl` shortcuts in the Global / file table keep working from there.
 | Test location | `tests/unit/` for unit tests, `tests/unit/ui/` for component tests | Environment matching: node for logic, jsdom for components |
 | Formatter | Biome (not Prettier) | Faster; linting + formatting in one tool |
 | Package scope | `@roadraven/` | Consistent npm namespace for publishable packages |
+| App version | Single source is `packages/desktop/package.json` (read by `electrobun.config.ts`, `src/bun/appVersion.ts` and the renderer's `__APP_VERSION__` define); `bun scripts/bump-version.ts X.Y.Z` propagates it to the other package.json files and the plugin/marketplace pins | One literal to bump; footer, About and the Setup Wizard mismatch check cannot drift |
 
 ## Related Documentation
 

@@ -1,6 +1,7 @@
 import * as Dialog from "@radix-ui/react-dialog";
 import { useEffect, useId, useRef, useState } from "react";
 import type { AppSettings } from "../../../../../shared/types";
+import { APP_VERSION } from "../lib/appVersion";
 import { electroview } from "../rpc";
 import { useEventApiStore } from "../store/eventApiStore";
 import { usePreferencesStore } from "../store/preferencesStore";
@@ -77,7 +78,6 @@ export function PreferencesDialog() {
 	const eventApiPort = useEventApiStore((s) => s.port);
 	const eventApiError = useEventApiStore((s) => s.errorMessage);
 	const [settings, setSettings] = useState<AppSettings | null>(null);
-	const [version, setVersion] = useState<string | null>(null);
 	const [portText, setPortText] = useState("");
 	const [portError, setPortError] = useState<string | null>(null);
 	const contentRef = useRef<HTMLDivElement>(null);
@@ -97,14 +97,6 @@ export function PreferencesDialog() {
 			setSettings(loaded);
 			setPortText(loaded.eventApi?.port?.toString() ?? "");
 		});
-		rpc?.request
-			.getSetupStatus({})
-			.then((status) => {
-				if (!cancelled) setVersion(status.appVersion);
-			})
-			.catch(() => {
-				// Version line stays blank; nothing else depends on it.
-			});
 		return () => {
 			cancelled = true;
 		};
@@ -305,7 +297,7 @@ export function PreferencesDialog() {
 								<h3 id={`${id}-about`} style={dialogSectionHeadingStyle}>
 									About
 								</h3>
-								<p style={dialogFieldLabelStyle}>RoadRaven {version ?? ""}</p>
+								<p style={dialogFieldLabelStyle}>RoadRaven {APP_VERSION}</p>
 								<div style={dialogActionRowStyle}>
 									<button
 										type="button"

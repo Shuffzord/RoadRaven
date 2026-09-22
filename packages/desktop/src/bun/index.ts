@@ -4,6 +4,7 @@ import type { RoadmapRPCType } from "../../../../shared/types.ts";
 // the saveFile/flushPending logic. Re-exported below so external callers (and
 // the Plan 04a acceptance grep) can see the persistence surface at a glance.
 import { agentRequestHandler } from "./agentRequestHandler";
+import { APP_VERSION } from "./appVersion";
 import { atomicWrite } from "./atomicWrite";
 import { bunLogger, setupBunLogging } from "./logging";
 import { splitSchemaByOwnership } from "./refMap";
@@ -44,11 +45,6 @@ import { createSetupRpcHandlers } from "./rpc/setupRpc";
 import { createWindowRpcHandlers } from "./rpc/windowRpc";
 import { deleteSentinel, writeSentinel } from "./sentinel";
 import { loadSettings, saveSettings } from "./settings";
-
-// App version shown in the Setup Wizard. scripts/bump-version.ts rewrites this
-// literal (alongside the package.json + electrobun.config.ts versions) so it
-// stays in lockstep — do not edit by hand.
-const APP_VERSION = "0.8.2";
 
 // Re-export the RPC type so downstream modules can import from the app entry
 export type { RoadmapRPCType };

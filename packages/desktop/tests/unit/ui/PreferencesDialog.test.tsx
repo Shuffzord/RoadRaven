@@ -13,7 +13,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 const rpc = vi.hoisted(() => ({
 	loadSettings: vi.fn(),
 	saveSettings: vi.fn(() => Promise.resolve({ success: true })),
-	getSetupStatus: vi.fn(() => Promise.resolve({ appVersion: "0.8.2" })),
 	openExternal: vi.fn(() => Promise.resolve({ ok: true })),
 }));
 
@@ -21,6 +20,7 @@ vi.mock("../../../src/mainview/rpc", () => ({
 	electroview: { rpc: { request: rpc } },
 }));
 
+import pkg from "../../../package.json" with { type: "json" };
 import { PreferencesDialog } from "../../../src/mainview/components/PreferencesDialog";
 import { useEventApiStore } from "../../../src/mainview/store/eventApiStore";
 import { usePreferencesStore } from "../../../src/mainview/store/preferencesStore";
@@ -209,7 +209,7 @@ describe("PreferencesDialog", () => {
 	it("About shows the app version and opens the links externally", async () => {
 		await openDialog();
 
-		expect(await screen.findByText("RoadRaven 0.8.2")).toBeTruthy();
+		expect(await screen.findByText(`RoadRaven ${pkg.version}`)).toBeTruthy();
 		fireEvent.click(screen.getByRole("button", { name: "Documentation" }));
 		fireEvent.click(screen.getByRole("button", { name: "Releases" }));
 

@@ -4,6 +4,7 @@
 import { render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 import type { RoadmapSchema } from "../../../../../packages/core/src/schema";
+import pkg from "../../../package.json" with { type: "json" };
 import { StatusBar } from "../../../src/mainview/components/StatusBar";
 import { useRoadmapStore } from "../../../src/mainview/store/roadmapStore";
 import { resetStore } from "../../helpers/resetStore";
@@ -47,5 +48,12 @@ describe("StatusBar", () => {
 	it("keeps the Event API pill on the left", () => {
 		render(<StatusBar />);
 		expect(screen.getByText(/Event API off/)).toBeTruthy();
+	});
+
+	it("shows the app version from packages/desktop/package.json", () => {
+		render(<StatusBar />);
+
+		const label = screen.getByText(`v${pkg.version}`);
+		expect(label.getAttribute("title")).toBe(`RoadRaven ${pkg.version}`);
 	});
 });
