@@ -134,7 +134,7 @@ jobs:
       # flake them, so they run for signal only and must not block a merge.
       - name: E2E perf budgets (ui project, non-blocking)
         continue-on-error: true
-        run: bunx playwright test --project=ui tests/ui/context-menu-50ms.spec.ts tests/ui/canvas-drag-perf.spec.ts
+        run: bunx playwright test --project=ui tests/ui/context-menu-50ms.spec.ts tests/ui/canvas-drag-perf.spec.ts tests/ui/canvas-large-tree-perf.spec.ts
         working-directory: packages/desktop
       - name: Upload Playwright report
         if: ${{ !cancelled() }}
