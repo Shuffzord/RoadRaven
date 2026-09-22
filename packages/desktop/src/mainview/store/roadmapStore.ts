@@ -448,6 +448,7 @@ interface RoadmapState {
 
 	// Viewport actions
 	fitView: () => void;
+	requestZoom: (direction: "in" | "out") => void;
 	setTranslate: (translate: { x: number; y: number }) => void;
 	setZoomLevel: (zoom: number) => void;
 	setViewport: (translate: { x: number; y: number }, zoom: number) => void;
@@ -1206,6 +1207,16 @@ export const useRoadmapStore = create<RoadmapState>((set, get) => {
 		fitView: () => {
 			if (typeof window === "undefined") return;
 			window.dispatchEvent(new CustomEvent("roadraven:fit-view"));
+		},
+
+		// v0.8.2 F6: the top-bar −/+ buttons. Same shape as fitView — only the
+		// Canvas knows the live (possibly mid-gesture) transform and the
+		// container centre the step zooms about.
+		requestZoom: (direction) => {
+			if (typeof window === "undefined") return;
+			window.dispatchEvent(
+				new CustomEvent("roadraven:zoom", { detail: direction }),
+			);
 		},
 
 		setTranslate: (translate) => {

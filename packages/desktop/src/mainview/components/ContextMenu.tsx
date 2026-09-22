@@ -5,6 +5,13 @@ import { trackMenuFocus } from "../lib/focusHandoff";
 import { requestNodeFocus } from "../lib/focusRequest";
 import { getNodeCollapseState, toggleNodeCollapse } from "../lib/nodeCollapse";
 import { useRoadmapStore } from "../store/roadmapStore";
+import {
+	HINT_CLASS,
+	ITEM_CLASS,
+	ITEM_DESTRUCTIVE_CLASS,
+	MENU_SURFACE_CLASS,
+	SEP_CLASS,
+} from "./menuStyles";
 
 const DEFAULT_STATUSES: ReadonlyArray<{ id: string; label: string }> = [
 	{ id: "not-started", label: "Not Started" },
@@ -12,15 +19,6 @@ const DEFAULT_STATUSES: ReadonlyArray<{ id: string; label: string }> = [
 	{ id: "completed", label: "Completed" },
 	{ id: "blocked", label: "Blocked" },
 ];
-
-const MENU_SURFACE_CLASS =
-	"min-w-[200px] max-w-[280px] py-1 bg-[var(--rv-bg-elevated)] border border-[var(--rv-border)] rounded-[8px] shadow-[var(--rv-shadow-config)] z-[9000] will-change-transform";
-const ITEM_CLASS =
-	"flex items-center justify-between h-[28px] px-3 text-[13px] text-[var(--rv-text-primary)] select-none cursor-default outline-none data-[highlighted]:bg-[var(--rv-accent-muted)] data-[highlighted]:text-[var(--rv-text-primary)] data-[disabled]:text-[var(--rv-text-tertiary)] data-[disabled]:pointer-events-none";
-const ITEM_DESTRUCTIVE_CLASS =
-	"flex items-center justify-between h-[28px] px-3 text-[13px] text-[var(--rv-status-blocked)] select-none cursor-default outline-none data-[highlighted]:bg-[var(--rv-accent-muted)]";
-const HINT_CLASS = "text-[11px] text-[var(--rv-text-tertiary)] ml-4";
-const SEP_CLASS = "h-px my-1 bg-[var(--rv-border-subtle)]";
 
 interface RoadRavenContextMenuProps {
 	children: ReactNode;

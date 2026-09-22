@@ -523,6 +523,64 @@ describe("Canvas fit to view (RC5, D3)", () => {
 	});
 });
 
+// v0.8.2 F6: the top-bar −/+ buttons. One ×1.2 / ÷1.2 step about the
+// container centre (400, 300), clamped to the shared extent, in one write.
+describe("Canvas zoom step (F6)", () => {
+	function zoom(direction: "in" | "out"): void {
+		act(() => {
+			useRoadmapStore.getState().requestZoom(direction);
+		});
+	}
+
+	it("zooms in about the container centre", () => {
+		renderCanvas();
+		const before = viewport();
+
+		zoom("in");
+
+		const after = viewport();
+		expect(after.k).toBeCloseTo(before.k * 1.2, 9);
+		expect(after.x).toBeCloseTo(400 - (400 - before.x) * 1.2, 9);
+		expect(after.y).toBeCloseTo(300 - (300 - before.y) * 1.2, 9);
+	});
+
+	it("zooms out by the inverse step", () => {
+		renderCanvas();
+		const before = viewport();
+
+		zoom("out");
+
+		expect(viewport().k).toBeCloseTo(before.k / 1.2, 9);
+	});
+
+	it("clamps to the extent and stops writing at the cap", () => {
+		renderCanvas();
+
+		for (let i = 0; i < 20; i++) zoom("in");
+		expect(viewport().k).toBe(SCALE_EXTENT.max);
+		const atCap = viewport();
+		zoom("in");
+		expect(viewport()).toEqual(atCap);
+
+		for (let i = 0; i < 40; i++) zoom("out");
+		expect(viewport().k).toBe(SCALE_EXTENT.min);
+	});
+
+	it("steps from a pending gesture's transform, publishing it first", () => {
+		const container = renderCanvas();
+		gesture(container, { x: -90, y: 239.5 }, 0.5);
+		// A second, unsynced wheel frame: only in the live mirror so far.
+		gestureFrame({ x: 10, y: 20 }, 0.6);
+
+		zoom("in");
+
+		const after = viewport();
+		expect(after.k).toBeCloseTo(0.72, 9);
+		expect(after.x).toBeCloseTo(400 - (400 - 10) * 1.2, 9);
+		expect(after.y).toBeCloseTo(300 - (300 - 20) * 1.2, 9);
+	});
+});
+
 describe("Canvas mouse selection (RC3)", () => {
 	it("asks for a nearest reveal and selects, in one explicit request", () => {
 		const requests: NodeFocusRequest[] = [];

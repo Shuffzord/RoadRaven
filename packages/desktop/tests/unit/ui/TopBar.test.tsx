@@ -71,16 +71,27 @@ afterEach(() => {
 });
 
 describe("TopBar — toolbar chrome", () => {
+	// v0.8.2 D2-A / D3: the New/Open buttons became the File menu trigger and
+	// the document chip sits in the centre once a document is open.
 	it("renders one toolbar with the brand and the primary actions", () => {
+		seed();
 		render(<TopBar />);
 
 		expect(screen.getByRole("toolbar", { name: "Main toolbar" })).toBeTruthy();
 		expect(screen.getByText("RoadRaven")).toBeTruthy();
-		expect(screen.getByText("New")).toBeTruthy();
-		expect(screen.getByText("Open")).toBeTruthy();
+		const file = screen.getByRole("button", { name: "File" });
+		expect(file.getAttribute("aria-haspopup")).toBe("menu");
+		expect(screen.queryByText("New")).toBeNull();
+		expect(screen.queryByText("Open")).toBeNull();
+		expect(screen.getByLabelText("Current file: topbar.json")).toBeTruthy();
 		expect(screen.getByText("Fit")).toBeTruthy();
 		expect(screen.getByLabelText("Zoom in")).toBeTruthy();
 		expect(screen.getByLabelText("Zoom out")).toBeTruthy();
+	});
+
+	it("hides the document chip while nothing is open", () => {
+		render(<TopBar />);
+		expect(screen.queryByLabelText(/^Current file: /)).toBeNull();
 	});
 
 	it("opens the setup wizard from the settings button", () => {
@@ -134,6 +145,36 @@ describe("TopBar — Fit", () => {
 		// cards and answers the event.
 		expect(useRoadmapStore.getState().translate).toEqual(before.translate);
 		expect(useRoadmapStore.getState().zoomLevel).toBe(before.zoomLevel);
+	});
+});
+
+// v0.8.2 F6: the −/+ buttons had no handlers. They now issue the store's zoom
+// request, which the Canvas fulfils about its centre (Canvas.viewport tests).
+describe("TopBar — zoom buttons", () => {
+	it("Zoom in / Zoom out ask the store for one step each way", () => {
+		seed();
+		const requestZoom = vi.spyOn(useRoadmapStore.getState(), "requestZoom");
+		render(<TopBar />);
+
+		fireEvent.click(screen.getByLabelText("Zoom in"));
+		fireEvent.click(screen.getByLabelText("Zoom out"));
+
+		expect(requestZoom.mock.calls).toEqual([["in"], ["out"]]);
+	});
+
+	it("dispatches the canvas zoom event with the direction", () => {
+		seed();
+		const directions: unknown[] = [];
+		const listener = (e: Event): void => {
+			directions.push((e as CustomEvent).detail);
+		};
+		window.addEventListener("roadraven:zoom", listener);
+		render(<TopBar />);
+
+		fireEvent.click(screen.getByLabelText("Zoom out"));
+		window.removeEventListener("roadraven:zoom", listener);
+
+		expect(directions).toEqual(["out"]);
 	});
 });
 

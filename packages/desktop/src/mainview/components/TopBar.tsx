@@ -1,17 +1,17 @@
 import { useEffect, useRef } from "react";
 import ravenLogo from "../assets/raven-logo.svg";
-import { useFileActions } from "../hooks/useFileActions";
 import { electroview } from "../rpc";
 import { useEventLogStore } from "../store/eventLogStore";
 import { useRoadmapStore } from "../store/roadmapStore";
 import { useSetupStore } from "../store/setupStore";
+import { DocumentChip } from "./DocumentChip";
+import { FileMenu } from "./FileMenu";
 import { ThemePicker } from "./ThemePicker";
 
 export function TopBar() {
 	const layoutOrientation = useRoadmapStore((s) => s.layoutOrientation);
 	const setLayout = useRoadmapStore((s) => s.setLayout);
 	const filePath = useRoadmapStore((s) => s.filePath);
-	const { openFile, newRoadmap } = useFileActions();
 	const isDrawerOpen = useEventLogStore((s) => s.isOpen);
 
 	const handleLayoutChange = (value: "TB" | "LR") => {
@@ -61,58 +61,37 @@ export function TopBar() {
 			{/* Separator */}
 			<div className="w-px h-6 bg-rv-border mx-1.5 shrink-0" />
 
-			{/* Action buttons */}
-			<button
-				className="flex items-center gap-1.5 px-2.5 py-[5px] rounded-[6px] text-[12px] font-semibold text-rv-text-secondary hover:bg-rv-bg-hover hover:text-rv-text-primary transition-all duration-150"
-				type="button"
-				onClick={() => {
-					void newRoadmap();
-				}}
-			>
-				<svg
-					aria-hidden="true"
-					width="15"
-					height="15"
-					viewBox="0 0 24 24"
-					fill="none"
-					stroke="currentColor"
-					strokeWidth="2"
-					strokeLinecap="round"
-					strokeLinejoin="round"
+			{/* File menu (v0.8.2 D2-A): every file verb, from the fileCommands registry */}
+			<FileMenu>
+				<button
+					className="flex items-center gap-1.5 px-2.5 py-[5px] rounded-[6px] text-[12px] font-semibold text-rv-text-secondary hover:bg-rv-bg-hover hover:text-rv-text-primary transition-all duration-150"
+					type="button"
 				>
-					<path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
-					<polyline points="14 2 14 8 20 8" />
-					<line x1="12" y1="18" x2="12" y2="12" />
-					<line x1="9" y1="15" x2="15" y2="15" />
-				</svg>
-				New
-			</button>
-			<button
-				className="flex items-center gap-1.5 px-2.5 py-[5px] rounded-[6px] text-[12px] font-semibold text-rv-text-secondary hover:bg-rv-bg-hover hover:text-rv-text-primary transition-all duration-150"
-				type="button"
-				onClick={openFile}
-			>
-				<svg
-					aria-hidden="true"
-					width="15"
-					height="15"
-					viewBox="0 0 24 24"
-					fill="none"
-					stroke="currentColor"
-					strokeWidth="2"
-					strokeLinecap="round"
-					strokeLinejoin="round"
-				>
-					<path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
-				</svg>
-				Open
-			</button>
+					File
+					<svg
+						aria-hidden="true"
+						width="10"
+						height="10"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						strokeWidth="2.5"
+						strokeLinecap="round"
+						strokeLinejoin="round"
+					>
+						<polyline points="6 9 12 15 18 9" />
+					</svg>
+				</button>
+			</FileMenu>
 
 			{/* Spacer */}
 			<div className="flex-1" />
 
-			{/* Search */}
-			<SearchBox />
+			{/* Document identity (D3) + search */}
+			<div className="flex items-center gap-2 min-w-0">
+				<DocumentChip />
+				<SearchBox />
+			</div>
 
 			{/* Spacer */}
 			<div className="flex-1" />
@@ -156,11 +135,12 @@ export function TopBar() {
 				Fit
 			</button>
 
-			{/* Zoom buttons */}
+			{/* Zoom buttons (F6): one step about the container centre, via the store */}
 			<button
 				className="flex items-center justify-center w-[26px] h-[26px] rounded-[5px] text-rv-text-secondary hover:bg-rv-bg-hover transition-all duration-150"
 				type="button"
 				aria-label="Zoom out"
+				onClick={() => useRoadmapStore.getState().requestZoom("out")}
 			>
 				<svg
 					aria-hidden="true"
@@ -180,6 +160,7 @@ export function TopBar() {
 				className="flex items-center justify-center w-[26px] h-[26px] rounded-[5px] text-rv-text-secondary hover:bg-rv-bg-hover transition-all duration-150"
 				type="button"
 				aria-label="Zoom in"
+				onClick={() => useRoadmapStore.getState().requestZoom("in")}
 			>
 				<svg
 					aria-hidden="true"
