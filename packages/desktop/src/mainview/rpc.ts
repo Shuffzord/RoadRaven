@@ -16,8 +16,13 @@ const rpc = Electroview.defineRPC<RoadmapRPCType>({
 				return handleAgentRequest(tool, args);
 			},
 			// v0.8.2 A1: Bun's will-close guard asks whether the window may close.
-			// Phase 1b replaces this with the autosave flush / untitled-edits prompt.
-			confirmClose: async () => ({ allow: true }),
+			// The guard flushes a file-backed document's edits or prompts for an
+			// untitled one (DiscardChangesDialog). Bun treats 3 s of silence as
+			// allow, so a flush that outlives that just lets the window close.
+			confirmClose: async () => {
+				const { ensureSafeToDiscard } = await import("./hooks/useFileActions");
+				return { allow: await ensureSafeToDiscard() };
+			},
 		},
 		messages: {
 			pushFileChanged: (msg) => {

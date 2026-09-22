@@ -133,6 +133,8 @@ const SINGLE_HEADLINE: Record<
 		const [producerVersion, appVersion] = (detail ?? "").split("|");
 		return `MCP server version ${producerVersion ?? "?"} does not match RoadRaven ${appVersion ?? "?"}.`;
 	},
+	file_info: (_source, detail) => detail ?? "",
+	file_error: (_source, detail) => detail ?? "",
 };
 
 /**
@@ -153,6 +155,8 @@ const SINGLE_BODY: Record<ToastType, string | null> = {
 	invalid_status: "Extend statusConfig in the schema to accept this status.",
 	disconnect: null,
 	version_mismatch: "Update the RoadRaven plugin or the app.",
+	file_info: null,
+	file_error: null,
 };
 
 /**
@@ -182,6 +186,9 @@ const MERGED_HEADLINE: Record<
 		`Producer disconnect events (×${count}) from ${source}.`,
 	version_mismatch: (source, count) =>
 		`${count} version mismatches from ${source}.`,
+	// File toasts merge only on an identical repeat; the message stands alone.
+	file_info: (_source, count) => `${count}× the same file notice.`,
+	file_error: (_source, count) => `${count}× the same file error.`,
 };
 
 /**
@@ -199,7 +206,8 @@ function renderMergedHeadline(
  * Build merged-count body per D-24.
  */
 function renderMergedBody(type: ToastType): string | null {
-	if (type === "disconnect") return null;
+	if (type === "disconnect" || type === "file_info" || type === "file_error")
+		return null;
 	if (type === "version_mismatch")
 		return "Update the RoadRaven plugin or the app.";
 	return "See event log for details.";

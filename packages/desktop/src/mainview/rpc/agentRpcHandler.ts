@@ -864,202 +864,111 @@ export async function handleAgentRequest(
 		}
 
 		case "saveFileAs": {
-			return serializeFileOperation<AgentResult>(async () => {
-				// Cycle agentRpcHandler → rpc → agentRpcHandler is broken at runtime by
-				// this import; flagged by fallow's static graph only.
-				const { electroview } = await import("../rpc");
-				if (!electroview?.rpc) {
-					return {
-						ok: false,
-						error: "Renderer RPC not ready.",
-						code: "internal_error",
-					};
-				}
-				const current = useRoadmapStore.getState();
-				if (!current.schema) {
-					return {
-						ok: false,
-						error: "No schema to save.",
-						code: "no_file_loaded",
-					};
-				}
-				const out = await electroview.rpc.request.saveFileAs({
-					schema: current.schema,
-				});
-				appendAgentDrawerEvent(
-					"saveFileAs",
-					LIFECYCLE_NODE_ID,
-					args,
-					useRoadmapStore.getState(),
-					eventLog,
-				);
-				if (!out.filePath) {
-					return {
-						ok: false,
-						error: "User cancelled save dialog.",
-						code: "save_error",
-						hint: "saveFileAs in v1 always opens a native dialog; the args.path argument is not used. The user picks the path interactively. Do not retry with the same path — instead surface the cancellation to the user, or call saveFile to write to the currently loaded path.",
-					};
-				}
-				useRoadmapStore.setState({
-					filePath: out.filePath,
-					isUntitled: false,
-					saveState: "saved",
-					failureCount: 0,
-					lastSaveError: null,
-					lastSavedDataKey: current.dataKey,
-					lastSavedStatusTick: current.statusTick,
-				});
-				return { ok: true, data: { filePath: out.filePath } };
-			});
+			// Cycle agentRpcHandler → rpc → agentRpcHandler is broken at runtime by
+			// this import; flagged by fallow's static graph only.
+			const { electroview } = await import("../rpc");
+			if (!electroview?.rpc) {
+				return {
+					ok: false,
+					error: "Renderer RPC not ready.",
+					code: "internal_error",
+				};
+			}
+			// v0.8.2 A3: the same Save As the UI runs — dialog defaults, store
+			// fields, linkedFiles reset and the A6 warning toast come along.
+			const { saveAs } = await import("../hooks/useFileActions");
+			const out = await saveAs();
+			appendAgentDrawerEvent(
+				"saveFileAs",
+				LIFECYCLE_NODE_ID,
+				args,
+				useRoadmapStore.getState(),
+				eventLog,
+			);
+			if (!out.filePath) {
+				return {
+					ok: false,
+					error: "User cancelled save dialog.",
+					code: "save_error",
+					hint: "saveFileAs in v1 always opens a native dialog; the args.path argument is not used. The user picks the path interactively. Do not retry with the same path — instead surface the cancellation to the user, or call saveFile to write to the currently loaded path.",
+				};
+			}
+			return { ok: true, data: { filePath: out.filePath } };
 		}
 
 		case "openFile": {
 			const path = args.path as string;
+			const { flushUnsavedEdits, requestAndApply } = await import(
+				"../hooks/useFileActions"
+			);
 			// D-12: auto-flush pending autosave before opening. A save is complete
 			// only when the state machine says saved AND its persisted dirty markers
-			// still match; a concurrent edit must not satisfy this wait.
+			// still match; a concurrent edit must not satisfy this wait. The agent
+			// never sees the UI's untitled-edits prompt: an untitled document is
+			// flushed through the same autosave path (native Save As dialog).
 			//
-			// WR-04 (06-REVIEW): catch the timeout here and return a structured
-			// `autosave_timeout` error rather than letting the throw bubble up
-			// to agentRequestHandler's outer try/catch (which would emit the
-			// generic `internal_error`). The agent needs to know the previous
-			// file may not be saved so it can call saveFile and retry.
+			// WR-04 (06-REVIEW): a timeout is a structured `autosave_timeout` error
+			// rather than the generic `internal_error` from agentRequestHandler's
+			// outer catch. The agent needs to know the previous file may not be
+			// saved so it can call saveFile and retry.
 			// schema guard: openFile is SCHEMA_OPTIONAL (v0.7 Phase 4) — with no
 			// schema loaded there is nothing to flush, and waiting on an autosave
 			// that can never fire would time out.
 			if (
 				useRoadmapStore.getState().schema &&
-				hasUnsavedEdits(useRoadmapStore.getState())
+				hasUnsavedEdits(useRoadmapStore.getState()) &&
+				!(await flushUnsavedEdits())
 			) {
-				useRoadmapStore.getState().triggerSave();
-				try {
-					await new Promise<void>((resolve, reject) => {
-						const isSavedAndClean = () => {
-							const current = useRoadmapStore.getState();
-							return current.saveState === "saved" && !hasUnsavedEdits(current);
-						};
-						const t = setTimeout(() => {
-							unsub();
-							reject(new Error("autosave timeout"));
-						}, 5000);
-						const unsub = useRoadmapStore.subscribe(() => {
-							if (isSavedAndClean()) {
-								clearTimeout(t);
-								unsub();
-								resolve();
-							}
-						});
-						// Edge case: triggerSave was synchronous and completed before subscribe.
-						if (isSavedAndClean()) {
-							clearTimeout(t);
-							unsub();
-							resolve();
-						}
-					});
-				} catch (err) {
-					return {
-						ok: false,
-						error:
-							"Autosave did not complete within 5s. Previous file may be unsaved.",
-						code: "autosave_timeout",
-						hint: "Call saveFile manually before retrying openFile.",
-						data: { detail: String(err) },
-					};
-				}
+				return {
+					ok: false,
+					error:
+						"Autosave did not complete within 5s. Previous file may be unsaved.",
+					code: "autosave_timeout",
+					hint: "Call saveFile manually before retrying openFile.",
+					data: { detail: "autosave timeout" },
+				};
 			}
 
-			// Autosave, load, conflict, and rollback gates are intentionally atomic.
-			// fallow-ignore-next-line complexity
-			return serializeFileOperation<AgentResult>(async () => {
-				const { electroview } = await import("../rpc");
-				if (!electroview?.rpc) {
-					return {
-						ok: false,
-						error: "Renderer RPC not ready.",
-						code: "internal_error",
-					};
-				}
-				// loadFile has Bun-side binding side effects (watchers, ownership map,
-				// cached save path/schema, and event sidecar). Capture the renderer token
-				// and dirty markers immediately before crossing that async boundary.
-				const beforeLoad = useRoadmapStore.getState();
-				const loadSnapshot = {
-					agentRevision: beforeLoad.agentRevision,
-					dataKey: beforeLoad.dataKey,
-					statusTick: beforeLoad.statusTick,
-					filePath: beforeLoad.filePath,
-					hadSchema: beforeLoad.schema !== null,
-				};
-				const out = await electroview.rpc.request.loadFile({ path });
-				if (!out.data) {
+			// v0.8.2 A3: same queued load / conflict / rollback path as the UI, so
+			// filePath, linkedFiles, window title and the recent list all follow.
+			const outcome = await requestAndApply(path);
+			if (!outcome.ok) {
+				if (outcome.reason === "read_error") {
 					return {
 						ok: false,
 						error: "Failed to read file.",
 						code: "file_read_error",
-						data: { errors: out.errors },
+						data: { errors: outcome.errors },
 					};
 				}
-				const afterLoad = useRoadmapStore.getState();
-				const openConflicted =
-					afterLoad.agentRevision !== loadSnapshot.agentRevision ||
-					afterLoad.dataKey !== loadSnapshot.dataKey ||
-					afterLoad.statusTick !== loadSnapshot.statusTick ||
-					(afterLoad.schema !== null && hasUnsavedEdits(afterLoad));
-				if (openConflicted) {
-					let backendBindingRestored = false;
-					try {
-						if (loadSnapshot.filePath) {
-							const restored = await electroview.rpc.request.loadFile({
-								path: loadSnapshot.filePath,
-							});
-							backendBindingRestored = restored.data !== null;
-						} else if (loadSnapshot.hadSchema || afterLoad.schema) {
-							// Existing RPC clears the cached path, ownership map, and sidecar.
-							await electroview.rpc.request.newFile({});
-							backendBindingRestored = true;
-						}
-					} catch {
-						// The renderer state remains untouched either way. Surface rollback
-						// status so the caller knows whether Bun still targets the new file.
-					}
-					if (!backendBindingRestored) {
-						try {
-							await electroview.rpc.request.newFile({});
-						} catch {
-							// Autosave supplies the renderer path explicitly, so even a failed
-							// unbind cannot redirect a write to the requested target.
-						}
-					}
-					return {
-						ok: false,
-						error: "Roadmap changed while the requested file was loading.",
-						code: "stale_write",
-						hint: "Wait for current edits to save, then retry openFile.",
-						data: {
-							currentRevision: afterLoad.agentRevision,
-							retry: true,
-							backendBindingRestored,
-						},
-					};
-				}
-				const loadedStore = useRoadmapStore.getState();
-				const loadedPath = out.filePath ?? path;
-				loadedStore.loadSchema(out.data, loadedPath);
-				loadedStore.applyEventBatch(out.sidecarUpdates ?? []);
-				const appliedStore = useRoadmapStore.getState();
-				appendAgentDrawerEvent(
-					"openFile",
-					LIFECYCLE_NODE_ID,
-					args,
-					appliedStore,
-					eventLog,
-				);
+				const stale = useRoadmapStore.getState();
 				return {
-					ok: true,
-					data: { filePath: loadedPath, schema: appliedStore.schema },
+					ok: false,
+					error: "Roadmap changed while the requested file was loading.",
+					code: "stale_write",
+					hint: "Wait for current edits to save, then retry openFile.",
+					data: {
+						currentRevision: stale.agentRevision,
+						retry: true,
+						backendBindingRestored:
+							outcome.reason === "conflict"
+								? outcome.backendBindingRestored
+								: true,
+					},
 				};
-			});
+			}
+			const appliedStore = useRoadmapStore.getState();
+			appendAgentDrawerEvent(
+				"openFile",
+				LIFECYCLE_NODE_ID,
+				args,
+				appliedStore,
+				eventLog,
+			);
+			return {
+				ok: true,
+				data: { filePath: outcome.filePath, schema: appliedStore.schema },
+			};
 		}
 
 		// -------- VIEWPORT TOOLS --------

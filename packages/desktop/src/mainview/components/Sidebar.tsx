@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useFileActions } from "../hooks/useFileActions";
 import { useRecentFiles } from "../hooks/useRecentFiles";
+import { useUiStore } from "../store/uiStore";
 import { InfoDialog } from "./InfoDialog";
 
 /** Extract filename from a path (browser-safe, no node:path) */
@@ -25,7 +26,10 @@ const INFO_DIALOG_CONTENT: Record<
 };
 
 export function Sidebar() {
-	const [collapsed, setCollapsed] = useState(false);
+	// v0.8.2 F3: collapse state lives in uiStore so Ctrl+B (keyboard router)
+	// toggles the same flag as the header button.
+	const collapsed = useUiStore((s) => s.sidebarCollapsed);
+	const toggleSidebar = useUiStore((s) => s.toggleSidebar);
 	const [activeDialog, setActiveDialog] = useState<InfoDialogKind | null>(null);
 	const recentFiles = useRecentFiles();
 	const { openRecent } = useFileActions();
@@ -50,7 +54,7 @@ export function Sidebar() {
 				<button
 					className="flex items-center justify-center w-6 h-6 rounded-[4px] text-rv-text-tertiary hover:bg-rv-bg-hover hover:text-rv-text-primary transition-all duration-150 ml-auto"
 					type="button"
-					onClick={() => setCollapsed(!collapsed)}
+					onClick={toggleSidebar}
 					aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
 					title="Ctrl+B"
 				>

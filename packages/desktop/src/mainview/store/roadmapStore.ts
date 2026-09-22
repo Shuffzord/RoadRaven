@@ -354,6 +354,16 @@ interface RoadmapState {
 	// --- Plan 03-04c: File > New (EDIT-17) ----------------------------------
 	isUntitled: boolean;
 
+	// --- v0.8.2 file UX -----------------------------------------------------
+	/** Absolute paths of the ownership-split companion files of the open
+	 * roadmap (root excluded). Empty for a single-file roadmap. */
+	linkedFiles: string[];
+	/** Untitled-with-edits prompt (A1). Set by ensureSafeToDiscard, rendered
+	 * by DiscardChangesDialog; the dialog resolves with the user's choice. */
+	pendingDiscard: {
+		resolve: (choice: "save" | "discard" | "cancel") => void;
+	} | null;
+
 	// --- Plan 04-03: Live event state (PLUG-03, PLUG-04) --------------------
 	/** Per-node live event metadata — populated by applyEventBatch. */
 	liveEventMeta: Record<
@@ -365,9 +375,15 @@ interface RoadmapState {
 	liveTick: number;
 
 	// Actions -- structural (increment dataKey)
-	loadSchema: (schema: RoadmapSchema, filePath: string | null) => void;
+	loadSchema: (
+		schema: RoadmapSchema,
+		filePath: string | null,
+		linkedFiles?: string[],
+	) => void;
 	reloadSchema: (schema: RoadmapSchema) => void;
 	newUntitledSchema: () => void;
+	/** v0.8.2 A2 Close File: back to the no-file (Welcome) state. */
+	closeSchema: () => void;
 	addChild: (
 		parentId: string,
 		title?: string,
@@ -507,6 +523,11 @@ export const INITIAL_STATE = {
 	autosavePaused: false,
 	// Plan 03-04c File > New
 	isUntitled: false,
+	// v0.8.2 file UX
+	linkedFiles: [] as string[],
+	pendingDiscard: null as {
+		resolve: (choice: "save" | "discard" | "cancel") => void;
+	} | null,
 	// Plan 04-03 live event state
 	liveEventMeta: {} as Record<
 		string,
@@ -620,7 +641,7 @@ export const useRoadmapStore = create<RoadmapState>((set, get) => {
 
 		// Load and reload intentionally publish the same reset contract.
 		// fallow-ignore-next-line code-duplication
-		loadSchema: (schema, filePath) => {
+		loadSchema: (schema, filePath, linkedFiles = []) => {
 			const treeData = schema.nodes[0] ? toTreeDatum(schema.nodes[0]) : null;
 			const nodeIndex = buildNodeIndex(schema.nodes);
 			const nextKey = String(Number(get().dataKey) + 1);
@@ -654,6 +675,38 @@ export const useRoadmapStore = create<RoadmapState>((set, get) => {
 				liveEventMeta: {},
 				// EDIT-17: a normal disk-backed load is by definition NOT untitled
 				isUntitled: false,
+				linkedFiles,
+			});
+		},
+
+		closeSchema: () => {
+			// Everything document-bound goes; camera, layout, panel pin and the
+			// clipboard buffer are session state and survive. lastSaved* track
+			// the current keys so hasUnsavedEdits() is false on the Welcome screen.
+			const { dataKey, statusTick } = get();
+			set({
+				schema: null,
+				filePath: null,
+				treeData: null,
+				nodeIndex: new Map(),
+				isUntitled: false,
+				linkedFiles: [],
+				focusedNodeId: null,
+				selectedNodeId: null,
+				searchQuery: "",
+				searchMatchIds: [],
+				searchCurrentIndex: -1,
+				schemaErrors: [],
+				pendingConfirmation: null,
+				pendingDiscard: null,
+				saveState: "saved",
+				lastSaveError: null,
+				failureCount: 0,
+				lastSavedDataKey: dataKey,
+				lastSavedStatusTick: statusTick,
+				externalEditPending: null,
+				autosavePaused: false,
+				liveEventMeta: {},
 			});
 		},
 

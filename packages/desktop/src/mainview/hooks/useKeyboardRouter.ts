@@ -1,9 +1,11 @@
 import { useEffect, useRef } from "react";
 import type { RoadmapNode } from "../../../../../packages/core/src/schema";
+import { type FileCommandId, getFileCommand } from "../lib/fileCommands";
 import { requestNodeFocus } from "../lib/focusRequest";
 import { getNodeCollapseState, toggleNodeCollapse } from "../lib/nodeCollapse";
 import { useEventLogStore } from "../store/eventLogStore";
 import { findParentAndIndex, useRoadmapStore } from "../store/roadmapStore";
+import { useUiStore } from "../store/uiStore";
 import type { useInlineRename } from "./useInlineRename";
 
 interface RouterDeps {
@@ -101,6 +103,47 @@ function returnToParent(nodeId: string): void {
 }
 
 /**
+ * v0.8.2 F3 — file shortcuts, routed through the fileCommands registry so the
+ * keyboard, the File menu and the Welcome screen share one definition of
+ * each verb. Returns true when the key was claimed.
+ *
+ *   Ctrl+N new · Ctrl+O open · Ctrl+S save · Ctrl+Shift+S save as · Ctrl+B sidebar
+ *
+ * Save / Save As work from inside a text input too (saving from the notes
+ * editor is expected); the others respect the input-focused guard.
+ */
+const FILE_SHORTCUTS: ReadonlyArray<{
+	key: string;
+	shift: boolean;
+	/** Also fires while a text input has the caret. */
+	global: boolean;
+	id: FileCommandId | "toggleSidebar";
+}> = [
+	{ key: "s", shift: false, global: true, id: "save" },
+	{ key: "s", shift: true, global: true, id: "saveAs" },
+	{ key: "n", shift: false, global: false, id: "new" },
+	{ key: "o", shift: false, global: false, id: "open" },
+	{ key: "b", shift: false, global: false, id: "toggleSidebar" },
+];
+
+function handleFileShortcut(e: KeyboardEvent, inTextInput: boolean): boolean {
+	if (!(e.ctrlKey || e.metaKey) || e.altKey) return false;
+	const key = e.key.toLowerCase();
+	const hit = FILE_SHORTCUTS.find(
+		(s) => s.key === key && s.shift === e.shiftKey,
+	);
+	if (!hit || (inTextInput && !hit.global)) return false;
+	e.preventDefault();
+	if (hit.id === "toggleSidebar") {
+		useUiStore.getState().toggleSidebar();
+		return true;
+	}
+	const command = getFileCommand(hit.id);
+	if (command.isEnabled(useRoadmapStore.getState())) void command.run();
+	return true;
+}
+
+/**
  * Create-and-rename: reveal the new node in the middle of the canvas and open
  * its rename input there (RC4).
  *
@@ -160,6 +203,9 @@ export function useKeyboardRouter(deps: RouterDeps): void {
 				window.dispatchEvent(new CustomEvent("roadraven:focus-search"));
 				return;
 			}
+
+			// Ctrl+N / Ctrl+O / Ctrl+S / Ctrl+Shift+S / Ctrl+B — file verbs (v0.8.2 F3)
+			if (handleFileShortcut(e, inTextInput)) return;
 
 			// F3 / Shift+F3 — step to next / previous search match. Global, like a
 			// browser find-next, so it works while the canvas (not the input) holds
