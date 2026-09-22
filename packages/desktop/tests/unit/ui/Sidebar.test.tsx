@@ -54,6 +54,14 @@ describe("Sidebar — Recent Files", () => {
 	});
 });
 
+describe("Sidebar — Outline", () => {
+	it("renders the Outline section header with the empty state when no roadmap is open", () => {
+		render(<Sidebar />);
+		expect(screen.getByText("Outline")).toBeTruthy();
+		expect(screen.getByText("No roadmap open")).toBeTruthy();
+	});
+});
+
 describe("Sidebar — Preferences / Help dialogs", () => {
 	it("opens the Preferences dialog with stay-tuned copy", () => {
 		render(<Sidebar />);

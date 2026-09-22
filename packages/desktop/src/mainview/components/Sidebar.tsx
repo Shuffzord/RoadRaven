@@ -3,6 +3,7 @@ import { useFileActions } from "../hooks/useFileActions";
 import { useRecentFiles } from "../hooks/useRecentFiles";
 import { useUiStore } from "../store/uiStore";
 import { InfoDialog } from "./InfoDialog";
+import { Outline } from "./Outline";
 
 /** Extract filename from a path (browser-safe, no node:path) */
 function basename(filePath: string): string {
@@ -75,8 +76,9 @@ export function Sidebar() {
 				</button>
 			</div>
 
-			{/* Content */}
-			<div className="flex-1 py-2 overflow-y-auto">
+			{/* Content — flex column so the Outline scrolls on its own below the
+			    Recent Files list instead of sharing one scroll container. */}
+			<div className="flex-1 py-2 overflow-y-auto flex flex-col min-h-0">
 				{/* Recent Files section */}
 				<SectionHeader label="Recent Files" collapsed={collapsed} />
 				{recentFiles.length === 0
@@ -94,6 +96,10 @@ export function Sidebar() {
 								onClick={() => openRecent(filePath)}
 							/>
 						))}
+
+				{/* Outline section */}
+				<SectionHeader label="Outline" collapsed={collapsed} />
+				<Outline collapsed={collapsed} />
 			</div>
 
 			{/* Bottom section */}

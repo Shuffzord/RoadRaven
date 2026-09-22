@@ -40,6 +40,15 @@ function isInTextInput(active: Element | null): boolean {
 	);
 }
 
+/**
+ * True while a sidebar Outline row holds DOM focus. The node shortcuts below
+ * the text-input guard (arrows, Enter, Space, Delete, …) are canvas-owned;
+ * from the outline the row's own button semantics apply instead.
+ */
+function isInOutline(active: Element | null): boolean {
+	return !!active?.closest?.("[data-outline-tree]");
+}
+
 function isModalOpen(): boolean {
 	// Radix renders dialogs with role="dialog" + data-state="open" to a Portal
 	// outside the canvas. When a modal is open, the canvas router must stand
@@ -245,7 +254,7 @@ export function useKeyboardRouter(deps: RouterDeps): void {
 				}
 			}
 
-			if (inTextInput) return;
+			if (inTextInput || isInOutline(active)) return;
 
 			// C — toggle collapse/expand on the focused node's subtree. Drives the
 			// same chevron-click path the mouse uses (react-d3-tree owns the
