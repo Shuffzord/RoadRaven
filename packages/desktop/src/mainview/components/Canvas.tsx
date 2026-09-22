@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import type { CustomNodeElementProps } from "react-d3-tree";
 import Tree from "react-d3-tree";
 import { useShallow } from "zustand/react/shallow";
@@ -80,10 +80,6 @@ export function Canvas() {
 
 	// Inline rename state
 	const inlineRename = useInlineRename();
-
-	// Target of the most recent right-click — null when opened on empty canvas.
-	// Drives RoadRavenContextMenu's node-vs-canvas content switch.
-	const [contextTargetId, setContextTargetId] = useState<string | null>(null);
 
 	// Self-animated because Tree's `centeringTransitionDuration` only fires
 	// on initial mount — runtime `translate` prop changes are applied instantly.
@@ -239,6 +235,7 @@ export function Canvas() {
 			const children = nodeDatum.children ?? [];
 			const hasChildren = children.length > 0;
 			const rd3t = nodeDatum.__rd3t;
+			const isRenaming = inlineRename.state.nodeId === nodeId;
 
 			return (
 				<foreignObject
@@ -268,8 +265,11 @@ export function Canvas() {
 						onDoubleClick={() => {
 							inlineRename.open(nodeId);
 						}}
-						isRenaming={inlineRename.state.nodeId === nodeId}
-						renameValue={inlineRename.state.title}
+						isRenaming={isRenaming}
+						// Only the renaming card may see the draft: handing the
+						// live text to all 1400 cards would change one prop on
+						// every card on every keystroke and defeat their memo.
+						renameValue={isRenaming ? inlineRename.state.title : ""}
 						onRenameChange={inlineRename.setTitle}
 						onRenameCommit={inlineRename.commit}
 						onRenameCancel={inlineRename.cancel}
@@ -288,10 +288,7 @@ export function Canvas() {
 	);
 
 	return (
-		<RoadRavenContextMenu
-			onOpen={setContextTargetId}
-			targetNodeId={contextTargetId}
-		>
+		<RoadRavenContextMenu>
 			<div
 				ref={containerRef}
 				className="[grid-area:canvas] bg-rv-bg-canvas relative rv-canvas"

@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { memo, useEffect, useRef } from "react";
 import type { NodeStatus } from "../../../../../packages/core/src/schema";
 import { isKeyboardNav } from "../hooks/useKeyboardRouter";
 import { requestNodeFocus } from "../lib/focusRequest";
@@ -109,7 +109,36 @@ interface RoadmapNodeCardProps {
 	onRenameCancel?: () => void;
 }
 
-export function RoadmapNodeCard({
+/**
+ * Skip a card whose own inputs did not change (v0.8.1 large-tree perf).
+ *
+ * react-d3-tree rebuilds its `subscriptions` object on every Tree render, so
+ * `Node.shouldComponentUpdate` is always true and `renderCustomNodeElement`
+ * runs for every mounted node on every Canvas render — a pan frame, a focus
+ * write or one typed character re-rendered all 1400 card bodies. The element
+ * is still recreated (that is the library's business); this stops the body,
+ * its three store subscriptions and its DOM diff from running.
+ *
+ * Function props are compared by intent, not identity: `onSelect` /
+ * `onDoubleClick` are fresh arrows on every Canvas render but close over
+ * nothing except `nodeId`, which IS compared, and `onToggle` is
+ * react-d3-tree's `Node.handleNodeToggle` — a stable instance method that
+ * reads `this.props.data.__rd3t.id` when it fires, so it cannot go stale
+ * either (verified in react-d3-tree 3.6.6 `lib/esm/Node/index.js`). Every
+ * other prop is compared by value, including ones added later.
+ */
+function propsEqual(a: RoadmapNodeCardProps, b: RoadmapNodeCardProps): boolean {
+	const keys = Object.keys(a) as (keyof RoadmapNodeCardProps)[];
+	if (keys.length !== Object.keys(b).length) return false;
+	for (const key of keys) {
+		if (a[key] === b[key]) continue;
+		if (typeof a[key] === "function" && typeof b[key] === "function") continue;
+		return false;
+	}
+	return true;
+}
+
+export const RoadmapNodeCard = memo(function RoadmapNodeCard({
 	title,
 	status: propStatus,
 	nodeId,
@@ -366,4 +395,4 @@ export function RoadmapNodeCard({
 			)}
 		</div>
 	);
-}
+}, propsEqual);

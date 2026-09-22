@@ -1,6 +1,6 @@
 /** @vitest-environment jsdom */
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { useRef, useState } from "react";
+import { useRef } from "react";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { RoadRavenContextMenu } from "../../../src/mainview/components/ContextMenu";
 import { useKeyboardRouter } from "../../../src/mainview/hooks/useKeyboardRouter";
@@ -63,9 +63,8 @@ function seedSchema(withStatusConfig = true) {
 }
 
 function NodeHarness({ nodeId = "root-id" }: { nodeId?: string }) {
-	const [target, setTarget] = useState<string | null>(nodeId);
 	return (
-		<RoadRavenContextMenu onOpen={setTarget} targetNodeId={target}>
+		<RoadRavenContextMenu>
 			<div data-testid="trigger" data-source-id={nodeId}>
 				trigger
 			</div>
@@ -253,7 +252,6 @@ function PitfallHarness() {
 		togglePanelFocus: noop,
 	});
 
-	const [target, setTarget] = useState<string | null>("child-1");
 	return (
 		<div>
 			<button
@@ -264,7 +262,7 @@ function PitfallHarness() {
 			>
 				canvas
 			</button>
-			<RoadRavenContextMenu onOpen={setTarget} targetNodeId={target}>
+			<RoadRavenContextMenu>
 				<div data-testid="trigger" data-source-id="child-1">
 					trigger
 				</div>

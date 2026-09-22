@@ -74,6 +74,72 @@ describe("RoadmapNodeCard", () => {
 	});
 });
 
+// v0.8.1 closing perf pass — .planning/v0.8.1-canvas-focus-PLAN.md,
+// "Large-tree performance".
+//
+// react-d3-tree rebuilds its `subscriptions` object on every Tree render, so
+// every mounted node re-runs `renderCustomNodeElement` whenever Canvas
+// renders. On a 1400-node tree that was 1400 card bodies per pan frame, per
+// typed character and per right-click. The card is memoised with a comparator
+// that ignores callback identity, because Canvas necessarily recreates
+// `onSelect`/`onDoubleClick` on every render and they close over nothing but
+// `nodeId`.
+describe("RoadmapNodeCard — memoised body", () => {
+	it("skips the re-render when only a callback identity changed", () => {
+		const first = vi.fn();
+		const second = vi.fn();
+		const { rerender } = render(
+			<RoadmapNodeCard
+				nodeId="memo-1"
+				title="Stable"
+				status="not-started"
+				onSelect={first}
+			/>,
+		);
+		rerender(
+			<RoadmapNodeCard
+				nodeId="memo-1"
+				title="Stable"
+				status="not-started"
+				onSelect={second}
+			/>,
+		);
+		// The skipped render kept the first closure wired to the card. Both
+		// callbacks do the same thing (they only capture `nodeId`), which is
+		// precisely why identity may be ignored.
+		fireEvent.click(screen.getByRole("treeitem"));
+		expect(first).toHaveBeenCalledTimes(1);
+		expect(second).not.toHaveBeenCalled();
+	});
+
+	it("re-renders when a value prop changed", () => {
+		const { rerender } = render(
+			<RoadmapNodeCard nodeId="memo-1" title="Before" status="not-started" />,
+		);
+		rerender(
+			<RoadmapNodeCard nodeId="memo-1" title="After" status="not-started" />,
+		);
+		expect(screen.getByText("After")).toBeTruthy();
+	});
+
+	it("re-renders when the prop set gains a key", () => {
+		const { rerender } = render(
+			<RoadmapNodeCard nodeId="memo-1" title="Shape" status="not-started" />,
+		);
+		rerender(
+			<RoadmapNodeCard
+				nodeId="memo-1"
+				title="Shape"
+				status="not-started"
+				isSelected
+			/>,
+		);
+		expect(screen.getByRole("treeitem").getAttribute("data-selected")).toBe(
+			"true",
+		);
+	});
+});
+
 // v0.8.1 Phase 3 (RC8 + the scroll hazard) —
 // .planning/v0.8.1-canvas-focus-PLAN.md.
 //

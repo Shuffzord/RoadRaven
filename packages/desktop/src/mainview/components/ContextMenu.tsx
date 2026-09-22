@@ -24,20 +24,21 @@ const SEP_CLASS = "h-px my-1 bg-[var(--rv-border-subtle)]";
 
 interface RoadRavenContextMenuProps {
 	children: ReactNode;
-	/** Called on right-click with the target node id (from data-source-id); null = canvas background. */
-	onOpen: (targetNodeId: string | null) => void;
-	targetNodeId: string | null;
 }
 
-export function RoadRavenContextMenu({
-	children,
-	onOpen,
-	targetNodeId,
-}: RoadRavenContextMenuProps) {
+export function RoadRavenContextMenu({ children }: RoadRavenContextMenuProps) {
+	// Target of the most recent right-click — null when opened on empty canvas.
+	// Picks the node-vs-canvas content below, and nothing else needs it, so it
+	// lives here. As Canvas state (until v0.8.1's perf pass) every right-click
+	// re-rendered Canvas -> Tree -> every mounted card: 1400 card renders and
+	// ~100 ms of React work on a large tree, to choose between two menus.
+	// Children arrive as the same element reference on a state change of this
+	// component, so React skips the canvas subtree entirely.
+	const [targetNodeId, setTargetNodeId] = useState<string | null>(null);
 	return (
 		<ContextMenuPrimitive.Root
 			onOpenChange={(open) => {
-				if (!open) onOpen(null);
+				if (!open) setTargetNodeId(null);
 				// A menu that closes without stating a focus intent hands DOM
 				// focus back to the canvas card, one frame later — see
 				// lib/focusHandoff.ts for why Radix's own restore stays off.
@@ -50,7 +51,7 @@ export function RoadRavenContextMenu({
 					const el = (e.target as Element)?.closest?.(
 						"[data-source-id]",
 					) as HTMLElement | null;
-					onOpen(el?.dataset.sourceId ?? null);
+					setTargetNodeId(el?.dataset.sourceId ?? null);
 				}}
 			>
 				{children}

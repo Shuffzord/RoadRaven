@@ -1,6 +1,5 @@
 /** @vitest-environment jsdom */
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { useState } from "react";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { RoadRavenContextMenu } from "../../../src/mainview/components/ContextMenu";
 import {
@@ -96,9 +95,8 @@ function seedSchema(withStatusConfig = true) {
  * The trigger has `data-source-id` so ContextMenu's onOpen receives it.
  */
 function NodeHarness({ nodeId = "root-id" }: { nodeId?: string | null }) {
-	const [target, setTarget] = useState<string | null>(nodeId);
 	return (
-		<RoadRavenContextMenu onOpen={setTarget} targetNodeId={target}>
+		<RoadRavenContextMenu>
 			<div data-testid="trigger" data-source-id={nodeId ?? undefined}>
 				trigger
 			</div>
@@ -108,9 +106,8 @@ function NodeHarness({ nodeId = "root-id" }: { nodeId?: string | null }) {
 
 /** Canvas-background harness (no data-source-id). */
 function CanvasHarness() {
-	const [target, setTarget] = useState<string | null>(null);
 	return (
-		<RoadRavenContextMenu onOpen={setTarget} targetNodeId={target}>
+		<RoadRavenContextMenu>
 			<div data-testid="trigger">trigger</div>
 		</RoadRavenContextMenu>
 	);
