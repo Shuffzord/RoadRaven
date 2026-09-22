@@ -4,6 +4,7 @@ import { type FileCommandId, getFileCommand } from "../lib/fileCommands";
 import { requestNodeFocus } from "../lib/focusRequest";
 import { getNodeCollapseState, toggleNodeCollapse } from "../lib/nodeCollapse";
 import { useEventLogStore } from "../store/eventLogStore";
+import { usePreferencesStore } from "../store/preferencesStore";
 import { findParentAndIndex, useRoadmapStore } from "../store/roadmapStore";
 import { useUiStore } from "../store/uiStore";
 import type { useInlineRename } from "./useInlineRename";
@@ -117,6 +118,7 @@ function returnToParent(nodeId: string): void {
  * each verb. Returns true when the key was claimed.
  *
  *   Ctrl+N new · Ctrl+O open · Ctrl+S save · Ctrl+Shift+S save as · Ctrl+B sidebar
+ *   Ctrl+, preferences (v0.8.2 Phase 4)
  *
  * Save / Save As work from inside a text input too (saving from the notes
  * editor is expected); the others respect the input-focused guard.
@@ -126,14 +128,26 @@ const FILE_SHORTCUTS: ReadonlyArray<{
 	shift: boolean;
 	/** Also fires while a text input has the caret. */
 	global: boolean;
-	id: FileCommandId | "toggleSidebar";
+	id: FileCommandId | UiShortcutId;
 }> = [
 	{ key: "s", shift: false, global: true, id: "save" },
 	{ key: "s", shift: true, global: true, id: "saveAs" },
 	{ key: "n", shift: false, global: false, id: "new" },
 	{ key: "o", shift: false, global: false, id: "open" },
 	{ key: "b", shift: false, global: false, id: "toggleSidebar" },
+	{ key: ",", shift: false, global: true, id: "preferences" },
 ];
+
+/** Shortcuts that open UI rather than run a file verb. */
+const UI_SHORTCUTS = {
+	toggleSidebar: () => useUiStore.getState().toggleSidebar(),
+	preferences: () => usePreferencesStore.getState().openPreferences(),
+} as const;
+type UiShortcutId = keyof typeof UI_SHORTCUTS;
+
+function isUiShortcut(id: FileCommandId | UiShortcutId): id is UiShortcutId {
+	return id in UI_SHORTCUTS;
+}
 
 function handleFileShortcut(e: KeyboardEvent, inTextInput: boolean): boolean {
 	if (!(e.ctrlKey || e.metaKey) || e.altKey) return false;
@@ -143,8 +157,8 @@ function handleFileShortcut(e: KeyboardEvent, inTextInput: boolean): boolean {
 	);
 	if (!hit || (inTextInput && !hit.global)) return false;
 	e.preventDefault();
-	if (hit.id === "toggleSidebar") {
-		useUiStore.getState().toggleSidebar();
+	if (isUiShortcut(hit.id)) {
+		UI_SHORTCUTS[hit.id]();
 		return true;
 	}
 	const command = getFileCommand(hit.id);

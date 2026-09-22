@@ -1,10 +1,9 @@
 import type { CSSProperties } from "react";
 
-// Shared chrome for the store-driven modal dialogs (ConfirmationDialog,
-// InfoDialog, DiscardChangesDialog) — the `--rv-*` token inline-style
-// approach. Only DiscardChangesDialog consumes these so far; the older two
-// still inline the same values and can be moved over when they are next
-// touched (Phase 2/3 own those files).
+// Shared chrome for the modal dialogs (DiscardChangesDialog,
+// PreferencesDialog) — the `--rv-*` token inline-style approach.
+// ConfirmationDialog still inlines the same values and can be moved over
+// when it is next touched.
 
 export const dialogContentStyle: CSSProperties = {
 	position: "fixed",
@@ -58,4 +57,70 @@ export const dialogPrimaryButtonStyle: CSSProperties = {
 	fontSize: 13,
 	fontWeight: 600,
 	color: "var(--rv-text-on-accent)",
+};
+
+// -- Preferences dialog (v0.8.2 Phase 4): sections of labelled fields --------
+
+export const dialogScrollContentStyle: CSSProperties = {
+	...dialogContentStyle,
+	width: 460,
+	maxHeight: "calc(100vh - 48px)",
+	overflowY: "auto",
+};
+
+export const dialogSectionStyle: CSSProperties = {
+	marginTop: 16,
+	paddingTop: 14,
+	borderTop: "1px solid var(--rv-border-subtle)",
+};
+
+export const dialogSectionHeadingStyle: CSSProperties = {
+	fontSize: 11,
+	fontWeight: 600,
+	letterSpacing: "0.04em",
+	textTransform: "uppercase",
+	color: "var(--rv-text-tertiary)",
+	marginBottom: 10,
+};
+
+export const dialogFieldRowStyle: CSSProperties = {
+	display: "flex",
+	alignItems: "center",
+	justifyContent: "space-between",
+	gap: 12,
+	minHeight: 28,
+};
+
+export const dialogFieldLabelStyle: CSSProperties = {
+	fontSize: 13,
+	color: "var(--rv-text-primary)",
+};
+
+export const dialogHelperTextStyle: CSSProperties = {
+	fontSize: 12,
+	lineHeight: 1.4,
+	color: "var(--rv-text-tertiary)",
+	marginTop: 6,
+};
+
+export const dialogErrorTextStyle: CSSProperties = {
+	...dialogHelperTextStyle,
+	color: "var(--rv-status-blocked)",
+};
+
+export const dialogInputStyle: CSSProperties = {
+	width: 120,
+	height: 28,
+	padding: "0 8px",
+	fontSize: 13,
+	background: "var(--rv-bg-input)",
+	border: "1px solid var(--rv-border)",
+	borderRadius: 6,
+	color: "var(--rv-text-primary)",
+};
+
+export const dialogActionRowStyle: CSSProperties = {
+	display: "flex",
+	gap: 8,
+	marginTop: 10,
 };

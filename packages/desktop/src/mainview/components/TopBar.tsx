@@ -2,8 +2,8 @@ import { useEffect, useRef } from "react";
 import ravenLogo from "../assets/raven-logo.svg";
 import { electroview } from "../rpc";
 import { useEventLogStore } from "../store/eventLogStore";
+import { usePreferencesStore } from "../store/preferencesStore";
 import { useRoadmapStore } from "../store/roadmapStore";
-import { useSetupStore } from "../store/setupStore";
 import { DocumentChip } from "./DocumentChip";
 import { FileMenu } from "./FileMenu";
 import { ThemePicker } from "./ThemePicker";
@@ -192,13 +192,13 @@ export function TopBar() {
 			{/* Theme picker */}
 			<ThemePicker />
 
-			{/* Settings */}
+			{/* Preferences (v0.8.2 D5-A); the setup wizard lives under Integrations */}
 			<button
 				className="flex items-center justify-center w-[30px] h-[30px] rounded-[6px] text-rv-text-tertiary hover:bg-rv-bg-hover hover:text-rv-text-primary transition-all duration-150"
 				type="button"
-				aria-label="Setup and integrations"
-				title="Setup & integrations"
-				onClick={() => useSetupStore.getState().openWizard()}
+				aria-label="Preferences"
+				title="Preferences (Ctrl+,)"
+				onClick={() => usePreferencesStore.getState().openPreferences()}
 			>
 				<svg
 					aria-hidden="true"

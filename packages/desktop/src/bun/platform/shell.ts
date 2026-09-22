@@ -15,3 +15,17 @@ export function showItemInFolder(path: string): { ok: boolean } {
 		return { ok: false };
 	}
 }
+
+/**
+ * Wraps Utils.openExternal (devkit sdks/main/core/Utils.ts:35 — returns
+ * whether the OS accepted the URL). The scheme allow-list lives in the
+ * windowRpc handler, next to revealInFolder's exists guard.
+ */
+export function openExternal(url: string): { ok: boolean } {
+	try {
+		return { ok: Utils.openExternal(url) };
+	} catch (err) {
+		bunLogger.error`openExternal failed for ${url}: ${String(err)}`;
+		return { ok: false };
+	}
+}

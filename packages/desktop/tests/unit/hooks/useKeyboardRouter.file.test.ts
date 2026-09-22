@@ -1,6 +1,7 @@
 /** @vitest-environment jsdom */
 // v0.8.2 F3 — file shortcuts in the keyboard router, routed through the
-// fileCommands registry: Ctrl+N / Ctrl+O / Ctrl+S / Ctrl+Shift+S / Ctrl+B.
+// fileCommands registry: Ctrl+N / Ctrl+O / Ctrl+S / Ctrl+Shift+S / Ctrl+B —
+// plus Ctrl+, for Preferences (Phase 4).
 import { fireEvent, renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { RoadmapSchema } from "../../../../../packages/core/src/schema";
@@ -19,6 +20,7 @@ const actions = vi.hoisted(() => ({
 vi.mock("../../../src/mainview/hooks/useFileActions", () => actions);
 
 import { useKeyboardRouter } from "../../../src/mainview/hooks/useKeyboardRouter";
+import { usePreferencesStore } from "../../../src/mainview/store/preferencesStore";
 import { useRoadmapStore } from "../../../src/mainview/store/roadmapStore";
 import { useUiStore } from "../../../src/mainview/store/uiStore";
 import { resetStore } from "../../helpers/resetStore";
@@ -108,6 +110,20 @@ describe("useKeyboardRouter — file shortcuts (F3)", () => {
 		expect(useUiStore.getState().sidebarCollapsed).toBe(true);
 		press("b", { ctrlKey: true });
 		expect(useUiStore.getState().sidebarCollapsed).toBe(false);
+	});
+
+	it("Ctrl+, opens Preferences, from a text input too", () => {
+		renderRouter();
+		expect(press(",", { ctrlKey: true })).toBe(true);
+		expect(usePreferencesStore.getState().open).toBe(true);
+		usePreferencesStore.setState({ open: false });
+
+		const input = document.createElement("input");
+		document.body.appendChild(input);
+		input.focus();
+		expect(press(",", { ctrlKey: true }, input)).toBe(true);
+		expect(usePreferencesStore.getState().open).toBe(true);
+		usePreferencesStore.setState({ open: false });
 	});
 
 	it("Ctrl+N / Ctrl+O / Ctrl+B are ignored inside a text input", () => {

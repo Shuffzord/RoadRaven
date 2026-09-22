@@ -1,5 +1,5 @@
 /** @vitest-environment jsdom */
-import { fireEvent, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { RoadmapSchema } from "../../../../../packages/core/src/schema";
 import { resetStore } from "../../helpers/resetStore";
@@ -12,14 +12,17 @@ vi.mock("../../../src/mainview/rpc", () => ({
 			request: {
 				saveSettings: vi.fn(() => Promise.resolve({ success: true })),
 				loadSettings: vi.fn(() => Promise.resolve({ settings: {} })),
+				getSetupStatus: vi.fn(() => Promise.resolve({ appVersion: "0.0.0" })),
 			},
 		},
 	},
 }));
 
+import { PreferencesDialog } from "../../../src/mainview/components/PreferencesDialog";
 import { TopBar } from "../../../src/mainview/components/TopBar";
 import { electroview } from "../../../src/mainview/rpc";
 import { useEventLogStore } from "../../../src/mainview/store/eventLogStore";
+import { usePreferencesStore } from "../../../src/mainview/store/preferencesStore";
 import { useRoadmapStore } from "../../../src/mainview/store/roadmapStore";
 import { useSetupStore } from "../../../src/mainview/store/setupStore";
 
@@ -65,6 +68,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+	cleanup();
 	document.body.innerHTML = "";
 	resetStore();
 	vi.restoreAllMocks();
@@ -94,12 +98,32 @@ describe("TopBar — toolbar chrome", () => {
 		expect(screen.queryByLabelText(/^Current file: /)).toBeNull();
 	});
 
-	it("opens the setup wizard from the settings button", () => {
+	// v0.8.2 D5-A: the cog opens Preferences; the setup wizard moved under
+	// Preferences → Integrations (the sidebar's Preferences button is gone).
+	it("opens Preferences from the cog", () => {
 		render(<TopBar />);
 
-		fireEvent.click(screen.getByLabelText("Setup and integrations"));
+		fireEvent.click(screen.getByLabelText("Preferences"));
+
+		expect(usePreferencesStore.getState().open).toBe(true);
+		usePreferencesStore.setState({ open: false });
+	});
+
+	it("reaches the setup wizard through Preferences → Integrations", async () => {
+		render(
+			<>
+				<TopBar />
+				<PreferencesDialog />
+			</>,
+		);
+
+		fireEvent.click(screen.getByLabelText("Preferences"));
+		fireEvent.click(
+			await screen.findByRole("button", { name: /set up claude code/i }),
+		);
 
 		expect(useSetupStore.getState().open).toBe(true);
+		expect(usePreferencesStore.getState().open).toBe(false);
 		useSetupStore.setState({ open: false });
 	});
 

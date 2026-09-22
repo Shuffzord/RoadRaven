@@ -38,6 +38,8 @@ export interface AppSettings {
 		/** RESEARCH §13 (kill-switch — Phase 6). When false, all agent mutation/read tools return code 'agent_api_disabled' before any tool dispatch. */
 		enabled?: boolean;
 	};
+	/** v0.8.2 A8: reopen the most recent roadmap on launch. Absent = true. */
+	reopenLastFile?: boolean;
 	/** First-run setup wizard state (v0.6). */
 	setup?: {
 		/** True once the user has finished or dismissed the first-run wizard. */
@@ -152,6 +154,9 @@ export type RoadmapRPCType = {
 			// Reveal a path in the OS file manager. ok:false when it does not
 			// exist or the platform call fails.
 			revealInFolder: { params: { path: string }; response: { ok: boolean } };
+			// Open an https:// URL in the default browser (Preferences → About).
+			// ok:false for any other scheme or when the platform call fails.
+			openExternal: { params: { url: string }; response: { ok: boolean } };
 			// Back to Welcome: stop file watchers and reset the Bun-side save
 			// cache / ownership map / dialog allowlist (same reset as newFile).
 			closeFile: { params: Record<string, never>; response: { ok: true } };

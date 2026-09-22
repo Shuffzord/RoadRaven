@@ -1,7 +1,7 @@
 import { existsSync } from "node:fs";
 import type { RoadmapRPCType } from "../../../../../shared/types.ts";
 import { bunLogger } from "../logging";
-import { showItemInFolder } from "../platform/shell";
+import { openExternal, showItemInFolder } from "../platform/shell";
 import { setMainWindowTitle } from "../platform/window";
 import type { MainWindow } from "./fileRpc";
 
@@ -19,6 +19,7 @@ export interface WindowRpcContext {
 export function createWindowRpcHandlers(ctx: WindowRpcContext): {
 	setWindowTitle: RpcHandler<"setWindowTitle">;
 	revealInFolder: RpcHandler<"revealInFolder">;
+	openExternal: RpcHandler<"openExternal">;
 } {
 	return {
 		// setWindowTitle: renderer mirrors the open file's identity into the OS
@@ -35,6 +36,16 @@ export function createWindowRpcHandlers(ctx: WindowRpcContext): {
 				return { ok: false };
 			}
 			return showItemInFolder(path);
+		},
+
+		// openExternal: only https:// URLs reach the browser — the renderer is
+		// the only caller, but a file:/javascript: URL must never get this far.
+		openExternal: ({ url }) => {
+			if (!url.startsWith("https://")) {
+				bunLogger.warn`openExternal: refused non-https url ${url}`;
+				return { ok: false };
+			}
+			return openExternal(url);
 		},
 	};
 }
