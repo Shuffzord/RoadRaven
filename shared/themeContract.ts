@@ -15,6 +15,20 @@
  *   actually paints that ink on that surface. Do not add a pair without one.
  */
 
+import type { ThemePreference } from "./types";
+
+/** The shipped theme ids — the `data-theme` values — in picker order. */
+export const THEME_IDS = [
+	"dark",
+	"light",
+	"high-contrast",
+	"paper",
+	"amber",
+	"contrast",
+	"slate",
+	"moss",
+] as const satisfies readonly Exclude<ThemePreference, "system">[];
+
 export type ThemeToken =
 	| { name: string; kind: "color"; tier: "required" | "optional" }
 	| { name: string; kind: "non-color" };

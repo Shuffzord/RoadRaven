@@ -2,6 +2,7 @@ import { existsSync } from "node:fs";
 import { join } from "node:path";
 import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
+import { THEME_IDS } from "../../../../shared/themeContract";
 
 // Pre-condition: `bun run --cwd packages/desktop build` has produced
 // packages/desktop/dist/. Vite preview serves dist/ on port 4173.
@@ -20,6 +21,15 @@ import { expect, type Page, test } from "@playwright/test";
 
 const DIST_DIR = join(process.cwd(), "dist");
 const hasDist = existsSync(DIST_DIR);
+
+// Themes whose chrome text axe flags today (v0.8.3 Phase 1 run, 2026-09-22).
+// Phase 2 empties this set as it fixes each theme.
+const AXE_KNOWN_FAILING_THEMES = new Set<string>([
+	"paper",
+	"amber",
+	"slate",
+	"moss",
+]);
 
 test.skip(
 	!hasDist,
@@ -157,12 +167,21 @@ test.describe("Accessibility audit (production bundle, vite preview port 4173)",
 	// available under vite preview) and exercise the CSS directly. The CSS is
 	// the same that ships in the installer.
 	// "contrast" added per code-review B-01: prior --rv-text-primary: #666666
-	// on #000000 = 3.66:1 (FAIL). Now d1d1d1 = 12.0:1. The other unaudited
-	// themes (paper, amber, slate, moss) are filed as backlog known-issues
-	// in 05-REVIEW.md disposition (v1.1 will either audit them all or mark
-	// them experimental in user-visible UI).
-	for (const theme of ["dark", "light", "high-contrast", "contrast"] as const) {
+	// on #000000 = 3.66:1 (FAIL). Now d1d1d1 = 12.0:1. v0.8.3 Phase 1: every
+	// shipped theme, from the shared registry. axe cannot see node-card text
+	// (the ::before stripe makes it "incomplete", never a violation) — that
+	// is contrast.spec.ts's job; this loop keeps the ARIA/structure audit.
+	for (const theme of THEME_IDS) {
 		test(`6. Theme '${theme}' passes WCAG 2.1 AA`, async ({ page }) => {
+			// RED until Phase 2 fixes the themes: axe reports serious
+			// color-contrast on chrome text (sidebar/footer tertiary text, kbd,
+			// the accent-muted chip) — the same rows the static linter baselines
+			// in tests/unit/theme/known-failures.json. test.fail() keeps the
+			// suite green and fails loudly the moment a theme starts passing.
+			test.fail(
+				AXE_KNOWN_FAILING_THEMES.has(theme),
+				`${theme}: serious color-contrast on chrome text until Phase 2`,
+			);
 			await loadHelloWorldSample(page);
 			// Set the data-theme attribute directly (matches ThemeProvider.tsx
 			// line 33 behavior). No reload needed — CSS responds to the
