@@ -163,7 +163,27 @@ See [Logging](./logging.md) for details.
 The canvas keyboard layer lives in
 [`hooks/useKeyboardRouter.ts`](../packages/desktop/src/mainview/hooks/useKeyboardRouter.ts).
 The router runs in capture phase and stands down when a Radix dialog or context menu is
-open, or when a text input / CodeMirror editor is focused.
+open, or when a text input / CodeMirror editor is focused. File verbs come from
+[`lib/fileCommands.ts`](../packages/desktop/src/mainview/lib/fileCommands.ts) — the single
+registry (label, shortcut, enablement, action) that the File menu, the keyboard router
+and the sidebar all read, so a verb cannot drift between surfaces.
+
+### Global / file
+
+| Shortcut | Action |
+|----------|--------|
+| `Ctrl+N` | New roadmap |
+| `Ctrl+O` | Open… |
+| `Ctrl+S` | Save (flush now) |
+| `Ctrl+Shift+S` | Save As… |
+| `Ctrl+B` | Toggle sidebar |
+| `Ctrl+,` | Preferences |
+| `Ctrl+F` | Focus node search |
+| `Ctrl+Shift+L` | Toggle event log |
+
+`Ctrl` is `⌘` on macOS. `Ctrl+S`, `Ctrl+Shift+S`, `Ctrl+,` and `Ctrl+F` also fire while
+a text input or CodeMirror editor has the caret; `Ctrl+N`, `Ctrl+O`, `Ctrl+B` and
+`Ctrl+Shift+L` respect the input-focused guard.
 
 ### Canvas (focused node)
 
@@ -204,6 +224,20 @@ Edit mode can also be entered by clicking the title field or the `[E]` pencil bu
 the panel header. Node cards are keyboard-accessible (`role="button"`, `tabIndex={0}`,
 Enter / Space handlers); the dashed focus ring uses a `keyboard-nav-active` class on
 `<body>` so it shows only during keyboard navigation, not after a mouse click.
+
+### Outline (sidebar)
+
+| Shortcut | Action |
+|----------|--------|
+| `Arrow ↑` / `Arrow ↓` | Move between rows |
+| `Arrow →` | Expand the row, or move to its first child if already expanded |
+| `Arrow ←` | Collapse the row, or move to its parent if already collapsed |
+| `Home` / `End` | First / last row |
+| `Enter` / `Space` | Select the node and reveal it on the canvas |
+
+While an outline row holds DOM focus (`[data-outline-tree]`) the canvas router stands
+down for node-navigation keys, so the arrows above act on the outline rather than the
+canvas; the `Ctrl` shortcuts in the Global / file table keep working from there.
 
 ## Project Conventions
 

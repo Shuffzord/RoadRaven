@@ -177,6 +177,10 @@ The card reads `--node-radius` from the theme (defaulting to `8px`), applies a s
 
 Source: [`packages/desktop/src/mainview/components/RoadmapNode.tsx`](../packages/desktop/src/mainview/components/RoadmapNode.tsx)
 
+## Shared Menu, Dialog and Save-Dot Styles
+
+Menu surfaces share one set of class strings in [`components/menuStyles.ts`](../packages/desktop/src/mainview/components/menuStyles.ts) — the canvas context menu, the top-bar File menu and the sidebar recent-row menu all read it, so a menu looks the same wherever it opens. The Discard-changes and Preferences dialogs share [`components/dialogStyles.ts`](../packages/desktop/src/mainview/components/dialogStyles.ts). The 7px save-state dot shown by both the footer `SaveIndicator` and the top-bar `DocumentChip` comes from one colour table in [`lib/saveDot.ts`](../packages/desktop/src/mainview/lib/saveDot.ts) (`saveDotClass(state)`), so the two can never disagree. Add a new menu, dialog or save-state indicator by importing from these modules rather than restating the classes.
+
 ## How to Add a New Token
 
 1. **Define the CSS variable** in each theme block in `index.css`:

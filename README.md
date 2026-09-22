@@ -18,7 +18,7 @@ no cloud, no accounts. It's just a file, living in your repo.
 
 > Built on **Electrobun** (not Electron). Runtime is **Bun**.
 
-> ⚠️ **Alpha (v0.8.1).** RoadRaven is an early public release. Core editing and
+> ⚠️ **Alpha (v0.8.2).** RoadRaven is an early public release. Core editing and
 > the live Event API work today, but expect rough edges — the data format, APIs, and
 > packaging may still change before v1.0. Bug reports and feedback are very welcome.
 
@@ -133,10 +133,10 @@ Or by hand:
 
 ### Packages (for producers and library consumers)
 
-> **Heads-up (v0.8.1):** these npm packages are **not published yet**. They go out
+> **Heads-up (v0.8.2):** these npm packages are **not published yet**. They go out
 > with the first stable release tag, and from then on a bare `bun add @roadraven/mcp`
 > / `npx -y @roadraven/mcp` resolves `latest`. Pin the version that matches your
-> app anyway, e.g. `@roadraven/mcp@0.8.1` — the app warns when the MCP server and
+> app anyway, e.g. `@roadraven/mcp@0.8.2` — the app warns when the MCP server and
 > the app versions drift apart. Until the publish lands, clone the repo and build
 > from source. RoadRaven is **bun-first**, but these are plain npm packages, so any
 > package manager works.
@@ -183,7 +183,7 @@ Zero commands, works fully offline, **works today** — no npm publish needed.
 Restart your MCP host with RoadRaven running and the tools are live.
 
 **Path 2 (Claude Code plugin).** ⚠️ Not usable yet — the plugin's `.mcp.json`
-runs `npx -y @roadraven/mcp@0.8.1`, and `@roadraven/mcp` isn't
+runs `npx -y @roadraven/mcp@0.8.2`, and `@roadraven/mcp` isn't
 published to npm yet (see [Packages](#packages-for-producers-and-library-consumers)
 above). Once it's published, install straight from this repo's marketplace,
 from inside Claude Code:
@@ -199,11 +199,11 @@ publish. Requires **Node.js >= 22**. Pin the exact prerelease version; a bare
 are published:
 
 ```bash
-claude mcp add -s user roadraven -- npx -y @roadraven/mcp@0.8.1
+claude mcp add -s user roadraven -- npx -y @roadraven/mcp@0.8.2
 ```
 
 ```bash
-opencode mcp add roadraven   # interactive — prompts for the command to run; give it `npx -y @roadraven/mcp@0.8.1`
+opencode mcp add roadraven   # interactive — prompts for the command to run; give it `npx -y @roadraven/mcp@0.8.2`
 ```
 
 For Cursor, Codex, Copilot, Gemini, or another MCP host, see the
@@ -252,6 +252,7 @@ Full tool catalog, configuration, kill-switch, and security model:
 | Themes (dark / light / high-contrast) | available | — |
 | Side-panel CodeMirror notes + metadata | available | — |
 | Atomic autosave + `$ref` write-back | available | — |
+| File menu, document chip, Outline navigator, Preferences | available | — |
 | Event API (WebSocket — external producers push status) | available | — |
 | MCP server version-mismatch warning | available | — |
 | First-run Setup Wizard — one-click MCP install (Claude Code + OpenCode) | available | — |
@@ -340,6 +341,12 @@ or a PR. Contributions, feedback, and wild suggestions are all genuinely welcome
 - **Right-click context menu** (Radix-based, all platforms) — rename, add, duplicate, move, delete, plus canvas-empty actions.
 - **Side panel editor** — click the title, click the pencil `[E]` button, or press `e` while the panel is open to enter edit mode. Editable title, status / type dropdowns (with freeform fallback), key-value metadata table, and a CodeMirror 6 markdown notes editor with `Edit | Preview | Split` toggle. A small `✓ saved` flash appears next to each field for 2s after each commit.
 - **Autosave** — debounced flush after edits (1s for in-place changes like notes/status, 2s for structural changes like add/delete/rename), 30s periodic safety sweep, atomic temp+rename writes, and per-file `refMap` so `$ref` subtrees are written back to their source files. A `SaveIndicator` lives in the StatusBar; on the third consecutive save failure a `SaveFailureModal` opens with `Retry / Save As / Dismiss`.
+- **File management**
+  - `File` menu in the top bar: New `Ctrl+N`, Open… `Ctrl+O`, Open Recent ▸, Save `Ctrl+S`, Save As… `Ctrl+Shift+S`, Reveal in Folder, Copy Path, Close File (`⌘` on macOS). `Ctrl+B` toggles the sidebar, `Ctrl+,` opens Preferences.
+  - Document chip in the top-bar centre: file name + save-state dot, full path and linked `$ref` files in the tooltip; the OS window title mirrors the open file.
+  - Preferences dialog (cog or `Ctrl+,`): theme, reopen last file on launch, Event API port, Agent API toggle, Integrations wizard, About.
+  - **Files** sidebar: recent files with a right-click menu (Open / Reveal in Folder / Remove / Clear) and an **Outline** navigator of the open roadmap — click a row to reveal the node on the canvas, arrow keys to move around it.
+  - New and the samples open as untitled; you are asked where to save after the first edit, and a Discard-changes dialog guards unsaved untitled edits on New / Open / Close / quit.
 - **Themes** — dark (default), light, high-contrast, plus per-schema status colour and node shape overrides.
 - **Live integration ready** — RPC contract has `nodeStatusUpdate`, `integrationEvent`, and `pushFileChanged` messages; plugin host comes in a later phase.
 

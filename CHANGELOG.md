@@ -3,6 +3,99 @@
 All notable changes to RoadRaven are documented in this file. The format
 follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.8.2] - 2026-09-22
+
+### Added
+
+- A **File menu** in the top bar: New, Open…, Open Recent ▸, Save, Save As…,
+  Reveal in Folder, Copy Path and Close File, with live enablement and
+  shortcut hints. Shortcuts: `Ctrl+N` new, `Ctrl+O` open, `Ctrl+S` save now,
+  `Ctrl+Shift+S` save as, `Ctrl+B` toggle the sidebar, `Ctrl+,` preferences
+  (`⌘` on macOS). Save and Save As also work while a text field has the
+  caret, so you can save from the notes editor.
+- A **document chip** in the top-bar centre shows the open file's name with a
+  save-state dot; its tooltip carries the full path and any linked (`$ref`)
+  files, and clicking it opens the File menu. The OS window title mirrors the
+  open file.
+- **Preferences** behind the top-bar cog (or `Ctrl+,`): theme, "Reopen last
+  roadmap on launch", the Event API WebSocket port (applies after restart),
+  the Agent API on/off switch (immediate), an Integrations button that opens
+  the setup wizard, and an About section with the app version and
+  Documentation / Releases links.
+- **Reopen last file on launch** — the most recent roadmap opens on start
+  unless you switch it off in Preferences.
+- An **Outline** section in the sidebar: an indented list of every node with
+  its status dot. Click a row to select the node and reveal it on the canvas
+  (collapsed ancestors expand and the side panel opens, as on a canvas
+  click). Expand/collapse in the outline is independent of the canvas.
+  `↑`/`↓`, `←`/`→`, `Home`/`End` and `Enter`/`Space` navigate it from the
+  keyboard; a status tick from an integration re-renders only the changed
+  row.
+- A **context menu on recent files** (Open, Reveal in Folder, Remove from
+  Recent, Clear Recent). The open file's row is highlighted, the list
+  refreshes as soon as it changes, and a recent file that no longer exists
+  is dropped from the list with a toast when you try to open it.
+- A **Discard changes?** dialog guards unsaved edits in an untitled document
+  when you choose New, Open, Close File, or close the window.
+
+### Changed
+
+- The sidebar is now **Files**. Collapsed, its rail shows one icon per
+  section (Recent Files, Outline) that expands the sidebar and scrolls to
+  that section, instead of an unlabelled icon per recent file. The empty
+  Preferences and Help buttons are gone; Preferences lives in the top bar.
+- The footer shows status only (Event API status, save indicator, node
+  count); the file name moved to the document chip.
+- **New** and the **samples** open as untitled documents. The Save As dialog
+  appears after the first real edit rather than the moment the document
+  opens, so `File > New` no longer pops a native dialog immediately.
+- **Save As** opens in the folder of the current file, writes the root file
+  only, and warns when linked `$ref` files were merged into the standalone
+  copy.
+- Closing the window with unsaved untitled edits asks first. If the renderer
+  does not answer within 3 seconds the window closes anyway.
+- Deferred to a later release: drag-and-drop to open a file (the Electrobun
+  2 view runtime exposes no path for dropped files) and a native application
+  menu.
+
+### Fixed
+
+- The top-bar zoom buttons did nothing. Each press now steps the camera ×1.2
+  about the centre of the canvas, clamped to the tree's zoom range.
+- The recent-files list could go stale after Save As or Close File; it now
+  refreshes after any change made from inside the app.
+
+## [0.8.1] - 2026-09-22
+
+### Added
+
+- One-line Windows install (`irm … | iex`) that verifies the installer's
+  checksum before running it.
+- When the connected MCP server's version does not match the app's, the
+  warning now shows how to fix it (pin `@roadraven/mcp` to the app version).
+- CI runs the Playwright `ui` specs and typechecks the whole `tests/` folder
+  on pull requests.
+
+### Changed
+
+- Canvas focus is real DOM focus with a roving `tabindex`: focus requests are
+  explicit and reveal the node with DOM-measured scrolling, the canvas and
+  side panel hand focus to each other (`F6`), and creating a node goes
+  through one create-and-rename path that respects collapsed ancestors.
+- One **Fit to View** implementation shared by every caller, instead of
+  several slightly different ones.
+- Canvas performance: node cards are memoised and context-menu state no
+  longer lives in `Canvas`, so a status tick re-renders one card, not the
+  tree. A 1.4k-node interaction probe guards this in the `ui` Playwright
+  project.
+- App identifier set to `io.github.shuffzord.roadraven`.
+
+### Fixed
+
+- The store's viewport now stays in sync with pan and zoom gestures, so Fit
+  to View and focus reveals start from where the canvas actually is instead
+  of a stale position.
+
 ## [0.8.0-beta.1] - 2026-09-20
 
 ### Added

@@ -11,9 +11,9 @@ import {
 import type { useRoadmapStore } from "../store/roadmapStore";
 
 /**
- * v0.8.2 A3 — the one table of file verbs. The File menu, the Welcome
- * screen, the sidebar context menu and the keyboard router all read it, so
- * a verb's label, shortcut, enablement and behaviour cannot drift between
+ * v0.8.2 A3 — the one table of file verbs. The File menu, the document
+ * chip, the sidebar's recent-file menu and the keyboard router all read it,
+ * so a verb's label, shortcut, enablement and behaviour cannot drift between
  * surfaces.
  */
 export type FileCommandId =

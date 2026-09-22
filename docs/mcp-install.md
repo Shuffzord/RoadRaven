@@ -13,7 +13,7 @@ layout: default
 > `app_not_running`.
 >
 > ⚠️ **`@roadraven/mcp` is not published to npm yet.** It ships with the first
-> stable release tag. Every command below pins the exact version, `0.8.1`, so
+> stable release tag. Every command below pins the exact version, `0.8.2`, so
 > the server matches the app (the app warns on a version mismatch); until the
 > publish lands, none of the `npx`/plugin paths on this page work — use the
 > built-in Setup Wizard (bundled server, no publish needed) or build from
@@ -41,7 +41,7 @@ registering a second server.
 Wizard and the plugin do (`claude mcp add` defaults to the current project only):
 
 ```bash
-claude mcp add -s user roadraven -- npx -y @roadraven/mcp@0.8.1
+claude mcp add -s user roadraven -- npx -y @roadraven/mcp@0.8.2
 ```
 
 **Raw config.** Add this to `~/.claude.json` (or a project's `.mcp.json`) by hand:
@@ -51,7 +51,7 @@ claude mcp add -s user roadraven -- npx -y @roadraven/mcp@0.8.1
   "mcpServers": {
     "roadraven": {
       "command": "npx",
-      "args": ["-y", "@roadraven/mcp@0.8.1"]
+      "args": ["-y", "@roadraven/mcp@0.8.2"]
     }
   }
 }
@@ -65,7 +65,7 @@ claude mcp add -s user roadraven -- npx -y @roadraven/mcp@0.8.1
 opencode mcp add roadraven
 ```
 
-Follow the prompts and give it the command `npx -y @roadraven/mcp@0.8.1`.
+Follow the prompts and give it the command `npx -y @roadraven/mcp@0.8.2`.
 
 **Raw config.** OpenCode uses the `mcp` key (not `mcpServers`) and a `command`
 array (not a `command` / `args` split). Add this to
@@ -76,7 +76,7 @@ array (not a `command` / `args` split). Add this to
   "mcp": {
     "roadraven": {
       "type": "local",
-      "command": ["npx", "-y", "@roadraven/mcp@0.8.1"],
+      "command": ["npx", "-y", "@roadraven/mcp@0.8.2"],
       "enabled": true
     }
   }
@@ -91,7 +91,7 @@ command:
 ```json
 {
   "command": "npx",
-  "args": ["-y", "@roadraven/mcp@0.8.1"]
+  "args": ["-y", "@roadraven/mcp@0.8.2"]
 }
 ```
 
