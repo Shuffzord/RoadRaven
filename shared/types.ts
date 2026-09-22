@@ -105,6 +105,10 @@ export type RoadmapRPCType = {
 						source?: string;
 						lastEventAt: number;
 					}>;
+					// v0.8.2 A6: absolute paths of the ownership-split companion
+					// files ($ref targets) of the loaded roadmap, root excluded.
+					// Empty for a single-file roadmap.
+					linkedFiles?: string[];
 				};
 			};
 			saveFile: {
@@ -131,9 +135,26 @@ export type RoadmapRPCType = {
 				response: { data: RoadmapSchema; filePath: null };
 			};
 			saveFileAs: {
-				params: { schema: RoadmapSchema };
-				response: { filePath: string | null };
+				// defaultPath / defaultName seed the native dialog (the current
+				// file's directory + basename); omitted = home dir + roadmap.json.
+				params: {
+					schema: RoadmapSchema;
+					defaultPath?: string;
+					defaultName?: string;
+				};
+				// A6: Save As writes the ROOT file only. Companion files of the
+				// previously loaded roadmap are listed here (never copied) so the
+				// renderer can warn.
+				response: { filePath: string | null; linkedFilesNotCopied?: string[] };
 			};
+			// v0.8.2 file UX (Phase 1a) ------------------------------------
+			setWindowTitle: { params: { title: string }; response: undefined };
+			// Reveal a path in the OS file manager. ok:false when it does not
+			// exist or the platform call fails.
+			revealInFolder: { params: { path: string }; response: { ok: boolean } };
+			// Back to Welcome: stop file watchers and reset the Bun-side save
+			// cache / ownership map / dialog allowlist (same reset as newFile).
+			closeFile: { params: Record<string, never>; response: { ok: true } };
 			logMessage: {
 				params: {
 					level: "debug" | "info" | "warning" | "error" | "fatal";
@@ -237,6 +258,13 @@ export type RoadmapRPCType = {
 							hint?: string;
 							data?: unknown;
 					  };
+			};
+			// v0.8.2 A1 close guard: Bun asks the renderer whether the window may
+			// close (renderer flushes autosave / prompts for untitled edits). Bun
+			// treats a 3 s silence as allow so a hung renderer cannot trap the user.
+			confirmClose: {
+				params: Record<string, never>;
+				response: { allow: boolean };
 			};
 		};
 		messages: {

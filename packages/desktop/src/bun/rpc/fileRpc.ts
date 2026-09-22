@@ -24,6 +24,7 @@ import {
 import { defaultReadFile, resolveRefsWithOwnership } from "../resolveRefs";
 import {
 	clearCachedMainPath,
+	getCachedMainPath,
 	isPathWithinMainDir,
 	pushDialogAllowlistPath,
 	saveFileHandler,
@@ -80,7 +81,7 @@ async function readRoadmapFile(
 	{ ok: true; raw: string } | { ok: false; result: LoadFileResponse }
 > {
 	try {
-		const raw = await Bun.file(filePath).text();
+		const raw = await defaultReadFile(filePath);
 		return { ok: true, raw };
 	} catch (err) {
 		bunLogger.error`Failed to read file ${filePath}: ${String(err)}`;
@@ -346,6 +347,25 @@ async function hydrateSidecarStatuses(
 	return sidecarUpdates;
 }
 
+// v0.8.2 A6: absolute paths of the ownership-split companion files ($ref
+// targets) of the roadmap rooted at `mainPath`, the root itself excluded.
+function linkedFilesFor(mainPath: string | null): string[] {
+	const linked = new Set(getOwnership().values());
+	if (mainPath) linked.delete(mainPath);
+	return [...linked];
+}
+
+// Shared by newFile / closeFile: drop every Bun-side reference to the
+// previously loaded file. No disk path means no sidecar (I-10 / D-12), the
+// cached main path + dialog allowlist go (so a stray saveFile({schema}) cannot
+// overwrite the old file), and the ownership map is cleared rather than
+// reseeded (WR-03: buildOwnershipMap([], "") would leave a "" ghost entry).
+function resetFileSession(eventServerHandle: EventServerHandle | null): void {
+	eventServerHandle?.setSidecarPath(null);
+	clearCachedMainPath();
+	clearOwnershipMap();
+}
+
 function toLoadResult(
 	schemaData: RoadmapSchema,
 	resolvedMain: string,
@@ -357,6 +377,7 @@ function toLoadResult(
 		filePath: resolvedMain,
 		errors,
 		sidecarUpdates,
+		linkedFiles: linkedFilesFor(resolvedMain),
 	};
 }
 
@@ -428,6 +449,7 @@ export function createFileRpcHandlers(ctx: FileRpcContext): {
 	resolveRef: RpcHandler<"resolveRef">;
 	newFile: RpcHandler<"newFile">;
 	saveFileAs: RpcHandler<"saveFileAs">;
+	closeFile: RpcHandler<"closeFile">;
 } {
 	return {
 		// loadFile handler with Zod validation + error propagation + app-data backup
@@ -487,11 +509,7 @@ export function createFileRpcHandlers(ctx: FileRpcContext): {
 		// newFile handler (EDIT-17): produce a fresh in-memory schema with a
 		// single root node. No disk write happens here — autosave will fire
 		// saveFileAs on the first mutation flush; the user picks a path then.
-		//
-		// Bun-side cache reset: the cached main path is cleared so a stray
-		// saveFile({schema}) (no filePath) call does NOT silently overwrite
-		// the previously loaded file. The ownership map is replaced with an
-		// empty map (no $refs in a fresh tree).
+		// Bun-side cache reset: see resetFileSession.
 		newFile: async () => {
 			const rootId = crypto.randomUUID();
 			const now = new Date().toISOString();
@@ -514,19 +532,19 @@ export function createFileRpcHandlers(ctx: FileRpcContext): {
 					},
 				],
 			};
-			// I-10 / D-12: no disk path means no sidecar — stop appending events to any
-			// previously-loaded file's .events.jsonl. The event server continues to receive
-			// events; they just don't get logged to a sidecar until the user picks a path.
-			ctx.getEventServerHandle()?.setSidecarPath(null);
+			resetFileSession(ctx.getEventServerHandle());
 			setCachedSchema(schema);
-			clearCachedMainPath();
-			// WR-03 (Wave 3 review): use clearOwnershipMap() instead of
-			// buildOwnershipMap([], "") so we don't leave a "" → [] ghost
-			// entry that other code paths could later read. saveFileAs
-			// rebuilds the map with the chosen path on first write.
-			clearOwnershipMap();
 			bunLogger.info`newFile: created in-memory Untitled Roadmap`;
 			return { data: schema, filePath: null };
+		},
+
+		// closeFile handler (v0.8.2 A2): back to Welcome. Stops the main + $ref
+		// file watchers and resets the file session exactly like newFile.
+		closeFile: () => {
+			stopAllWatchers();
+			resetFileSession(ctx.getEventServerHandle());
+			bunLogger.info`closeFile: watchers stopped, file session reset`;
+			return { ok: true as const };
 		},
 
 		// saveFileAs handler (EDIT-17): pop a native dialog and run the
@@ -535,8 +553,10 @@ export function createFileRpcHandlers(ctx: FileRpcContext): {
 		//     calls without an explicit filePath are accepted)
 		//   - cachedMainPath / cachedSchema updated for flushPending
 		//   - ownership map seeded with the schema's nodes (no $refs yet)
-		saveFileAs: async ({ schema }) => {
-			const chosenPath = await pickSaveFilePath();
+		//   - A6: the ROOT file only is written. Companion files of the
+		//     previously loaded roadmap are reported as linkedFilesNotCopied.
+		saveFileAs: async ({ schema, defaultPath, defaultName }) => {
+			const chosenPath = await pickSaveFilePath({ defaultPath, defaultName });
 			if (!chosenPath) return { filePath: null }; // user cancelled
 
 			const resolved = pathResolve(chosenPath);
@@ -544,13 +564,16 @@ export function createFileRpcHandlers(ctx: FileRpcContext): {
 			const serialized = await serializeForSave(schema);
 			if (!serialized.ok) return { filePath: null };
 
+			// Read before writeSavedFile rebuilds the ownership map around the
+			// new root.
+			const linkedFilesNotCopied = linkedFilesFor(getCachedMainPath());
 			const filePath = await writeSavedFile(
 				resolved,
 				schema,
 				serialized.json,
 				ctx.getEventServerHandle(),
 			);
-			return { filePath };
+			return { filePath, linkedFilesNotCopied };
 		},
 	};
 }

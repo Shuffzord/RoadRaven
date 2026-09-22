@@ -15,6 +15,9 @@ const rpc = Electroview.defineRPC<RoadmapRPCType>({
 				const { handleAgentRequest } = await import("./rpc/agentRpcHandler");
 				return handleAgentRequest(tool, args);
 			},
+			// v0.8.2 A1: Bun's will-close guard asks whether the window may close.
+			// Phase 1b replaces this with the autosave flush / untitled-edits prompt.
+			confirmClose: async () => ({ allow: true }),
 		},
 		messages: {
 			pushFileChanged: (msg) => {

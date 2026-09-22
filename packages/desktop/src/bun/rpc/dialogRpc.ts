@@ -13,12 +13,14 @@ type RpcHandler<K extends keyof BunRequests> = (
  * handler in ./fileRpc.ts (EDIT-17 File>New flow) — dialog interaction is
  * split out here so saveFileAs itself only has to handle the outcome.
  */
-export async function pickSaveFilePath(): Promise<string | null> {
+export async function pickSaveFilePath(
+	defaults: { defaultPath?: string; defaultName?: string } = {},
+): Promise<string | null> {
 	const { homedir } = await import("node:os");
 	return openSaveDialog({
 		title: "Save Roadmap",
-		defaultPath: homedir(),
-		defaultName: "roadmap.json",
+		defaultPath: defaults.defaultPath ?? homedir(),
+		defaultName: defaults.defaultName ?? "roadmap.json",
 		filters: [{ name: "JSON", extensions: ["json"] }],
 	});
 }

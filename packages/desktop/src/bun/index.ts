@@ -12,6 +12,7 @@ import { flushPending, pushDialogAllowlistPath } from "./saveFile";
 // Persistence surface re-exports — imported by Plan 04b/04c
 export { atomicWrite, splitSchemaByOwnership };
 
+import { createCloseGuard } from "./closeGuard";
 import {
 	DEFAULT_PORT,
 	type EventServerHandle,
@@ -26,7 +27,12 @@ import {
 import { onBeforeQuit } from "./platform/lifecycle";
 import { showNotification } from "./platform/notifications";
 import { getReleaseChannel } from "./platform/updater";
-import { createMainWindow, defineMainRpc } from "./platform/window";
+import {
+	closeMainWindow,
+	createMainWindow,
+	defineMainRpc,
+	onWillClose,
+} from "./platform/window";
 import { createDialogRpcHandlers } from "./rpc/dialogRpc";
 import { createEventApiRpcHandlers } from "./rpc/eventApiRpc";
 import {
@@ -35,6 +41,7 @@ import {
 	type MainWindow,
 } from "./rpc/fileRpc";
 import { createSetupRpcHandlers } from "./rpc/setupRpc";
+import { createWindowRpcHandlers } from "./rpc/windowRpc";
 import { deleteSentinel, writeSentinel } from "./sentinel";
 import { loadSettings, saveSettings } from "./settings";
 
@@ -271,6 +278,10 @@ const rpc = defineMainRpc<RoadmapRPCType>({
 
 			...createDialogRpcHandlers(),
 
+			...createWindowRpcHandlers({
+				getMainWindow: () => mainWindow,
+			}),
+
 			...createEventApiRpcHandlers({
 				getEventServerHandle: () => eventServerHandle,
 				getState: () => ({
@@ -313,6 +324,20 @@ mainWindow = createMainWindow<AppRpc>({
 });
 
 export { mainWindow };
+
+// v0.8.2 A1: window close guard — the renderer gets to flush autosave / prompt
+// for untitled edits before the window goes. See closeGuard.ts for why this
+// is a deny-then-close-programmatically round trip rather than an awaited
+// handler.
+onWillClose(
+	mainWindow,
+	createCloseGuard({
+		confirmClose: () =>
+			mainWindow.webview.rpc?.request.confirmClose({}) ??
+			Promise.resolve({ allow: true }),
+		closeWindow: () => closeMainWindow(mainWindow),
+	}),
+);
 
 showNotification({
 	title: "RoadRaven",
