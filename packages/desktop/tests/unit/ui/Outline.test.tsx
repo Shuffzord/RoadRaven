@@ -168,3 +168,69 @@ describe("Outline", () => {
 		expect(container.innerHTML).toBe("");
 	});
 });
+
+describe("Outline — keyboard (WAI-ARIA tree)", () => {
+	const focusRow = (title: string): HTMLElement => {
+		const row = rowByTitle(title);
+		row.focus();
+		return row;
+	};
+	const key = (row: HTMLElement, k: string): boolean =>
+		fireEvent.keyDown(row, { key: k });
+	const focusedTitle = (): string | null =>
+		document.activeElement?.getAttribute("title") ?? null;
+
+	it("ArrowDown / ArrowUp move focus between rows and stop at the ends", () => {
+		render(<Outline collapsed={false} />);
+		key(focusRow("Alpha"), "ArrowDown");
+		expect(focusedTitle()).toBe("Alpha One");
+		key(rowByTitle("Alpha One"), "ArrowUp");
+		expect(focusedTitle()).toBe("Alpha");
+
+		key(focusRow("Root"), "ArrowUp");
+		expect(focusedTitle()).toBe("Root");
+		key(focusRow("Second root"), "ArrowDown");
+		expect(focusedTitle()).toBe("Second root");
+	});
+
+	it("ArrowRight expands a collapsed parent, then moves to its first child", () => {
+		const seen = captureRequests();
+		render(<Outline collapsed={false} />);
+		fireEvent.click(
+			rowByTitle("Alpha").querySelector("[data-outline-chevron]") as Element,
+		);
+		expect(rowByTitle("Alpha").getAttribute("aria-expanded")).toBe("false");
+
+		const alpha = focusRow("Alpha");
+		expect(key(alpha, "ArrowRight")).toBe(false); // claimed
+		expect(alpha.getAttribute("aria-expanded")).toBe("true");
+		expect(focusedTitle()).toBe("Alpha");
+
+		key(alpha, "ArrowRight");
+		expect(focusedTitle()).toBe("Alpha One");
+		expect(seen).toEqual([]); // focus moved, nothing was selected
+	});
+
+	it("ArrowLeft collapses an expanded parent, else moves to the parent row", () => {
+		render(<Outline collapsed={false} />);
+		key(focusRow("Beta"), "ArrowLeft");
+		expect(focusedTitle()).toBe("Root");
+
+		key(rowByTitle("Root"), "ArrowLeft");
+		expect(rowByTitle("Root").getAttribute("aria-expanded")).toBe("false");
+		expect(screen.queryByRole("treeitem", { name: "Beta" })).toBeNull();
+
+		// A collapsed top-level row has no parent to go to.
+		key(rowByTitle("Root"), "ArrowLeft");
+		expect(focusedTitle()).toBe("Root");
+	});
+
+	it("Home / End jump to the first and last row; other keys are left alone", () => {
+		render(<Outline collapsed={false} />);
+		key(focusRow("Alpha One"), "End");
+		expect(focusedTitle()).toBe("Second root");
+		key(rowByTitle("Second root"), "Home");
+		expect(focusedTitle()).toBe("Root");
+		expect(key(rowByTitle("Root"), "Enter")).toBe(true); // not claimed
+	});
+});

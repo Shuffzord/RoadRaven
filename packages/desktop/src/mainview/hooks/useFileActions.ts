@@ -166,7 +166,8 @@ export async function requestAndApply(
 	});
 }
 
-async function loadAndApply(path: string): Promise<void> {
+/** Resolves with the outcome, or null when the RPC itself threw. */
+async function loadAndApply(path: string): Promise<OpenFileOutcome | null> {
 	const fail = () =>
 		useRoadmapStore.getState().setSchemaErrors([
 			{
@@ -179,9 +180,21 @@ async function loadAndApply(path: string): Promise<void> {
 		const outcome = await requestAndApply(path);
 		// A read error already published Bun's own error list.
 		if (!outcome.ok && outcome.reason !== "read_error") fail();
+		return outcome;
 	} catch {
 		fail();
+		return null;
 	}
+}
+
+/** Bun could not read the file at all (missing, unreadable) — not a parse error. */
+function isUnreadable(outcome: OpenFileOutcome | null): boolean {
+	return (
+		outcome !== null &&
+		!outcome.ok &&
+		outcome.reason === "read_error" &&
+		outcome.errors.some((e) => e.code === "file_read_error")
+	);
 }
 
 /**
@@ -235,6 +248,33 @@ export async function handleExternalFileChange(payload: {
 			.getState()
 			.setExternalEdit(payload.mainPath ?? payload.path);
 	}
+}
+
+// ---------------------------------------------------------------------------
+// v0.8.2 A4 — renderer-side edits to `settings.recentFiles`
+//
+// Bun appends on every successful load; removing is a renderer decision (the
+// sidebar's row menu, or a recent entry whose file is gone). Each write
+// announces itself so every mounted `useRecentFiles` refetches. Lives here
+// rather than in a lib module because anything that imports `rpc` and is
+// imported by this file closes a new import cycle through rpcHandlers.
+// ---------------------------------------------------------------------------
+
+export const RECENT_FILES_CHANGED_EVENT = "roadraven:recent-files-changed";
+
+async function writeRecentFiles(recentFiles: string[]): Promise<void> {
+	await electroview?.rpc?.request.saveSettings({ settings: { recentFiles } });
+	window.dispatchEvent(new Event(RECENT_FILES_CHANGED_EVENT));
+}
+
+export async function removeRecentFile(path: string): Promise<void> {
+	const result = await electroview?.rpc?.request.loadSettings({});
+	const current = result?.settings.recentFiles ?? [];
+	await writeRecentFiles(current.filter((p) => p !== path));
+}
+
+export function clearRecentFiles(): Promise<void> {
+	return writeRecentFiles([]);
 }
 
 // ---------------------------------------------------------------------------
@@ -439,7 +479,12 @@ export async function openFile(): Promise<void> {
 export async function openRecent(path: string): Promise<void> {
 	if (!electroview) return;
 	if (!(await ensureSafeToDiscard())) return;
-	await loadAndApply(path);
+	const outcome = await loadAndApply(path);
+	// A4: a recent entry whose file is gone leaves the list instead of lingering.
+	if (isUnreadable(outcome)) {
+		pushFileToast("file_error", "File not found — removed from Recent Files");
+		await removeRecentFile(path);
+	}
 }
 
 export async function openSample(name: string): Promise<void> {

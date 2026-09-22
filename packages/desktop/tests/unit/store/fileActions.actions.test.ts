@@ -13,6 +13,8 @@ const rpcMocks = vi.hoisted(() => ({
 	revealInFolder: vi.fn(),
 	loadFile: vi.fn(),
 	openFilePicker: vi.fn(),
+	loadSettings: vi.fn(),
+	saveSettings: vi.fn(),
 }));
 
 vi.mock("../../../src/mainview/rpc", () => ({
@@ -283,6 +285,53 @@ describe("openRecent — linkedFiles hand-off", () => {
 		const state = useRoadmapStore.getState();
 		expect(state.filePath).toBe("/tmp/root.json");
 		expect(state.linkedFiles).toEqual(["/tmp/part.json"]);
+	});
+});
+
+describe("openRecent — missing file (A4)", () => {
+	beforeEach(() => {
+		rpcMocks.loadSettings.mockResolvedValue({
+			settings: { recentFiles: ["/tmp/gone.json", "/tmp/other.json"] },
+		});
+		rpcMocks.saveSettings.mockResolvedValue({ success: true });
+	});
+
+	it("toasts and drops the entry when Bun cannot read the file", async () => {
+		rpcMocks.loadFile.mockResolvedValue({
+			data: null,
+			errors: [
+				{
+					path: "",
+					message: "Failed to read file: ENOENT",
+					code: "file_read_error",
+				},
+			],
+		});
+
+		await openRecent("/tmp/gone.json");
+
+		const toasts = useToastStore.getState().toasts;
+		expect(toasts).toHaveLength(1);
+		expect(toasts[0].type).toBe("file_error");
+		expect(toasts[0].detail).toBe("File not found — removed from Recent Files");
+		expect(rpcMocks.saveSettings).toHaveBeenCalledWith({
+			settings: { recentFiles: ["/tmp/other.json"] },
+		});
+		expect(useRoadmapStore.getState().schemaErrors[0]?.code).toBe(
+			"file_read_error",
+		);
+	});
+
+	it("keeps the entry for a file that exists but does not parse", async () => {
+		rpcMocks.loadFile.mockResolvedValue({
+			data: null,
+			errors: [{ path: "", message: "bad json", code: "json_parse_error" }],
+		});
+
+		await openRecent("/tmp/gone.json");
+
+		expect(useToastStore.getState().toasts).toHaveLength(0);
+		expect(rpcMocks.saveSettings).not.toHaveBeenCalled();
 	});
 });
 

@@ -1,4 +1,12 @@
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+	type KeyboardEvent,
+	memo,
+	useCallback,
+	useEffect,
+	useMemo,
+	useRef,
+	useState,
+} from "react";
 import type { RoadmapNode } from "../../../../../packages/core/src/schema";
 import { requestNodeFocus } from "../lib/focusRequest";
 import { useRoadmapStore } from "../store/roadmapStore";
@@ -34,6 +42,57 @@ export function flattenOutline(
 
 const FALLBACK_DOT_TOKEN = "--rv-text-tertiary";
 
+type KeyTarget = { focus?: number; toggle?: string };
+
+/** Vertical tree keys: the row index to focus, given the current and last. */
+const VERTICAL_KEYS: Record<string, (index: number, last: number) => number> = {
+	ArrowDown: (index, last) => Math.min(index + 1, last),
+	ArrowUp: (index) => Math.max(index - 1, 0),
+	Home: () => 0,
+	End: (_, last) => last,
+};
+
+/** ArrowRight expands or descends; ArrowLeft collapses or ascends. */
+function horizontalKeyTarget(
+	key: string,
+	index: number,
+	rows: OutlineRowData[],
+	collapsedIds: ReadonlySet<string>,
+): KeyTarget {
+	const { node, depth } = rows[index];
+	const isParent = !!node.children?.length;
+	const isOpen = isParent && !collapsedIds.has(node.id);
+	if (key === "ArrowRight") {
+		if (!isParent) return {};
+		return isOpen ? { focus: index + 1 } : { toggle: node.id };
+	}
+	if (isOpen) return { toggle: node.id };
+	const parent = rows
+		.slice(0, index)
+		.map((r) => r.depth)
+		.lastIndexOf(depth - 1);
+	return parent >= 0 ? { focus: parent } : {};
+}
+
+/**
+ * WAI-ARIA tree keys, resolved against the flattened rows: the row to focus
+ * and/or the parent to toggle. Null means the key is not a tree key. Enter
+ * and Space stay native (the row is a button).
+ */
+function outlineKeyTarget(
+	key: string,
+	index: number,
+	rows: OutlineRowData[],
+	collapsedIds: ReadonlySet<string>,
+): KeyTarget | null {
+	const vertical = VERTICAL_KEYS[key];
+	if (vertical) return { focus: vertical(index, rows.length - 1) };
+	if (key === "ArrowRight" || key === "ArrowLeft") {
+		return horizontalKeyTarget(key, index, rows, collapsedIds);
+	}
+	return null;
+}
+
 export function Outline({ collapsed }: { collapsed: boolean }) {
 	// `schema.nodes` identity changes only on structural edits (dataKey), not
 	// on status ticks, so the row list is rebuilt only when the tree changes.
@@ -57,6 +116,19 @@ export function Outline({ collapsed }: { collapsed: boolean }) {
 		});
 	}, []);
 
+	const onKeyDown = (e: KeyboardEvent<HTMLDivElement>): void => {
+		const items = Array.from(
+			e.currentTarget.querySelectorAll<HTMLElement>('[role="treeitem"]'),
+		);
+		const index = items.indexOf(e.target as HTMLElement);
+		if (index < 0) return;
+		const target = outlineKeyTarget(e.key, index, rows, collapsedIds);
+		if (!target) return;
+		e.preventDefault();
+		if (target.toggle) toggle(target.toggle);
+		if (target.focus !== undefined) items[target.focus]?.focus();
+	};
+
 	if (collapsed) return null;
 	if (!nodes) {
 		return (
@@ -72,6 +144,7 @@ export function Outline({ collapsed }: { collapsed: boolean }) {
 			aria-label="Roadmap outline"
 			data-outline-tree
 			className="flex-1 min-h-0 overflow-y-auto"
+			onKeyDown={onKeyDown}
 		>
 			{rows.map(({ node, depth }) => (
 				<OutlineRow
