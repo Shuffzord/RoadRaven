@@ -1,7 +1,13 @@
 /** @vitest-environment jsdom */
 // v0.8.2 Phase 3 — the Files sidebar: header, two-icon rail, current-file
 // highlight, the recent-row context menu (A4) and no bottom buttons.
-import { act, fireEvent, render, screen } from "@testing-library/react";
+import {
+	act,
+	fireEvent,
+	render,
+	renderHook,
+	screen,
+} from "@testing-library/react";
 import {
 	afterEach,
 	beforeAll,
@@ -48,10 +54,15 @@ vi.mock("../../../src/mainview/lib/focusHandoff", () => focus);
 
 import { Sidebar } from "../../../src/mainview/components/Sidebar";
 import { RECENT_FILES_CHANGED_EVENT } from "../../../src/mainview/hooks/useFileActions";
+import { useSidebarWidthSetting } from "../../../src/mainview/hooks/useSidebarWidthSetting";
 import { formatShortcut } from "../../../src/mainview/lib/fileCommands";
 import { useRoadmapStore } from "../../../src/mainview/store/roadmapStore";
 import { useToastStore } from "../../../src/mainview/store/toastStore";
-import { useUiStore } from "../../../src/mainview/store/uiStore";
+import {
+	SIDEBAR_DEFAULT_WIDTH,
+	SIDEBAR_MAX_WIDTH,
+	useUiStore,
+} from "../../../src/mainview/store/uiStore";
 import { resetStore } from "../../helpers/resetStore";
 
 const A = "/path/to/roadmap.json";
@@ -95,7 +106,10 @@ afterEach(() => {
 	recent.files = [];
 	resetStore();
 	useToastStore.setState({ toasts: [] });
-	useUiStore.setState({ sidebarCollapsed: false });
+	useUiStore.setState({
+		sidebarCollapsed: false,
+		sidebarWidth: SIDEBAR_DEFAULT_WIDTH,
+	});
 });
 
 const rowButton = (name: string): HTMLButtonElement => {
@@ -278,6 +292,83 @@ describe("Sidebar — recent row context menu (A4)", () => {
 				settings: { recentFiles: [] },
 			}),
 		);
+	});
+});
+
+describe("Sidebar — resizable width", () => {
+	const nav = (): HTMLElement =>
+		screen.getByRole("navigation", { name: "Sidebar navigation" });
+
+	it("renders the handle with the current width when expanded", () => {
+		useUiStore.setState({ sidebarWidth: 300 });
+		render(<Sidebar />);
+		const handle = screen.getByRole("separator", { name: "Resize sidebar" });
+		expect(handle.getAttribute("aria-valuenow")).toBe("300");
+		expect(nav().style.width).toBe("300px");
+		expect(nav().style.transitionProperty).toBe("width");
+	});
+
+	it("has no handle and a 48px rail when collapsed", () => {
+		useUiStore.setState({ sidebarCollapsed: true });
+		render(<Sidebar />);
+		expect(screen.queryByRole("separator")).toBeNull();
+		expect(nav().style.width).toBe("48px");
+	});
+
+	it("drag updates the store width, suspends the transition and saves on mouseup", async () => {
+		render(<Sidebar />);
+		nav().getBoundingClientRect = () => ({ left: 0 }) as DOMRect;
+		const handle = screen.getByRole("separator", { name: "Resize sidebar" });
+		fireEvent.mouseDown(handle);
+		fireEvent.mouseMove(window, { clientX: 350 });
+		expect(useUiStore.getState().sidebarWidth).toBe(350);
+		expect(nav().style.transitionProperty).toBe("none");
+		expect(rpc.saveSettings).not.toHaveBeenCalled();
+		fireEvent.mouseUp(window);
+		expect(nav().style.transitionProperty).toBe("width");
+		await vi.waitFor(() =>
+			expect(rpc.saveSettings).toHaveBeenCalledWith({
+				settings: { sidebarWidth: 350 },
+			}),
+		);
+	});
+
+	it("keyboard steps update the store and save", () => {
+		render(<Sidebar />);
+		const handle = screen.getByRole("separator", { name: "Resize sidebar" });
+		fireEvent.keyDown(handle, { key: "ArrowRight" });
+		expect(useUiStore.getState().sidebarWidth).toBe(SIDEBAR_DEFAULT_WIDTH + 16);
+		expect(rpc.saveSettings).toHaveBeenCalledWith({
+			settings: { sidebarWidth: SIDEBAR_DEFAULT_WIDTH + 16 },
+		});
+	});
+
+	it("double-click resets to the default width and saves it", () => {
+		useUiStore.setState({ sidebarWidth: 400 });
+		render(<Sidebar />);
+		fireEvent.doubleClick(
+			screen.getByRole("separator", { name: "Resize sidebar" }),
+		);
+		expect(useUiStore.getState().sidebarWidth).toBe(SIDEBAR_DEFAULT_WIDTH);
+		expect(rpc.saveSettings).toHaveBeenCalledWith({
+			settings: { sidebarWidth: SIDEBAR_DEFAULT_WIDTH },
+		});
+	});
+
+	it("hydration clamps the saved width", async () => {
+		rpc.loadSettings.mockResolvedValue({ settings: { sidebarWidth: 9999 } });
+		renderHook(() => useSidebarWidthSetting());
+		await vi.waitFor(() =>
+			expect(useUiStore.getState().sidebarWidth).toBe(SIDEBAR_MAX_WIDTH),
+		);
+	});
+
+	it("hydration ignores a non-numeric saved width", async () => {
+		rpc.loadSettings.mockResolvedValue({ settings: { sidebarWidth: "abc" } });
+		renderHook(() => useSidebarWidthSetting());
+		await vi.waitFor(() => expect(rpc.loadSettings).toHaveBeenCalled());
+		await Promise.resolve();
+		expect(useUiStore.getState().sidebarWidth).toBe(SIDEBAR_DEFAULT_WIDTH);
 	});
 });
 

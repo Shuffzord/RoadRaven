@@ -40,6 +40,8 @@ export interface AppSettings {
 	};
 	/** v0.8.2 A8: reopen the most recent roadmap on launch. Absent = true. */
 	reopenLastFile?: boolean;
+	/** v0.8.2: expanded sidebar width in px, set by dragging its right edge. */
+	sidebarWidth?: number;
 	/** First-run setup wizard state (v0.6). */
 	setup?: {
 		/** True once the user has finished or dismissed the first-run wizard. */

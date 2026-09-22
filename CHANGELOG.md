@@ -37,6 +37,9 @@ follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   is dropped from the list with a toast when you try to open it.
 - A **Discard changes?** dialog guards unsaved edits in an untitled document
   when you choose New, Open, Close File, or close the window.
+- The sidebar is **resizable**: drag its right edge (160–480 px), use the
+  arrow keys on the handle, or double-click it to restore the default width.
+  The width is remembered across launches.
 
 ### Changed
 

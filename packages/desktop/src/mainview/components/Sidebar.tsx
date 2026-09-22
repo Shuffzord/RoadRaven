@@ -1,5 +1,5 @@
 import * as ContextMenu from "@radix-ui/react-context-menu";
-import { type ReactNode, type Ref, useEffect, useRef } from "react";
+import { type ReactNode, type Ref, useEffect, useRef, useState } from "react";
 import { clearRecentFiles, removeRecentFile } from "../hooks/useFileActions";
 import { useRecentFiles } from "../hooks/useRecentFiles";
 import { formatShortcut, getFileCommand } from "../lib/fileCommands";
@@ -8,17 +8,45 @@ import { trackMenuFocus } from "../lib/focusHandoff";
 import { electroview } from "../rpc";
 import { useRoadmapStore } from "../store/roadmapStore";
 import { useToastStore } from "../store/toastStore";
-import { useUiStore } from "../store/uiStore";
+import {
+	SIDEBAR_MAX_WIDTH,
+	SIDEBAR_MIN_WIDTH,
+	useUiStore,
+} from "../store/uiStore";
 import { ITEM_CLASS, MENU_SURFACE_CLASS, SEP_CLASS } from "./menuStyles";
 import { Outline } from "./Outline";
+import { ResizeHandle } from "./ResizeHandle";
 
 type Section = "recent" | "outline";
+
+const RAIL_WIDTH = 48;
+
+/**
+ * The nav's width style. It animates on collapse/expand only: from the first
+ * drag step until mouseup the transition is off, or the edge lags the cursor.
+ */
+function useNavStyle(collapsed: boolean): {
+	style: React.CSSProperties;
+	setResizing: (resizing: boolean) => void;
+} {
+	const sidebarWidth = useUiStore((s) => s.sidebarWidth);
+	const [resizing, setResizing] = useState(false);
+	return {
+		style: {
+			width: collapsed ? RAIL_WIDTH : sidebarWidth,
+			transitionProperty: resizing ? "none" : "width",
+			transitionDuration: "200ms",
+		},
+		setResizing,
+	};
+}
 
 export function Sidebar() {
 	// v0.8.2 F3: collapse state lives in uiStore so Ctrl+B (keyboard router)
 	// toggles the same flag as the header button.
 	const collapsed = useUiStore((s) => s.sidebarCollapsed);
 	const toggleSidebar = useUiStore((s) => s.toggleSidebar);
+	const { style: navStyle, setResizing } = useNavStyle(collapsed);
 	const currentPath = useRoadmapStore((s) => s.filePath);
 	const recentFiles = useRecentFiles();
 	const recentHeaderRef = useRef<HTMLDivElement>(null);
@@ -42,12 +70,11 @@ export function Sidebar() {
 
 	return (
 		<nav
-			className={`[grid-area:sidebar] bg-rv-bg-surface border-r border-rv-border z-[50] flex flex-col overflow-hidden ${
-				collapsed ? "w-[48px]" : "w-[220px]"
-			}`}
-			style={{ transitionProperty: "width", transitionDuration: "200ms" }}
+			className="[grid-area:sidebar] relative bg-rv-bg-surface border-r border-rv-border z-[50] flex flex-col overflow-hidden"
+			style={navStyle}
 			aria-label="Sidebar navigation"
 		>
+			<SidebarResizeHandle onResizingChange={setResizing} />
 			{/* Header */}
 			<div className="flex items-center justify-between h-[40px] px-3 border-b border-rv-border shrink-0">
 				{!collapsed && (
@@ -113,6 +140,54 @@ export function Sidebar() {
 				</div>
 			)}
 		</nav>
+	);
+}
+
+/**
+ * Drag handle on the sidebar's right edge; persists the width on release.
+ * Absent while collapsed — the rail is fixed at 48px.
+ */
+function SidebarResizeHandle({
+	onResizingChange,
+}: {
+	onResizingChange: (resizing: boolean) => void;
+}) {
+	const collapsed = useUiStore((s) => s.sidebarCollapsed);
+	const sidebarWidth = useUiStore((s) => s.sidebarWidth);
+	const setSidebarWidth = useUiStore((s) => s.setSidebarWidth);
+	const resetSidebarWidth = useUiStore((s) => s.resetSidebarWidth);
+
+	const persistWidth = (): void => {
+		electroview?.rpc?.request
+			.saveSettings({
+				settings: { sidebarWidth: useUiStore.getState().sidebarWidth },
+			})
+			.catch(() => {
+				// RPC unavailable outside Electrobun (HMR dev server).
+			});
+	};
+
+	if (collapsed) return null;
+	return (
+		<ResizeHandle
+			side="right"
+			aria-label="Resize sidebar"
+			minWidth={SIDEBAR_MIN_WIDTH}
+			maxWidth={SIDEBAR_MAX_WIDTH}
+			currentWidth={sidebarWidth}
+			onResize={(width) => {
+				onResizingChange(true);
+				setSidebarWidth(width);
+			}}
+			onResizeEnd={() => {
+				onResizingChange(false);
+				persistWidth();
+			}}
+			onReset={() => {
+				resetSidebarWidth();
+				persistWidth();
+			}}
+		/>
 	);
 }
 
