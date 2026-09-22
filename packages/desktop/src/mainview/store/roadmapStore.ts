@@ -52,14 +52,16 @@ export function buildNodeIndex(nodes: RoadmapNode[]): Map<string, RoadmapNode> {
 }
 
 /**
- * Pre-order DFS collection of node ids whose `title` or `notes` contain `query`
- * (case-insensitive substring). Returns [] for blank queries. The traversal
- * order mirrors the visual top-to-bottom ordering of siblings so Enter/F3
- * cycling reads as "next match down the tree".
+ * Pre-order DFS collection of node ids whose `title` contains `query`
+ * (case-insensitive substring); `notes` are searched too when `scope.notes`
+ * is set. Returns [] for blank queries. The traversal order mirrors the
+ * visual top-to-bottom ordering of siblings so Enter/F3 cycling reads as
+ * "next match down the tree".
  */
 export function collectSearchMatches(
 	nodes: RoadmapNode[],
 	query: string,
+	scope: { notes: boolean },
 ): string[] {
 	const needle = query.trim().toLowerCase();
 	if (needle === "") return [];
@@ -68,7 +70,7 @@ export function collectSearchMatches(
 	function walk(list: RoadmapNode[]): void {
 		for (const node of list) {
 			const title = node.title.toLowerCase();
-			const notes = (node.notes ?? "").toLowerCase();
+			const notes = scope.notes ? (node.notes ?? "").toLowerCase() : "";
 			if (title.includes(needle) || notes.includes(needle)) {
 				out.push(node.id);
 			}
@@ -319,6 +321,9 @@ interface RoadmapState {
 	/** Index into searchMatchIds of the "current" match the camera follows.
 	 *  -1 when there are no matches. */
 	searchCurrentIndex: number;
+	/** v0.8.2: also match `notes`. A persisted preference, not document state,
+	 *  so loadSchema/closeSchema leave it alone. */
+	searchInNotes: boolean;
 
 	// Viewport state for Fit View
 	translate: { x: number; y: number };
@@ -429,9 +434,13 @@ interface RoadmapState {
 	setLayout: (orientation: "TB" | "LR") => void;
 
 	// --- Node search actions -------------------------------------------------
-	/** Set the query, recompute matches over title + notes (case-insensitive),
-	 *  and reset the current index to the first match (or -1 when none). */
+	/** Set the query, recompute matches over titles (+ notes when
+	 *  searchInNotes; case-insensitive), and reset the current index to the
+	 *  first match (or -1 when none). */
 	setSearchQuery: (query: string) => void;
+	/** Widen/narrow the search to notes and recompute the current query's
+	 *  matches, keeping the current match when it survives. */
+	setSearchInNotes: (value: boolean) => void;
 	/** Move the current match by `delta` (+1 next, -1 prev) with wraparound.
 	 *  No-op when there are no matches. */
 	stepSearchMatch: (delta: number) => void;
@@ -504,6 +513,7 @@ export const INITIAL_STATE = {
 	searchQuery: "",
 	searchMatchIds: [] as string[],
 	searchCurrentIndex: -1,
+	searchInNotes: false,
 	translate: { x: 400, y: 50 },
 	zoomLevel: 0.8,
 	schemaErrors: [] as Array<{ path: string; message: string; code: string }>,
@@ -624,9 +634,12 @@ export const useRoadmapStore = create<RoadmapState>((set, get) => {
 		searchMatchIds?: string[];
 		searchCurrentIndex?: number;
 	} {
-		const { searchQuery, searchCurrentIndex, searchMatchIds } = get();
+		const { searchQuery, searchCurrentIndex, searchMatchIds, searchInNotes } =
+			get();
 		if (searchQuery.trim() === "") return {};
-		const matches = collectSearchMatches(nextNodes, searchQuery);
+		const matches = collectSearchMatches(nextNodes, searchQuery, {
+			notes: searchInNotes,
+		});
 		const survivor = matches.indexOf(searchMatchIds[searchCurrentIndex] ?? "");
 		const nextIndex =
 			matches.length === 0
@@ -1116,13 +1129,23 @@ export const useRoadmapStore = create<RoadmapState>((set, get) => {
 		// --- Node search ---------------------------------------------------------
 
 		setSearchQuery: (query) => {
-			const schema = get().schema;
-			const matches = schema ? collectSearchMatches(schema.nodes, query) : [];
+			const { schema, searchInNotes } = get();
+			const matches = schema
+				? collectSearchMatches(schema.nodes, query, { notes: searchInNotes })
+				: [];
 			set({
 				searchQuery: query,
 				searchMatchIds: matches,
 				searchCurrentIndex: matches.length > 0 ? 0 : -1,
 			});
+		},
+
+		setSearchInNotes: (value) => {
+			set({ searchInNotes: value });
+			// Same recompute as a structural edit: the current match stays current
+			// when it is still in the (wider or narrower) result set.
+			const schema = get().schema;
+			if (schema) set(searchStateForTree(schema.nodes));
 		},
 
 		stepSearchMatch: (delta) => {

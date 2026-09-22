@@ -15,7 +15,7 @@ import { TopBar } from "./components/TopBar";
 import { useAutosave } from "./hooks/useAutosave";
 import { useFileActions } from "./hooks/useFileActions";
 import { useReopenLastFile } from "./hooks/useReopenLastFile";
-import { useSidebarWidthSetting } from "./hooks/useSidebarWidthSetting";
+import { useUiSettingsHydration } from "./hooks/useUiSettingsHydration";
 import { useWindowTitle } from "./hooks/useWindowTitle";
 import { pullEventApiStateOnMount, pushAllowlistFromStore } from "./rpc";
 import { useRoadmapStore } from "./store/roadmapStore";
@@ -35,8 +35,8 @@ export default function App() {
 	useWindowTitle();
 	// v0.8.2 A8: reopen the most recent roadmap on launch (Preferences → Startup).
 	useReopenLastFile();
-	// v0.8.2: restore the dragged sidebar width from settings.
-	useSidebarWidthSetting();
+	// v0.8.2: restore the sidebar width and the search notes toggle from settings.
+	useUiSettingsHydration();
 
 	// Plan 04-03: 1Hz tick for live-pulse selector re-evaluation (D-14/D-15).
 	// bumpLiveTick increments liveTick in roadmapStore; useIsNodeLive selectors

@@ -166,7 +166,9 @@ The router runs in capture phase and stands down when a Radix dialog or context 
 open, or when a text input / CodeMirror editor is focused. File verbs come from
 [`lib/fileCommands.ts`](../packages/desktop/src/mainview/lib/fileCommands.ts) — the single
 registry (label, shortcut, enablement, action) that the File menu, the keyboard router
-and the sidebar all read, so a verb cannot drift between surfaces.
+and the sidebar all read, so a verb cannot drift between surfaces. Node search matches
+titles by default; the notes toggle inside the search box widens it to notes and is
+persisted (`AppSettings.searchInNotes`).
 
 ### Global / file
 

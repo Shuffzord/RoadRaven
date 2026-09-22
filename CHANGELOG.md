@@ -57,6 +57,8 @@ follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   copy.
 - Closing the window with unsaved untitled edits asks first. If the renderer
   does not answer within 3 seconds the window closes anyway.
+- Search matches node titles only by default; a toggle in the search box
+  includes notes, and the choice is remembered.
 - Deferred to a later release: drag-and-drop to open a file (the Electrobun
   2 view runtime exposes no path for dropped files) and a native application
   menu.

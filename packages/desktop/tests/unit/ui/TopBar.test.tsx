@@ -283,3 +283,48 @@ describe("TopBar — search box", () => {
 		expect(document.activeElement).toBe(screen.getByLabelText("Search nodes"));
 	});
 });
+
+describe("TopBar — search notes toggle", () => {
+	const toggle = () =>
+		screen.getByRole("button", { name: "Include notes in search" });
+
+	it("is off by default: titles-only placeholder, notes hits do not match", () => {
+		seed();
+		render(<TopBar />);
+		expect(toggle().getAttribute("aria-pressed")).toBe("false");
+		expect(screen.getByPlaceholderText("Search titles...")).toBeTruthy();
+	});
+
+	it("click widens the search, persists the choice and keeps the caret in the input", () => {
+		seed();
+		render(<TopBar />);
+		const input = screen.getByLabelText("Search nodes") as HTMLInputElement;
+		input.focus();
+		fireEvent.change(input, { target: { value: "Findable" } });
+
+		fireEvent.click(toggle());
+
+		expect(useRoadmapStore.getState().searchInNotes).toBe(true);
+		expect(toggle().getAttribute("aria-pressed")).toBe("true");
+		expect(saveSettingsMock()).toHaveBeenCalledWith({
+			settings: { searchInNotes: true },
+		});
+		expect(document.activeElement).toBe(input);
+		expect(screen.getByPlaceholderText("Search titles and notes...")).toBe(
+			input,
+		);
+		// The counter still renders next to the toggle.
+		expect(screen.getByRole("status").textContent).toBe("1/1");
+	});
+
+	it("click again narrows back to titles and persists false", () => {
+		seed();
+		useRoadmapStore.getState().setSearchInNotes(true);
+		render(<TopBar />);
+		fireEvent.click(toggle());
+		expect(useRoadmapStore.getState().searchInNotes).toBe(false);
+		expect(saveSettingsMock()).toHaveBeenCalledWith({
+			settings: { searchInNotes: false },
+		});
+	});
+});

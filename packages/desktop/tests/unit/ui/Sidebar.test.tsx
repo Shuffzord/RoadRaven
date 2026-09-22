@@ -54,7 +54,7 @@ vi.mock("../../../src/mainview/lib/focusHandoff", () => focus);
 
 import { Sidebar } from "../../../src/mainview/components/Sidebar";
 import { RECENT_FILES_CHANGED_EVENT } from "../../../src/mainview/hooks/useFileActions";
-import { useSidebarWidthSetting } from "../../../src/mainview/hooks/useSidebarWidthSetting";
+import { useUiSettingsHydration } from "../../../src/mainview/hooks/useUiSettingsHydration";
 import { formatShortcut } from "../../../src/mainview/lib/fileCommands";
 import { useRoadmapStore } from "../../../src/mainview/store/roadmapStore";
 import { useToastStore } from "../../../src/mainview/store/toastStore";
@@ -357,7 +357,7 @@ describe("Sidebar — resizable width", () => {
 
 	it("hydration clamps the saved width", async () => {
 		rpc.loadSettings.mockResolvedValue({ settings: { sidebarWidth: 9999 } });
-		renderHook(() => useSidebarWidthSetting());
+		renderHook(() => useUiSettingsHydration());
 		await vi.waitFor(() =>
 			expect(useUiStore.getState().sidebarWidth).toBe(SIDEBAR_MAX_WIDTH),
 		);
@@ -365,7 +365,7 @@ describe("Sidebar — resizable width", () => {
 
 	it("hydration ignores a non-numeric saved width", async () => {
 		rpc.loadSettings.mockResolvedValue({ settings: { sidebarWidth: "abc" } });
-		renderHook(() => useSidebarWidthSetting());
+		renderHook(() => useUiSettingsHydration());
 		await vi.waitFor(() => expect(rpc.loadSettings).toHaveBeenCalled());
 		await Promise.resolve();
 		expect(useUiStore.getState().sidebarWidth).toBe(SIDEBAR_DEFAULT_WIDTH);

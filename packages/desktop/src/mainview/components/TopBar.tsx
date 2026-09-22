@@ -249,7 +249,22 @@ function SearchBox() {
 	const setSearchQuery = useRoadmapStore((s) => s.setSearchQuery);
 	const stepSearchMatch = useRoadmapStore((s) => s.stepSearchMatch);
 	const clearSearch = useRoadmapStore((s) => s.clearSearch);
+	const searchInNotes = useRoadmapStore((s) => s.searchInNotes);
+	const setSearchInNotes = useRoadmapStore((s) => s.setSearchInNotes);
 	const inputRef = useRef<HTMLInputElement>(null);
+
+	// Persisted preference (AppSettings.searchInNotes); the click must not leave
+	// the caret on the button, so hand focus back to the input.
+	const toggleNotes = () => {
+		const next = !searchInNotes;
+		setSearchInNotes(next);
+		electroview?.rpc?.request
+			.saveSettings({ settings: { searchInNotes: next } })
+			.catch(() => {
+				// HMR: no rpc
+			});
+		inputRef.current?.focus();
+	};
 
 	useEffect(() => {
 		const focusSearch = () => {
@@ -271,14 +286,45 @@ function SearchBox() {
 		<search className="relative flex items-center">
 			<input
 				ref={inputRef}
-				className="w-[220px] h-[30px] bg-rv-bg-input border border-rv-border rounded-lg px-3 pr-14 text-[12px] text-rv-text-primary placeholder:text-rv-text-tertiary outline-none focus:border-rv-border-focus"
+				className="w-[220px] h-[30px] bg-rv-bg-input border border-rv-border rounded-lg px-3 pr-[80px] text-[12px] text-rv-text-primary placeholder:text-rv-text-tertiary outline-none focus:border-rv-border-focus"
 				type="text"
-				placeholder="Search nodes..."
+				placeholder={
+					searchInNotes ? "Search titles and notes..." : "Search titles..."
+				}
 				aria-label="Search nodes"
 				value={searchQuery}
 				onChange={(e) => setSearchQuery(e.target.value)}
 				onKeyDown={(e) => handleSearchKeyDown(e, stepSearchMatch, clearSearch)}
 			/>
+			<button
+				type="button"
+				aria-pressed={searchInNotes}
+				aria-label="Include notes in search"
+				title="Include notes in search"
+				onClick={toggleNotes}
+				className={`absolute right-[54px] top-1/2 -translate-y-1/2 flex items-center justify-center w-[20px] h-[20px] rounded-[4px] transition-all duration-150 ${
+					searchInNotes
+						? "text-rv-accent bg-rv-bg-hover"
+						: "text-rv-text-tertiary hover:bg-rv-bg-hover"
+				}`}
+			>
+				<svg
+					aria-hidden="true"
+					width="14"
+					height="14"
+					viewBox="0 0 24 24"
+					fill="none"
+					stroke="currentColor"
+					strokeWidth="2"
+					strokeLinecap="round"
+					strokeLinejoin="round"
+				>
+					<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+					<polyline points="14 2 14 8 20 8" />
+					<line x1="16" y1="13" x2="8" y2="13" />
+					<line x1="16" y1="17" x2="8" y2="17" />
+				</svg>
+			</button>
 			{searchQuery ? (
 				<span
 					className="absolute right-2 top-1/2 -translate-y-1/2 text-[11px] tabular-nums text-rv-text-tertiary pointer-events-none"

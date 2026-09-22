@@ -1,7 +1,7 @@
 // Node search (header search box) — store logic.
-// Covers collectSearchMatches (title + notes, case-insensitive, DFS order),
-// getAncestorPath, and the setSearchQuery / stepSearchMatch / clearSearch
-// action cycle including wraparound.
+// Covers collectSearchMatches (titles, optionally notes; case-insensitive, DFS
+// order), getAncestorPath, the setSearchQuery / stepSearchMatch / clearSearch
+// action cycle including wraparound, and the searchInNotes scope toggle.
 
 import { afterEach, describe, expect, it } from "vitest";
 import type { RoadmapSchema } from "../../../../../packages/core/src/schema";
@@ -55,19 +55,45 @@ function searchFor(query: string): void {
 }
 const st = () => useRoadmapStore.getState();
 
+const TITLES = { notes: false };
+const WITH_NOTES = { notes: true };
+
 describe("collectSearchMatches", () => {
 	it("matches node titles (pre-order DFS, case-insensitive)", () => {
-		expect(collectSearchMatches(TEST_SCHEMA.nodes, "task")).toEqual(["a", "b"]);
-		expect(collectSearchMatches(TEST_SCHEMA.nodes, "ALPHA")).toEqual(["a"]);
+		expect(collectSearchMatches(TEST_SCHEMA.nodes, "task", TITLES)).toEqual([
+			"a",
+			"b",
+		]);
+		expect(collectSearchMatches(TEST_SCHEMA.nodes, "ALPHA", TITLES)).toEqual([
+			"a",
+		]);
 	});
 
-	it("matches node notes, not just titles", () => {
-		expect(collectSearchMatches(TEST_SCHEMA.nodes, "find me")).toEqual(["a1"]);
+	it("ignores notes hits unless the scope includes notes", () => {
+		expect(collectSearchMatches(TEST_SCHEMA.nodes, "find me", TITLES)).toEqual(
+			[],
+		);
+		expect(
+			collectSearchMatches(TEST_SCHEMA.nodes, "find me", WITH_NOTES),
+		).toEqual(["a1"]);
+	});
+
+	it("keeps pre-order DFS order when notes widen the result set", () => {
+		// "r": title hit on root ("Root Project"); notes hit on a1 ("find me here").
+		expect(collectSearchMatches(TEST_SCHEMA.nodes, "r", TITLES)).toEqual([
+			"root",
+		]);
+		expect(collectSearchMatches(TEST_SCHEMA.nodes, "r", WITH_NOTES)).toEqual([
+			"root",
+			"a1",
+		]);
 	});
 
 	it("returns [] for a blank or whitespace-only query", () => {
-		expect(collectSearchMatches(TEST_SCHEMA.nodes, "")).toEqual([]);
-		expect(collectSearchMatches(TEST_SCHEMA.nodes, "   ")).toEqual([]);
+		expect(collectSearchMatches(TEST_SCHEMA.nodes, "", WITH_NOTES)).toEqual([]);
+		expect(collectSearchMatches(TEST_SCHEMA.nodes, "   ", WITH_NOTES)).toEqual(
+			[],
+		);
 	});
 });
 
@@ -123,6 +149,51 @@ describe("search actions", () => {
 		expect(st().searchMatchIds).toEqual([]);
 		expect(st().searchCurrentIndex).toBe(-1);
 		expect(st().getCurrentSearchMatchId()).toBeNull();
+	});
+});
+
+describe("searchInNotes", () => {
+	it("defaults to titles only: a notes-only hit is not a match", () => {
+		expect(st().searchInNotes).toBe(false);
+		searchFor("find me");
+		expect(st().searchMatchIds).toEqual([]);
+	});
+
+	it("setSearchInNotes(true) widens the active query and keeps the current match", () => {
+		searchFor("r"); // titles: ["root"]
+		st().setSearchInNotes(true);
+		expect(st().searchMatchIds).toEqual(["root", "a1"]);
+		expect(st().getCurrentSearchMatchId()).toBe("root");
+	});
+
+	it("setSearchInNotes(false) narrows and clamps when the current match drops out", () => {
+		st().setSearchInNotes(true);
+		searchFor("r"); // ["root", "a1"]
+		st().stepSearchMatch(1); // current "a1" (notes hit)
+		st().setSearchInNotes(false);
+		expect(st().searchMatchIds).toEqual(["root"]);
+		expect(st().getCurrentSearchMatchId()).toBe("root");
+	});
+
+	it("setSearchInNotes(true) with a notes-only query goes from no match to a match", () => {
+		searchFor("find me");
+		st().setSearchInNotes(true);
+		expect(st().searchMatchIds).toEqual(["a1"]);
+		expect(st().searchCurrentIndex).toBe(0);
+	});
+
+	it("setSearchQuery honours the current scope", () => {
+		st().setSearchInNotes(true);
+		searchFor("find me");
+		expect(st().searchMatchIds).toEqual(["a1"]);
+	});
+
+	it("survives loadSchema and closeSchema (it is a preference, not document state)", () => {
+		st().setSearchInNotes(true);
+		st().loadSchema(TEST_SCHEMA, "/test.json");
+		expect(st().searchInNotes).toBe(true);
+		st().closeSchema();
+		expect(st().searchInNotes).toBe(true);
 	});
 });
 

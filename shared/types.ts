@@ -42,6 +42,8 @@ export interface AppSettings {
 	reopenLastFile?: boolean;
 	/** v0.8.2: expanded sidebar width in px, set by dragging its right edge. */
 	sidebarWidth?: number;
+	/** v0.8.2: node search also matches notes (the search-box toggle). Absent = false. */
+	searchInNotes?: boolean;
 	/** First-run setup wizard state (v0.6). */
 	setup?: {
 		/** True once the user has finished or dismissed the first-run wizard. */
