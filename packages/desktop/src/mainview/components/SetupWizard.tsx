@@ -1,6 +1,6 @@
 import * as Dialog from "@radix-ui/react-dialog";
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { McpInstallStep } from "../../../../../shared/types";
+import type { McpHost, McpInstallStep } from "../../../../../shared/types";
 import { electroview } from "../rpc";
 import { useSetupStore } from "../store/setupStore";
 
@@ -10,7 +10,15 @@ interface SetupStatus {
 	mcpServerAvailable: boolean;
 	mcpInstalled: boolean;
 	appVersion: string;
+	openCodeDetected: boolean;
+	openCodeInstalled: boolean;
+	pluginInstalled: boolean;
 }
+
+const HOST_LABEL: Record<McpHost, string> = {
+	claude: "Claude Code",
+	opencode: "OpenCode",
+};
 
 interface InstallResult {
 	ok: boolean;
@@ -32,6 +40,14 @@ const STEP_COLOR: Record<McpInstallStep["status"], string> = {
 	skipped: "var(--rv-text-tertiary)",
 };
 
+/** Hosts to default-select when the setup status first arrives, per host detection state. */
+function computeDefaultHosts(status: SetupStatus): Set<McpHost> {
+	const defaults = new Set<McpHost>();
+	if (status.claudeDetected && !status.pluginInstalled) defaults.add("claude");
+	if (status.openCodeDetected) defaults.add("opencode");
+	return defaults;
+}
+
 /**
  * SetupWizard — first-run onboarding (v0.6). Walks the user through RoadRaven
  * setup and can install the Claude Code MCP integration (register the
@@ -47,7 +63,9 @@ export function SetupWizard() {
 	const [status, setStatus] = useState<SetupStatus | null>(null);
 	const [installing, setInstalling] = useState(false);
 	const [result, setResult] = useState<InstallResult | null>(null);
+	const [selectedHosts, setSelectedHosts] = useState<Set<McpHost>>(new Set());
 	const autoChecked = useRef(false);
+	const hostsInitialized = useRef(false);
 
 	// Pull setup status on mount; auto-open the wizard on first run.
 	useEffect(() => {
@@ -64,6 +82,23 @@ export function SetupWizard() {
 			});
 	}, [openWizard]);
 
+	// Seed the host checkboxes once status first arrives: every detected host
+	// defaults on, except Claude Code when the plugin already covers it.
+	useEffect(() => {
+		if (!status || hostsInitialized.current) return;
+		hostsInitialized.current = true;
+		setSelectedHosts(computeDefaultHosts(status));
+	}, [status]);
+
+	const toggleHost = useCallback((host: McpHost) => {
+		setSelectedHosts((prev) => {
+			const next = new Set(prev);
+			if (next.has(host)) next.delete(host);
+			else next.add(host);
+			return next;
+		});
+	}, []);
+
 	const finish = useCallback(() => {
 		electroview?.rpc?.request.completeSetup({}).catch(() => {
 			// Best-effort: if persisting the flag fails the wizard re-opens next
@@ -77,7 +112,9 @@ export function SetupWizard() {
 		setInstalling(true);
 		setResult(null);
 		try {
-			const res = await electroview?.rpc?.request.installMcpIntegration({});
+			const res = await electroview?.rpc?.request.installMcpIntegration({
+				hosts: Array.from(selectedHosts),
+			});
 			if (res) setResult(res);
 			const s = await electroview?.rpc?.request.getSetupStatus({});
 			if (s) setStatus(s);
@@ -96,7 +133,7 @@ export function SetupWizard() {
 		} finally {
 			setInstalling(false);
 		}
-	}, []);
+	}, [selectedHosts]);
 
 	return (
 		<Dialog.Root
@@ -114,6 +151,8 @@ export function SetupWizard() {
 						status={status}
 						installing={installing}
 						result={result}
+						selectedHosts={selectedHosts}
+						onToggleHost={toggleHost}
 						onInstall={runInstall}
 					/>
 					<Footer
@@ -137,12 +176,16 @@ function StepBody({
 	status,
 	installing,
 	result,
+	selectedHosts,
+	onToggleHost,
 	onInstall,
 }: {
 	step: number;
 	status: SetupStatus | null;
 	installing: boolean;
 	result: InstallResult | null;
+	selectedHosts: Set<McpHost>;
+	onToggleHost: (host: McpHost) => void;
 	onInstall: () => void;
 }) {
 	if (step === 0) return <WelcomeStep status={status} />;
@@ -152,6 +195,8 @@ function StepBody({
 				status={status}
 				installing={installing}
 				result={result}
+				selectedHosts={selectedHosts}
+				onToggleHost={onToggleHost}
 				onInstall={onInstall}
 			/>
 		);
@@ -177,30 +222,39 @@ function McpStep({
 	status,
 	installing,
 	result,
+	selectedHosts,
+	onToggleHost,
 	onInstall,
 }: {
 	status: SetupStatus | null;
 	installing: boolean;
 	result: InstallResult | null;
+	selectedHosts: Set<McpHost>;
+	onToggleHost: (host: McpHost) => void;
 	onInstall: () => void;
 }) {
 	if (!status) return <Body>Checking setup…</Body>;
 	return (
 		<>
-			<Title>Claude Code MCP integration</Title>
+			<Title>MCP integration</Title>
 			<Body>
-				Register the <code style={codeStyle}>roadraven</code> MCP server in your
-				Claude Code config so Claude can create, edit, and push live status to
-				your roadmap. Close Claude Code before installing (it writes this config
-				too), then restart it afterwards. RoadRaven must be running for the
-				tools to work.
+				Register the <code style={codeStyle}>roadraven</code> MCP server with
+				your detected agent hosts so they can create, edit, and push live status
+				to your roadmap. Close the host app before installing (it writes this
+				config too), then restart it afterwards. RoadRaven must be running for
+				the tools to work.
 			</Body>
-			<DetectedList status={status} />
+			<HostList
+				status={status}
+				selectedHosts={selectedHosts}
+				onToggleHost={onToggleHost}
+			/>
 			<InstallLog result={result} />
 			<InstallButton
 				installing={installing}
 				serverAvailable={status.mcpServerAvailable}
-				alreadyInstalled={status.mcpInstalled}
+				hasSelection={selectedHosts.size > 0}
+				alreadyInstalled={status.mcpInstalled || status.openCodeInstalled}
 				onInstall={onInstall}
 			/>
 		</>
@@ -223,20 +277,52 @@ function DoneStep({ status }: { status: SetupStatus | null }) {
 
 /* ---- MCP step pieces ---- */
 
-function DetectedList({ status }: { status: SetupStatus }) {
+const ALL_HOSTS = ["claude", "opencode"] as const;
+
+/** Whether a host's row should appear at all — detected, or (Claude) covered by the plugin. */
+function isHostRowVisible(host: McpHost, status: SetupStatus): boolean {
+	if (host === "claude") return status.pluginInstalled || status.claudeDetected;
+	return status.openCodeDetected;
+}
+
+function HostList({
+	status,
+	selectedHosts,
+	onToggleHost,
+}: {
+	status: SetupStatus;
+	selectedHosts: Set<McpHost>;
+	onToggleHost: (host: McpHost) => void;
+}) {
+	const visibleHosts = ALL_HOSTS.filter((host) =>
+		isHostRowVisible(host, status),
+	);
 	return (
 		<div style={detectedListStyle}>
-			<Detected
-				ok={status.claudeDetected}
-				label="Claude Code detected"
-				fallback="Not detected — a new config will be created"
-			/>
+			{visibleHosts.length === 0 ? (
+				<Detected
+					key="none"
+					ok={false}
+					label=""
+					fallback="No Claude Code or OpenCode installation detected"
+				/>
+			) : (
+				visibleHosts.map((host) => (
+					<HostRow
+						key={host}
+						host={host}
+						status={status}
+						selectedHosts={selectedHosts}
+						onToggleHost={onToggleHost}
+					/>
+				))
+			)}
 			<Detected
 				ok={status.mcpServerAvailable}
 				label="MCP server bundle available"
 				fallback="Bundle missing — build the plugin first"
 			/>
-			{status.mcpInstalled && (
+			{(status.mcpInstalled || status.openCodeInstalled) && (
 				<Detected
 					ok
 					label="Already registered — reinstall to refresh"
@@ -247,15 +333,98 @@ function DetectedList({ status }: { status: SetupStatus }) {
 	);
 }
 
+/** A single host's row: the plugin-installed notice (Claude only) or its selection checkbox. */
+function HostRow({
+	host,
+	status,
+	selectedHosts,
+	onToggleHost,
+}: {
+	host: McpHost;
+	status: SetupStatus;
+	selectedHosts: Set<McpHost>;
+	onToggleHost: (host: McpHost) => void;
+}) {
+	if (host === "claude" && status.pluginInstalled) {
+		return (
+			<Detected
+				ok
+				label="Claude Code — already installed via the RoadRaven plugin"
+				fallback=""
+			/>
+		);
+	}
+	return (
+		<HostCheckbox
+			host={host}
+			checked={selectedHosts.has(host)}
+			onToggle={onToggleHost}
+		/>
+	);
+}
+
+function HostCheckbox({
+	host,
+	checked,
+	onToggle,
+}: {
+	host: McpHost;
+	checked: boolean;
+	onToggle: (host: McpHost) => void;
+}) {
+	return (
+		<label
+			style={{
+				fontSize: 12,
+				color: "var(--rv-text-secondary)",
+				display: "flex",
+				alignItems: "center",
+				gap: 8,
+				cursor: "pointer",
+			}}
+		>
+			<input
+				type="checkbox"
+				checked={checked}
+				onChange={() => onToggle(host)}
+			/>
+			{HOST_LABEL[host]}
+		</label>
+	);
+}
+
 function InstallLog({ result }: { result: InstallResult | null }) {
 	if (!result) return null;
+	const shared = result.steps.filter((s) => !s.host);
+	const byHost = groupStepsByHost(result.steps);
 	return (
 		<div style={logStyle}>
-			{result.steps.map((s) => (
+			{shared.map((s) => (
 				<StepLine key={s.id} step={s} />
+			))}
+			{byHost.map(([host, steps]) => (
+				<div key={host}>
+					<div style={hostGroupLabelStyle}>{HOST_LABEL[host]}</div>
+					{steps.map((s) => (
+						<StepLine key={s.id} step={s} />
+					))}
+				</div>
 			))}
 		</div>
 	);
+}
+
+function groupStepsByHost(
+	steps: McpInstallStep[],
+): Array<[McpHost, McpInstallStep[]]> {
+	const byHost = new Map<McpHost, McpInstallStep[]>();
+	for (const s of steps) {
+		if (!s.host) continue;
+		const list = byHost.get(s.host) ?? [];
+		list.push(s);
+		byHost.set(s.host, list);
+	}
+	return Array.from(byHost.entries());
 }
 
 function installLabel(installing: boolean, alreadyInstalled: boolean): string {
@@ -266,15 +435,17 @@ function installLabel(installing: boolean, alreadyInstalled: boolean): string {
 function InstallButton({
 	installing,
 	serverAvailable,
+	hasSelection,
 	alreadyInstalled,
 	onInstall,
 }: {
 	installing: boolean;
 	serverAvailable: boolean;
+	hasSelection: boolean;
 	alreadyInstalled: boolean;
 	onInstall: () => void;
 }) {
-	const disabled = installing || !serverAvailable;
+	const disabled = installing || !serverAvailable || !hasSelection;
 	const tone = disabled
 		? { opacity: 0.5, cursor: "not-allowed" as const }
 		: { opacity: 1, cursor: "pointer" as const };
@@ -496,6 +667,15 @@ const logStyle: React.CSSProperties = {
 	border: "1px solid var(--rv-border)",
 	display: "grid",
 	gap: 6,
+};
+
+const hostGroupLabelStyle: React.CSSProperties = {
+	fontSize: 11,
+	fontWeight: 700,
+	color: "var(--rv-text-tertiary)",
+	textTransform: "uppercase",
+	letterSpacing: "0.04em",
+	marginTop: 4,
 };
 
 const stepDetailStyle: React.CSSProperties = {

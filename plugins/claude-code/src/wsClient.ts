@@ -1,3 +1,4 @@
+import type { InstallKind } from "./installKind";
 import { readSentinel } from "./sentinel";
 
 export const RECONNECT_DELAYS_MS = [500, 1000, 2000, 4000, 8000, 16000, 30000];
@@ -7,6 +8,9 @@ const JITTER_MAX_MS = 200;
 export interface WsClientOptions {
 	source: string;
 	version: string;
+	// v0.8: how this server was installed (see installKind.ts). Left out of
+	// the hello frame when unset — the app treats it as optional.
+	install?: InstallKind;
 }
 
 export interface OutgoingEvent {
@@ -63,9 +67,15 @@ export function createWsClient(opts: WsClientOptions): WsClient {
 				ws = socket;
 				connected = true;
 				attempt = 0;
-				// hello frame: type="hello", source, version (D-27 RESEARCH §1.5)
+				// hello frame: type="hello", source, version (D-27 RESEARCH §1.5),
+				// install (v0.8 — lets the app pick the version-mismatch remedy)
 				socket.send(
-					`{"type":"hello","source":${JSON.stringify(opts.source)},"version":${JSON.stringify(opts.version)}}`,
+					JSON.stringify({
+						type: "hello",
+						source: opts.source,
+						version: opts.version,
+						install: opts.install,
+					}),
 				);
 				resolve(true);
 			});

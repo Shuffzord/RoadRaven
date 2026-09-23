@@ -26,9 +26,11 @@ const pkgTargets = [
 	"plugins/claude-code/package.json",
 ];
 
-// Non-JSON source/config files that embed the version as a string literal.
-// Each is validated (regex must match) before any file is written, so a
-// renamed literal aborts the whole bump instead of leaving a partial state.
+// Files that embed the version as a string literal rather than a top-level
+// package.json `version` field (some are JSON, matched by regex rather than
+// parsed, since only one field needs updating). Each is validated (regex
+// must match) before any file is written, so a renamed literal aborts the
+// whole bump instead of leaving a partial state.
 const textTargets = [
 	{
 		path: "packages/desktop/electrobun.config.ts",
@@ -42,6 +44,27 @@ const textTargets = [
 		regex: /const APP_VERSION = "[^"]+"/,
 		replacement: `const APP_VERSION = "${newVersion}"`,
 		label: 'const APP_VERSION = "..."',
+	},
+	{
+		// Claude Code plugin manifest (W5 — plugin marketplace install path).
+		path: "plugins/claude-code/.claude-plugin/plugin.json",
+		regex: /"version":\s*"[^"]+"/,
+		replacement: `"version": "${newVersion}"`,
+		label: '"version": "..."',
+	},
+	{
+		// Marketplace plugin entry's version (root .claude-plugin/marketplace.json).
+		path: ".claude-plugin/marketplace.json",
+		regex: /"version":\s*"[^"]+"/,
+		replacement: `"version": "${newVersion}"`,
+		label: '"version": "..." (marketplace plugin entry)',
+	},
+	{
+		// Pinned MCP server version the plugin's npx invocation installs.
+		path: "plugins/claude-code/.mcp.json",
+		regex: /@roadraven\/mcp@[^"]+/,
+		replacement: `@roadraven/mcp@${newVersion}`,
+		label: '"@roadraven/mcp@..."',
 	},
 ];
 
@@ -66,14 +89,13 @@ const preparedText = textTargets.map(({ path, regex, replacement, label }) => {
 		process.exit(1);
 	}
 	const content = readFileSync(path, "utf8");
-	const updated = content.replace(regex, replacement);
-	if (updated === content) {
+	if (!regex.test(content)) {
 		console.error(
 			`Failed to find '${label}' in ${path}. Refusing to write — partial bump would break lockstep invariant (D-04).`,
 		);
 		process.exit(1);
 	}
-	return { path, updated };
+	return { path, updated: content.replace(regex, replacement) };
 });
 
 for (const { path, pkg } of parsedPkgs) {

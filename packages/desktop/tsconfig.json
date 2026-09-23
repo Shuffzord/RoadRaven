@@ -2,7 +2,11 @@
 	"compilerOptions": {
 		"target": "ES2020",
 		"useDefineForClassFields": true,
-		"lib": ["ES2020", "DOM", "DOM.Iterable"],
+		// ES2022 rather than ES2020: the Hutch devkit's own sources typecheck as
+		// part of this program and use ES2021+ globals (AggregateError in
+		// WindowsUpdateTask.ts). Lib only declares what the runtime provides —
+		// Bun and CEF both do — and target stays ES2020 since Vite builds esnext.
+		"lib": ["ES2022", "DOM", "DOM.Iterable"],
 		"module": "ESNext",
 		"skipLibCheck": true,
 		"moduleResolution": "bundler",
@@ -14,7 +18,16 @@
 		"strict": true,
 		"noUnusedLocals": true,
 		"noUnusedParameters": true,
-		"noFallthroughCasesInSwitch": true
+		"noFallthroughCasesInSwitch": true,
+		// Electrobun 2.x resolves its APIs from the Hutch-projected devkit. Only
+		// these two specifiers are ever imported — enforced by biome
+		// noRestrictedImports and tests/architecture/no-direct-electrobun-imports —
+		// so map them directly instead of extending the devkit tsconfig, whose
+		// `baseUrl` TypeScript 6 errors on (TS5101).
+		"paths": {
+			"electrobun/bun": ["./.hutch/devkit/api/sdks/main/index.ts"],
+			"electrobun/view": ["./.hutch/devkit/api/browser/index.ts"]
+		}
 	},
 	"include": ["src", "../../shared"],
 	"exclude": ["node_modules", "dist", "build"]

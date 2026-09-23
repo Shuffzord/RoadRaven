@@ -2,13 +2,16 @@
   "name": "roadraven-workspace",
   "private": true,
   "license": "PolyForm-Noncommercial-1.0.0",
+  "packageManager": "bun@1.3.4",
   "workspaces": [
     "packages/*",
     "plugins/*"
   ],
   "scripts": {
+    "preinstall": "node scripts/verify-package-manager.js",
     "dev:hmr": "bun run --cwd packages/desktop dev:hmr",
     "build:canary": "bun run --cwd packages/desktop build:canary",
+    "build:canary:lite": "bun run --cwd packages/desktop build:canary:lite",
     "start": "bun run --cwd packages/desktop start",
     "dev": "bun run --cwd packages/desktop dev",
     "test": "bun run --filter '*' test",
@@ -18,7 +21,8 @@
     "test:build": "bun run --cwd packages/desktop build",
     "test:lint": "bunx @biomejs/biome lint packages/desktop/src/ shared/",
     "verify": "bun run test && bun run test:typecheck && bun run test:build && bun run test:lint",
-    "prepare": "husky"
+    "prepare": "husky",
+    "postinstall": "bun run --cwd packages/desktop prepare:electrobun"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.0",

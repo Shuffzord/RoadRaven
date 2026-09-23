@@ -68,3 +68,23 @@ scripts/storytelling-video/
 
 # WebSocket event-log runtime output (not source data); *.bak.json already ignored above
 *.events.jsonl
+
+# brag skill (testing) + its output
+.agents/skills/brag
+skills/brag/
+brag-output*/
+
+# scratch/temp outputs
+temp/
+
+# Hutch/Cottontail vendored toolchain (Electrobun 2.x) - native binaries, not source
+.hutch/
+
+# Cottontail build scratch (Electrobun 2.x) - per-PID temp, regenerated each build
+.cottontail-tmp/
+
+# Lockfiles from package managers other than bun (see scripts/verify-package-manager.js) -
+# bun.lock is the only lockfile this repo tracks.
+package-lock.json
+pnpm-lock.yaml
+yarn.lock

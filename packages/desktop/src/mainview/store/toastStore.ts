@@ -4,7 +4,8 @@ export type ToastType =
 	| "malformed"
 	| "unknown_node"
 	| "invalid_status"
-	| "disconnect";
+	| "disconnect"
+	| "version_mismatch";
 
 export interface ActiveToast {
 	id: string;
@@ -44,11 +45,17 @@ export const useToastStore = create<ToastState>((set) => ({
 			);
 
 			if (existing) {
-				// Merge: increment count and bump timestamp
+				// Merge: increment count, bump timestamp, keep the latest detail
+				// (a merged version_mismatch toast shows the latest remedy)
 				return {
 					toasts: state.toasts.map((t) =>
 						t.id === existing.id
-							? { ...t, count: t.count + 1, lastEventAt: now }
+							? {
+									...t,
+									detail: incoming.detail,
+									count: t.count + 1,
+									lastEventAt: now,
+								}
 							: t,
 					),
 				};

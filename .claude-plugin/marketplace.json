@@ -1,0 +1,15 @@
+{
+	"$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+	"name": "roadraven",
+	"description": "RoadRaven MCP integration — live roadmap status updates from Claude Code over a localhost WebSocket Event API.",
+	"owner": { "name": "Shuffzord", "url": "https://github.com/Shuffzord" },
+	"plugins": [
+		{
+			"name": "roadraven",
+			"description": "MCP server that lets Claude Code create, edit, and push live status updates to a running RoadRaven roadmap.",
+			"source": "./plugins/claude-code",
+			"category": "productivity",
+			"version": "0.8.0"
+		}
+	]
+}

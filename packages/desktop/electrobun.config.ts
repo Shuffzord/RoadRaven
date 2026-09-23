@@ -1,16 +1,30 @@
 import type { ElectrobunConfig } from "electrobun";
 
-// Default: CEF (Chromium) on all platforms — consistent rendering, avoids WebKitGTK bugs.
-// Override locally: set ROADRAVEN_RENDERER=webkit in .env.local to use native WebKit.
-const bundleCEF = process.env.ROADRAVEN_RENDERER !== "webkit";
+// Linux/macOS default: bundled CEF (Chromium) — WebKitGTK renders the app incorrectly.
+// Windows default: the system WebView2 (itself Chromium), so no CEF bundle and a
+// much smaller installer.
+// Override in .env.local: ROADRAVEN_RENDERER=cef bundles CEF, =webkit uses the
+// system webview (WebKitGTK / WKWebView / WebView2).
+const renderer = process.env.ROADRAVEN_RENDERER;
+const bundleCEF = renderer !== "webkit";
+const bundleCEFWin = renderer === "cef";
 
 export default {
 	app: {
 		name: "RoadRaven",
-		identifier: "RoadRaven.electrobun.dev",
-		version: "0.6.0",
+		identifier: "io.github.shuffzord.roadraven",
+		version: "0.8.0",
 	},
 	build: {
+		// Cottontail is Electrobun 2.x's default main-process runtime and ships a
+		// Bun compatibility layer (runtime_modules/bun: file-io, http-server-runtime).
+		// It covers what this main process needs — Bun.serve in eventServer.ts,
+		// Bun.file, Bun.write, import.meta.dir — so we stay on the framework
+		// default rather than pinning "bun" and carrying the divergence.
+		// Verified by launching the app and exercising the Event API, including
+		// the EADDRINUSE port-fallback path that depends on Bun.serve throwing
+		// synchronously (I-04 in eventServer.ts).
+		mainProcess: "cottontail",
 		copy: {
 			"dist/index.html": "views/mainview/index.html",
 			"dist/assets": "views/mainview/assets",
@@ -22,7 +36,7 @@ export default {
 		watchIgnore: ["dist/**"],
 		mac: { bundleCEF },
 		linux: { bundleCEF, icon: "assets/icon.png" },
-		win: { bundleCEF, icon: "assets/icon.ico" },
+		win: { bundleCEF: bundleCEFWin, icon: "assets/icon.ico" },
 	},
 	release: {
 		// Strategy A from RESEARCH.md Pattern 5 — GitHub Releases /latest/download

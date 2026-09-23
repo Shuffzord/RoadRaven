@@ -50,11 +50,14 @@ describe("SCAF-08: bundleCEF configuration", () => {
 		);
 		// Config must derive bundleCEF from ROADRAVEN_RENDERER env var (not hardcoded)
 		expect(content).toMatch(/process\.env\.ROADRAVEN_RENDERER/);
-		// All three platforms must reference the shared bundleCEF variable
+		// mac + linux default to bundled CEF (WebKitGTK renders incorrectly);
+		// windows defaults to the system WebView2 and bundles CEF only on opt-in
 		// (additional per-platform fields like `icon` are allowed)
 		expect(content).toMatch(/mac:\s*\{\s*bundleCEF[\s,}]/);
 		expect(content).toMatch(/linux:\s*\{\s*bundleCEF[\s,}]/);
-		expect(content).toMatch(/win:\s*\{\s*bundleCEF[\s,}]/);
+		expect(content).toMatch(/win:\s*\{\s*bundleCEF:\s*bundleCEFWin[\s,}]/);
+		expect(content).toMatch(/bundleCEF\s*=\s*renderer !== "webkit"/);
+		expect(content).toMatch(/bundleCEFWin\s*=\s*renderer === "cef"/);
 		// Must NOT have hardcoded false
 		expect(content).not.toMatch(/bundleCEF:\s*false/);
 	});
@@ -73,15 +76,22 @@ describe("SCAF-03: RPC contract", () => {
 });
 
 describe("SCAF-09: Updater safety", () => {
-	it("index.ts wraps Updater.localInfo.channel() in try/catch", () => {
+	// The try/catch-to-"dev" fallback moved from src/bun/index.ts into the
+	// platform seam (src/bun/platform/updater.ts's getReleaseChannel) as part
+	// of the Electrobun platform-adapter refactor — index.ts now just calls
+	// getReleaseChannel() and no longer touches Updater.localInfo directly.
+	it("platform/updater.ts wraps Updater.localInfo.channel() in try/catch", () => {
 		const content = readFileSync(
-			join(DESKTOP_ROOT, "src/bun/index.ts"),
+			join(DESKTOP_ROOT, "src/bun/platform/updater.ts"),
 			"utf-8",
 		);
-		// Must have the safe pattern: let channel = "dev" then try { channel = await ... }
-		expect(content).toContain('let channel = "dev"');
-		expect(content).toContain("Updater.localInfo.channel()");
-		// Must NOT have the unsafe pattern: const channel = await Updater.localInfo.channel()
+		// Must have the safe pattern: the call sits INSIDE a try block whose
+		// catch falls back to "dev". Asserting enclosure rather than merely the
+		// presence of "try {" — a bare substring check passes for any try block
+		// anywhere in the file, including one that does not guard this call.
+		expect(content).toMatch(/try\s*\{[^}]*Updater\.localInfo\.channel\(\)/s);
+		expect(content).toMatch(/catch[\s\S]*?return "dev"/);
+		// Must NOT have the unsafe pattern: an unguarded call outside try/catch.
 		expect(content).not.toMatch(
 			/const channel\s*=\s*await\s+Updater\.localInfo\.channel\(\)/,
 		);

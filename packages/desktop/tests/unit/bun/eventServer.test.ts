@@ -8,6 +8,10 @@ import { DEFAULT_PORT, startEventServer } from "../../../src/bun/eventServer";
 // EADDRINUSE-specific regression lives in eventServer.eaddrinuse.test.ts.
 
 const NO_OP_OPTS = {
+	appVersion: "0.8.0",
+	// v0.8: StartOptions now requires isWizardCopyCurrent (consulted on each
+	// version mismatch to pick the remedy).
+	isWizardCopyCurrent: () => false,
 	onFlush: () => {
 		/* noop */
 	},
@@ -28,6 +32,44 @@ const NO_OP_OPTS = {
 	},
 };
 
+/** Connects a WS client to the server and waits for the connection to open. */
+async function connectWs(port: number): Promise<WebSocket> {
+	const ws = new WebSocket(`ws://127.0.0.1:${port}`);
+	await new Promise<void>((resolve) =>
+		ws.addEventListener("open", () => resolve()),
+	);
+	return ws;
+}
+
+/** Connects, sends a hello frame with the given version (and v0.8 install, if any), waits for it to be processed, then closes. */
+async function helloAndClose(
+	port: number,
+	version: string,
+	source = "test-agent",
+	install?: string,
+): Promise<void> {
+	const ws = await connectWs(port);
+	ws.send(JSON.stringify({ type: "hello", source, version, install }));
+	// Small delay for message to be processed
+	await new Promise((r) => setTimeout(r, 50));
+	ws.close();
+}
+
+/** Occupies a real port with a dummy server for the duration of `fn`, always freeing it after. */
+async function withOccupiedPort<T>(
+	fn: (occupiedPort: number) => Promise<T>,
+): Promise<T> {
+	const dummy = Bun.serve({
+		port: 0,
+		fetch: () => new Response("dummy"),
+	});
+	try {
+		return await fn(dummy.port);
+	} finally {
+		dummy.stop(true);
+	}
+}
+
 describe("EventServer (WebSocket lifecycle)", () => {
 	const handles: Array<{ stop(): Promise<void> }> = [];
 
@@ -36,55 +78,58 @@ describe("EventServer (WebSocket lifecycle)", () => {
 		await Promise.all(handles.splice(0).map((h) => h.stop()));
 	});
 
-	it("binds on the default port 47921 when nothing conflicts", async () => {
-		// Use port 0 (OS-assigned) to confirm the bind path works without risking
-		// collision with a real running instance. The I-04 test uses 47931 for real EADDRINUSE.
+	/** Starts a server with NO_OP_OPTS + overrides, asserts it bound, and registers it for cleanup. */
+	async function startTestServer(
+		overrides: Partial<Parameters<typeof startEventServer>[0]> = {},
+	) {
 		const result = await startEventServer({
 			...NO_OP_OPTS,
 			requestedPort: 0,
 			isUserSpecified: true,
+			...overrides,
 		});
 		expect(result.ok).toBe(true);
-		if (result.ok) {
-			handles.push(result.handle);
-			expect(result.handle.port).toBeGreaterThan(0);
-		}
+		if (!result.ok) return null;
+		handles.push(result.handle);
+		return result.handle;
+	}
+
+	/** Starts a server whose onError calls are captured into the returned `errors` array. */
+	async function startServerCapturingErrors(
+		overrides: Partial<Parameters<typeof startEventServer>[0]> = {},
+	) {
+		const errors: Array<{ type: string; source: string }> = [];
+		const handle = await startTestServer({
+			onError: (err) => errors.push(err),
+			...overrides,
+		});
+		return { handle, errors };
+	}
+
+	it("binds on the default port 47921 when nothing conflicts", async () => {
+		// Use port 0 (OS-assigned) to confirm the bind path works without risking
+		// collision with a real running instance. The I-04 test uses 47931 for real EADDRINUSE.
+		const handle = await startTestServer();
+		expect(handle?.port).toBeGreaterThan(0);
 	});
 
 	it("falls back to +1..+9 when default port is taken (D-01)", async () => {
 		// Bind a dummy server on port 0 (OS-assigned), then use that port as the
 		// requested port with isUserSpecified: false — confirms the fallback loop
 		// scans +1..+9. We use isUserSpecified: false so the fallback activates.
-		const dummy = Bun.serve({
-			port: 0,
-			fetch: () => new Response("dummy"),
-		});
-		const occupiedPort = dummy.port;
-		try {
-			const result = await startEventServer({
-				...NO_OP_OPTS,
+		await withOccupiedPort(async (occupiedPort) => {
+			const handle = await startTestServer({
 				requestedPort: occupiedPort,
 				isUserSpecified: false,
 			});
-			expect(result.ok).toBe(true);
-			if (result.ok) {
-				handles.push(result.handle);
-				// Should have bound on a different port (fallback)
-				expect(result.handle.port).not.toBe(occupiedPort);
-			}
-		} finally {
-			dummy.stop(true);
-		}
+			// Should have bound on a different port (fallback)
+			expect(handle?.port).not.toBe(occupiedPort);
+		});
 	});
 
 	it("returns in_use error when user-specified port is taken (D-02 — no fallback)", async () => {
 		// Occupy a port with a dummy server
-		const dummy = Bun.serve({
-			port: 0,
-			fetch: () => new Response("dummy"),
-		});
-		const occupiedPort = dummy.port;
-		try {
+		await withOccupiedPort(async (occupiedPort) => {
 			const result = await startEventServer({
 				...NO_OP_OPTS,
 				requestedPort: occupiedPort,
@@ -95,53 +140,25 @@ describe("EventServer (WebSocket lifecycle)", () => {
 				expect(result.error).toBe("in_use");
 				expect(result.attempted).toEqual([occupiedPort]);
 			}
-		} finally {
-			dummy.stop(true);
-		}
+		});
 	});
 
 	it("accepts hello frame within 2s grace window (D-05)", async () => {
-		const result = await startEventServer({
-			...NO_OP_OPTS,
-			requestedPort: 0,
-			isUserSpecified: true,
-		});
-		expect(result.ok).toBe(true);
-		if (!result.ok) return;
-		handles.push(result.handle);
+		const handle = await startTestServer();
+		if (!handle) return;
 
-		const ws = new WebSocket(`ws://127.0.0.1:${result.handle.port}`);
-		await new Promise<void>((resolve) =>
-			ws.addEventListener("open", () => resolve()),
-		);
-		ws.send(
-			JSON.stringify({ type: "hello", source: "test-agent", version: "1" }),
-		);
-		// Small delay for message to be processed
-		await new Promise((r) => setTimeout(r, 50));
-		ws.close();
+		await helloAndClose(handle.port, "1");
 		// No assertion on internal state needed — hello processing is fire-and-forget;
 		// the absence of any thrown error confirms the path is handled.
 		expect(true).toBe(true);
 	});
 
 	it("stamps source: 'unknown' when no hello frame arrives in grace window", async () => {
-		const errors: Array<{ type: string; source: string }> = [];
-		const result = await startEventServer({
-			...NO_OP_OPTS,
-			onError: (err) => errors.push(err),
-			requestedPort: 0,
-			isUserSpecified: true,
-		});
-		expect(result.ok).toBe(true);
-		if (!result.ok) return;
-		handles.push(result.handle);
+		const { handle, errors } = await startServerCapturingErrors();
+		if (!handle) return;
 
 		// Connect and immediately close (abnormal) without sending hello
-		const ws = new WebSocket(`ws://127.0.0.1:${result.handle.port}`);
-		await new Promise<void>((resolve) =>
-			ws.addEventListener("open", () => resolve()),
-		);
+		const ws = await connectWs(handle.port);
 		// Close without hello — should fire disconnect error with source: "unknown"
 		ws.close();
 		await new Promise((r) => setTimeout(r, 100));
@@ -153,5 +170,55 @@ describe("EventServer (WebSocket lifecycle)", () => {
 
 	it("DEFAULT_PORT is 47921", () => {
 		expect(DEFAULT_PORT).toBe(47921);
+	});
+
+	it("fires exactly one version_mismatch error when hello version major.minor differs from appVersion", async () => {
+		const { handle, errors } = await startServerCapturingErrors({
+			appVersion: "0.8.0",
+		});
+		if (!handle) return;
+
+		await helloAndClose(handle.port, "0.7.2");
+
+		const mismatchErrors = errors.filter((e) => e.type === "version_mismatch");
+		expect(mismatchErrors).toHaveLength(1);
+		expect(mismatchErrors[0]?.source).toBe("test-agent");
+	});
+
+	it("fires no version_mismatch error when hello version major.minor matches appVersion", async () => {
+		const { handle, errors } = await startServerCapturingErrors({
+			appVersion: "0.8.0",
+		});
+		if (!handle) return;
+
+		await helloAndClose(handle.port, "0.8.3");
+
+		expect(errors.filter((e) => e.type === "version_mismatch")).toHaveLength(0);
+	});
+
+	// v0.8 end-to-end: a fake producer connects over the real socket and the
+	// emitted detail carries the remedy as its third field.
+	it.each([
+		["0.7.2", "plugin", false, "0.7.2|0.8.0|update-plugin"],
+		["0.7.2", "npm", false, "0.7.2|0.8.0|update-npm"],
+		["0.7.2", "local", true, "0.7.2|0.8.0|restart-agent"],
+		["0.1.0", undefined, true, "0.1.0|0.8.0|restart-agent"],
+		["0.1.0", undefined, false, "0.1.0|0.8.0|reinstall"],
+		["0.9.1", "plugin", true, "0.9.1|0.8.0|update-app"],
+	])("hello version=%s install=%s wizardCopyCurrent=%s → detail %s", async (version, install, wizardCopyCurrent, expectedDetail) => {
+		const errors: Array<{ type: string; source: string; detail?: string }> = [];
+		const handle = await startTestServer({
+			appVersion: "0.8.0",
+			isWizardCopyCurrent: () => wizardCopyCurrent,
+			onError: (err) => errors.push(err),
+		});
+		if (!handle) return;
+
+		await helloAndClose(handle.port, version, "claude-code", install);
+
+		const mismatch = errors.filter((e) => e.type === "version_mismatch");
+		expect(mismatch).toHaveLength(1);
+		expect(mismatch[0]?.source).toBe("claude-code");
+		expect(mismatch[0]?.detail).toBe(expectedDetail);
 	});
 });

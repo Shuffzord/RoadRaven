@@ -28,6 +28,22 @@ describe("toastStore", () => {
 		expect(useToastStore.getState().toasts[0].count).toBe(3);
 	});
 
+	it("a merged toast keeps the latest detail (v0.8 — latest mismatch remedy)", () => {
+		useToastStore.getState().pushToast({
+			type: "version_mismatch",
+			source: "claude-code",
+			detail: "0.1.0|0.8.0|reinstall",
+		});
+		useToastStore.getState().pushToast({
+			type: "version_mismatch",
+			source: "claude-code",
+			detail: "0.1.0|0.8.0|restart-agent",
+		});
+		const [toast] = useToastStore.getState().toasts;
+		expect(toast.count).toBe(2);
+		expect(toast.detail).toBe("0.1.0|0.8.0|restart-agent");
+	});
+
 	it("does not merge when > 5s apart", () => {
 		vi.useFakeTimers();
 		useToastStore

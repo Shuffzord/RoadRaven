@@ -1,43 +1,13 @@
-import { resolve as pathResolve } from "node:path";
 import { getLogger } from "@logtape/logtape";
-import Electrobun, {
-	BrowserView,
-	BrowserWindow,
-	Updater,
-	Utils,
-} from "electrobun/bun";
-import type {
-	RoadmapNode,
-	RoadmapSchema,
-} from "../../../../packages/core/src/schema.ts";
 import type { RoadmapRPCType } from "../../../../shared/types.ts";
 // atomicWrite + splitSchemaByOwnership are consumed via saveFile.ts which owns
 // the saveFile/flushPending logic. Re-exported below so external callers (and
 // the Plan 04a acceptance grep) can see the persistence surface at a glance.
 import { agentRequestHandler } from "./agentRequestHandler";
 import { atomicWrite } from "./atomicWrite";
-import { writeLoadBackup } from "./backups";
-import { canonicalizeSchemaJson } from "./canonicalJson";
-import { markSelfWrite, stopAllWatchers, watchFile } from "./fileWatcher";
 import { bunLogger, setupBunLogging } from "./logging";
-import {
-	buildOwnershipMap,
-	clearOwnershipMap,
-	getOwnership,
-	setSourceTemplate,
-	splitSchemaByOwnership,
-} from "./refMap";
-import { defaultReadFile, resolveRefsWithOwnership } from "./resolveRefs";
-import {
-	clearCachedMainPath,
-	flushPending,
-	isPathWithinMainDir,
-	pushDialogAllowlistPath,
-	saveFileHandler,
-	setCachedMainPath,
-	setCachedSchema,
-} from "./saveFile";
-import { nativeSaveDialog } from "./saveFileDialog";
+import { splitSchemaByOwnership } from "./refMap";
+import { flushPending, pushDialogAllowlistPath } from "./saveFile";
 
 // Persistence surface re-exports — imported by Plan 04b/04c
 export { atomicWrite, splitSchemaByOwnership };
@@ -45,19 +15,33 @@ export { atomicWrite, splitSchemaByOwnership };
 import {
 	DEFAULT_PORT,
 	type EventServerHandle,
-	getSidecarPath as getEventSidecarPath,
 	startEventServer,
 } from "./eventServer";
-import { replayEventLog } from "./eventsLog";
 import { serverLogger } from "./logging";
-import { getSetupStatus, installMcpIntegration } from "./mcpInstaller";
+import {
+	getInstalledMcpServerPath,
+	isInstalledMcpServerCurrent,
+	refreshInstalledMcpServer,
+} from "./mcpInstaller";
+import { onBeforeQuit } from "./platform/lifecycle";
+import { showNotification } from "./platform/notifications";
+import { getReleaseChannel } from "./platform/updater";
+import { createMainWindow, defineMainRpc } from "./platform/window";
+import { createDialogRpcHandlers } from "./rpc/dialogRpc";
+import { createEventApiRpcHandlers } from "./rpc/eventApiRpc";
+import {
+	type AppRpc,
+	createFileRpcHandlers,
+	type MainWindow,
+} from "./rpc/fileRpc";
+import { createSetupRpcHandlers } from "./rpc/setupRpc";
 import { deleteSentinel, writeSentinel } from "./sentinel";
-import { addRecentFile, loadSettings, saveSettings } from "./settings";
+import { loadSettings, saveSettings } from "./settings";
 
 // App version shown in the Setup Wizard. scripts/bump-version.ts rewrites this
 // literal (alongside the package.json + electrobun.config.ts versions) so it
 // stays in lockstep — do not edit by hand.
-const APP_VERSION = "0.6.0";
+const APP_VERSION = "0.8.0";
 
 // Re-export the RPC type so downstream modules can import from the app entry
 export type { RoadmapRPCType };
@@ -89,11 +73,25 @@ const isUserSpecified = envPort !== null || settingsPort !== null;
 // so TypeScript can see the declaration before all uses.
 let eventServerHandle: EventServerHandle | null = null;
 
-// Note: mainWindow is not yet created here. The onFlush/onEvent callbacks use
-// mainWindow which is defined later in this file. This works because the callbacks
-// are closures — they capture the `mainWindow` binding which will be assigned
-// before any WebSocket events arrive (server binds before window is shown but
-// events require a WS producer to connect after the app is visible).
+// mainWindow is declared here (before startEventServer, the RPC table, and the
+// shutdown hooks) so every callback/handler below can close over it by
+// reference. It is not created until further down this file — that's fine
+// because none of these closures run until after the window exists (the
+// event server binds and the RPC handlers register before the window is
+// shown, but events/RPC calls require a producer/renderer that arrives
+// later).
+let mainWindow: MainWindow;
+
+// Note: mainWindow is not yet created here. The callbacks below close over the
+// binding and are assigned it later in this file.
+//
+// They must therefore guard it. The event server binds BEFORE the window
+// exists, and a producer can connect in that gap — an MCP server already
+// running from a previous session reconnects on a loop and will hit the port
+// the instant it opens. This previously crashed the main process with
+// "undefined is not an object (evaluating 'mainWindow.webview')". These pushes
+// are fire-and-forget renderer notifications, so dropping them before the
+// window exists is correct: there is nothing to render into yet.
 //
 // I-09 fix (Plan 04-03 Task 6): onError and onConnectionChange now send active
 // pushEventApi* RPC messages. State vars below track current server state so
@@ -103,17 +101,37 @@ let currentPort: number | null = null;
 let currentErrorMessage: string | null = null;
 let currentConnectedCount = 0;
 
+// v0.8: bring a stale Setup Wizard copy of the MCP server up to date with the
+// one bundled in this app, before the event server starts judging producer
+// versions. Skipped on the dev channel so `bun run dev` never overwrites the
+// user's installed copy with a workspace build.
+if ((await getReleaseChannel()) === "dev") {
+	bunLogger.info("MCP server refresh skipped on the dev channel");
+} else {
+	try {
+		const refresh = refreshInstalledMcpServer();
+		bunLogger.info`MCP server refresh: ${refresh} (${getInstalledMcpServerPath()})`;
+	} catch (e) {
+		bunLogger.warn`MCP server refresh failed: ${String(e)}`;
+	}
+}
+
 const eventServerResult = await startEventServer({
 	requestedPort,
 	isUserSpecified,
+	// v0.8: the server compares this against the version in each producer's
+	// hello frame so an MCP server installed independently of the app (npm /
+	// Claude Code plugin) cannot drift silently.
+	appVersion: APP_VERSION,
+	isWizardCopyCurrent: isInstalledMcpServerCurrent,
 	onFlush: (updates) => {
-		mainWindow.webview.rpc?.send.pushStatusUpdate({ updates });
+		mainWindow?.webview.rpc?.send.pushStatusUpdate({ updates });
 	},
 	onEvent: (event) => {
-		mainWindow.webview.rpc?.send.pushEventLog({ events: [event] });
+		mainWindow?.webview.rpc?.send.pushEventLog({ events: [event] });
 	},
 	onError: (err) => {
-		mainWindow.webview.rpc?.send.pushEventApiError({
+		mainWindow?.webview.rpc?.send.pushEventApiError({
 			type: err.type,
 			source: err.source,
 			detail: err.detail,
@@ -121,7 +139,7 @@ const eventServerResult = await startEventServer({
 	},
 	onConnectionChange: (count) => {
 		currentConnectedCount = count;
-		mainWindow.webview.rpc?.send.pushEventApiState({
+		mainWindow?.webview.rpc?.send.pushEventApiState({
 			status: currentStatus,
 			port: currentPort,
 			connectedCount: count,
@@ -133,6 +151,11 @@ const eventServerResult = await startEventServer({
 	// the renderer's agentRpcHandler (Plan 06-04). The mainWindow binding is
 	// captured by closure; same pattern as onFlush/onEvent/onError above.
 	onAgentRequest: (ws, request) => {
+		// Unlike the pushes above, an agent request expects a reply, so it cannot
+		// be silently dropped — but it cannot be served before the renderer
+		// exists either. Ignoring it here lets the caller's request time out and
+		// retry, which is what it already does when the app is not running.
+		if (!mainWindow) return;
 		void agentRequestHandler(ws, request, mainWindow);
 	},
 });
@@ -164,12 +187,7 @@ const DEV_SERVER_URL = `http://localhost:${DEV_SERVER_PORT}`;
  * (dev checkout). We catch that and default to "dev" channel.
  */
 async function getMainViewUrl(): Promise<string> {
-	let channel = "dev";
-	try {
-		channel = await Updater.localInfo.channel();
-	} catch {
-		// version.json not found -- treating as dev channel
-	}
+	const channel = await getReleaseChannel();
 
 	if (channel === "dev") {
 		try {
@@ -182,11 +200,6 @@ async function getMainViewUrl(): Promise<string> {
 
 	return "views://mainview/index.html";
 }
-
-// $ref resolution + ownership tagging lives in `./resolveRefs.ts` so the
-// production loadFile handler (this file) and the test-only loadFileHandler
-// in saveFile.ts share one implementation. Production passes a `watchFile`
-// callback; tests omit it.
 
 // EDIT-13 quit-flush + EDIT-18 Linux SIGTERM-flush wiring.
 //
@@ -205,7 +218,7 @@ async function getMainViewUrl(): Promise<string> {
 // before-quit emit) cannot tear an atomicWrite mid-rename — the SIGINT
 // handler's process.exit(0) waits for the same promise the before-quit
 // handler is awaiting.
-Electrobun.events.on("before-quit", async () => {
+onBeforeQuit(async () => {
 	if (eventServerHandle) {
 		await eventServerHandle.stop();
 	}
@@ -241,7 +254,7 @@ process.on("exit", (code) => {
 });
 
 // Define RPC handlers before creating the window (Electrobun pattern)
-const rpc = BrowserView.defineRPC<RoadmapRPCType>({
+const rpc = defineMainRpc<RoadmapRPCType>({
 	maxRequestTime: 120_000, // 2 min — native file dialogs block until user picks a file
 	handlers: {
 		requests: {
@@ -251,252 +264,22 @@ const rpc = BrowserView.defineRPC<RoadmapRPCType>({
 				logger[level](message, data ? { ...data } : undefined);
 			},
 
-			// loadFile handler with Zod validation + error propagation + app-data backup
-			loadFile: async ({ path: filePath }) => {
-				const { NodeStatusSchema, RoadmapSchemaSchema } = await import(
-					"../../../../packages/core/src/schema"
-				);
+			...createFileRpcHandlers({
+				getMainWindow: () => mainWindow,
+				getEventServerHandle: () => eventServerHandle,
+			}),
 
-				let raw: string;
-				try {
-					raw = await Bun.file(filePath).text();
-				} catch (err) {
-					bunLogger.error`Failed to read file ${filePath}: ${String(err)}`;
-					return {
-						data: null,
-						errors: [
-							{
-								path: "",
-								message: `Failed to read file: ${String(err)}`,
-								code: "file_read_error",
-							},
-						],
-					};
-				}
+			...createDialogRpcHandlers(),
 
-				// Write load backup into the app-data backups dir (VIEW-12; v0.7
-				// phase 3 — no longer written next to the roadmap file).
-				try {
-					const bakPath = writeLoadBackup(filePath, raw);
-					bunLogger.info`Backup written to ${bakPath}`;
-				} catch (err) {
-					bunLogger.error`Failed to write backup: ${String(err)}`;
-				}
-
-				// Parse JSON
-				let parsed: unknown;
-				try {
-					parsed = JSON.parse(raw);
-				} catch (err) {
-					return {
-						data: null,
-						errors: [
-							{
-								path: "",
-								message: `Invalid JSON: ${String(err)}`,
-								code: "json_parse_error",
-							},
-						],
-					};
-				}
-
-				// Validate with Zod
-				const result = RoadmapSchemaSchema.safeParse(parsed);
-
-				if (!result.success) {
-					return {
-						data: null,
-						errors: result.error.issues.map((issue) => ({
-							path: issue.path.map(String).join("/"),
-							message: issue.message,
-							code: String(issue.code),
-						})),
-					};
-				}
-				const schemaData = result.data;
-				const errors: Array<{
-					path: string;
-					message: string;
-					code: string;
-				}> = [];
-
-				// Resolve $ref nodes
-				const fileChangeCallback = (changedPath: string) => {
-					if (changedPath.endsWith(".bak.json")) return;
-					bunLogger.info`File changed: ${changedPath}`;
-					mainWindow.webview.rpc?.send.pushFileChanged({
-						path: changedPath,
-						mainPath: resolvedMain,
-					});
-				};
-
-				// Stop existing watchers before resolveRefs sets up new $ref watchers
-				stopAllWatchers();
-
-				const resolvedMain = pathResolve(filePath);
-
-				try {
-					if (
-						schemaData &&
-						typeof schemaData === "object" &&
-						"nodes" in schemaData &&
-						Array.isArray(schemaData.nodes)
-					) {
-						const originalNodes = schemaData.nodes as RoadmapNode[];
-						// EDIT-16: capture the pre-resolution main-file nodes so
-						// splitSchemaByOwnership can restore $ref placeholders on save.
-						setSourceTemplate(resolvedMain, originalNodes);
-						// Seed the ownership map rooted at the main file before expansion;
-						// resolveRefs then overlays per-ref descendants via setOwnership.
-						buildOwnershipMap(
-							originalNodes.filter((n) => !n.$ref),
-							resolvedMain,
-						);
-
-						schemaData.nodes = await resolveRefsWithOwnership(
-							originalNodes,
-							filePath,
-							resolvedMain,
-							{
-								readFile: defaultReadFile,
-								onWatch: (path) => watchFile(path, fileChangeCallback),
-							},
-						);
-					}
-				} catch (err) {
-					bunLogger.error`Failed to resolve $ref nodes: ${String(err)}`;
-				}
-
-				// Start file watcher for the main file
-				watchFile(filePath, fileChangeCallback);
-
-				// Track recent file
-				addRecentFile(filePath);
-
-				// Cache for saveFile / flushPending (path-traversal allowlist)
-				setCachedMainPath(resolvedMain);
-				if (schemaData && typeof schemaData === "object") {
-					setCachedSchema(schemaData as RoadmapSchema);
-				}
-
-				// Push ownership map to webview for optimistic cross-boundary detection
-				try {
-					mainWindow.webview.rpc?.send.pushOwnershipMap({
-						entries: [...getOwnership().entries()],
-					});
-				} catch (err) {
-					bunLogger.error`pushOwnershipMap failed: ${String(err)}`;
-				}
-
-				// Return sidecar status hydration with the loaded schema. Applying it in
-				// the renderer after loadSchema prevents target-file events from mutating
-				// the previously displayed roadmap while this request is in flight.
-				const sidecarPath = getEventSidecarPath(filePath);
-				eventServerHandle?.setSidecarPath(sidecarPath);
-				const sidecarUpdates: Array<{
-					nodeId: string;
-					status: RoadmapNode["status"];
-					meta?: Record<string, unknown>;
-					source?: string;
-					lastEventAt: number;
-				}> = [];
-				try {
-					const { overlay, events } = await replayEventLog(sidecarPath);
-					for (const value of overlay.values()) {
-						const status = NodeStatusSchema.safeParse(value.status);
-						if (!status.success) {
-							bunLogger.warn`Ignoring invalid sidecar status ${value.status} for node ${value.nodeId}`;
-							continue;
-						}
-						sidecarUpdates.push({
-							nodeId: value.nodeId,
-							status: status.data,
-							meta: value.meta,
-							source: value.source,
-							lastEventAt: value.lastEventAt,
-						});
-					}
-					if (events.length > 0) {
-						mainWindow.webview.rpc?.send.pushEventLog({ events });
-					}
-				} catch (err) {
-					bunLogger.error`sidecar replay failed for ${filePath}: ${String(err)}`;
-				}
-
-				return {
-					data: schemaData as RoadmapRPCType["bun"]["requests"]["loadFile"]["response"]["data"],
-					filePath: resolvedMain,
-					errors,
-					sidecarUpdates,
-				};
-			},
-
-			// saveFile handler — atomic write with path-traversal session allowlist
-			// (T-03.04-01; see dialogAllowlist in saveFile.ts) and Zod pre-write
-			// validation (T-03.04-07). Shared logic lives in saveFile.ts.
-			saveFile: async ({ schema, filePath }) => {
-				return saveFileHandler({ schema, filePath });
-			},
-
-			// openFilePicker handler (Electrobun native dialog)
-			openFilePicker: async () => {
-				try {
-					const { homedir } = await import("node:os");
-					const paths = await Utils.openFileDialog({
-						startingFolder: homedir(),
-						allowedFileTypes: "json",
-						canChooseFiles: true,
-						canChooseDirectory: false,
-						allowsMultipleSelection: false,
-					});
-					return paths?.[0] ?? "";
-				} catch (err) {
-					bunLogger.error`openFileDialog failed: ${String(err)}`;
-					return "";
-				}
-			},
-
-			// resolveRef handler — allowlisted to the currently-loaded main
-			// file's directory. A crafted roadmap JSON with a $ref pointing
-			// outside baseDir is a data-exfiltration primitive; same guard
-			// lives in resolveRefs for the load path.
-			resolveRef: async ({ refPath }) => {
-				const absPath = pathResolve(refPath);
-				if (!isPathWithinMainDir(absPath)) {
-					bunLogger.error`resolveRef rejected: ${refPath} escapes main-file directory`;
-					return [];
-				}
-				try {
-					const raw = await Bun.file(absPath).text();
-					const parsed = JSON.parse(raw);
-					const nodes: RoadmapNode[] = Array.isArray(parsed)
-						? parsed
-						: (parsed.nodes ?? [parsed]);
-					return nodes;
-				} catch (err) {
-					bunLogger.error`Failed to resolve ref ${refPath}: ${String(err)}`;
-					return [];
-				}
-			},
-
-			// setNodeAllowlist handler — routes to the event server's classification allowlist
-			setNodeAllowlist: ({ nodeIds, statusIds }) => {
-				eventServerHandle?.setAllowlist(nodeIds, statusIds);
-				return { ok: true as const };
-			},
-
-			// getEventApiState handler — renderer pulls current state on mount.
-			// The Bun-side push at startup races bundle load and is dropped silently
-			// if the renderer's RPC handlers haven't registered yet (UAT D-07
-			// regression: pill / welcome URL line stuck at "off").
-			getEventApiState: () => {
-				return {
+			...createEventApiRpcHandlers({
+				getEventServerHandle: () => eventServerHandle,
+				getState: () => ({
 					status: currentStatus,
 					port: currentPort,
 					connectedCount: currentConnectedCount,
 					errorMessage: currentErrorMessage,
-				};
-			},
+				}),
+			}),
 
 			// saveSettings handler
 			saveSettings: ({ settings }) => {
@@ -508,151 +291,7 @@ const rpc = BrowserView.defineRPC<RoadmapRPCType>({
 				return { settings: loadSettings() };
 			},
 
-			// -- Setup Wizard (v0.6) --------------------------------------------
-			// getSetupStatus: renderer pulls this on mount to decide whether to
-			// auto-open the first-run wizard and to seed the MCP step's state.
-			getSetupStatus: () => {
-				return getSetupStatus(APP_VERSION, loadSettings());
-			},
-			// installMcpIntegration: copy the bundled MCP server into the user
-			// data dir and register it in the user's Claude Code config.
-			installMcpIntegration: () => {
-				const result = installMcpIntegration();
-				if (result.ok) {
-					bunLogger.info`MCP integration installed: server=${result.serverPath} config=${result.configPath}`;
-				} else {
-					const failed = result.steps.find((s) => s.status === "error");
-					bunLogger.warn`MCP integration install failed at step '${failed?.id}': ${failed?.detail}`;
-				}
-				return result;
-			},
-			// completeSetup: persist that the first-run wizard is done so it stops
-			// auto-opening on subsequent launches.
-			completeSetup: () => {
-				saveSettings({ setup: { completed: true } });
-				return { ok: true as const };
-			},
-
-			// newFile handler (EDIT-17): produce a fresh in-memory schema with a
-			// single root node. No disk write happens here — autosave will fire
-			// saveFileAs on the first mutation flush; the user picks a path then.
-			//
-			// Bun-side cache reset: the cached main path is cleared so a stray
-			// saveFile({schema}) (no filePath) call does NOT silently overwrite
-			// the previously loaded file. The ownership map is replaced with an
-			// empty map (no $refs in a fresh tree).
-			newFile: async () => {
-				const rootId = crypto.randomUUID();
-				const now = new Date().toISOString();
-				const schema: RoadmapSchema = {
-					version: "1.0",
-					title: "Untitled Roadmap",
-					statusConfig: [
-						{ id: "not-started", label: "Not Started" },
-						{ id: "in-progress", label: "In Progress" },
-						{ id: "completed", label: "Completed" },
-						{ id: "blocked", label: "Blocked" },
-					],
-					nodes: [
-						{
-							id: rootId,
-							title: "Untitled",
-							status: "not-started",
-							createdAt: now,
-							updatedAt: now,
-						},
-					],
-				};
-				// I-10 / D-12: no disk path means no sidecar — stop appending events to any
-				// previously-loaded file's .events.jsonl. The event server continues to receive
-				// events; they just don't get logged to a sidecar until the user picks a path.
-				eventServerHandle?.setSidecarPath(null);
-				setCachedSchema(schema);
-				clearCachedMainPath();
-				// WR-03 (Wave 3 review): use clearOwnershipMap() instead of
-				// buildOwnershipMap([], "") so we don't leave a "" → [] ghost
-				// entry that other code paths could later read. saveFileAs
-				// rebuilds the map with the chosen path on first write.
-				clearOwnershipMap();
-				bunLogger.info`newFile: created in-memory Untitled Roadmap`;
-				return { data: schema, filePath: null };
-			},
-
-			// saveFileAs handler (EDIT-17): pop a native dialog and run the
-			// initial atomic write. Side effects on success:
-			//   - dialogAllowlist gains the chosen path (so subsequent saveFile
-			//     calls without an explicit filePath are accepted)
-			//   - cachedMainPath / cachedSchema updated for flushPending
-			//   - ownership map seeded with the schema's nodes (no $refs yet)
-			//
-			// The installed Electrobun version (1.16.0) does not expose
-			// Utils.saveFileDialog (tracked upstream as blackboardsh/electrobun#233).
-			// We probe for it so a future Electrobun release picks up automatically;
-			// otherwise fall back to nativeSaveDialog (./saveFileDialog.ts) which
-			// shells out to PowerShell / osascript / zenity per platform.
-			saveFileAs: async ({ schema }) => {
-				const { RoadmapSchemaSchema } = await import(
-					"../../../../packages/core/src/schema"
-				);
-
-				let chosenPath: string | null = null;
-				try {
-					const utilsWithSave = Utils as unknown as {
-						saveFileDialog?: (opts: {
-							title: string;
-							filters: Array<{ name: string; extensions: string[] }>;
-						}) => Promise<string | null>;
-					};
-					if (typeof utilsWithSave.saveFileDialog === "function") {
-						chosenPath = await utilsWithSave.saveFileDialog({
-							title: "Save Roadmap",
-							filters: [{ name: "JSON", extensions: ["json"] }],
-						});
-					} else {
-						const { homedir } = await import("node:os");
-						chosenPath = await nativeSaveDialog({
-							title: "Save Roadmap",
-							defaultPath: homedir(),
-							defaultName: "roadmap.json",
-							filters: [{ name: "JSON", extensions: ["json"] }],
-						});
-					}
-				} catch (err) {
-					bunLogger.error`saveFileAs dialog failed: ${String(err)}`;
-					return { filePath: null };
-				}
-				if (!chosenPath) return { filePath: null }; // user cancelled
-
-				const resolved = pathResolve(chosenPath);
-
-				// Pre-write Zod validation (T-03.04-07 — same trust-boundary
-				// guard saveFile uses).
-				const parsed = RoadmapSchemaSchema.safeParse(schema);
-				if (!parsed.success) {
-					const issue = parsed.error.issues[0];
-					bunLogger.warn`saveFileAs: schema validation failed: ${issue.path.map(String).join(".")}: ${issue.message}`;
-					return { filePath: null };
-				}
-
-				try {
-					await atomicWrite(resolved, canonicalizeSchemaJson(schema));
-					markSelfWrite(resolved);
-					pushDialogAllowlistPath(resolved);
-					setCachedSchema(schema);
-					setCachedMainPath(resolved);
-					// Fresh schema → all nodes owned by the new main file.
-					buildOwnershipMap(schema.nodes, resolved);
-					setSourceTemplate(resolved, schema.nodes);
-					addRecentFile(resolved);
-					// I-10 / D-12: the new disk path is now the sidecar target.
-					eventServerHandle?.setSidecarPath(getEventSidecarPath(resolved));
-					bunLogger.info`saveFileAs wrote ${resolved}`;
-					return { filePath: resolved };
-				} catch (err) {
-					bunLogger.error`saveFileAs write failed: ${String(err)}`;
-					return { filePath: null };
-				}
-			},
+			...createSetupRpcHandlers(APP_VERSION),
 		},
 		messages: {},
 	},
@@ -661,7 +300,7 @@ const rpc = BrowserView.defineRPC<RoadmapRPCType>({
 // Create the main application window
 const url = await getMainViewUrl();
 
-export const mainWindow = new BrowserWindow({
+mainWindow = createMainWindow<AppRpc>({
 	title: "RoadRaven",
 	url,
 	rpc,
@@ -673,7 +312,9 @@ export const mainWindow = new BrowserWindow({
 	},
 });
 
-Utils.showNotification({
+export { mainWindow };
+
+showNotification({
 	title: "RoadRaven",
 	body: "RoadRaven is running.",
 });

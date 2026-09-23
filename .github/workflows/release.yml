@@ -13,10 +13,12 @@ on:
 # All jobs that publish or upload need explicit permissions (least-privilege).
 # id-token: write — required for npm provenance OIDC token mint (R-03)
 # contents: write — required for gh release create + asset upload
+# attestations: write — required for actions/attest-build-provenance
 # NOTE: deploy-docs job (Task 4) overrides these with pages-specific permissions.
 permissions:
   contents: write
   id-token: write
+  attestations: write
 
 jobs:
   build-windows:
@@ -32,6 +34,16 @@ jobs:
         with:
           path: ~/.bun/install/cache
           key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lock') }}
+      # `bun install` runs the workspace's postinstall, which calls
+      # `bunx electrobun prepare` to materialize the gitignored
+      # packages/desktop/.hutch/devkit/ (Electrobun 2.x's API source, not
+      # published to node_modules). Cache Hutch's own toolchain store so
+      # that doesn't re-download Hutch/Cottontail/CEF/Bun on every run.
+      - name: Cache Hutch toolchain
+        uses: actions/cache@v4
+        with:
+          path: ~/.hutch
+          key: ${{ runner.os }}-hutch-${{ hashFiles('**/bun.lock') }}
       - name: Install workspace dependencies
         run: bun install
       - name: Build webview bundle (vite build → packages/desktop/dist)
@@ -42,12 +54,14 @@ jobs:
         # Claude Code MCP integration (v0.6).
         run: bun run --cwd packages/desktop build:mcp
       - name: Build Windows installer (stable channel)
-        # Produces: packages/desktop/artifacts/stable-win-x64-RoadRaven-Setup.zip
+        # Produces: packages/desktop/artifacts/win-x64-RoadRaven-Setup.zip
         #           packages/desktop/artifacts/stable-win-x64-update.json
         #           packages/desktop/artifacts/stable-win-x64-RoadRaven.tar.zst
-        # Names verified against electrobun@1.18.1 src/shared/naming.ts — for
-        # buildEnvironment === "stable" the channel suffix is OMITTED on the
-        # bundle name (only canary/dev/etc. carry a trailing -{channel}).
+        #           packages/desktop/artifacts/stable-win-x64-<hash>.patch (optional)
+        # Names verified against electrobun@2.0.1 src/shared/naming.ts and a
+        # real local build. The installer wrapper (.zip) OMITS the channel
+        # prefix for "stable" builds (unlike 1.x); the updater triplet
+        # (.tar.zst/update.json/.patch) keeps the full stable-win-x64- prefix.
         run: bunx electrobun build --env=stable
         working-directory: packages/desktop
       - name: Smoke-test installer artifact naming
@@ -58,9 +72,10 @@ jobs:
         with:
           name: windows-installer
           path: |
-            packages/desktop/artifacts/stable-win-x64-*.zip
+            packages/desktop/artifacts/win-x64-*.zip
             packages/desktop/artifacts/stable-win-x64-update.json
             packages/desktop/artifacts/stable-win-x64-*.tar.zst
+            packages/desktop/artifacts/stable-win-x64-*.patch
           if-no-files-found: error
 
   build-linux:
@@ -76,6 +91,14 @@ jobs:
         with:
           path: ~/.bun/install/cache
           key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lock') }}
+      # See build-windows: `bun install`'s postinstall runs `bunx electrobun
+      # prepare`, which needs this cached to avoid re-downloading the Hutch
+      # toolchain (Hutch/Cottontail/CEF/Bun) on every run.
+      - name: Cache Hutch toolchain
+        uses: actions/cache@v4
+        with:
+          path: ~/.hutch
+          key: ${{ runner.os }}-hutch-${{ hashFiles('**/bun.lock') }}
       - name: Install workspace dependencies
         run: bun install
       - name: Build webview bundle (vite build → packages/desktop/dist)
@@ -86,11 +109,15 @@ jobs:
         # Claude Code MCP integration (v0.6).
         run: bun run --cwd packages/desktop build:mcp
       - name: Build Linux installer (stable channel)
-        # Produces: packages/desktop/artifacts/stable-linux-x64-RoadRaven-Setup.tar.gz
+        # Produces: packages/desktop/artifacts/linux-x64-RoadRaven-Setup.tar.gz
         #           packages/desktop/artifacts/stable-linux-x64-update.json
         #           packages/desktop/artifacts/stable-linux-x64-RoadRaven.tar.zst
+        #           packages/desktop/artifacts/stable-linux-x64-<hash>.patch (optional)
         # NOTE per R-01: Electrobun ships .tar.gz, NOT .deb. Wave-0 test asserts no .deb.
-        # Stable build OMITS channel suffix on bundle name (matches Electrobun naming).
+        # The installer wrapper (.tar.gz) OMITS the channel prefix for "stable"
+        # builds (unlike 1.x); the updater triplet (.tar.zst/update.json/.patch)
+        # keeps the full stable-linux-x64- prefix. Names verified against
+        # electrobun@2.0.1 src/shared/naming.ts.
         run: bunx electrobun build --env=stable
         working-directory: packages/desktop
       - name: Smoke-test installer artifact naming + .deb absence
@@ -100,9 +127,10 @@ jobs:
         with:
           name: linux-installer
           path: |
-            packages/desktop/artifacts/stable-linux-x64-*.tar.gz
+            packages/desktop/artifacts/linux-x64-*.tar.gz
             packages/desktop/artifacts/stable-linux-x64-update.json
             packages/desktop/artifacts/stable-linux-x64-*.tar.zst
+            packages/desktop/artifacts/stable-linux-x64-*.patch
           if-no-files-found: error
 
   github-release:
@@ -114,6 +142,16 @@ jobs:
         with:
           path: artifacts
           merge-multiple: true
+      - name: Generate SHA256SUMS
+        # install.sh and package-manager manifests verify downloads against
+        # this. Written outside the glob first so it never hashes itself.
+        run: sha256sum * > ../SHA256SUMS && mv ../SHA256SUMS .
+        working-directory: artifacts
+      - name: Attest build provenance
+        # Verify with: gh attestation verify <file> --repo Shuffzord/RoadRaven
+        uses: actions/attest-build-provenance@v4
+        with:
+          subject-path: artifacts/*
       - name: Create release and attach artifacts
         uses: softprops/action-gh-release@v2
         with:
@@ -137,7 +175,8 @@ jobs:
           bun-version: latest
       - uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          # Trusted publishing needs npm >= 11.5.1; Node 22 bundles npm 10.
+          node-version: '24'
           registry-url: 'https://registry.npmjs.org'
       - name: Install workspace dependencies
         run: bun install
@@ -153,8 +192,11 @@ jobs:
         working-directory: packages/core
 
   publish-npm-mcp:
-    name: Publish @roadraven/plugin-claude-code to npm
-    # Disabled for v0.5.0 alpha — npm trusted publishers not configured yet.
+    name: Publish @roadraven/mcp to npm
+    # Disabled until @roadraven/mcp exists on npm with a trusted publisher
+    # configured for this workflow — the first publish has to be manual, and an
+    # OIDC publish without that setup fails the release run. Remove this line
+    # once npmjs.com → package → Settings → Trusted Publisher is filled in.
     if: false
     needs: [build-windows, build-linux]
     runs-on: ubuntu-latest
@@ -165,14 +207,15 @@ jobs:
           bun-version: latest
       - uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          # Trusted publishing needs npm >= 11.5.1; Node 22 bundles npm 10.
+          node-version: '24'
           registry-url: 'https://registry.npmjs.org'
       - name: Install workspace dependencies
         run: bun install
-      - name: Build @roadraven/plugin-claude-code (bun build → dist/)
+      - name: Build @roadraven/mcp (bun build → dist/)
         run: bun run --cwd plugins/claude-code build
       # Same CLAUDE.md exception as publish-npm-core above.
-      - name: Publish @roadraven/plugin-claude-code to npm with provenance (OIDC)
+      - name: Publish @roadraven/mcp to npm with provenance (OIDC)
         run: npm publish --access public --provenance
         working-directory: plugins/claude-code
 

@@ -2,7 +2,7 @@
 # RoadRaven
 
 [![License: PolyForm Noncommercial 1.0.0](https://img.shields.io/badge/License-PolyForm--Noncommercial--1.0.0-blue.svg)](./LICENSE)
-[![Status: Alpha v0.6](https://img.shields.io/badge/status-alpha%20v0.6-orange.svg)](#feature-status)
+[![Status: Alpha v0.8](https://img.shields.io/badge/status-alpha%20v0.8-orange.svg)](#feature-status)
 [![Platform: Windows | Linux](https://img.shields.io/badge/platform-Windows%20%7C%20Linux-blue.svg)](#install)
 [![Watch the demo](https://img.shields.io/badge/%E2%96%B6-Watch_the_demo-FF4500.svg)](#demo)
 
@@ -18,8 +18,8 @@ no cloud, no accounts. It's just a file, living in your repo.
 
 > Built on **Electrobun** (not Electron). Runtime is **Bun**.
 
-> ⚠️ **Alpha (v0.6).** RoadRaven is an early public release. Core editing and the
-> live Event API work today, but expect rough edges — the data format, APIs, and
+> ⚠️ **Alpha (v0.8.0).** RoadRaven is an early public release. Core editing and
+> the live Event API work today, but expect rough edges — the data format, APIs, and
 > packaging may still change before v1.0. Bug reports and feedback are very welcome.
 
 ## Demo
@@ -46,7 +46,7 @@ to whatever is actually running, and the tree keeps itself current.
 
 - **🌳 Plan-as-file** — your roadmap is plain `roadmap.json`, living in your repo. Diffable, reviewable, yours. No database, no proprietary format.
 - **📡 Live status from anything** — any process that can send a message updates a node. A GitHub Action finishes → the node turns green. Claude Code completes a task → the node updates. You don't touch a thing.
-- **🤖 Built for agent supervision** — watch Claude Code work through your plan in real time via the [MCP integration](#use-with-claude-code-mcp).
+- **🤖 Built for agent supervision** — watch Claude Code work through your plan in real time via the [MCP integration](#connect-an-mcp-host).
 - **🔒 Local-first** — binds to `127.0.0.1`, works air-gapped. Nothing leaves your machine. No accounts, no cloud, no subscription.
 - **⌨️ Keyboard-first** — navigate and edit the entire tree without reaching for the mouse.
 - **🎚️ Zero-opinion schema** — you define the statuses, types, and hierarchy. The app stays dumb; your tools do the talking.
@@ -55,7 +55,7 @@ to whatever is actually running, and the tree keeps itself current.
 
 ## Install
 
-> **This alpha (v0.6) ships Windows + Linux installers.** macOS is planned
+> **This alpha (v0.8) ships Windows + Linux installers.** macOS is planned
 > (see [Feature status](#feature-status) below).
 
 Download the latest release from
@@ -63,7 +63,22 @@ Download the latest release from
 
 ### Windows
 
-1. Download `stable-win-x64-RoadRaven-Setup.zip`.
+One line (x64, PowerShell) — downloads the latest release, verifies it against
+the release's `SHA256SUMS`, and runs the installer (click **Close** when it
+finishes):
+
+```powershell
+irm https://raw.githubusercontent.com/Shuffzord/RoadRaven/master/install.ps1 | iex
+```
+
+Pin a version by running `$env:ROADRAVEN_VERSION = 'v0.8.0'` first. Works for
+v0.8.0 and later (earlier releases ship no `SHA256SUMS`).
+
+Or by hand:
+
+1. Download `win-x64-RoadRaven-Setup.zip` and `SHA256SUMS`, then check the
+   download (prints `True` when it matches):
+   `(Get-FileHash win-x64-RoadRaven-Setup.zip).Hash -eq (Select-String -SimpleMatch '  win-x64-RoadRaven-Setup.zip' SHA256SUMS).Line.Split(' ')[0]`
 2. Extract the `.zip`.
 3. Double-click `RoadRaven-Setup.exe`.
 4. **Windows SmartScreen will warn:** "Windows protected your PC."
@@ -73,9 +88,26 @@ Download the latest release from
    - Click **Run anyway**.
 5. Follow the installer prompts.
 
+RoadRaven renders through the system **WebView2** runtime on Windows
+(preinstalled on Windows 11 and current Windows 10), so the download carries no
+bundled browser engine.
+
 ### Linux
 
-1. Download `stable-linux-x64-RoadRaven-Setup.tar.gz`.
+One line (x86_64) — downloads the latest release, verifies it against the
+release's `SHA256SUMS`, and runs the installer:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/Shuffzord/RoadRaven/master/install.sh | sh
+```
+
+Pin a version with `ROADRAVEN_VERSION=v0.8.0` in front of `sh`. Works for
+v0.8.0 and later (earlier releases ship no `SHA256SUMS`).
+
+Or by hand:
+
+1. Download `linux-x64-RoadRaven-Setup.tar.gz` and `SHA256SUMS`, then check
+   the download: `sha256sum -c SHA256SUMS --ignore-missing`.
 2. Extract and run the self-extracting installer:
 
    <!-- The extracted file is literally named `installer` (no extension). This is the
@@ -86,7 +118,7 @@ Download the latest release from
         against electrobun@1.18.1. If a future Electrobun version renames this binary,
         update both this section and `tests/release/installer-artifacts.test.ts`. -->
    ```bash
-   tar -xzf stable-linux-x64-RoadRaven-Setup.tar.gz
+   tar -xzf linux-x64-RoadRaven-Setup.tar.gz
    chmod +x ./installer        # ensure self-extractor is executable (per RESEARCH.md Pitfall 6)
    ./installer
    ```
@@ -101,46 +133,81 @@ Download the latest release from
 
 ### Packages (for producers and library consumers)
 
-> **Heads-up (alpha v0.6):** these npm packages are **not published yet** — they ship
-> with the first tagged release. For now, clone the repo and build from source. The
-> `bun add` / `bunx` commands below are how it will work once published. RoadRaven is
-> **bun-first**, but these are plain npm packages, so any package manager works.
+> **v0.8.0:** `@roadraven/mcp` is on npm. Pin the version that matches your
+> installed app, e.g. `@roadraven/mcp@0.8.0` —
+> the app warns when the server's major.minor differs from its own.
+> `@roadraven/core` is **not published yet**; clone the repo and build from source.
+> RoadRaven is **bun-first**, but these are plain npm packages, so any package manager works.
 
 `@roadraven/core` — Zod schemas + types. Use this if you're building an Event Producer:
 
 ```bash
-bun add @roadraven/core          # available once the first release is published
+bun add @roadraven/core          # not published yet — see note above
 ```
 
-`@roadraven/plugin-claude-code` — the MCP wrapper that lets Claude Code (and any MCP
-host) read, edit, and push live status updates to your roadmap. Until it's published,
-build it locally — see [Use with Claude Code (MCP)](#use-with-claude-code-mcp) below.
+`@roadraven/mcp` — the MCP wrapper that lets Claude Code (and any MCP
+host) read, edit, and push live status updates to your roadmap
+([npm](https://www.npmjs.com/package/@roadraven/mcp)). See
+[Connect an MCP host](#connect-an-mcp-host) below.
 
 See the [plugin authoring guide](docs/plugin-authoring.md) for the full Event API contract.
 
 ---
 
-## Use with Claude Code (MCP)
+## Connect an MCP host
 
 **Why.** RoadRaven's headline use case is letting an AI agent author and maintain
-your roadmap. `@roadraven/plugin-claude-code` is an MCP server exposing **19 tools**
-so Claude Code can create, edit, move, and delete nodes — and push live status as it
-works. Your plan becomes something the agent keeps current for you.
+your roadmap. `@roadraven/mcp` is an MCP server exposing **21 tools** so any MCP
+host — Claude Code, OpenCode, and others — can create, edit, move, and delete
+nodes, and push live status as it works. Your plan becomes something the agent
+keeps current for you. Three ways to connect it, easiest first.
 
-**How (easiest — the built-in Setup Wizard).** RoadRaven ships an MCP server
+**Path 1 (easiest — the built-in Setup Wizard).** RoadRaven ships an MCP server
 bundle inside the app. On first launch a **Setup Wizard** opens (re-openable any
-time from the ⚙ button in the top bar). Step through to **Install integration**
-and it will:
+time from the ⚙ button in the top bar). It detects installed hosts — Claude Code
+and OpenCode — and registers both with one click:
 
-1. copy the bundled MCP server into your user data directory, and
-2. register it as the `roadraven` server in your Claude Code config
-   (`~/.claude.json`) — without touching any other server you have configured.
+1. copies the bundled MCP server into your user data directory, and
+2. registers it in each detected host's config (`~/.claude.json` for Claude
+   Code, `~/.config/opencode/opencode.json` for OpenCode) — without touching
+   any other server you have configured.
 
-The wizard shows the status of each step as it runs. Afterwards, restart Claude
-Code with RoadRaven running and the tools are live. No clone, no manual JSON edit.
+If the RoadRaven Claude Code plugin (Path 2 below) is already installed, the
+wizard defers to it for Claude Code instead of registering a second server —
+two installs would mean two running server processes and a duplicated tool
+set (plugin tools are namespaced `mcp__plugin_roadraven_roadraven__*`, the
+wizard's `mcp__roadraven__*`).
 
-**How (manual — build from source).** Prefer to wire it up yourself? Build the
-MCP server locally:
+Zero commands, works fully offline, **works today** — no npm publish needed.
+Restart your MCP host with RoadRaven running and the tools are live.
+
+**Path 2 (Claude Code plugin).** Requires **Node.js >= 22** (the plugin's
+`.mcp.json` runs `npx -y @roadraven/mcp@0.8.0`). Install straight from
+this repo's marketplace, from inside Claude Code:
+
+```
+/plugin marketplace add Shuffzord/RoadRaven
+/plugin install roadraven@roadraven
+```
+
+**Path 3 (one-liner — any other host).** Requires **Node.js >= 22**. Pin the
+version that matches your installed app (the app warns on a major.minor
+mismatch):
+
+```bash
+claude mcp add -s user roadraven -- npx -y @roadraven/mcp@0.8.0
+```
+
+```bash
+opencode mcp add roadraven   # interactive — prompts for the command to run; give it `npx -y @roadraven/mcp@0.8.0`
+```
+
+For Cursor, Codex, Copilot, Gemini, or another MCP host, see the
+[MCP install guide](docs/mcp-install.md) for a generic stdio config block and
+the raw JSON shapes for the hosts above.
+
+**Fallback (build from source).** Prefer to wire it up yourself, or building
+before a release is published:
 
 ```bash
 git clone https://github.com/Shuffzord/RoadRaven.git
@@ -166,12 +233,6 @@ at the built file (use an absolute path). For Claude Code, add it to your MCP co
 > The desktop app **must be running** — the plugin talks to it over the local Event
 > API (`127.0.0.1`). If the app is closed, every tool returns `app_not_running`.
 
-> 📦 **Once the first release is published to npm**, this simplifies to a one-liner —
-> no clone, no build:
-> ```json
-> { "mcpServers": { "roadraven": { "command": "bunx", "args": ["-y", "@roadraven/plugin-claude-code"] } } }
-> ```
-
 Full tool catalog, configuration, kill-switch, and security model:
 [`plugins/claude-code/README.md`](plugins/claude-code/README.md).
 
@@ -181,23 +242,26 @@ Full tool catalog, configuration, kill-switch, and security model:
 
 ## Feature status
 
-| What | v0.6 (this alpha) | Planned |
+| What | v0.8 (this alpha) | Planned |
 |------|-------------------|---------|
 | Tree canvas + keyboard editor | available | — |
 | Themes (dark / light / high-contrast) | available | — |
 | Side-panel CodeMirror notes + metadata | available | — |
 | Atomic autosave + `$ref` write-back | available | — |
 | Event API (WebSocket — external producers push status) | available | — |
-| `@roadraven/plugin-claude-code` (Claude Code MCP wrapper) | available | — |
-| First-run Setup Wizard + one-click MCP install | available | — |
+| MCP server version-mismatch warning | available | — |
+| First-run Setup Wizard — one-click MCP install (Claude Code + OpenCode) | available | — |
+| Claude Code marketplace plugin (`@roadraven/mcp`) | available | — |
 | Windows installer | available | — |
 | Linux installer (`.tar.gz`) | available | — |
+| Electrobun 2.x runtime (Cottontail main process) | available | — |
 | macOS installer | deferred | planned |
 | Canary release channel | deferred | planned |
 | Code signing (Authenticode / GPG / notarization) | deferred | planned (when commercial pressure justifies) |
 | `.deb` packaging + apt repo | deferred | possibly |
 | `@roadraven/react` component package | deferred | planned |
 | Smart-adapter Plugin System (`RoadmapPlugin`) | deferred | planned |
+| In-app self-update | deferred | planned — `Updater.checkForUpdate`/`downloadUpdate`/`applyUpdate` exist in the Electrobun SDK but aren't wired into the app yet |
 | Drag-and-drop reordering | deferred | planned |
 | Undo / redo | deferred | planned |
 

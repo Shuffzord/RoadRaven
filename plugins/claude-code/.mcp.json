@@ -1,0 +1,10 @@
+{
+	"mcpServers": {
+		"roadraven": {
+			"type": "stdio",
+			"command": "npx",
+			"args": ["-y", "@roadraven/mcp@0.8.0"],
+			"env": { "ROADRAVEN_MCP_INSTALL": "plugin" }
+		}
+	}
+}

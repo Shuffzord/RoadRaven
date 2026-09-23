@@ -60,7 +60,12 @@ export async function handlePushEventApiState(msg: {
  * /disconnect events received by the Bun WebSocket server (PLUG-06, D-23).
  */
 export async function handlePushEventApiError(msg: {
-	type: "malformed" | "unknown_node" | "invalid_status" | "disconnect";
+	type:
+		| "malformed"
+		| "unknown_node"
+		| "invalid_status"
+		| "disconnect"
+		| "version_mismatch";
 	source: string;
 	detail?: string;
 }): Promise<void> {
