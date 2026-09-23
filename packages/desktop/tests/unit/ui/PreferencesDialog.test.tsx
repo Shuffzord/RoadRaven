@@ -14,6 +14,11 @@ const rpc = vi.hoisted(() => ({
 	loadSettings: vi.fn(),
 	saveSettings: vi.fn(() => Promise.resolve({ success: true })),
 	openExternal: vi.fn(() => Promise.resolve({ ok: true })),
+	// v0.8.3 Phase 4 theme file RPCs
+	listThemes: vi.fn(() => Promise.resolve({ themes: [], dir: "/themes" })),
+	duplicateTheme: vi.fn(() => Promise.resolve({ ok: true, id: "dark-copy" })),
+	importTheme: vi.fn(() => Promise.resolve({ ok: true, id: "imported" })),
+	revealThemesFolder: vi.fn(() => Promise.resolve({ ok: true })),
 }));
 
 vi.mock("../../../src/mainview/rpc", () => ({
@@ -21,11 +26,18 @@ vi.mock("../../../src/mainview/rpc", () => ({
 }));
 
 import pkg from "../../../package.json" with { type: "json" };
-import { PreferencesDialog } from "../../../src/mainview/components/PreferencesDialog";
+import {
+	DUPLICATE_THEME_LABEL,
+	IMPORT_THEME_LABEL,
+	OPEN_THEMES_FOLDER_LABEL,
+	PreferencesDialog,
+	THEME_NAME_LABEL,
+} from "../../../src/mainview/components/PreferencesDialog";
 import { useEventApiStore } from "../../../src/mainview/store/eventApiStore";
 import { usePreferencesStore } from "../../../src/mainview/store/preferencesStore";
 import { useSetupStore } from "../../../src/mainview/store/setupStore";
 import { useThemeStore } from "../../../src/mainview/store/themeStore";
+import { THEME_IDS, themeForId } from "../../../src/mainview/themes";
 
 async function openDialog(settings: Record<string, unknown> = {}) {
 	rpc.loadSettings.mockResolvedValue({ settings });
@@ -217,6 +229,61 @@ describe("PreferencesDialog", () => {
 			[{ url: "https://github.com/Shuffzord/RoadRaven#readme" }],
 			[{ url: "https://github.com/Shuffzord/RoadRaven/releases/latest" }],
 		]);
+	});
+
+	// v0.8.3 Phase 4: the Theme row's file actions.
+	it("Open themes folder reveals the folder through its RPC", async () => {
+		await openDialog();
+		fireEvent.click(
+			screen.getByRole("button", { name: OPEN_THEMES_FOLDER_LABEL }),
+		);
+		expect(rpc.revealThemesFolder).toHaveBeenCalledWith({});
+	});
+
+	it("Import theme file… imports through its RPC and refreshes the list", async () => {
+		await openDialog();
+		fireEvent.click(screen.getByRole("button", { name: IMPORT_THEME_LABEL }));
+		expect(rpc.importTheme).toHaveBeenCalledWith({
+			reservedIds: [...THEME_IDS],
+		});
+		await screen.findByText(/Imported 'imported'/);
+		expect(rpc.listThemes).toHaveBeenCalled();
+	});
+
+	it("an import error is shown inline", async () => {
+		rpc.importTheme.mockResolvedValueOnce({
+			ok: false,
+			error: "not a valid theme file",
+		} as never);
+		await openDialog();
+		fireEvent.click(screen.getByRole("button", { name: IMPORT_THEME_LABEL }));
+		expect((await screen.findByRole("alert")).textContent).toContain(
+			"not a valid theme file",
+		);
+	});
+
+	it("Duplicate current theme… asks for a name, writes the copy and selects it", async () => {
+		useThemeStore.setState({ preference: "dark", resolvedTheme: "dark" });
+		await openDialog();
+		fireEvent.click(
+			screen.getByRole("button", { name: DUPLICATE_THEME_LABEL }),
+		);
+
+		const name = screen.getByLabelText(THEME_NAME_LABEL) as HTMLInputElement;
+		expect(name.value).toBe("Dark copy");
+		fireEvent.change(name, { target: { value: "Dark copy" } });
+		fireEvent.click(screen.getByRole("button", { name: "Create" }));
+
+		expect(rpc.duplicateTheme).toHaveBeenCalledWith({
+			source: themeForId("dark"),
+			name: "Dark copy",
+			reservedIds: [...THEME_IDS],
+		});
+		await vi.waitFor(() =>
+			expect(useThemeStore.getState().preference).toBe("dark-copy"),
+		);
+		expect(rpc.listThemes).toHaveBeenCalled();
+		expect(screen.queryByLabelText(THEME_NAME_LABEL)).toBeNull();
 	});
 
 	it("Escape closes the dialog", async () => {

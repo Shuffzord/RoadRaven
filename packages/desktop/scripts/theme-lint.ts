@@ -19,7 +19,7 @@ import { type Finding, lintTheme } from "../../../shared/contrast";
 import { CONTRAST_PAIRS } from "../../../shared/themeContract";
 import { resolveTheme, type ThemeFile } from "../../../shared/themeSchema";
 import { BUILT_IN_THEMES } from "../src/mainview/themes";
-import { ThemeFileSchema } from "../src/mainview/themes/schema";
+import { ThemeFileSchema } from "../src/theme/themeFileSchema";
 
 const here = (rel: string) => fileURLToPath(new URL(rel, import.meta.url));
 const BASELINE_PATH = here("../tests/unit/theme/known-failures.json");

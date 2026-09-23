@@ -1,8 +1,10 @@
 /**
  * Runtime validator for theme files (v0.8.3 Phase 3). The shape and the
  * value grammars come from shared/themeSchema.ts; this is the zod binding
- * (zod is not resolvable from shared/ — see that file's header). Phase 4
- * runs every user file through it before a single value reaches CSS.
+ * (zod is not resolvable from shared/ — see that file's header). It lives
+ * outside src/mainview and src/bun on purpose (Phase 4): the renderer's
+ * registry and the Bun process's user-theme reader both run every file
+ * through it before a single value reaches CSS.
  */
 
 import { z } from "zod";
@@ -19,7 +21,7 @@ import {
 	THEME_COLOR_KEYS,
 	THEME_ID_PATTERN,
 	type ThemeFile,
-} from "../../../../../shared/themeSchema";
+} from "../../../../shared/themeSchema";
 
 const colour = z
 	.string()

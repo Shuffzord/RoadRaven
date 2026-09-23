@@ -13,6 +13,10 @@ vi.mock("../../../src/mainview/rpc", () => ({
 			},
 		},
 	},
+	// v0.8.3 Phase 4: ThemeProvider subscribes to pushThemesChanged here.
+	onThemesChanged: vi.fn(() => () => {
+		/* unsubscribe */
+	}),
 }));
 
 // Spy on applyTheme (v0.8.3 Phase 3) while keeping its real behaviour, so the
@@ -34,6 +38,7 @@ import { applyTheme } from "../../../src/mainview/theme/applyTheme";
 import {
 	DEFAULT_THEME_ID,
 	getBuiltInTheme,
+	themeForId,
 } from "../../../src/mainview/themes";
 
 // Mock matchMedia
@@ -135,6 +140,50 @@ describe("ThemeProvider", () => {
 		expect(
 			document.documentElement.style.getPropertyValue("--rv-bg-base"),
 		).toBe(paper.colors["bg-base"]);
+	});
+
+	// v0.8.3 Phase 4 hot reload: a themesChanged refresh re-applies only when
+	// the active user theme's file changed.
+	it("re-applies when the active user theme's file changes, not when another does", async () => {
+		const mine = {
+			id: "mine",
+			meta: { name: "Mine", mode: "dark" as const },
+			colors: themeForId("dark").colors,
+		};
+		const entry = { id: "mine", file: mine, requiredFailures: 0 };
+		render(
+			<ThemeProvider>
+				<div>child</div>
+			</ThemeProvider>,
+		);
+		await act(async () => {
+			useThemeStore.getState().setUserThemes([entry]);
+			useThemeStore.getState().setTheme("mine");
+		});
+		expect(applyTheme).toHaveBeenLastCalledWith(resolveTheme(mine), "mine");
+		vi.mocked(applyTheme).mockClear();
+
+		const edited = {
+			...mine,
+			colors: { ...mine.colors, accent: "#ff00ff" },
+		};
+		await act(async () => {
+			useThemeStore.getState().setUserThemes([{ ...entry, file: edited }]);
+		});
+		expect(applyTheme).toHaveBeenCalledTimes(1);
+		expect(applyTheme).toHaveBeenCalledWith(resolveTheme(edited), "mine");
+		expect(document.documentElement.style.getPropertyValue("--rv-accent")).toBe(
+			"#ff00ff",
+		);
+		vi.mocked(applyTheme).mockClear();
+
+		await act(async () => {
+			useThemeStore.getState().setUserThemes([
+				{ ...entry, file: edited },
+				{ id: "other", file: { ...mine, id: "other" }, requiredFailures: 0 },
+			]);
+		});
+		expect(applyTheme).not.toHaveBeenCalled();
 	});
 
 	it("registers matchMedia listener when preference is 'system'", async () => {

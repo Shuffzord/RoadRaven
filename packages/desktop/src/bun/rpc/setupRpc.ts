@@ -1,7 +1,16 @@
 import type { RoadmapRPCType } from "../../../../../shared/types.ts";
 import { bunLogger } from "../logging";
 import { getSetupStatus, installMcpIntegration } from "../mcpInstaller";
+import { openFileDialog } from "../platform/dialogs";
 import { loadSettings, saveSettings } from "../settings";
+import {
+	duplicateTheme,
+	getThemesDir,
+	importThemeFile,
+	listUserThemes,
+	readUserTheme,
+	revealThemesFolder,
+} from "../themes";
 
 type BunRequests = RoadmapRPCType["bun"]["requests"];
 type RpcHandler<K extends keyof BunRequests> = (
@@ -39,5 +48,50 @@ export function createSetupRpcHandlers(appVersion: string): {
 			saveSettings({ setup: { completed: true } });
 			return { ok: true as const };
 		},
+	};
+}
+
+// -- User themes (v0.8.3 Phase 4) ------------------------------------------
+//
+// The renderer never hands Bun a path to write: duplicate writes under the
+// slug of a name, import copies whatever the native dialog returned, reveal
+// opens the fixed themes dir. `reservedIds` are the built-in ids, which only
+// the renderer's registry knows.
+
+export function createThemeRpcHandlers(): {
+	listThemes: RpcHandler<"listThemes">;
+	readTheme: RpcHandler<"readTheme">;
+	duplicateTheme: RpcHandler<"duplicateTheme">;
+	importTheme: RpcHandler<"importTheme">;
+	revealThemesFolder: RpcHandler<"revealThemesFolder">;
+} {
+	return {
+		listThemes: ({ reservedIds }) => ({
+			themes: listUserThemes({ reservedIds }),
+			dir: getThemesDir(),
+		}),
+		readTheme: ({ id, reservedIds }) => readUserTheme(id, { reservedIds }),
+		duplicateTheme: ({ source, name, reservedIds }) =>
+			duplicateTheme(source, name, { reservedIds }),
+		importTheme: async ({ reservedIds }) => {
+			let paths: string[];
+			try {
+				const { homedir } = await import("node:os");
+				paths = await openFileDialog({
+					startingFolder: homedir(),
+					allowedFileTypes: "json",
+					canChooseFiles: true,
+					canChooseDirectory: false,
+					allowsMultipleSelection: false,
+				});
+			} catch (err) {
+				bunLogger.error`importTheme: openFileDialog failed: ${String(err)}`;
+				return { ok: false, error: "could not open the file dialog" };
+			}
+			const chosen = paths?.[0];
+			if (!chosen) return { ok: false, error: null };
+			return importThemeFile(chosen, { reservedIds });
+		},
+		revealThemesFolder: () => revealThemesFolder(),
 	};
 }

@@ -68,12 +68,11 @@ export const RoadmapSchemaSchema = z.object({
 	// Persisted document mutation counter. Files written before v0.7 may omit it;
 	// the desktop store keeps its agent optimistic-lock token separately.
 	revision: z.number().int().min(1).optional(),
-	themeConfig: z
-		.object({
-			statusColors: z.record(z.string(), z.string()).optional(),
-			nodeRadius: z.number().optional(),
-		})
-		.optional(),
+	// Deprecated (v0.8.3 Phase 4, A3): per-file theme overrides never shipped —
+	// `statusConfig[].color` is the per-status colour, themes are user files.
+	// Kept as an opaque optional key so a file written with one still parses
+	// and round-trips; nothing reads it.
+	themeConfig: z.unknown().optional(),
 	statusConfig: z.array(StatusConfigSchema).optional(),
 	typeConfig: z.array(TypeConfigSchema).optional(),
 	nodes: z.array(RoadmapNodeSchema),

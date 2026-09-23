@@ -7,6 +7,7 @@
  */
 
 import type { ThemeFile } from "../../../../../shared/themeSchema";
+import { ThemeFileSchema } from "../../theme/themeFileSchema";
 import amberJson from "./amber.json";
 import contrastJson from "./contrast.json";
 import darkJson from "./dark.json";
@@ -14,7 +15,6 @@ import highContrastJson from "./high-contrast.json";
 import lightJson from "./light.json";
 import mossJson from "./moss.json";
 import paperJson from "./paper.json";
-import { ThemeFileSchema } from "./schema";
 import slateJson from "./slate.json";
 
 const parse = (raw: unknown): ThemeFile => ThemeFileSchema.parse(raw);
@@ -48,4 +48,16 @@ export function getBuiltInTheme(id: string): ThemeFile | undefined {
 /** The theme to paint for an id: the built-in, or the default when unknown. */
 export function themeForId(id: string): ThemeFile {
 	return byId.get(id) ?? amber;
+}
+
+/**
+ * The theme to paint for an id once user themes exist (v0.8.3 Phase 4): a
+ * built-in wins over a user file of the same id (the Bun side refuses such
+ * files anyway), and an id nobody owns paints the default.
+ */
+export function resolveThemeFile(
+	id: string,
+	userThemes: readonly ThemeFile[],
+): ThemeFile {
+	return byId.get(id) ?? userThemes.find((t) => t.id === id) ?? amber;
 }

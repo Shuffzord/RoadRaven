@@ -6,6 +6,8 @@ import { electroview } from "../rpc";
 import { useEventApiStore } from "../store/eventApiStore";
 import { usePreferencesStore } from "../store/preferencesStore";
 import { useSetupStore } from "../store/setupStore";
+import { userThemeFiles, useThemeStore } from "../store/themeStore";
+import { resolveThemeFile, THEME_IDS } from "../themes";
 import {
 	dialogActionRowStyle,
 	dialogButtonRowStyle,
@@ -29,7 +31,145 @@ const RELEASES_URL = "https://github.com/Shuffzord/RoadRaven/releases/latest";
 const PORT_MIN = 1024;
 const PORT_MAX = 65535;
 
+// Theme row actions (v0.8.3 Phase 4) — the tests select on these.
+export const DUPLICATE_THEME_LABEL = "Duplicate current theme…";
+export const IMPORT_THEME_LABEL = "Import theme file…";
+export const OPEN_THEMES_FOLDER_LABEL = "Open themes folder";
+export const THEME_NAME_LABEL = "New theme name";
+
 type Rpc = NonNullable<NonNullable<typeof electroview>["rpc"]>;
+
+type ThemeMessage = { kind: "info" | "error"; text: string };
+
+/**
+ * The Theme row's file actions: duplicate the painted theme under a new
+ * name (and select it), import a file, reveal the folder. Every write goes
+ * through Bun, which validates and names the file; the renderer only
+ * refreshes the list afterwards.
+ */
+function ThemeFileActions({ id }: { id: string }) {
+	const resolvedTheme = useThemeStore((s) => s.resolvedTheme);
+	const userThemes = useThemeStore((s) => s.userThemes);
+	const [naming, setNaming] = useState(false);
+	const [name, setName] = useState("");
+	const [message, setMessage] = useState<ThemeMessage | null>(null);
+	const current = resolveThemeFile(resolvedTheme, userThemeFiles(userThemes));
+	const reservedIds = [...THEME_IDS];
+
+	const startDuplicate = (): void => {
+		setMessage(null);
+		setName(`${current.meta.name} copy`);
+		setNaming(true);
+	};
+
+	const commitDuplicate = async (): Promise<void> => {
+		const rpc = electroview?.rpc;
+		if (!rpc) return;
+		const result = await rpc.request.duplicateTheme({
+			source: current,
+			name,
+			reservedIds,
+		});
+		if (!result.ok) {
+			setMessage({ kind: "error", text: result.error });
+			return;
+		}
+		setNaming(false);
+		const store = useThemeStore.getState();
+		await store.refreshUserThemes();
+		store.setTheme(result.id);
+	};
+
+	const importTheme = async (): Promise<void> => {
+		const rpc = electroview?.rpc;
+		if (!rpc) return;
+		setMessage(null);
+		const result = await rpc.request.importTheme({ reservedIds });
+		if (!result.ok) {
+			if (result.error !== null)
+				setMessage({ kind: "error", text: result.error });
+			return;
+		}
+		await useThemeStore.getState().refreshUserThemes();
+		setMessage({ kind: "info", text: `Imported '${result.id}'.` });
+	};
+
+	const revealFolder = (): void => {
+		electroview?.rpc?.request.revealThemesFolder({}).catch(() => {
+			// Nothing to fall back to outside Electrobun.
+		});
+	};
+
+	return (
+		<>
+			<div style={dialogActionRowStyle}>
+				<button
+					type="button"
+					onClick={startDuplicate}
+					style={dialogSecondaryButtonStyle}
+				>
+					{DUPLICATE_THEME_LABEL}
+				</button>
+				<button
+					type="button"
+					onClick={() => void importTheme()}
+					style={dialogSecondaryButtonStyle}
+				>
+					{IMPORT_THEME_LABEL}
+				</button>
+				<button
+					type="button"
+					onClick={revealFolder}
+					style={dialogSecondaryButtonStyle}
+				>
+					{OPEN_THEMES_FOLDER_LABEL}
+				</button>
+			</div>
+			{naming && (
+				<form
+					style={dialogFieldRowStyle}
+					onSubmit={(e) => {
+						e.preventDefault();
+						void commitDuplicate();
+					}}
+				>
+					<label htmlFor={`${id}-theme-name`} style={dialogFieldLabelStyle}>
+						{THEME_NAME_LABEL}
+					</label>
+					<input
+						id={`${id}-theme-name`}
+						type="text"
+						value={name}
+						onChange={(e) => setName(e.target.value)}
+						style={dialogInputStyle}
+					/>
+					<button type="submit" style={dialogPrimaryButtonStyle}>
+						Create
+					</button>
+					<button
+						type="button"
+						onClick={() => setNaming(false)}
+						style={dialogSecondaryButtonStyle}
+					>
+						Cancel
+					</button>
+				</form>
+			)}
+			{message && (
+				<p
+					role={message.kind === "error" ? "alert" : "status"}
+					style={
+						message.kind === "error"
+							? dialogErrorTextStyle
+							: dialogHelperTextStyle
+					}
+				>
+					{message.text}
+				</p>
+			)}
+		</>
+	);
+}
 
 /** Current settings, or `{}` when the RPC is unavailable or fails. */
 async function fetchSettings(rpc: Rpc | undefined): Promise<AppSettings> {
@@ -177,6 +317,7 @@ export function PreferencesDialog() {
 									<span style={dialogFieldLabelStyle}>Theme</span>
 									<ThemePicker />
 								</div>
+								<ThemeFileActions id={id} />
 							</section>
 
 							<section

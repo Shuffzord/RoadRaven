@@ -124,42 +124,6 @@ Source: [`packages/desktop/src/mainview/store/themeStore.ts`](../packages/deskto
 
 Source: [`packages/desktop/src/mainview/components/ThemeProvider.tsx`](../packages/desktop/src/mainview/components/ThemeProvider.tsx)
 
-## Per-Schema Theme Overrides (ThemeOverrideProvider)
-
-Individual roadmap files can customize status colors and node shapes without affecting the rest of the UI, via the `ThemeOverrideProvider` component.
-
-Schema-level overrides must not leak to global UI elements (toolbar, status bar, etc.), so the override is applied as inline CSS custom properties on a wrapper `<div>`, not on `:root`. CSS inheritance means child elements pick up the overrides, while sibling elements outside the wrapper are unaffected.
-
-The override scope is intentionally narrow:
-
-- **Status colors**: Custom hex colors per status value (e.g., `"completed": "#00ff00"`)
-- **Node shape**: Border radius in pixels
-
-### Security: Input Validation
-
-Override values are validated against strict regex patterns before being applied as CSS. This prevents CSS injection:
-
-```typescript
-// From packages/desktop/src/mainview/components/ThemeOverrideProvider.tsx
-const HEX_COLOR_RE = /^#[0-9a-fA-F]{6}$/;   // Only 6-digit hex
-const PX_VALUE_RE = /^\d+px$/;                 // Only Npx values
-```
-
-Values that fail validation are silently dropped.
-
-### Usage Example
-
-```tsx
-<ThemeOverrideProvider themeConfig={{
-  statusColors: { "completed": "#00cc66", "blocked": "#cc0000" },
-  nodeShape: { borderRadius: "12px" }
-}}>
-  <RoadmapTree />
-</ThemeOverrideProvider>
-```
-
-Source: [`packages/desktop/src/mainview/components/ThemeOverrideProvider.tsx`](../packages/desktop/src/mainview/components/ThemeOverrideProvider.tsx)
-
 ## Node Card Styling
 
 Tree node cards (`RoadmapNodeCard`) combine token-driven Tailwind classes with dynamic inline CSS custom properties. The status color and badge background are set via inline `style` using `STATUS_TOKEN_MAP`:

@@ -347,7 +347,7 @@ or a PR. Contributions, feedback, and wild suggestions are all genuinely welcome
   - Preferences dialog (cog or `Ctrl+,`): theme, reopen last file on launch, Event API port, Agent API toggle, Integrations wizard, About.
   - **Files** sidebar: recent files with a right-click menu (Open / Reveal in Folder / Remove / Clear) and an **Outline** navigator of the open roadmap — click a row to reveal the node on the canvas, arrow keys to move around it.
   - New and the samples open as untitled; you are asked where to save after the first edit, and a Discard-changes dialog guards unsaved untitled edits on New / Open / Close / quit.
-- **Themes** — dark (default), light, high-contrast, plus per-schema status colour and node shape overrides.
+- **Themes** — dark (default), light, high-contrast.
 - **Live integration ready** — RPC contract has `nodeStatusUpdate`, `integrationEvent`, and `pushFileChanged` messages; plugin host comes in a later phase.
 
 ## Quick start (development)

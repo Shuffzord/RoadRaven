@@ -41,10 +41,11 @@ import {
 	createFileRpcHandlers,
 	type MainWindow,
 } from "./rpc/fileRpc";
-import { createSetupRpcHandlers } from "./rpc/setupRpc";
+import { createSetupRpcHandlers, createThemeRpcHandlers } from "./rpc/setupRpc";
 import { createWindowRpcHandlers } from "./rpc/windowRpc";
 import { deleteSentinel, writeSentinel } from "./sentinel";
 import { loadSettings, saveSettings } from "./settings";
+import { startThemeWatcher } from "./themeWatcher";
 
 // Re-export the RPC type so downstream modules can import from the app entry
 export type { RoadmapRPCType };
@@ -299,6 +300,8 @@ const rpc = defineMainRpc<RoadmapRPCType>({
 			},
 
 			...createSetupRpcHandlers(APP_VERSION),
+
+			...createThemeRpcHandlers(),
 		},
 		messages: {},
 	},
@@ -338,6 +341,12 @@ onWillClose(
 showNotification({
 	title: "RoadRaven",
 	body: "RoadRaven is running.",
+});
+
+// v0.8.3 Phase 4: hot reload of user themes — the renderer re-lists on every
+// change in <userData>/themes and re-applies the active theme if it moved.
+startThemeWatcher((ids) => {
+	mainWindow?.webview.rpc?.send.pushThemesChanged({ ids });
 });
 
 // I-09 fix: push initial event server state to the renderer immediately after

@@ -1,7 +1,16 @@
-import { useEffect, useId, useRef, useState } from "react";
-import type { ThemePreference } from "../../../../../shared/types";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
+import type {
+	ThemePreference,
+	UserThemeEntry,
+} from "../../../../../shared/types";
 import { useTheme } from "../hooks/useTheme";
+import { useThemeStore } from "../store/themeStore";
 import { BUILT_IN_THEMES, DEFAULT_THEME_ID, themeForId } from "../themes";
+
+// Contract constants (tests/unit/ui/ThemePicker.test.tsx imports these).
+export const THEME_GROUP_BUILT_IN = "Built-in";
+export const THEME_GROUP_USER = "Your themes";
+export const THEME_BADGE_TESTID = "theme-badge";
 
 type ThemeOption = {
 	id: ThemePreference;
@@ -10,11 +19,15 @@ type ThemeOption = {
 	bg: string;
 	/** Accent / highlight — the pop color */
 	accent: string;
+	/** Why the file cannot be used at all (invalid, no last good version). */
+	disabled?: boolean;
+	/** Badge text: the file's error, or its required contrast failures. */
+	warning?: string;
 };
 
 // Registry-driven (v0.8.3 Phase 3, D5): the swatch is the theme's own
 // bg-base and accent, so it cannot drift from what the theme paints.
-const THEMES: ThemeOption[] = [
+const BUILT_IN_OPTIONS: ThemeOption[] = [
 	...BUILT_IN_THEMES.map((t) => ({
 		id: t.id,
 		label: t.meta.name,
@@ -29,6 +42,23 @@ const THEMES: ThemeOption[] = [
 		accent: themeForId("light").colors["bg-base"],
 	},
 ];
+
+function contrastWarning(failures: number | undefined): string | undefined {
+	if (!failures) return undefined;
+	return `${failures} required contrast pair${failures === 1 ? " fails" : "s fail"}`;
+}
+
+/** A user file as a picker option (v0.8.3 Phase 4); an invalid one is inert. */
+function userOption(entry: UserThemeEntry): ThemeOption {
+	return {
+		id: entry.id,
+		label: entry.file?.meta.name ?? entry.id,
+		bg: entry.file?.colors["bg-base"] ?? "var(--rv-bg-input)",
+		accent: entry.file?.colors.accent ?? "var(--rv-border)",
+		disabled: !entry.file,
+		warning: entry.error ?? contrastWarning(entry.requiredFailures),
+	};
+}
 
 function Swatch({ option }: { option: ThemeOption }) {
 	const isSystem = option.id === "system";
@@ -56,17 +86,24 @@ function Swatch({ option }: { option: ThemeOption }) {
 
 export function ThemePicker() {
 	const { preference, setTheme } = useTheme();
+	const userThemes = useThemeStore((s) => s.userThemes);
 	const [open, setOpen] = useState(false);
 	const [focusIndex, setFocusIndex] = useState(0);
 	const rootRef = useRef<HTMLDivElement>(null);
 	const itemRefs = useRef<(HTMLButtonElement | null)[]>([]);
 	const menuId = useId();
 
+	const userOptions = useMemo(() => userThemes.map(userOption), [userThemes]);
+	const options = useMemo(
+		() => [...BUILT_IN_OPTIONS, ...userOptions],
+		[userOptions],
+	);
+
 	// An unknown preference paints the default (themeStore), so show that.
 	const activeTheme =
-		THEMES.find((t) => t.id === preference) ??
-		THEMES.find((t) => t.id === DEFAULT_THEME_ID) ??
-		THEMES[0];
+		options.find((t) => t.id === preference && !t.disabled) ??
+		options.find((t) => t.id === DEFAULT_THEME_ID) ??
+		options[0];
 
 	useEffect(() => {
 		if (!open) return;
@@ -91,38 +128,84 @@ export function ThemePicker() {
 		if (!open) return;
 		const startIdx = Math.max(
 			0,
-			THEMES.findIndex((t) => t.id === preference),
+			options.findIndex((t) => t.id === preference),
 		);
 		setFocusIndex(startIdx);
 		requestAnimationFrame(() => itemRefs.current[startIdx]?.focus());
-	}, [open, preference]);
+	}, [open, preference, options]);
+
+	const focusItem = (index: number) => {
+		setFocusIndex(index);
+		itemRefs.current[index]?.focus();
+	};
 
 	const handleMenuKey = (e: React.KeyboardEvent<HTMLDivElement>) => {
+		const count = options.length;
 		if (e.key === "ArrowDown") {
 			e.preventDefault();
-			const next = (focusIndex + 1) % THEMES.length;
-			setFocusIndex(next);
-			itemRefs.current[next]?.focus();
+			focusItem((focusIndex + 1) % count);
 		} else if (e.key === "ArrowUp") {
 			e.preventDefault();
-			const next = (focusIndex - 1 + THEMES.length) % THEMES.length;
-			setFocusIndex(next);
-			itemRefs.current[next]?.focus();
+			focusItem((focusIndex - 1 + count) % count);
 		} else if (e.key === "Home") {
 			e.preventDefault();
-			setFocusIndex(0);
-			itemRefs.current[0]?.focus();
+			focusItem(0);
 		} else if (e.key === "End") {
 			e.preventDefault();
-			const last = THEMES.length - 1;
-			setFocusIndex(last);
-			itemRefs.current[last]?.focus();
+			focusItem(count - 1);
 		}
 	};
 
-	const choose = (id: ThemePreference) => {
-		setTheme(id);
+	const choose = (option: ThemeOption) => {
+		if (option.disabled) return;
+		setTheme(option.id);
 		setOpen(false);
+	};
+
+	const renderItem = (t: ThemeOption, i: number) => {
+		const active = t.id === preference;
+		const reasonId = t.warning ? `${menuId}-${t.id}-reason` : undefined;
+		return (
+			<button
+				key={t.id}
+				ref={(el) => {
+					itemRefs.current[i] = el;
+				}}
+				type="button"
+				role="menuitem"
+				aria-disabled={t.disabled || undefined}
+				aria-describedby={reasonId}
+				className={`flex items-center gap-2 w-full h-[30px] px-2 text-[12px] transition duration-150 ${
+					active
+						? "text-rv-accent"
+						: "text-rv-text-secondary hover:bg-rv-bg-hover hover:text-rv-text-primary"
+				}`}
+				onClick={() => choose(t)}
+			>
+				<Swatch option={t} />
+				<span className="flex-1 text-left">{t.label}</span>
+				{t.warning && (
+					<>
+						<span
+							data-testid={THEME_BADGE_TESTID}
+							title={t.warning}
+							aria-hidden="true"
+							className={`inline-flex items-center justify-center w-[14px] h-[14px] rounded-full text-[9px] font-bold ${
+								t.disabled
+									? "bg-rv-status-blocked-bg text-rv-status-blocked"
+									: "bg-rv-status-in-progress-bg text-rv-status-in-progress"
+							}`}
+						>
+							!
+						</span>
+						<span id={reasonId} hidden>
+							{t.warning}
+						</span>
+					</>
+				)}
+				{active && <CheckIcon />}
+			</button>
+		);
 	};
 
 	return (
@@ -152,29 +235,23 @@ export function ThemePicker() {
 					className="absolute right-0 top-[calc(100%+4px)] min-w-[180px] bg-rv-bg-elevated border border-rv-border rounded-[6px] py-1 z-50"
 					style={{ boxShadow: "var(--rv-shadow-config)" }}
 				>
-					{THEMES.map((t, i) => {
-						const active = t.id === preference;
-						return (
-							<button
-								key={t.id}
-								ref={(el) => {
-									itemRefs.current[i] = el;
-								}}
-								type="button"
-								role="menuitem"
-								className={`flex items-center gap-2 w-full h-[30px] px-2 text-[12px] transition duration-150 ${
-									active
-										? "text-rv-accent"
-										: "text-rv-text-secondary hover:bg-rv-bg-hover hover:text-rv-text-primary"
-								}`}
-								onClick={() => choose(t.id)}
-							>
-								<Swatch option={t} />
-								<span className="flex-1 text-left">{t.label}</span>
-								{active && <CheckIcon />}
-							</button>
-						);
-					})}
+					{/* fieldset = role "group" (biome useSemanticElements); reset to a plain box */}
+					<fieldset
+						aria-label={THEME_GROUP_BUILT_IN}
+						className="m-0 p-0 border-0 min-w-0"
+					>
+						{BUILT_IN_OPTIONS.map(renderItem)}
+					</fieldset>
+					{userOptions.length > 0 && (
+						<fieldset
+							aria-label={THEME_GROUP_USER}
+							className="m-0 p-0 mt-1 pt-1 min-w-0 border-0 border-t border-solid border-rv-border-subtle"
+						>
+							{userOptions.map((t, i) =>
+								renderItem(t, BUILT_IN_OPTIONS.length + i),
+							)}
+						</fieldset>
+					)}
 				</div>
 			)}
 		</div>

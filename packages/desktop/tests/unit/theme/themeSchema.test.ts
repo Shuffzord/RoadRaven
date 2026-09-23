@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { ThemeFile } from "../../../../../shared/themeSchema";
 import { BUILT_IN_THEMES } from "../../../src/mainview/themes";
-import { ThemeFileSchema } from "../../../src/mainview/themes/schema";
+import { ThemeFileSchema } from "../../../src/theme/themeFileSchema";
 
 // The theme file format (v0.8.3 Phase 3). Phase 4 loads user files through
 // this schema, so every string that reaches CSS is validated here.
