@@ -45,7 +45,7 @@ for the full v1 vs. v1.1 split.
 ## Packages on npm
 
 > Not published yet. `@roadraven/mcp` ships with the first stable release tag
-> (`0.8.2`); pin the version that matches your app — see the main README's
+> (`0.8.3`); pin the version that matches your app — see the main README's
 > [Packages](https://github.com/Shuffzord/RoadRaven#packages-for-producers-and-library-consumers)
 > section for what that means for install commands.
 

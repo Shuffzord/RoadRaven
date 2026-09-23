@@ -18,7 +18,7 @@ no cloud, no accounts. It's just a file, living in your repo.
 
 > Built on **Electrobun** (not Electron). Runtime is **Bun**.
 
-> ⚠️ **Alpha (v0.8.2).** RoadRaven is an early public release. Core editing and
+> ⚠️ **Alpha (v0.8.3).** RoadRaven is an early public release. Core editing and
 > the live Event API work today, but expect rough edges — the data format, APIs, and
 > packaging may still change before v1.0. Bug reports and feedback are very welcome.
 
@@ -133,10 +133,10 @@ Or by hand:
 
 ### Packages (for producers and library consumers)
 
-> **Heads-up (v0.8.2):** these npm packages are **not published yet**. They go out
+> **Heads-up (v0.8.3):** these npm packages are **not published yet**. They go out
 > with the first stable release tag, and from then on a bare `bun add @roadraven/mcp`
 > / `npx -y @roadraven/mcp` resolves `latest`. Pin the version that matches your
-> app anyway, e.g. `@roadraven/mcp@0.8.2` — the app warns when the MCP server and
+> app anyway, e.g. `@roadraven/mcp@0.8.3` — the app warns when the MCP server and
 > the app versions drift apart. Until the publish lands, clone the repo and build
 > from source. RoadRaven is **bun-first**, but these are plain npm packages, so any
 > package manager works.
@@ -183,7 +183,7 @@ Zero commands, works fully offline, **works today** — no npm publish needed.
 Restart your MCP host with RoadRaven running and the tools are live.
 
 **Path 2 (Claude Code plugin).** ⚠️ Not usable yet — the plugin's `.mcp.json`
-runs `npx -y @roadraven/mcp@0.8.2`, and `@roadraven/mcp` isn't
+runs `npx -y @roadraven/mcp@0.8.3`, and `@roadraven/mcp` isn't
 published to npm yet (see [Packages](#packages-for-producers-and-library-consumers)
 above). Once it's published, install straight from this repo's marketplace,
 from inside Claude Code:
@@ -199,11 +199,11 @@ publish. Requires **Node.js >= 22**. Pin the exact prerelease version; a bare
 are published:
 
 ```bash
-claude mcp add -s user roadraven -- npx -y @roadraven/mcp@0.8.2
+claude mcp add -s user roadraven -- npx -y @roadraven/mcp@0.8.3
 ```
 
 ```bash
-opencode mcp add roadraven   # interactive — prompts for the command to run; give it `npx -y @roadraven/mcp@0.8.2`
+opencode mcp add roadraven   # interactive — prompts for the command to run; give it `npx -y @roadraven/mcp@0.8.3`
 ```
 
 For Cursor, Codex, Copilot, Gemini, or another MCP host, see the

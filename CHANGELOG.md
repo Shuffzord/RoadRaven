@@ -3,6 +3,73 @@
 All notable changes to RoadRaven are documented in this file. The format
 follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.8.3] - 2026-09-23
+
+### Added
+
+- **Your own themes.** A theme is now a small JSON file, and RoadRaven keeps
+  yours in its own themes folder. In Preferences → Theme: **Duplicate
+  current theme…** writes a copy of whatever you are looking at and switches
+  to it, **Import theme file…** brings in a file someone sent you, and
+  **Open themes folder** shows you where they live. Edit a file in any text
+  editor and the app repaints as you save — no restart. Your themes appear
+  in the theme picker under "Your themes"; a broken file gets a badge with
+  the reason instead of breaking anything, and if the theme you had
+  selected goes missing the app opens in Amber, says so once, and keeps
+  your setting so restoring the file brings it back.
+- **A theme editor** — Preferences → Theme → **Edit…**. It opens beside the
+  canvas rather than over it, and the canvas *is* the preview: every colour
+  you change repaints the real nodes, badges and menus as you type. Twelve
+  colours are enough for a complete theme; **Advanced** exposes everything
+  else with its automatically derived value shown until you override it.
+  Next to each colour the editor lists every place that colour is read
+  against another, with a live **pass / warn / fail** contrast check — the
+  same rules the built-in themes are held to — and a one-click **Suggest
+  fix** that nudges a failing colour until it passes. Changes save to the
+  file automatically; **Revert to saved** undoes them. **Hide** collapses
+  the editor to a small pill so you can use the app with the theme applied;
+  hold the eye button (or `Alt`) to peek at the canvas underneath. Built-in
+  themes are read-only, so Edit… on one first makes a copy and edits that.
+- **Contrast is now checked, not eyeballed.** Every built-in theme passes a
+  WCAG 2.x contrast check twice in CI: once on its colour values and once
+  on the rendered app in a real browser, so a stylesheet rule can no longer
+  quietly override a readable colour. Theme authors get the same report
+  from `bun run theme:lint`.
+
+### Changed
+
+- **Amber is the new default theme** on a fresh install and whenever a
+  saved theme cannot be found. An existing saved preference is left alone.
+- Slate's headings are a step heavier (semibold rather than medium) now
+  that every theme's heading style comes from the same place.
+- The lines connecting nodes are a little stronger in every theme, so the
+  tree's structure still reads on a dim screen or a projector.
+- The per-file `themeConfig` override (status colours and node shape set
+  inside a roadmap file) has been removed. It was never wired up and never
+  shipped as a working feature; a roadmap file that carries the key still
+  opens and keeps it untouched. A file's `statusConfig` colours continue to
+  work as before.
+
+### Fixed
+
+- **Contrast** and **Moss**: node titles were close to invisible on the
+  white and cream cards. They are now dark on the card, while the rest of
+  the interface keeps its light-on-dark text.
+- **Contrast**: the Completed and Blocked status stripes were white on a
+  white card — you could not tell which status a node had — and the Not
+  started badge was too faint. Stripes and badges are readable now.
+- **Light**: the Completed and In progress badges used pale green and pale
+  blue on white; both are deeper now.
+- **Moss**: menu, sidebar and status-bar text was a murky olive-grey that
+  failed on every surface; it is cream now, and the theme's status inks and
+  accent were retuned to match.
+- **Paper**, **Amber**, **Slate**: the faintest text tier (section headings,
+  shortcut hints, placeholder text) was too dim to read comfortably.
+- **Dark**: the Not started badge was too dim.
+- The theme picker's colour swatches are generated from the theme itself,
+  so a swatch can no longer show a colour the theme stopped using (Light's
+  did).
+
 ## [0.8.2] - 2026-09-22
 
 ### Added
