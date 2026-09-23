@@ -4,6 +4,9 @@ import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
 import {
 	CREATE_THEME_LABEL,
+	DELETE_THEME_CONFIRM_LABEL,
+	deleteThemeLabel,
+	deleteThemeTitle,
 	EDIT_THEME_LABEL,
 	EDITOR_ADVANCED_LABEL,
 	EDITOR_CHIP_PAIR_ATTR,
@@ -133,6 +136,48 @@ test.describe("Theme editor (production bundle, vite preview port 4173)", () => 
 		await expect(editor).toBeVisible();
 		await expect(pill).toBeHidden();
 		expect(await titleColor(page)).toBe(fixed);
+	});
+
+	// Delete the copy from the picker (Phase 7, D-11): the "×" after its row
+	// opens a confirm (audited with it open, on an unedited copy so the
+	// dialog is painted in Amber's own colours), Delete drops the row, Amber
+	// stays active and the editor session on the deleted copy closes. The
+	// editor is hidden first — anchored right, it covers the picker menu.
+	test("deletes a user theme from the picker; the confirm passes WCAG 2.1 AA", async ({
+		page,
+	}) => {
+		await loadHelloWorld(page);
+		await selectTheme(page, "amber");
+		const before = await titleColor(page);
+		const name = await openEditorOnCopy(page, "amber");
+		const editor = page.getByRole("dialog", { name: EDITOR_DIALOG_LABEL });
+		await editor.getByRole("button", { name: EDITOR_HIDE_LABEL }).click();
+		const pill = page.getByRole("button", { name: editorPillLabel(name) });
+		await expect(pill).toBeVisible();
+
+		await page.getByRole("button", { name: /^Theme:/ }).click();
+		const menu = page.getByRole("menu", { name: "Theme" });
+		const row = menu.getByRole("menuitem", { name, exact: true });
+		await expect(row).toBeVisible();
+		await menu.getByRole("menuitem", { name: deleteThemeLabel(name) }).click();
+		const confirm = page.getByRole("dialog", { name: deleteThemeTitle(name) });
+		await expect(confirm).toBeVisible();
+		await auditEditor(page, "delete-confirm");
+		await confirm
+			.getByRole("button", { name: DELETE_THEME_CONFIRM_LABEL })
+			.click();
+		await expect(confirm).toBeHidden();
+		await expect(row).toHaveCount(0);
+		await expect(
+			menu.getByRole("menuitem", { name: "Amber", exact: true }),
+		).toBeVisible();
+		await expect(
+			page.getByRole("button", { name: "Theme: Amber" }),
+		).toBeVisible();
+		// No dialog, no pill: the session on the deleted copy is gone.
+		await expect(editor).toBeHidden();
+		await expect(pill).toBeHidden();
+		expect(await titleColor(page)).toBe(before);
 	});
 
 	// The editor itself must pass axe with every chip on screen, on a copy of

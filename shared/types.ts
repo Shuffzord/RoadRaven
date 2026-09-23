@@ -40,6 +40,9 @@ export type ThemeWriteResult =
 	| { ok: true; id: string }
 	| { ok: false; error: string };
 
+/** Outcome of a theme-file delete (v0.8.3 Phase 7). */
+export type ThemeDeleteResult = { ok: true } | { ok: false; error: string };
+
 /**
  * Strict settings interface — add fields here as new phases need them.
  * Each field is optional so partial updates work via saveSettings RPC.
@@ -285,6 +288,13 @@ export type RoadmapRPCType = {
 			writeTheme: {
 				params: { file: ThemeFile; reservedIds?: string[] };
 				response: ThemeWriteResult;
+			};
+			// v0.8.3 Phase 7: removes `<id>.json` from the themes dir. The id is
+			// pattern-checked before it becomes a path; a built-in (reserved) or
+			// unknown id is refused.
+			deleteTheme: {
+				params: { id: string; reservedIds?: string[] };
+				response: ThemeDeleteResult;
 			};
 		};
 		messages: {

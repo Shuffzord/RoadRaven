@@ -16,6 +16,7 @@ import {
 	mkdirSync,
 	readdirSync,
 	readFileSync,
+	unlinkSync,
 	writeFileSync,
 } from "node:fs";
 import { basename, join } from "node:path";
@@ -28,6 +29,7 @@ import {
 	type ThemeFile,
 } from "../../../../shared/themeSchema";
 import type {
+	ThemeDeleteResult,
 	ThemeWriteResult,
 	UserThemeEntry,
 } from "../../../../shared/types";
@@ -234,6 +236,32 @@ export function importThemeFile(
 	}
 	log.info`imported theme ${sourcePath} -> ${path}`;
 	return { ok: true, id: result.file.id };
+}
+
+/**
+ * Removes `<id>.json` (v0.8.3 Phase 7, D-11). The id is checked before it
+ * becomes a path — nothing outside the themes dir can be unlinked — and a
+ * built-in (reserved) or missing id is refused. The file is unlinked, not
+ * moved to the OS trash.
+ */
+export function deleteUserTheme(
+	id: string,
+	opts: ThemeDirOptions = {},
+): ThemeDeleteResult {
+	if (!THEME_ID_PATTERN.test(id)) return { ok: false, error: "not a theme id" };
+	if (opts.reservedIds?.includes(id)) {
+		return { ok: false, error: `"${id}" is a built-in theme` };
+	}
+	const path = themePath(id, opts);
+	if (!existsSync(path)) return { ok: false, error: `no user theme "${id}"` };
+	try {
+		unlinkSync(path);
+	} catch (err) {
+		log.error`failed to delete theme ${path}: ${String(err)}`;
+		return { ok: false, error: `could not delete ${path}` };
+	}
+	log.info`deleted theme ${path}`;
+	return { ok: true };
 }
 
 /** Reveals the themes dir in the OS file manager. */

@@ -45,6 +45,7 @@ describe("themeStore", () => {
 			systemResolution: "dark",
 			resolvedTheme: DEFAULT_THEME_ID,
 			userThemes: [],
+			draft: null,
 		});
 		useToastStore.setState({ toasts: [] });
 		vi.clearAllMocks();
@@ -186,6 +187,84 @@ describe("themeStore", () => {
 		useThemeStore.getState().setTheme("high-contrast");
 		expect(electroview?.rpc).toBeDefined();
 		expect(electroview!.rpc!.request.saveSettings).toHaveBeenCalledTimes(3);
+	});
+
+	// v0.8.3 Phase 7 (D-11): deleting a user theme goes through the RPC, then
+	// the entry is dropped. Deleting the active theme switches to the default
+	// through setTheme, so the choice is persisted and no missing-theme notice
+	// fires on the next launch.
+	describe("deleteUserTheme", () => {
+		const other: UserThemeEntry = {
+			id: "other",
+			file: { ...(mine.file as NonNullable<typeof mine.file>), id: "other" },
+			requiredFailures: 0,
+		};
+		const request = () =>
+			electroview?.rpc?.request as unknown as Record<string, unknown>;
+
+		it("on the active theme: RPC delete, entry gone, default theme set and persisted, no notice", async () => {
+			const deleteTheme = vi.fn(() => Promise.resolve({ ok: true }));
+			request().deleteTheme = deleteTheme;
+			useThemeStore.getState().setUserThemes([mine, other]);
+			useThemeStore.getState().setTheme("mine");
+			vi.clearAllMocks();
+
+			await useThemeStore.getState().deleteUserTheme("mine");
+			expect(deleteTheme).toHaveBeenCalledWith({
+				id: "mine",
+				reservedIds: [...THEME_IDS],
+			});
+			const state = useThemeStore.getState();
+			expect(state.userThemes).toEqual([other]);
+			expect(state.preference).toBe(DEFAULT_THEME_ID);
+			expect(state.resolvedTheme).toBe(DEFAULT_THEME_ID);
+			expect(electroview?.rpc?.request.saveSettings).toHaveBeenCalledWith({
+				settings: { theme: DEFAULT_THEME_ID },
+			});
+			expect(useToastStore.getState().toasts).toEqual([]);
+		});
+
+		it("on an inactive theme: the preference is untouched and nothing is persisted", async () => {
+			request().deleteTheme = vi.fn(() => Promise.resolve({ ok: true }));
+			useThemeStore.getState().setUserThemes([mine, other]);
+			useThemeStore.getState().setTheme("other");
+			vi.clearAllMocks();
+
+			await useThemeStore.getState().deleteUserTheme("mine");
+			const state = useThemeStore.getState();
+			expect(state.userThemes).toEqual([other]);
+			expect(state.preference).toBe("other");
+			expect(state.resolvedTheme).toBe("other");
+			expect(electroview?.rpc?.request.saveSettings).not.toHaveBeenCalled();
+		});
+
+		it("on an RPC error: a notice is pushed and the entry is kept", async () => {
+			request().deleteTheme = vi.fn(() =>
+				Promise.resolve({ ok: false, error: "EPERM" }),
+			);
+			useThemeStore.getState().setUserThemes([mine]);
+			useThemeStore.getState().setTheme("mine");
+
+			await useThemeStore.getState().deleteUserTheme("mine");
+			expect(useThemeStore.getState().userThemes).toEqual([mine]);
+			expect(useThemeStore.getState().preference).toBe("mine");
+			const toasts = useToastStore.getState().toasts;
+			expect(toasts).toHaveLength(1);
+			expect(toasts[0].source).toBe(THEME_NOTICE_SOURCE);
+			expect(toasts[0].detail).toMatch(/EPERM/);
+		});
+
+		it("clears the editor's draft when it is the deleted theme", async () => {
+			request().deleteTheme = vi.fn(() => Promise.resolve({ ok: true }));
+			useThemeStore.getState().setUserThemes([mine, other]);
+			useThemeStore
+				.getState()
+				.setDraft(other.file as NonNullable<typeof other.file>);
+			await useThemeStore.getState().deleteUserTheme("mine");
+			expect(useThemeStore.getState().draft).toBe(other.file);
+			await useThemeStore.getState().deleteUserTheme("other");
+			expect(useThemeStore.getState().draft).toBeNull();
+		});
 	});
 
 	// v0.8.3 Phase 5: the editor's draft. It is not a preference — nothing

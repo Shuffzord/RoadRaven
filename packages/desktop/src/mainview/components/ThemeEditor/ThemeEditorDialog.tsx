@@ -16,7 +16,6 @@ import {
 	EDITOR_HIDE_LABEL,
 	EDITOR_KEEP_EDITING_LABEL,
 	EDITOR_PEEK_LABEL,
-	EDITOR_REVERT_LABEL,
 	EDITOR_SAVE_STATUS_TESTID,
 } from "../../lib/domContract";
 import {
@@ -113,7 +112,21 @@ export function takeEditorReturnFocus(): boolean {
  */
 export function openThemeEditor(file: ThemeFile): void {
 	usePreferencesStore.getState().closePreferences();
-	useThemeStore.getState().setDraft(file);
+	const store = useThemeStore.getState();
+	// A copy Bun could not write (no RPC: the HMR dev server, the a11y
+	// preview bundle) is still a user theme while it is being edited: list
+	// it so the picker shows it under "Your themes" (Phase 7, D-11).
+	if (!store.userThemes.some((e) => e.id === file.id)) {
+		store.setUserThemes([
+			...store.userThemes,
+			{
+				id: file.id,
+				file,
+				requiredFailures: verdictsFor(file).requiredFailures,
+			},
+		]);
+	}
+	store.setDraft(file);
 }
 
 /** Closes the editor: the draft goes, Preferences comes back on "Edit…". */
@@ -209,7 +222,6 @@ function useDraftSession(initial: ThemeFile) {
 		confirming,
 		setConfirming,
 		change,
-		revert: () => useThemeStore.getState().setDraft(saved),
 		requestClose,
 	};
 }
@@ -289,12 +301,10 @@ function PeekButton({
 
 interface EditorHeaderProps {
 	themeName: string;
-	dirty: boolean;
 	peek: boolean;
 	status: SaveStatus;
 	verdicts: ThemeVerdicts;
 	confirming: boolean;
-	onRevert: () => void;
 	onPeek: (on: boolean) => void;
 	onHide: () => void;
 	onClose: () => void;
@@ -311,14 +321,6 @@ function EditorHeader(props: EditorHeaderProps) {
 				<Dialog.Title style={{ ...dialogTitleStyle, flex: 1 }}>
 					Editing {props.themeName}
 				</Dialog.Title>
-				<button
-					type="button"
-					style={iconButtonStyle}
-					disabled={!props.dirty}
-					onClick={props.onRevert}
-				>
-					{EDITOR_REVERT_LABEL}
-				</button>
 				<PeekButton peek={props.peek} onPeek={props.onPeek} />
 				<button type="button" style={iconButtonStyle} onClick={props.onHide}>
 					{EDITOR_HIDE_LABEL}
@@ -384,7 +386,7 @@ function EditorHeader(props: EditorHeaderProps) {
  */
 function EditorSession({ initial }: { initial: ThemeFile }) {
 	const session = useDraftSession(initial);
-	const { draft, saved } = session;
+	const { draft } = session;
 	const [hidden, setHidden] = useState(false);
 	const { peek, setPeek, peekKeys } = usePeek();
 	const contentRef = useRef<HTMLDivElement>(null);
@@ -435,12 +437,10 @@ function EditorSession({ initial }: { initial: ThemeFile }) {
 					>
 						<EditorHeader
 							themeName={draft.meta.name}
-							dirty={draft !== saved}
 							peek={peek}
 							status={session.status}
 							verdicts={verdicts}
 							confirming={session.confirming}
-							onRevert={session.revert}
 							onPeek={setPeek}
 							onHide={() => setHidden(true)}
 							onClose={() => void session.requestClose()}

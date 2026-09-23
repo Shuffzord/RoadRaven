@@ -46,7 +46,6 @@ import {
 	EDITOR_HIDE_LABEL,
 	EDITOR_PEEK_LABEL,
 	EDITOR_RESET_LABEL,
-	EDITOR_REVERT_LABEL,
 	EDITOR_SAVE_STATUS_TESTID,
 	EDITOR_SUGGEST_FIX_LABEL,
 	editorPillLabel,
@@ -275,7 +274,7 @@ describe("ThemeEditor", () => {
 		);
 	});
 
-	it("a failed write is reported; Revert returns the draft to the last saved file", async () => {
+	it("a failed write is reported and the draft stays as typed", async () => {
 		rpc.writeTheme.mockResolvedValue({
 			ok: false,
 			error: "disk full",
@@ -287,9 +286,25 @@ describe("ThemeEditor", () => {
 				"Could not save: disk full",
 			),
 		);
-		fireEvent.click(screen.getByRole("button", { name: EDITOR_REVERT_LABEL }));
-		expect(draft()).toEqual(mine);
-		expect(hexInput("--rv-accent").value).toBe(mine.colors.accent);
+		expect(draft()?.colors.accent).toBe("#00ff00");
+		expect(hexInput("--rv-accent").value).toBe("#00ff00");
+	});
+
+	// RC1 (D-10): with a 500 ms autosave, `saved` equalled the draft by the
+	// time "Revert to saved" could be pressed, so it never reverted anything
+	// (the RED case changed a field, waited for "Saved · just now", pressed
+	// Revert and found the field unchanged). The button is gone.
+	it("has no Revert button; the save status and autosave are unchanged", async () => {
+		open();
+		expect(screen.queryByRole("button", { name: /revert/i })).toBeNull();
+		type("--rv-accent", "#00ff00");
+		await vi.waitFor(() =>
+			expect(screen.getByTestId(EDITOR_SAVE_STATUS_TESTID).textContent).toBe(
+				"Saved · just now",
+			),
+		);
+		expect(screen.queryByRole("button", { name: /revert/i })).toBeNull();
+		expect(hexInput("--rv-accent").value).toBe("#00ff00");
 	});
 
 	it("Hide collapses to a pill that names the theme and keeps the draft painted; the pill restores the dialog", () => {

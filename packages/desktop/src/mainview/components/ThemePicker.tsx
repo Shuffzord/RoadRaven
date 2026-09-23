@@ -1,11 +1,26 @@
+import * as Dialog from "@radix-ui/react-dialog";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import type {
 	ThemePreference,
 	UserThemeEntry,
 } from "../../../../../shared/types";
 import { useTheme } from "../hooks/useTheme";
+import {
+	DELETE_THEME_CANCEL_LABEL,
+	DELETE_THEME_CONFIRM_LABEL,
+	deleteThemeLabel,
+	deleteThemeTitle,
+} from "../lib/domContract";
 import { useThemeStore } from "../store/themeStore";
 import { BUILT_IN_THEMES, DEFAULT_THEME_ID, themeForId } from "../themes";
+import {
+	dialogButtonRowStyle,
+	dialogContentStyle,
+	dialogDescriptionStyle,
+	dialogPrimaryButtonStyle,
+	dialogSecondaryButtonStyle,
+	dialogTitleStyle,
+} from "./dialogStyles";
 
 // Contract constants (tests/unit/ui/ThemePicker.test.tsx imports these).
 export const THEME_GROUP_BUILT_IN = "Built-in";
@@ -23,6 +38,8 @@ type ThemeOption = {
 	disabled?: boolean;
 	/** Badge text: the file's error, or its required contrast failures. */
 	warning?: string;
+	/** A file in the themes dir (deletable), as opposed to a built-in. */
+	user?: boolean;
 };
 
 // Registry-driven (v0.8.3 Phase 3, D5): the swatch is the theme's own
@@ -57,6 +74,7 @@ function userOption(entry: UserThemeEntry): ThemeOption {
 		accent: entry.file?.colors.accent ?? "var(--rv-border)",
 		disabled: !entry.file,
 		warning: entry.error ?? contrastWarning(entry.requiredFailures),
+		user: true,
 	};
 }
 
@@ -84,11 +102,82 @@ function Swatch({ option }: { option: ThemeOption }) {
 	);
 }
 
+/**
+ * "Delete theme "<name>"?" (v0.8.3 Phase 7, D-11). Modal, in the shared
+ * dialog chrome; lands on Cancel. The picker menu stays open underneath so
+ * closing it (Cancel, Escape) can hand focus back to the theme's row.
+ */
+function DeleteThemeConfirm({
+	option,
+	onCancel,
+	onConfirm,
+	onClosed,
+}: {
+	option: ThemeOption | null;
+	onCancel: () => void;
+	onConfirm: () => void;
+	onClosed: () => void;
+}) {
+	const cancelRef = useRef<HTMLButtonElement>(null);
+	return (
+		<Dialog.Root
+			open={option !== null}
+			onOpenChange={(open) => {
+				if (!open) onCancel();
+			}}
+		>
+			<Dialog.Portal>
+				<Dialog.Overlay className="fixed inset-0 z-[9999] bg-black/60" />
+				<Dialog.Content
+					aria-modal="true"
+					style={dialogContentStyle}
+					// Radix would focus the first tabbable; land on the safe choice.
+					onOpenAutoFocus={(e) => {
+						e.preventDefault();
+						cancelRef.current?.focus();
+					}}
+					onCloseAutoFocus={(e) => {
+						e.preventDefault();
+						onClosed();
+					}}
+				>
+					<Dialog.Title style={dialogTitleStyle}>
+						{deleteThemeTitle(option?.label ?? "")}
+					</Dialog.Title>
+					<Dialog.Description style={dialogDescriptionStyle}>
+						This removes its file.
+					</Dialog.Description>
+					<div style={dialogButtonRowStyle}>
+						<button
+							ref={cancelRef}
+							type="button"
+							style={dialogSecondaryButtonStyle}
+							onClick={onCancel}
+						>
+							{DELETE_THEME_CANCEL_LABEL}
+						</button>
+						<button
+							type="button"
+							style={dialogPrimaryButtonStyle}
+							onClick={onConfirm}
+						>
+							{DELETE_THEME_CONFIRM_LABEL}
+						</button>
+					</div>
+				</Dialog.Content>
+			</Dialog.Portal>
+		</Dialog.Root>
+	);
+}
+
 export function ThemePicker() {
 	const { preference, setTheme } = useTheme();
 	const userThemes = useThemeStore((s) => s.userThemes);
 	const [open, setOpen] = useState(false);
 	const [focusIndex, setFocusIndex] = useState(0);
+	// The user theme whose delete confirm is up, and the index of its row.
+	const [confirming, setConfirming] = useState<ThemeOption | null>(null);
+	const confirmRow = useRef(0);
 	const rootRef = useRef<HTMLDivElement>(null);
 	const itemRefs = useRef<(HTMLButtonElement | null)[]>([]);
 	const menuId = useId();
@@ -105,8 +194,10 @@ export function ThemePicker() {
 		options.find((t) => t.id === DEFAULT_THEME_ID) ??
 		options[0];
 
+	// Suspended while the delete confirm is up: its Cancel click and Escape
+	// are the dialog's, and must not also close the menu underneath.
 	useEffect(() => {
-		if (!open) return;
+		if (!open || confirming) return;
 		const onDown = (e: MouseEvent) => {
 			if (!rootRef.current?.contains(e.target as Node)) setOpen(false);
 		};
@@ -122,7 +213,7 @@ export function ThemePicker() {
 			document.removeEventListener("mousedown", onDown);
 			document.removeEventListener("keydown", onKey);
 		};
-	}, [open]);
+	}, [open, confirming]);
 
 	useEffect(() => {
 		if (!open) return;
@@ -139,6 +230,17 @@ export function ThemePicker() {
 		itemRefs.current[index]?.focus();
 	};
 
+	const askDelete = (option: ThemeOption, index: number) => {
+		confirmRow.current = index;
+		setConfirming(option);
+	};
+
+	const confirmDelete = () => {
+		const id = confirming?.id;
+		setConfirming(null);
+		if (id) void useThemeStore.getState().deleteUserTheme(id);
+	};
+
 	const handleMenuKey = (e: React.KeyboardEvent<HTMLDivElement>) => {
 		const count = options.length;
 		if (e.key === "ArrowDown") {
@@ -153,6 +255,9 @@ export function ThemePicker() {
 		} else if (e.key === "End") {
 			e.preventDefault();
 			focusItem(count - 1);
+		} else if (e.key === "Delete" && options[focusIndex]?.user) {
+			e.preventDefault();
+			askDelete(options[focusIndex], focusIndex);
 		}
 	};
 
@@ -175,6 +280,10 @@ export function ThemePicker() {
 				role="menuitem"
 				aria-disabled={t.disabled || undefined}
 				aria-describedby={reasonId}
+				// Focus that did not come from the arrow keys (Tab back from a
+				// "×", a click) keeps the index in step, so Delete acts on the
+				// row that holds focus.
+				onFocus={() => setFocusIndex(i)}
 				className={`flex items-center gap-2 w-full h-[30px] px-2 text-[12px] transition duration-150 ${
 					active
 						? "text-rv-accent"
@@ -207,6 +316,31 @@ export function ThemePicker() {
 			</button>
 		);
 	};
+
+	// A user row: the theme item plus its "×" (Phase 7, D-11). The "×" is a
+	// menuitem of its own — a plain button inside a menu fails axe's
+	// aria-required-children — named through aria-label so the row's name
+	// stays the bare theme name. Arrow keys skip it (it is not in itemRefs);
+	// Tab from the row, or Delete on the row, reaches it. Shown while the row
+	// is hovered or holds focus.
+	const renderUserRow = (t: ThemeOption, i: number) => (
+		<div key={t.id} className="group flex items-center">
+			{renderItem(t, i)}
+			<button
+				type="button"
+				role="menuitem"
+				aria-label={deleteThemeLabel(t.label)}
+				title={deleteThemeLabel(t.label)}
+				className="shrink-0 inline-flex items-center justify-center w-[22px] h-[22px] mr-1 rounded-[4px] text-[14px] leading-none text-rv-text-secondary hover:bg-rv-bg-hover hover:text-rv-text-primary opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition duration-150"
+				onClick={(e) => {
+					e.stopPropagation();
+					askDelete(t, i);
+				}}
+			>
+				<span aria-hidden="true">×</span>
+			</button>
+		</div>
+	);
 
 	return (
 		<div ref={rootRef} className="relative">
@@ -248,12 +382,21 @@ export function ThemePicker() {
 							className="m-0 p-0 mt-1 pt-1 min-w-0 border-0 border-t border-solid border-rv-border-subtle"
 						>
 							{userOptions.map((t, i) =>
-								renderItem(t, BUILT_IN_OPTIONS.length + i),
+								renderUserRow(t, BUILT_IN_OPTIONS.length + i),
 							)}
 						</fieldset>
 					)}
 				</div>
 			)}
+
+			<DeleteThemeConfirm
+				option={confirming}
+				onCancel={() => setConfirming(null)}
+				onConfirm={confirmDelete}
+				// Back to the row it was opened from; after a deletion the row is
+				// gone and the options effect above refocuses the active theme.
+				onClosed={() => focusItem(confirmRow.current)}
+			/>
 		</div>
 	);
 }

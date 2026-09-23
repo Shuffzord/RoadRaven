@@ -21,6 +21,7 @@ vi.mock("../../../src/bun/platform/shell", () => ({
 
 import { showItemInFolder } from "../../../src/bun/platform/shell";
 import {
+	deleteUserTheme,
 	duplicateTheme,
 	getThemesDir,
 	importThemeFile,
@@ -248,6 +249,45 @@ describe("bun/themes", () => {
 		const missing = join(base, "missing.json");
 		expect(importThemeFile(missing, { basePath: base }).ok).toBe(false);
 		expect(listUserThemes({ basePath: base })).toHaveLength(1);
+	});
+
+	// v0.8.3 Phase 7 (D-11): deleting a user theme. The id is checked before
+	// it becomes a path, so nothing outside the themes dir can be unlinked.
+	it("deleteUserTheme unlinks an existing user file", () => {
+		put("mine.json", JSON.stringify(valid));
+		put("murky.json", JSON.stringify(lowContrast));
+		expect(
+			deleteUserTheme("mine", { basePath: base, reservedIds: RESERVED }),
+		).toEqual({ ok: true });
+		expect(existsSync(join(base, "themes", "mine.json"))).toBe(false);
+		expect(listUserThemes({ basePath: base }).map((e) => e.id)).toEqual([
+			"murky",
+		]);
+	});
+
+	it("deleteUserTheme refuses a built-in id, a missing id and an id that is not a theme id", () => {
+		put("mine.json", JSON.stringify(valid));
+		// A stray file under a built-in's id is never touched through delete.
+		put("amber.json", JSON.stringify({ ...valid, id: "amber" }));
+		const reserved = deleteUserTheme("amber", {
+			basePath: base,
+			reservedIds: RESERVED,
+		});
+		expect(reserved.ok).toBe(false);
+		expect(!reserved.ok && reserved.error).toMatch(/built-in/);
+		expect(existsSync(join(base, "themes", "amber.json"))).toBe(true);
+
+		const missing = deleteUserTheme("nope", { basePath: base });
+		expect(missing.ok).toBe(false);
+		expect(!missing.ok && missing.error).toMatch(/no user theme "nope"/);
+
+		// Outside the dir: the pattern refuses it before any path is built.
+		writeFileSync(join(base, "settings.json"), "{}", "utf-8");
+		const outside = deleteUserTheme("../settings", { basePath: base });
+		expect(outside).toEqual({ ok: false, error: "not a theme id" });
+		expect(existsSync(join(base, "settings.json"))).toBe(true);
+		expect(deleteUserTheme("Mine", { basePath: base }).ok).toBe(false);
+		expect(existsSync(join(base, "themes", "mine.json"))).toBe(true);
 	});
 
 	it("revealThemesFolder reveals the themes dir through the platform seam", () => {

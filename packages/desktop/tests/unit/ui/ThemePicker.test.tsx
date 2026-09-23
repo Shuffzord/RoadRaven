@@ -2,7 +2,13 @@
 // v0.8.3 Phase 4: the picker lists user themes in their own group, flags
 // invalid files and contrast failures with a badge, and stays keyboard
 // navigable across both groups (the a11y specs select items by name).
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import {
+	act,
+	cleanup,
+	fireEvent,
+	render,
+	screen,
+} from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { UserThemeEntry } from "../../../../../shared/types";
 
@@ -23,6 +29,12 @@ import {
 	THEME_GROUP_USER,
 	ThemePicker,
 } from "../../../src/mainview/components/ThemePicker";
+import {
+	DELETE_THEME_CANCEL_LABEL,
+	DELETE_THEME_CONFIRM_LABEL,
+	deleteThemeLabel,
+	deleteThemeTitle,
+} from "../../../src/mainview/lib/domContract";
 import { useThemeStore } from "../../../src/mainview/store/themeStore";
 import { BUILT_IN_THEMES, themeForId } from "../../../src/mainview/themes";
 
@@ -68,10 +80,11 @@ describe("ThemePicker with user themes", () => {
 		openMenu();
 		const builtIn = screen.getByRole("group", { name: THEME_GROUP_BUILT_IN });
 		const user = screen.getByRole("group", { name: THEME_GROUP_USER });
+		// Theme rows only: a user row's "×" is a menuitem too (Phase 7).
 		const names = (g: HTMLElement) =>
-			[...g.querySelectorAll('[role="menuitem"]')].map((el) =>
-				el.querySelector("span.text-left")?.textContent?.trim(),
-			);
+			[...g.querySelectorAll('[role="menuitem"]')]
+				.filter((el) => !el.getAttribute("aria-label"))
+				.map((el) => el.querySelector("span.text-left")?.textContent?.trim());
 		expect(names(builtIn)).toEqual([
 			...BUILT_IN_THEMES.map((t) => t.meta.name),
 			"System",
@@ -136,7 +149,10 @@ describe("ThemePicker with user themes", () => {
 	it("arrow keys, Home and End walk across both groups", () => {
 		render(<ThemePicker />);
 		const menu = openMenu();
-		const items = screen.getAllByRole("menuitem");
+		// Theme rows only: a user row's "×" is a menuitem too (Phase 7).
+		const items = screen
+			.getAllByRole("menuitem")
+			.filter((el) => !el.getAttribute("aria-label"));
 		const last = items.length - 1;
 
 		fireEvent.keyDown(menu, { key: "End" });
@@ -156,5 +172,151 @@ describe("ThemePicker with user themes", () => {
 		expect(document.activeElement).toBe(items[systemIdx]);
 		fireEvent.keyDown(menu, { key: "ArrowDown" });
 		expect(document.activeElement).toBe(items[systemIdx + 1]);
+	});
+});
+
+// v0.8.3 Phase 7 (D-11): a delete control on each "Your themes" row. It is a
+// menuitem of its own (a plain button inside a menu fails axe's
+// aria-required-children) named "Delete theme <name>", so the theme row's
+// own accessible name stays the bare theme name the a11y sampler selects on.
+describe("ThemePicker delete control", () => {
+	const deleteButton = (name: string) =>
+		screen.getByRole("menuitem", { name: deleteThemeLabel(name) });
+	const confirmDialog = (name: string) =>
+		screen.getByRole("dialog", { name: deleteThemeTitle(name) });
+
+	beforeEach(() => {
+		useThemeStore.setState({
+			preference: "dark",
+			systemResolution: "dark",
+			resolvedTheme: "dark",
+			userThemes: [mine, murky, broken],
+			deleteUserTheme: vi.fn(() => Promise.resolve(true)),
+		});
+	});
+
+	afterEach(() => cleanup());
+
+	it("every user row has a delete button named after the theme; built-in rows have none", () => {
+		render(<ThemePicker />);
+		openMenu();
+		for (const name of ["Mine", "Murky", "broken"]) {
+			expect(deleteButton(name)).toBeTruthy();
+			// The theme row itself keeps its exact name.
+			expect(screen.getByRole("menuitem", { name })).not.toBe(
+				deleteButton(name),
+			);
+		}
+		const builtIn = screen.getByRole("group", { name: THEME_GROUP_BUILT_IN });
+		expect(
+			[...builtIn.querySelectorAll('[role="menuitem"]')].filter((el) =>
+				el.getAttribute("aria-label")?.startsWith("Delete theme"),
+			),
+		).toEqual([]);
+		expect(screen.queryByRole("menuitem", { name: /Delete theme Dark/ })).toBe(
+			null,
+		);
+	});
+
+	it("clicking the delete button opens a confirm without selecting the theme; Delete calls the store", async () => {
+		render(<ThemePicker />);
+		openMenu();
+		fireEvent.click(deleteButton("Mine"));
+		expect(useThemeStore.getState().preference).toBe("dark");
+		const dialog = confirmDialog("Mine");
+		expect(dialog.textContent).toContain("This removes its file.");
+		expect(useThemeStore.getState().deleteUserTheme).not.toHaveBeenCalled();
+
+		fireEvent.click(
+			screen.getByRole("button", { name: DELETE_THEME_CONFIRM_LABEL }),
+		);
+		expect(useThemeStore.getState().deleteUserTheme).toHaveBeenCalledWith(
+			"mine",
+		);
+		await vi.waitFor(() =>
+			expect(screen.queryByRole("dialog", { name: /Delete theme/ })).toBe(null),
+		);
+		// The menu is still open: the user sees the row go.
+		expect(screen.getByRole("menu", { name: "Theme" })).toBeTruthy();
+	});
+
+	it("Cancel and Escape close the confirm, keep the theme and return focus to its row", async () => {
+		render(<ThemePicker />);
+		openMenu();
+		fireEvent.click(deleteButton("Murky"));
+		fireEvent.click(
+			screen.getByRole("button", { name: DELETE_THEME_CANCEL_LABEL }),
+		);
+		await vi.waitFor(() =>
+			expect(screen.queryByRole("dialog", { name: /Delete theme/ })).toBe(null),
+		);
+		expect(useThemeStore.getState().deleteUserTheme).not.toHaveBeenCalled();
+		expect(screen.getByRole("menu", { name: "Theme" })).toBeTruthy();
+		// Radix hands focus back on a macrotask after the dialog unmounts.
+		await vi.waitFor(() =>
+			expect(document.activeElement).toBe(
+				screen.getByRole("menuitem", { name: "Murky" }),
+			),
+		);
+
+		fireEvent.click(deleteButton("Murky"));
+		const dialog = confirmDialog("Murky");
+		fireEvent.keyDown(dialog, { key: "Escape" });
+		await vi.waitFor(() =>
+			expect(screen.queryByRole("dialog", { name: /Delete theme/ })).toBe(null),
+		);
+		expect(screen.getByRole("menu", { name: "Theme" })).toBeTruthy();
+		await vi.waitFor(() =>
+			expect(document.activeElement).toBe(
+				screen.getByRole("menuitem", { name: "Murky" }),
+			),
+		);
+	});
+
+	it("arrow keys walk the theme rows only; the delete buttons are reached with Tab or the Delete key", () => {
+		render(<ThemePicker />);
+		const menu = openMenu();
+		const rows = screen
+			.getAllByRole("menuitem")
+			.filter((el) => !el.getAttribute("aria-label")?.startsWith("Delete"));
+		expect(
+			rows.map((el) => el.querySelector("span.text-left")?.textContent),
+		).toEqual([
+			...BUILT_IN_THEMES.map((t) => t.meta.name),
+			"System",
+			"Mine",
+			"Murky",
+			"broken",
+		]);
+		// Focus that arrives by Tab or click (not the arrow keys) is a native
+		// focus event; act() lets the row's onFocus land before the next key.
+		act(() => screen.getByRole("menuitem", { name: "Mine" }).focus());
+		fireEvent.keyDown(menu, { key: "ArrowDown" });
+		expect(document.activeElement).toBe(
+			screen.getByRole("menuitem", { name: "Murky" }),
+		);
+		fireEvent.keyDown(menu, { key: "ArrowDown" });
+		expect(document.activeElement).toBe(
+			screen.getByRole("menuitem", { name: "broken" }),
+		);
+		fireEvent.keyDown(menu, { key: "ArrowDown" });
+		expect(document.activeElement).toBe(rows[0]);
+		fireEvent.keyDown(menu, { key: "End" });
+		expect(document.activeElement).toBe(
+			screen.getByRole("menuitem", { name: "broken" }),
+		);
+		// Tab order puts the delete button right after its row.
+		expect(deleteButton("broken").previousElementSibling).toBe(
+			screen.getByRole("menuitem", { name: "broken" }),
+		);
+		expect(deleteButton("broken").tagName).toBe("BUTTON");
+
+		// Delete on a focused user row opens its confirm; on a built-in, nothing.
+		act(() => rows[0].focus());
+		fireEvent.keyDown(menu, { key: "Delete" });
+		expect(screen.queryByRole("dialog", { name: /Delete theme/ })).toBe(null);
+		fireEvent.keyDown(menu, { key: "End" });
+		fireEvent.keyDown(menu, { key: "Delete" });
+		expect(confirmDialog("broken")).toBeTruthy();
 	});
 });

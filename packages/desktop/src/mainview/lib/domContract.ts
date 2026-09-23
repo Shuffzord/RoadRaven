@@ -31,7 +31,6 @@ export const EDITOR_DIALOG_LABEL = "Theme editor";
 export const EDITOR_HIDE_LABEL = "Hide";
 export const EDITOR_PEEK_LABEL = "Peek at the canvas (hold)";
 export const EDITOR_CLOSE_LABEL = "Close theme editor";
-export const EDITOR_REVERT_LABEL = "Revert to saved";
 export const EDITOR_ADVANCED_LABEL = "Advanced";
 export const EDITOR_RESET_LABEL = "Reset to derived";
 export const EDITOR_DERIVED_TAG = "derived";
@@ -57,3 +56,18 @@ export const EDITOR_CHIP_STATUS_ATTR = "data-status";
 export const EDITOR_COUNTS_TESTID = "theme-editor-counts";
 /** Header line: "Saved · just now" / "Saving…" / "Could not save: …". */
 export const EDITOR_SAVE_STATUS_TESTID = "theme-editor-save-status";
+
+// -- Theme picker: delete a user theme (v0.8.3 Phase 7, D-11) ---------------
+// Rendered by ThemePicker.tsx; selected on by tests/unit/ui/ThemePicker.test.tsx
+// and tests/a11y/editor.spec.ts.
+
+/** `aria-label` of the "×" after a user theme's row in the picker menu. */
+export function deleteThemeLabel(themeName: string): string {
+	return `Delete theme ${themeName}`;
+}
+/** Title (accessible name) of the confirm dialog the "×" opens. */
+export function deleteThemeTitle(themeName: string): string {
+	return `Delete theme "${themeName}"?`;
+}
+export const DELETE_THEME_CONFIRM_LABEL = "Delete";
+export const DELETE_THEME_CANCEL_LABEL = "Cancel";

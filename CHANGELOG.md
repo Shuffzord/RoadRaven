@@ -26,10 +26,16 @@ follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   against another, with a live **pass / warn / fail** contrast check — the
   same rules the built-in themes are held to — and a one-click **Suggest
   fix** that nudges a failing colour until it passes. Changes save to the
-  file automatically; **Revert to saved** undoes them. **Hide** collapses
-  the editor to a small pill so you can use the app with the theme applied;
-  hold the eye button (or `Alt`) to peek at the canvas underneath. Built-in
-  themes are read-only, so Edit… on one first makes a copy and edits that.
+  file automatically. **Hide** collapses the editor to a small pill so you
+  can use the app with the theme applied; hold the eye button (or `Alt`) to
+  peek at the canvas underneath. Built-in themes are read-only, so Edit… on
+  one first makes a copy and edits that.
+- **Deleting a theme you made.** In the theme picker, each entry under
+  "Your themes" has a small **×** (shown when you hover the row or reach it
+  with the keyboard — `Tab` from the row, or press `Delete` on it). It asks
+  first, then removes the theme's file. Deleting the theme you are using
+  switches you to Amber and remembers that, so the app does not go looking
+  for the missing theme next time.
 - **Contrast is now checked, not eyeballed.** Every built-in theme passes a
   WCAG 2.x contrast check twice in CI: once on its colour values and once
   on the rendered app in a real browser, so a stylesheet rule can no longer

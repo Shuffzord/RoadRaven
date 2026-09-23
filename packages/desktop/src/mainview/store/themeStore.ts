@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import type { ThemeFile } from "../../../../../shared/themeSchema";
 import type {
+	ThemeDeleteResult,
 	ThemePreference,
 	UserThemeEntry,
 } from "../../../../../shared/types";
@@ -36,6 +37,14 @@ export interface ThemeState {
 	setUserThemes: (entries: UserThemeEntry[]) => void;
 	/** Re-lists through the RPC; a no-op outside Electrobun. */
 	refreshUserThemes: () => Promise<void>;
+	/**
+	 * Deletes a user theme's file through the RPC, then drops its entry
+	 * (v0.8.3 Phase 7, D-11). Deleting the active theme switches to the
+	 * default through setTheme, so the choice is persisted and no
+	 * missing-theme notice fires later; a draft of it is cleared. A failure
+	 * keeps the entry and pushes a notice. Resolves to whether it was deleted.
+	 */
+	deleteUserTheme: (id: string) => Promise<boolean>;
 	/**
 	 * The theme editor's working copy (v0.8.3 Phase 5). While set,
 	 * ThemeProvider paints it instead of the preference; nothing here
@@ -145,6 +154,40 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
 		} catch {
 			// RPC unavailable outside Electrobun runtime (test/Vite dev server)
 		}
+	},
+	deleteUserTheme: async (id) => {
+		const rpc = electroview?.rpc;
+		let result: ThemeDeleteResult;
+		if (!rpc) {
+			// Outside Electrobun (HMR dev server, the a11y preview bundle) the
+			// list is in-memory only: nothing on disk to delete.
+			result = { ok: true };
+		} else {
+			try {
+				result = await rpc.request.deleteTheme({
+					id,
+					reservedIds: [...THEME_IDS],
+				});
+			} catch (err) {
+				result = { ok: false, error: String(err) };
+			}
+		}
+		if (!result.ok) {
+			useToastStore.getState().pushToast({
+				type: "file_error",
+				source: THEME_NOTICE_SOURCE,
+				detail: `Could not delete theme '${id}': ${result.error}`,
+			});
+			return false;
+		}
+		const { preference, resolvedTheme, draft } = get();
+		set({
+			userThemes: get().userThemes.filter((e) => e.id !== id),
+			draft: draft?.id === id ? null : draft,
+		});
+		if (preference === id || resolvedTheme === id)
+			get().setTheme(DEFAULT_THEME_ID);
+		return true;
 	},
 	draft: null,
 	setDraft: (file) => set({ draft: file }),

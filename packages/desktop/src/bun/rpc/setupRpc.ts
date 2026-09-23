@@ -4,6 +4,7 @@ import { getSetupStatus, installMcpIntegration } from "../mcpInstaller";
 import { openFileDialog } from "../platform/dialogs";
 import { loadSettings, saveSettings } from "../settings";
 import {
+	deleteUserTheme,
 	duplicateTheme,
 	getThemesDir,
 	importThemeFile,
@@ -66,6 +67,7 @@ export function createThemeRpcHandlers(): {
 	importTheme: RpcHandler<"importTheme">;
 	revealThemesFolder: RpcHandler<"revealThemesFolder">;
 	writeTheme: RpcHandler<"writeTheme">;
+	deleteTheme: RpcHandler<"deleteTheme">;
 } {
 	return {
 		listThemes: ({ reservedIds }) => ({
@@ -99,5 +101,7 @@ export function createThemeRpcHandlers(): {
 		// theme only; a built-in (reserved) or unknown id is refused.
 		writeTheme: ({ file, reservedIds }) =>
 			updateUserTheme(file, { reservedIds }),
+		// v0.8.3 Phase 7: the picker's delete — a user theme only.
+		deleteTheme: ({ id, reservedIds }) => deleteUserTheme(id, { reservedIds }),
 	};
 }
