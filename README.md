@@ -249,7 +249,7 @@ Full tool catalog, configuration, kill-switch, and security model:
 | What | v0.8 (this alpha) | Planned |
 |------|-------------------|---------|
 | Tree canvas + keyboard editor | available | — |
-| Themes (dark / light / high-contrast) | available | — |
+| Themes — 8 built-in (Amber default), your own as JSON files, in-app editor with live WCAG checks | available | — |
 | Side-panel CodeMirror notes + metadata | available | — |
 | Atomic autosave + `$ref` write-back | available | — |
 | File menu, document chip, Outline navigator, Preferences | available | — |
@@ -344,10 +344,10 @@ or a PR. Contributions, feedback, and wild suggestions are all genuinely welcome
 - **File management**
   - `File` menu in the top bar: New `Ctrl+N`, Open… `Ctrl+O`, Open Recent ▸, Save `Ctrl+S`, Save As… `Ctrl+Shift+S`, Reveal in Folder, Copy Path, Close File (`⌘` on macOS). `Ctrl+B` toggles the sidebar, `Ctrl+,` opens Preferences.
   - Document chip in the top-bar centre: file name + save-state dot, full path and linked `$ref` files in the tooltip; the OS window title mirrors the open file.
-  - Preferences dialog (cog or `Ctrl+,`): theme, reopen last file on launch, Event API port, Agent API toggle, Integrations wizard, About.
+  - Preferences dialog (cog or `Ctrl+,`): theme (Edit… / Duplicate / Import / Open themes folder), reopen last file on launch, Event API port, Agent API toggle, Integrations wizard, About.
   - **Files** sidebar: recent files with a right-click menu (Open / Reveal in Folder / Remove / Clear) and an **Outline** navigator of the open roadmap — click a row to reveal the node on the canvas, arrow keys to move around it.
   - New and the samples open as untitled; you are asked where to save after the first edit, and a Discard-changes dialog guards unsaved untitled edits on New / Open / Close / quit.
-- **Themes** — dark (default), light, high-contrast.
+- **Themes** — eight built-in (Amber is the default; Dark, Light, High Contrast, Paper, Contrast, Slate, Moss), every one gated on WCAG 2.x contrast in CI. Your own themes are JSON files in the app's `themes` folder: Preferences → Duplicate current theme… / Import theme file… / Open themes folder, hot-reloaded on save, and an in-app **theme editor** (Preferences → Theme → Edit…) that paints the canvas live with a pass / warn / fail contrast chip per colour and a one-click Suggest fix. See [`docs/design-system.md`](docs/design-system.md).
 - **Live integration ready** — RPC contract has `nodeStatusUpdate`, `integrationEvent`, and `pushFileChanged` messages; plugin host comes in a later phase.
 
 ## Quick start (development)
