@@ -133,13 +133,11 @@ Or by hand:
 
 ### Packages (for producers and library consumers)
 
-> **Heads-up (v0.8.1):** these npm packages are **not published yet**. They go out
-> with the first stable release tag, and from then on a bare `bun add @roadraven/mcp`
-> / `npx -y @roadraven/mcp` resolves `latest`. Pin the version that matches your
-> app anyway, e.g. `@roadraven/mcp@0.8.1` — the app warns when the MCP server and
-> the app versions drift apart. Until the publish lands, clone the repo and build
-> from source. RoadRaven is **bun-first**, but these are plain npm packages, so any
-> package manager works.
+> **v0.8.1:** `@roadraven/mcp` is on npm. Pin the version that matches your
+> installed app, e.g. `@roadraven/mcp@0.8.1` —
+> the app warns when the server's major.minor differs from its own.
+> `@roadraven/core` is **not published yet**; clone the repo and build from source.
+> RoadRaven is **bun-first**, but these are plain npm packages, so any package manager works.
 
 `@roadraven/core` — Zod schemas + types. Use this if you're building an Event Producer:
 
@@ -148,8 +146,9 @@ bun add @roadraven/core          # not published yet — see note above
 ```
 
 `@roadraven/mcp` — the MCP wrapper that lets Claude Code (and any MCP
-host) read, edit, and push live status updates to your roadmap. Until it's published,
-build it locally — see [Connect an MCP host](#connect-an-mcp-host) below.
+host) read, edit, and push live status updates to your roadmap
+([npm](https://www.npmjs.com/package/@roadraven/mcp)). See
+[Connect an MCP host](#connect-an-mcp-host) below.
 
 See the [plugin authoring guide](docs/plugin-authoring.md) for the full Event API contract.
 
@@ -158,7 +157,7 @@ See the [plugin authoring guide](docs/plugin-authoring.md) for the full Event AP
 ## Connect an MCP host
 
 **Why.** RoadRaven's headline use case is letting an AI agent author and maintain
-your roadmap. `@roadraven/mcp` is an MCP server exposing **19 tools** so any MCP
+your roadmap. `@roadraven/mcp` is an MCP server exposing **21 tools** so any MCP
 host — Claude Code, OpenCode, and others — can create, edit, move, and delete
 nodes, and push live status as it works. Your plan becomes something the agent
 keeps current for you. Three ways to connect it, easiest first.
@@ -182,21 +181,18 @@ wizard's `mcp__roadraven__*`).
 Zero commands, works fully offline, **works today** — no npm publish needed.
 Restart your MCP host with RoadRaven running and the tools are live.
 
-**Path 2 (Claude Code plugin).** ⚠️ Not usable yet — the plugin's `.mcp.json`
-runs `npx -y @roadraven/mcp@0.8.1`, and `@roadraven/mcp` isn't
-published to npm yet (see [Packages](#packages-for-producers-and-library-consumers)
-above). Once it's published, install straight from this repo's marketplace,
-from inside Claude Code:
+**Path 2 (Claude Code plugin).** Requires **Node.js >= 22** (the plugin's
+`.mcp.json` runs `npx -y @roadraven/mcp@0.8.1`). Install straight from
+this repo's marketplace, from inside Claude Code:
 
 ```
 /plugin marketplace add Shuffzord/RoadRaven
 /plugin install roadraven@roadraven
 ```
 
-**Path 3 (one-liner — any other host).** ⚠️ Same caveat — requires the npm
-publish. Requires **Node.js >= 22**. Pin the exact prerelease version; a bare
-`npx -y @roadraven/mcp` resolves `latest`, which won't exist while only betas
-are published:
+**Path 3 (one-liner — any other host).** Requires **Node.js >= 22**. Pin the
+version that matches your installed app (the app warns on a major.minor
+mismatch):
 
 ```bash
 claude mcp add -s user roadraven -- npx -y @roadraven/mcp@0.8.1
@@ -255,7 +251,7 @@ Full tool catalog, configuration, kill-switch, and security model:
 | Event API (WebSocket — external producers push status) | available | — |
 | MCP server version-mismatch warning | available | — |
 | First-run Setup Wizard — one-click MCP install (Claude Code + OpenCode) | available | — |
-| Claude Code marketplace plugin (`@roadraven/mcp`) | ships this release¹ | — |
+| Claude Code marketplace plugin (`@roadraven/mcp`) | available | — |
 | Windows installer | available | — |
 | Linux installer (`.tar.gz`) | available | — |
 | Electrobun 2.x runtime (Cottontail main process) | available | — |
@@ -268,12 +264,6 @@ Full tool catalog, configuration, kill-switch, and security model:
 | In-app self-update | deferred | planned — `Updater.checkForUpdate`/`downloadUpdate`/`applyUpdate` exist in the Electrobun SDK but aren't wired into the app yet |
 | Drag-and-drop reordering | deferred | planned |
 | Undo / redo | deferred | planned |
-
-¹ `@roadraven/mcp` is not published to npm yet — see
-[Packages](#packages-for-producers-and-library-consumers) above. The plugin
-manifest and marketplace entry ship in this release, but installing them only
-works once the npm publish lands; the Setup Wizard (bundled server, no
-publish needed) works today.
 
 See the [documentation](docs/) for more detail on current capabilities and
 what's planned next.

@@ -22,9 +22,8 @@ Anything that can speak WebSocket and produce structured status events:
 - An LLM-driven agent that updates nodes as it makes progress on tasks
    — the `@roadraven/mcp` MCP wrapper at
    [`plugins/claude-code/`](https://github.com/Shuffzord/RoadRaven/tree/master/plugins/claude-code)
-   is the reference implementation (not published to npm yet — see the main
-   README's [Packages](https://github.com/Shuffzord/RoadRaven#packages-for-producers-and-library-consumers)
-   section)
+   is the reference implementation
+   ([`@roadraven/mcp` on npm](https://www.npmjs.com/package/@roadraven/mcp))
 
 ## The contract
 
@@ -54,7 +53,7 @@ import type { IntegrationEvent } from "@roadraven/core";
 ```
 
 > Install `@roadraven/core` to import the contract type: `bun add @roadraven/core`
-> (not published yet — for now, build from source; see the repo's `plugins/claude-code/`).
+> (`@roadraven/core` is not published yet — for now, build from source; see the repo's `plugins/claude-code/`).
 
 ## Discovering the URL
 
@@ -196,8 +195,8 @@ overlays).
 - **Sentinel file:** `<userData>/event-api.json` (`<userData>` per OS — see above)
 - **Default port:** 47921 (with auto-fallback `+1..+9`)
 - **Reference producer:** `@roadraven/mcp`
-   — not published to npm yet (see [MCP install guide](mcp-install.html)); for
-   now, fork from
+   ([npm](https://www.npmjs.com/package/@roadraven/mcp), [MCP install guide](mcp-install.html));
+   source in
    [`plugins/claude-code/`](https://github.com/Shuffzord/RoadRaven/tree/master/plugins/claude-code)
 - **App-side architecture:** see [Architecture Overview](architecture-overview.md)
    and [RPC and IPC](rpc-and-ipc.md) for how events flow from WS → Bun
