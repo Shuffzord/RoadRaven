@@ -193,11 +193,10 @@ jobs:
 
   publish-npm-mcp:
     name: Publish @roadraven/mcp to npm
-    # Disabled until @roadraven/mcp exists on npm with a trusted publisher
-    # configured for this workflow — the first publish has to be manual, and an
-    # OIDC publish without that setup fails the release run. Remove this line
-    # once npmjs.com → package → Settings → Trusted Publisher is filled in.
-    if: false
+    # Publishes through npm trusted publishing (OIDC): npmjs.com → @roadraven/mcp
+    # → Settings → Trusted Publisher trusts this repo + workflow file, so no
+    # token is stored anywhere. Configured 2026-09-23 after the manual 0.8.0
+    # publish (the settings page only exists once the package does).
     needs: [build-windows, build-linux]
     runs-on: ubuntu-latest
     steps:
