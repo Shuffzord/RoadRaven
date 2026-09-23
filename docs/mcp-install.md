@@ -12,13 +12,9 @@ layout: default
 > over the local Event API (`127.0.0.1`); with the app closed, tools return
 > `app_not_running`.
 >
-> ⚠️ **`@roadraven/mcp` is not published to npm yet.** It ships with the first
-> stable release tag. Every command below pins the exact version, `0.8.3`, so
-> the server matches the app (the app warns on a version mismatch); until the
-> publish lands, none of the `npx`/plugin paths on this page work — use the
-> built-in Setup Wizard (bundled server, no publish needed) or build from
-> source (see the main README's
-> [Fallback](https://github.com/Shuffzord/RoadRaven#connect-an-mcp-host)).
+> Every command below pins the exact version, `0.8.3`. Pin the version
+> that matches your installed app: the app warns when the server's major.minor
+> differs from its own (see [Version mismatch](#version-mismatch)).
 
 Pick the section for your MCP host below. If you'd rather skip all of this,
 use the built-in Setup Wizard instead — see the main
