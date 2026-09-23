@@ -91,6 +91,44 @@ export function withAlpha([r, g, b]: RGB, alpha: number): string {
 	return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
+const BLACK: RGB = [0, 0, 0];
+const WHITE: RGB = [255, 255, 255];
+const SUGGEST_STEPS = 50;
+const SUGGEST_STEP = 0.02;
+
+/**
+ * "Suggest fix" (v0.8.3 Phase 5): the ink stepped away from the surface in
+ * 2 % lightness steps — toward white in a dark theme, toward black in a
+ * light one — until the pair reaches `min`, at most 50 steps. Mixing toward
+ * a neutral keeps the hue. When the mode's direction cannot reach `min` at
+ * all (a bright accent in a dark theme) the other direction is used; when
+ * neither can, null. The ink comes back unchanged when it already passes.
+ * Returns `#rrggbb`; a translucent ink is measured composited over the
+ * surface and the suggestion is opaque.
+ */
+export function suggestInk(
+	ink: string,
+	surface: string,
+	min: number,
+	mode: "dark" | "light",
+): string | null {
+	const inkLayer = parseColor(ink);
+	const surfaceLayer = parseColor(surface);
+	if (!inkLayer || !surfaceLayer) return null;
+	const bg: RGB = [surfaceLayer[0], surfaceLayer[1], surfaceLayer[2]];
+	const start = composite(inkLayer, bg);
+	if (contrastRatio(start, bg) >= min) return toHex(start);
+	const preferred = mode === "dark" ? WHITE : BLACK;
+	const other = mode === "dark" ? BLACK : WHITE;
+	const target = [preferred, other].find((t) => contrastRatio(t, bg) >= min);
+	if (!target) return null;
+	for (let step = 1; step <= SUGGEST_STEPS; step++) {
+		const candidate = mix(start, target, step * SUGGEST_STEP);
+		if (contrastRatio(candidate, bg) >= min) return toHex(candidate);
+	}
+	return null;
+}
+
 function describe(token: string, value: string | undefined): string {
 	return value === undefined
 		? `${token} is not defined`

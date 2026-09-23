@@ -36,6 +36,14 @@ export interface ThemeState {
 	setUserThemes: (entries: UserThemeEntry[]) => void;
 	/** Re-lists through the RPC; a no-op outside Electrobun. */
 	refreshUserThemes: () => Promise<void>;
+	/**
+	 * The theme editor's working copy (v0.8.3 Phase 5). While set,
+	 * ThemeProvider paints it instead of the preference; nothing here
+	 * persists it — the editor's autosave writes the file.
+	 */
+	draft: ThemeFile | null;
+	setDraft: (file: ThemeFile) => void;
+	clearDraft: () => void;
 }
 
 /** The paintable user files (a stale-good file on an invalid entry counts). */
@@ -138,4 +146,7 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
 			// RPC unavailable outside Electrobun runtime (test/Vite dev server)
 		}
 	},
+	draft: null,
+	setDraft: (file) => set({ draft: file }),
+	clearDraft: () => set({ draft: null }),
 }));

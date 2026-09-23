@@ -10,6 +10,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 	const resolvedTheme = useThemeStore((s) => s.resolvedTheme);
 	const preference = useThemeStore((s) => s.preference);
 	const userThemes = useThemeStore((s) => s.userThemes);
+	const draft = useThemeStore((s) => s.draft);
 	const hasLoadedSettings = useRef(false);
 	const lastPainted = useRef("");
 
@@ -50,14 +51,18 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 	// kept the data-theme attribute, applyTheme sets it too). A user-list
 	// refresh (Phase 4 hot reload) repaints only when the painted tokens
 	// actually changed, so editing an inactive theme file is a no-op here.
+	// While the theme editor holds a draft (Phase 5) the draft is painted
+	// instead: its own autosave comes back through the watcher as a list
+	// refresh, and the draft — not the file on disk — is what the user sees.
 	useEffect(() => {
-		const file = resolveThemeFile(resolvedTheme, userThemeFiles(userThemes));
+		const file =
+			draft ?? resolveThemeFile(resolvedTheme, userThemeFiles(userThemes));
 		const resolved = resolveTheme(file);
 		const key = `${file.id}\n${JSON.stringify(resolved)}`;
 		if (key === lastPainted.current) return;
 		lastPainted.current = key;
 		applyTheme(resolved, file.id);
-	}, [resolvedTheme, userThemes]);
+	}, [resolvedTheme, userThemes, draft]);
 
 	// Listen for OS preference changes when in "system" mode (D-05)
 	useEffect(() => {

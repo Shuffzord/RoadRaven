@@ -1,13 +1,20 @@
 import * as Dialog from "@radix-ui/react-dialog";
 import { useEffect, useId, useRef, useState } from "react";
+import type { ThemeFile } from "../../../../../shared/themeSchema";
 import type { AppSettings } from "../../../../../shared/types";
 import { APP_VERSION } from "../lib/appVersion";
+import {
+	CREATE_THEME_LABEL,
+	EDIT_THEME_LABEL,
+	THEME_NAME_LABEL,
+} from "../lib/domContract";
+import { slugify } from "../lib/themeEditor";
 import { electroview } from "../rpc";
 import { useEventApiStore } from "../store/eventApiStore";
 import { usePreferencesStore } from "../store/preferencesStore";
 import { useSetupStore } from "../store/setupStore";
 import { userThemeFiles, useThemeStore } from "../store/themeStore";
-import { resolveThemeFile, THEME_IDS } from "../themes";
+import { getBuiltInTheme, resolveThemeFile, THEME_IDS } from "../themes";
 import {
 	dialogActionRowStyle,
 	dialogButtonRowStyle,
@@ -24,6 +31,10 @@ import {
 	dialogSectionStyle,
 	dialogTitleStyle,
 } from "./dialogStyles";
+import {
+	openThemeEditor,
+	takeEditorReturnFocus,
+} from "./ThemeEditor/ThemeEditorDialog";
 import { ThemePicker } from "./ThemePicker";
 
 const DOCS_URL = "https://github.com/Shuffzord/RoadRaven#readme";
@@ -35,49 +46,94 @@ const PORT_MAX = 65535;
 export const DUPLICATE_THEME_LABEL = "Duplicate current theme…";
 export const IMPORT_THEME_LABEL = "Import theme file…";
 export const OPEN_THEMES_FOLDER_LABEL = "Open themes folder";
-export const THEME_NAME_LABEL = "New theme name";
+// The name prompt's label moved to lib/domContract.ts (Phase 5: the a11y
+// spec drives it); re-exported so nothing that imported it here breaks.
+export { THEME_NAME_LABEL };
 
 type Rpc = NonNullable<NonNullable<typeof electroview>["rpc"]>;
 
 type ThemeMessage = { kind: "info" | "error"; text: string };
 
+/** What the name prompt is for: a plain copy, or a copy to edit (Phase 5). */
+type Naming = "duplicate" | "edit" | null;
+
 /**
- * The Theme row's file actions: duplicate the painted theme under a new
- * name (and select it), import a file, reveal the folder. Every write goes
- * through Bun, which validates and names the file; the renderer only
- * refreshes the list afterwards.
+ * The copy the editor opens when Bun cannot write one (no RPC: the HMR dev
+ * server and the a11y preview bundle). Same shape as Bun's duplicateTheme:
+ * the slug of the name as id, renamed, author unset. Its autosave then
+ * reports "Could not save" — the editor still works as a preview.
+ */
+function localCopy(source: ThemeFile, name: string): ThemeFile | null {
+	const id = slugify(name);
+	if (!id) return null;
+	const { author: _author, ...meta } = source.meta;
+	return { ...source, id, meta: { ...meta, name: name.trim() } };
+}
+
+/**
+ * The Theme row's file actions: edit the painted theme (a built-in is
+ * duplicated first, Phase 5), duplicate it under a new name (and select
+ * it), import a file, reveal the folder. Every write goes through Bun,
+ * which validates and names the file; the renderer only refreshes the list
+ * afterwards.
  */
 function ThemeFileActions({ id }: { id: string }) {
 	const resolvedTheme = useThemeStore((s) => s.resolvedTheme);
 	const userThemes = useThemeStore((s) => s.userThemes);
-	const [naming, setNaming] = useState(false);
+	const [naming, setNaming] = useState<Naming>(null);
 	const [name, setName] = useState("");
 	const [message, setMessage] = useState<ThemeMessage | null>(null);
+	const editRef = useRef<HTMLButtonElement>(null);
 	const current = resolveThemeFile(resolvedTheme, userThemeFiles(userThemes));
 	const reservedIds = [...THEME_IDS];
 
-	const startDuplicate = (): void => {
+	// Back from the editor: focus lands on the control that opened it.
+	useEffect(() => {
+		if (takeEditorReturnFocus()) editRef.current?.focus();
+	}, []);
+
+	const startNaming = (purpose: Naming): void => {
 		setMessage(null);
 		setName(`${current.meta.name} copy`);
-		setNaming(true);
+		setNaming(purpose);
 	};
 
-	const commitDuplicate = async (): Promise<void> => {
+	const startEdit = (): void => {
+		if (getBuiltInTheme(current.id)) startNaming("edit");
+		else openThemeEditor(current);
+	};
+
+	// No RPC (HMR dev server, preview bundle): only "Edit…" has a fallback,
+	// the in-memory copy; a plain duplicate has nowhere to write.
+	const commitOffline = (): void => {
+		if (naming !== "edit") return;
+		const copy = localCopy(current, name);
+		if (copy) openThemeEditor(copy);
+		else
+			setMessage({ kind: "error", text: "the name needs a letter or digit" });
+	};
+
+	/** The copy as Bun wrote and re-listed it (the in-memory copy as a fallback). */
+	const writtenCopy = (id: string): ThemeFile =>
+		useThemeStore.getState().userThemes.find((e) => e.id === id)?.file ??
+		localCopy(current, name) ??
+		current;
+
+	const commitName = async (): Promise<void> => {
 		const rpc = electroview?.rpc;
-		if (!rpc) return;
+		if (!rpc) return commitOffline();
 		const result = await rpc.request.duplicateTheme({
 			source: current,
 			name,
 			reservedIds,
 		});
-		if (!result.ok) {
-			setMessage({ kind: "error", text: result.error });
-			return;
-		}
-		setNaming(false);
+		if (!result.ok) return setMessage({ kind: "error", text: result.error });
+		const purpose = naming;
+		setNaming(null);
 		const store = useThemeStore.getState();
 		await store.refreshUserThemes();
 		store.setTheme(result.id);
+		if (purpose === "edit") openThemeEditor(writtenCopy(result.id));
 	};
 
 	const importTheme = async (): Promise<void> => {
@@ -104,8 +160,16 @@ function ThemeFileActions({ id }: { id: string }) {
 		<>
 			<div style={dialogActionRowStyle}>
 				<button
+					ref={editRef}
 					type="button"
-					onClick={startDuplicate}
+					onClick={startEdit}
+					style={dialogSecondaryButtonStyle}
+				>
+					{EDIT_THEME_LABEL}
+				</button>
+				<button
+					type="button"
+					onClick={() => startNaming("duplicate")}
 					style={dialogSecondaryButtonStyle}
 				>
 					{DUPLICATE_THEME_LABEL}
@@ -125,12 +189,12 @@ function ThemeFileActions({ id }: { id: string }) {
 					{OPEN_THEMES_FOLDER_LABEL}
 				</button>
 			</div>
-			{naming && (
+			{naming !== null && (
 				<form
 					style={dialogFieldRowStyle}
 					onSubmit={(e) => {
 						e.preventDefault();
-						void commitDuplicate();
+						void commitName();
 					}}
 				>
 					<label htmlFor={`${id}-theme-name`} style={dialogFieldLabelStyle}>
@@ -144,11 +208,11 @@ function ThemeFileActions({ id }: { id: string }) {
 						style={dialogInputStyle}
 					/>
 					<button type="submit" style={dialogPrimaryButtonStyle}>
-						Create
+						{CREATE_THEME_LABEL}
 					</button>
 					<button
 						type="button"
-						onClick={() => setNaming(false)}
+						onClick={() => setNaming(null)}
 						style={dialogSecondaryButtonStyle}
 					>
 						Cancel

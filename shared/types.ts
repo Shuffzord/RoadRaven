@@ -279,6 +279,13 @@ export type RoadmapRPCType = {
 				params: Record<string, never>;
 				response: { ok: boolean };
 			};
+			// v0.8.3 Phase 5: the editor's autosave. Overwrites `<file.id>.json`
+			// after validation; refused when no user theme of that id exists yet
+			// (the editor never creates — duplicateTheme does).
+			writeTheme: {
+				params: { file: ThemeFile; reservedIds?: string[] };
+				response: ThemeWriteResult;
+			};
 		};
 		messages: {
 			nodeStatusUpdate: {

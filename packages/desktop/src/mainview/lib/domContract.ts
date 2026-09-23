@@ -15,3 +15,45 @@ export const NODE_FOCUSED_ATTR = "data-focused";
 export const NODE_SURFACE_ATTR = "data-rv-surface";
 /** Save-state dot in the top-bar document chip (DocumentChip.tsx). */
 export const SAVE_STATE_ATTR = "data-save-state";
+
+// -- Theme editor (v0.8.3 Phase 5) ------------------------------------------
+// Rendered by PreferencesDialog.tsx and components/ThemeEditor/*; selected
+// on by tests/unit/ui/ThemeEditor.test.tsx and tests/a11y/editor.spec.ts.
+
+/** Preferences → Theme row: opens the editor (a built-in is duplicated first). */
+export const EDIT_THEME_LABEL = "Edit…";
+/** The duplicate-name prompt's input label and submit button. */
+export const THEME_NAME_LABEL = "New theme name";
+export const CREATE_THEME_LABEL = "Create";
+
+/** `aria-label` of the editor dialog. */
+export const EDITOR_DIALOG_LABEL = "Theme editor";
+export const EDITOR_HIDE_LABEL = "Hide";
+export const EDITOR_PEEK_LABEL = "Peek at the canvas (hold)";
+export const EDITOR_CLOSE_LABEL = "Close theme editor";
+export const EDITOR_REVERT_LABEL = "Revert to saved";
+export const EDITOR_ADVANCED_LABEL = "Advanced";
+export const EDITOR_RESET_LABEL = "Reset to derived";
+export const EDITOR_DERIVED_TAG = "derived";
+export const EDITOR_SUGGEST_FIX_LABEL = "Suggest fix";
+export const EDITOR_DISCARD_LABEL = "Discard changes";
+export const EDITOR_KEEP_EDITING_LABEL = "Keep editing";
+/** The floating pill the dialog collapses to; its text is the accessible name. */
+export const EDITOR_PILL_TESTID = "theme-editor-pill";
+export function editorPillLabel(themeName: string): string {
+	return `Editing ${themeName} — Show`;
+}
+/** `aria-label` of a field's native colour picker. */
+export function editorSwatchLabel(fieldLabel: string): string {
+	return `${fieldLabel} swatch`;
+}
+/** On a field's wrapper and on its text input: value is the `--rv-*` token. */
+export const EDITOR_FIELD_ATTR = "data-token";
+/** One contrast chip; `data-pair` is the pair id, `data-status` pass/warn/fail. */
+export const EDITOR_CHIP_TESTID = "theme-editor-chip";
+export const EDITOR_CHIP_PAIR_ATTR = "data-pair";
+export const EDITOR_CHIP_STATUS_ATTR = "data-status";
+/** Header line: "N required failures · M advisory". */
+export const EDITOR_COUNTS_TESTID = "theme-editor-counts";
+/** Header line: "Saved · just now" / "Saving…" / "Could not save: …". */
+export const EDITOR_SAVE_STATUS_TESTID = "theme-editor-save-status";

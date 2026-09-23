@@ -23,6 +23,7 @@ import { getLogger } from "@logtape/logtape";
 import { lintTheme } from "../../../../shared/contrast";
 import {
 	resolveTheme,
+	slugifyThemeId,
 	THEME_ID_PATTERN,
 	type ThemeFile,
 } from "../../../../shared/themeSchema";
@@ -122,18 +123,27 @@ export function readUserTheme(
 	return readEntry(path, opts);
 }
 
+/** Whether the target file may, must, or must not already exist. */
+type WriteMode = "create" | "update" | "overwrite";
+
 function writeValidated(
 	raw: unknown,
 	opts: ThemeDirOptions,
-	mustBeNew: boolean,
+	mode: WriteMode,
 ): ThemeWriteResult {
 	const result = validate(raw, opts);
 	if ("error" in result) return { ok: false, error: result.error };
 	const path = themePath(result.file.id, opts);
-	if (mustBeNew && existsSync(path)) {
+	if (mode === "create" && existsSync(path)) {
 		return {
 			ok: false,
 			error: `a theme with id "${result.file.id}" already exists`,
+		};
+	}
+	if (mode === "update" && !existsSync(path)) {
+		return {
+			ok: false,
+			error: `no user theme "${result.file.id}" to update`,
 		};
 	}
 	try {
@@ -151,22 +161,24 @@ export function writeUserTheme(
 	raw: unknown,
 	opts: ThemeDirOptions = {},
 ): ThemeWriteResult {
-	return writeValidated(raw, opts, false);
+	return writeValidated(raw, opts, "overwrite");
 }
 
 /**
- * A theme id for a display name: lowercase, runs of anything else become
- * hyphens; a leading digit gets the `theme-` prefix. `null` when nothing
- * usable is left.
+ * The editor's autosave (v0.8.3 Phase 5): validates `raw` and overwrites
+ * `<id>.json`, refusing an id that has no file yet — the editor never
+ * creates a theme, `duplicateTheme` does.
  */
-export function slugifyThemeId(name: string): string | null {
-	const slug = name
-		.toLowerCase()
-		.replace(/[^a-z0-9]+/g, "-")
-		.replace(/^-+|-+$/g, "");
-	if (slug === "") return null;
-	return THEME_ID_PATTERN.test(slug) ? slug : `theme-${slug}`;
+export function updateUserTheme(
+	raw: unknown,
+	opts: ThemeDirOptions = {},
+): ThemeWriteResult {
+	return writeValidated(raw, opts, "update");
 }
+
+// The slug rule lives in shared/themeSchema.ts (Phase 5: the renderer's
+// offline copy needs the same rule); re-exported for the tests.
+export { slugifyThemeId };
 
 /**
  * Writes `source` (a built-in or user file the renderer paints) as a new
@@ -187,7 +199,7 @@ export function duplicateTheme(
 		id,
 		meta: { ...meta, name: name.trim() },
 	};
-	return writeValidated(copy, opts, true);
+	return writeValidated(copy, opts, "create");
 }
 
 /** Copies a theme file from anywhere on disk into the themes dir, by id. */

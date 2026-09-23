@@ -187,4 +187,24 @@ describe("themeStore", () => {
 		expect(electroview?.rpc).toBeDefined();
 		expect(electroview!.rpc!.request.saveSettings).toHaveBeenCalledTimes(3);
 	});
+
+	// v0.8.3 Phase 5: the editor's draft. It is not a preference — nothing
+	// is persisted — and a user-list refresh (the watcher round-trip of the
+	// editor's own write) never replaces it.
+	it("setDraft holds the editor's file and clearDraft drops it, without touching the preference", () => {
+		expect(useThemeStore.getState().draft).toBeNull();
+		const file = mine.file as NonNullable<typeof mine.file>;
+		useThemeStore.getState().setDraft(file);
+		expect(useThemeStore.getState().draft).toBe(file);
+		expect(useThemeStore.getState().preference).toBe(DEFAULT_THEME_ID);
+		expect(electroview?.rpc?.request.saveSettings).not.toHaveBeenCalled();
+
+		const edited = { ...file, colors: { ...file.colors, accent: "#ff00ff" } };
+		useThemeStore.getState().setDraft(edited);
+		useThemeStore.getState().setUserThemes([mine]);
+		expect(useThemeStore.getState().draft).toBe(edited);
+
+		useThemeStore.getState().clearDraft();
+		expect(useThemeStore.getState().draft).toBeNull();
+	});
 });

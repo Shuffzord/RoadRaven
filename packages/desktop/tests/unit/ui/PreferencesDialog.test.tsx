@@ -33,6 +33,10 @@ import {
 	PreferencesDialog,
 	THEME_NAME_LABEL,
 } from "../../../src/mainview/components/PreferencesDialog";
+import {
+	CREATE_THEME_LABEL,
+	EDIT_THEME_LABEL,
+} from "../../../src/mainview/lib/domContract";
 import { useEventApiStore } from "../../../src/mainview/store/eventApiStore";
 import { usePreferencesStore } from "../../../src/mainview/store/preferencesStore";
 import { useSetupStore } from "../../../src/mainview/store/setupStore";
@@ -72,7 +76,12 @@ afterEach(() => {
 	cleanup();
 	usePreferencesStore.setState({ open: false });
 	useSetupStore.setState({ open: false });
-	useThemeStore.setState({ preference: "dark", resolvedTheme: "dark" });
+	useThemeStore.setState({
+		preference: "dark",
+		resolvedTheme: "dark",
+		userThemes: [],
+		draft: null,
+	});
 });
 
 describe("PreferencesDialog", () => {
@@ -284,6 +293,58 @@ describe("PreferencesDialog", () => {
 		);
 		expect(rpc.listThemes).toHaveBeenCalled();
 		expect(screen.queryByLabelText(THEME_NAME_LABEL)).toBeNull();
+	});
+
+	// v0.8.3 Phase 5: "Edit…" opens the theme editor. Preferences is modal, so
+	// it closes while the editor is open; a built-in is duplicated first.
+	it("Edit… on a user theme closes Preferences and opens the editor on that file", async () => {
+		const mine = {
+			id: "mine",
+			meta: { name: "Mine", mode: "dark" as const },
+			colors: themeForId("dark").colors,
+		};
+		useThemeStore
+			.getState()
+			.setUserThemes([{ id: "mine", file: mine, requiredFailures: 0 }]);
+		useThemeStore.setState({ preference: "mine", resolvedTheme: "mine" });
+		await openDialog();
+
+		fireEvent.click(screen.getByRole("button", { name: EDIT_THEME_LABEL }));
+
+		expect(rpc.duplicateTheme).not.toHaveBeenCalled();
+		expect(usePreferencesStore.getState().open).toBe(false);
+		expect(useThemeStore.getState().draft).toEqual(mine);
+	});
+
+	it("Edit… on a built-in asks for a name, duplicates it, selects the copy and opens the editor on it", async () => {
+		const copy = {
+			...themeForId("dark"),
+			id: "dark-copy",
+			meta: { name: "Dark copy", mode: "dark" as const },
+		};
+		rpc.listThemes.mockResolvedValue({
+			themes: [{ id: "dark-copy", file: copy, requiredFailures: 0 }],
+			dir: "/themes",
+		} as never);
+		useThemeStore.setState({ preference: "dark", resolvedTheme: "dark" });
+		await openDialog();
+
+		fireEvent.click(screen.getByRole("button", { name: EDIT_THEME_LABEL }));
+		expect(useThemeStore.getState().draft).toBeNull();
+		const name = screen.getByLabelText(THEME_NAME_LABEL) as HTMLInputElement;
+		expect(name.value).toBe("Dark copy");
+		fireEvent.click(screen.getByRole("button", { name: CREATE_THEME_LABEL }));
+
+		expect(rpc.duplicateTheme).toHaveBeenCalledWith({
+			source: themeForId("dark"),
+			name: "Dark copy",
+			reservedIds: [...THEME_IDS],
+		});
+		await vi.waitFor(() =>
+			expect(useThemeStore.getState().draft?.id).toBe("dark-copy"),
+		);
+		expect(useThemeStore.getState().preference).toBe("dark-copy");
+		expect(usePreferencesStore.getState().open).toBe(false);
 	});
 
 	it("Escape closes the dialog", async () => {

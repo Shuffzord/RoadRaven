@@ -11,6 +11,7 @@ import { SetupWizard } from "./components/SetupWizard";
 import { Sidebar } from "./components/Sidebar";
 import { SidePanel } from "./components/SidePanel";
 import { StatusBar } from "./components/StatusBar";
+import { ThemeEditor } from "./components/ThemeEditor/ThemeEditorDialog";
 import { TopBar } from "./components/TopBar";
 import { useAutosave } from "./hooks/useAutosave";
 import { useFileActions } from "./hooks/useFileActions";
@@ -112,6 +113,7 @@ export default function App() {
 			<EventLogDrawer />
 			<SetupWizard />
 			<PreferencesDialog />
+			<ThemeEditor />
 		</div>
 	);
 }

@@ -10,6 +10,7 @@ import {
 	listUserThemes,
 	readUserTheme,
 	revealThemesFolder,
+	updateUserTheme,
 } from "../themes";
 
 type BunRequests = RoadmapRPCType["bun"]["requests"];
@@ -64,6 +65,7 @@ export function createThemeRpcHandlers(): {
 	duplicateTheme: RpcHandler<"duplicateTheme">;
 	importTheme: RpcHandler<"importTheme">;
 	revealThemesFolder: RpcHandler<"revealThemesFolder">;
+	writeTheme: RpcHandler<"writeTheme">;
 } {
 	return {
 		listThemes: ({ reservedIds }) => ({
@@ -93,5 +95,9 @@ export function createThemeRpcHandlers(): {
 			return importThemeFile(chosen, { reservedIds });
 		},
 		revealThemesFolder: () => revealThemesFolder(),
+		// v0.8.3 Phase 5: the editor's autosave — overwrite an existing user
+		// theme only; a built-in (reserved) or unknown id is refused.
+		writeTheme: ({ file, reservedIds }) =>
+			updateUserTheme(file, { reservedIds }),
 	};
 }

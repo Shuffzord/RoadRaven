@@ -28,6 +28,7 @@ import {
 	readUserTheme,
 	revealThemesFolder,
 	slugifyThemeId,
+	updateUserTheme,
 	writeUserTheme,
 } from "../../../src/bun/themes";
 import { themeForId } from "../../../src/mainview/themes";
@@ -175,6 +176,32 @@ describe("bun/themes", () => {
 			error: 'shadows built-in "amber"',
 		});
 		expect(listUserThemes({ basePath: base })).toEqual([]);
+	});
+
+	// v0.8.3 Phase 5: the editor's autosave. It never creates — Duplicate does
+	// — so an id without a file is refused, and a good file is overwritten.
+	it("updateUserTheme refuses an id with no file yet and overwrites an existing one", () => {
+		expect(updateUserTheme(valid, { basePath: base })).toEqual({
+			ok: false,
+			error: 'no user theme "mine" to update',
+		});
+		expect(existsSync(join(base, "themes", "mine.json"))).toBe(false);
+
+		put("mine.json", JSON.stringify(valid));
+		const edited = { ...valid, colors: { ...valid.colors, accent: "#ff00ff" } };
+		expect(updateUserTheme(edited, { basePath: base })).toEqual({
+			ok: true,
+			id: "mine",
+		});
+		expect(listUserThemes({ basePath: base })[0].file).toEqual(edited);
+
+		expect(updateUserTheme({ id: "mine" }, { basePath: base }).ok).toBe(false);
+		expect(
+			updateUserTheme(
+				{ ...valid, id: "amber" },
+				{ basePath: base, reservedIds: RESERVED },
+			),
+		).toEqual({ ok: false, error: 'shadows built-in "amber"' });
 	});
 
 	it("slugifyThemeId turns a display name into a theme id", () => {

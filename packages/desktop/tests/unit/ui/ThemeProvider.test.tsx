@@ -75,6 +75,8 @@ describe("ThemeProvider", () => {
 			preference: DEFAULT_THEME_ID,
 			systemResolution: "dark",
 			resolvedTheme: DEFAULT_THEME_ID,
+			userThemes: [],
+			draft: null,
 		});
 		vi.clearAllMocks();
 
@@ -184,6 +186,55 @@ describe("ThemeProvider", () => {
 			]);
 		});
 		expect(applyTheme).not.toHaveBeenCalled();
+	});
+
+	// v0.8.3 Phase 5: while the editor holds a draft, the draft is what is
+	// painted — whatever the preference says and whatever the user list does.
+	it("paints the draft while one is set, ignores list refreshes meanwhile, and repaints the preference when it is cleared", async () => {
+		const mine = {
+			id: "mine",
+			meta: { name: "Mine", mode: "dark" as const },
+			colors: { ...themeForId("dark").colors, accent: "#ff00ff" },
+		};
+		render(
+			<ThemeProvider>
+				<div>child</div>
+			</ThemeProvider>,
+		);
+		await act(async () => {
+			/* flush effects */
+		});
+		vi.mocked(applyTheme).mockClear();
+
+		await act(async () => {
+			useThemeStore.getState().setDraft(mine);
+		});
+		expect(applyTheme).toHaveBeenCalledTimes(1);
+		expect(applyTheme).toHaveBeenCalledWith(resolveTheme(mine), "mine");
+		expect(document.documentElement.style.getPropertyValue("--rv-accent")).toBe(
+			"#ff00ff",
+		);
+		vi.mocked(applyTheme).mockClear();
+
+		// The editor's own write comes back through the watcher as a list
+		// refresh carrying the file on disk: the draft still wins.
+		await act(async () => {
+			useThemeStore
+				.getState()
+				.setUserThemes([
+					{ id: "mine", file: { ...mine, colors: themeForId("dark").colors } },
+				]);
+		});
+		expect(applyTheme).not.toHaveBeenCalled();
+
+		await act(async () => {
+			useThemeStore.getState().clearDraft();
+		});
+		const amber = getBuiltInTheme(DEFAULT_THEME_ID);
+		expect(amber).toBeDefined();
+		if (!amber) return;
+		expect(applyTheme).toHaveBeenCalledTimes(1);
+		expect(applyTheme).toHaveBeenCalledWith(resolveTheme(amber), "amber");
 	});
 
 	it("registers matchMedia listener when preference is 'system'", async () => {

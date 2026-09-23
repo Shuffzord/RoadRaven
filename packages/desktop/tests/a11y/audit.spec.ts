@@ -2,7 +2,13 @@ import { existsSync } from "node:fs";
 import { join } from "node:path";
 import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
-import { NODE_CARD_ATTR } from "../../src/mainview/lib/domContract";
+import {
+	CREATE_THEME_LABEL,
+	EDIT_THEME_LABEL,
+	EDITOR_ADVANCED_LABEL,
+	EDITOR_DIALOG_LABEL,
+	NODE_CARD_ATTR,
+} from "../../src/mainview/lib/domContract";
 import { THEME_IDS } from "../../src/mainview/themes";
 import { selectTheme } from "./contrastSampler";
 
@@ -182,6 +188,28 @@ test.describe("Accessibility audit (production bundle, vite preview port 4173)",
 			});
 		});
 	}
+
+	// v0.8.3 Phase 5: the theme editor, a non-modal dialog over the live
+	// canvas, with every field and contrast chip on screen. "Edit…" on the
+	// painted built-in (Amber, D-8) prompts for a name and opens the editor
+	// on the copy; outside Electrobun the copy is in-memory (no RPC), which
+	// changes nothing about the dialog axe sees. editor.spec.ts covers the
+	// other seven themes and the interaction flow.
+	test("8. Theme editor open (copy of Amber, Advanced expanded) passes WCAG 2.1 AA", async ({
+		page,
+	}) => {
+		await loadHelloWorldSample(page);
+		await page.getByRole("button", { name: "Preferences" }).click();
+		await page.getByRole("button", { name: EDIT_THEME_LABEL }).click();
+		await page.getByRole("button", { name: CREATE_THEME_LABEL }).click();
+		const editor = page.getByRole("dialog", { name: EDITOR_DIALOG_LABEL });
+		await expect(editor).toBeVisible();
+		await editor.getByRole("button", { name: EDITOR_ADVANCED_LABEL }).click();
+		await page.waitForTimeout(200);
+		await auditPage(page, "theme-editor-open", {
+			exclude: ["svg .rd3t-link"],
+		});
+	});
 
 	// B-02 regression guard: the dark-theme context-menu case at test 4 only
 	// caught --rv-status-blocked: #ff5252 on #252527 = 4.74:1. The light theme

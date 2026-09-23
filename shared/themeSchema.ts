@@ -94,6 +94,21 @@ export function isSafeCssValue(value: string): boolean {
 	return !/url\s*\(/i.test(value) && !/[;{}]/.test(value);
 }
 
+/**
+ * A theme id for a display name: lowercase, runs of anything else become
+ * hyphens; a leading digit gets the `theme-` prefix. `null` when nothing
+ * usable is left. Shared by Bun's duplicate (Phase 4) and the editor's
+ * offline copy (Phase 5) so the two can never name a file differently.
+ */
+export function slugifyThemeId(name: string): string | null {
+	const slug = name
+		.toLowerCase()
+		.replace(/[^a-z0-9]+/g, "-")
+		.replace(/^-+|-+$/g, "");
+	if (slug === "") return null;
+	return THEME_ID_PATTERN.test(slug) ? slug : `theme-${slug}`;
+}
+
 /** The optional groups of a file and how their keys become token names. */
 const OPTIONAL_GROUPS: readonly {
 	keys: readonly string[];
