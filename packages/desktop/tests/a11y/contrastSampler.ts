@@ -26,10 +26,17 @@ import {
 import {
 	CONTRAST_PAIRS,
 	type ContrastPair,
+	STATUS_IDS,
+	STATUS_TOKENS,
 } from "../../../../shared/themeContract";
+import {
+	NODE_CARD_ATTR,
+	NODE_FOCUSED_ATTR,
+	SAVE_STATE_ATTR,
+} from "../../src/mainview/lib/domContract";
 
 /** When in the walkthrough the element exists. */
-export type SampleStage = "page" | "menu" | "focus";
+export type SampleStage = "page" | "menu" | "context-menu" | "focus";
 
 export interface SampleSpec {
 	id: string;
@@ -38,8 +45,10 @@ export interface SampleSpec {
 	stage: SampleStage;
 	/** CSS selector; the first match is read. A missing match fails the run. */
 	selector: string;
+	/** When set, the first match whose text starts with this is read instead. */
+	text?: string;
 	/** Computed property that carries the ink. */
-	property: "color" | "background-color" | "outline-color";
+	property: "color" | "background-color" | "outline-color" | "border-top-color";
 	/** Read the ink from this pseudo-element of the match instead. */
 	pseudo?: "::before" | "::after";
 	/**
@@ -74,21 +83,16 @@ export interface SampleFinding {
 	reason?: string;
 }
 
-// Node-card selectors mirror tests/a11y/audit.spec.ts: the card is
-// `[data-source-id]` (RoadmapNode.tsx:238) and its inline style carries
-// `--node-stripe-color: var(--rv-status-<s>)` (RoadmapNode.tsx:250), which
+// Node-card selectors mirror tests/a11y/audit.spec.ts: the card carries
+// NODE_CARD_ATTR (RoadmapNode.tsx:254) and its inline style carries
+// `--node-stripe-color: var(--rv-status-<s>)` (RoadmapNode.tsx:266), which
 // is how a card of a given status is picked without retyping badge labels.
-const STATUSES = [
-	"not-started",
-	"in-progress",
-	"completed",
-	"blocked",
-] as const;
-const cardOf = (status: string) =>
-	`[data-source-id][style*="var(--rv-status-${status})"]`;
+export const CARD = `[${NODE_CARD_ATTR}]`;
+const cardOf = (status: (typeof STATUS_IDS)[number]) =>
+	`${CARD}[style*="var(${STATUS_TOKENS[status].ink})"]`;
 const RD = "packages/desktop/src/mainview/components/RoadmapNode.tsx";
 
-const statusSamples: SampleSpec[] = STATUSES.flatMap((s) => [
+const statusSamples: SampleSpec[] = STATUS_IDS.flatMap((s) => [
 	{
 		id: `badge-${s}`,
 		pairId: `badge-${s}`,
@@ -96,7 +100,19 @@ const statusSamples: SampleSpec[] = STATUSES.flatMap((s) => [
 		selector: `${cardOf(s)} > span.inline-flex`,
 		property: "color",
 		paint: "behind",
-		evidence: `${RD}:346`,
+		evidence: `${RD}:367`,
+	},
+	{
+		// The 6px dot inside the badge pill (non-text, but it reads the same
+		// badge ink on the same fill, so the text pair is the stricter check).
+		// Its own background IS the ink, so the surface walk starts at the pill.
+		id: `badge-dot-${s}`,
+		pairId: `badge-${s}`,
+		stage: "page",
+		selector: `${cardOf(s)} > span.inline-flex > span`,
+		property: "background-color",
+		paint: "around",
+		evidence: `${RD}:368`,
 	},
 	{
 		id: `stripe-${s}`,
@@ -106,7 +122,7 @@ const statusSamples: SampleSpec[] = STATUSES.flatMap((s) => [
 		property: "background-color",
 		pseudo: "::before",
 		paint: "behind",
-		evidence: "packages/desktop/src/mainview/index.css:736",
+		evidence: "packages/desktop/src/mainview/index.css:758",
 	},
 ]);
 
@@ -120,10 +136,10 @@ export const SAMPLES: readonly SampleSpec[] = [
 		id: "node-title",
 		pairId: "node-title",
 		stage: "page",
-		selector: "[data-source-id] > span.block",
+		selector: `${CARD} > span.block`,
 		property: "color",
 		paint: "behind",
-		evidence: `${RD}:339`,
+		evidence: `${RD}:360`,
 	},
 	...statusSamples,
 	{
@@ -135,16 +151,39 @@ export const SAMPLES: readonly SampleSpec[] = [
 		selector: `${cardOf("in-progress")} > button`,
 		property: "color",
 		paint: "behind",
-		evidence: `${RD}:369`,
+		evidence: `${RD}:388`,
+	},
+	{
+		// The chevron's 1px border reads the same badge ink over the same fill.
+		id: "chevron-border",
+		pairId: "badge-in-progress",
+		stage: "page",
+		selector: `${cardOf("in-progress")} > button`,
+		property: "border-top-color",
+		paint: "behind",
+		evidence: `${RD}:387`,
+	},
+	{
+		// Hello World is never saved to disk in this walkthrough, so the chip's
+		// save dot is the hollow "untitled" ring (saveDot.ts:12); its border is
+		// the ink and its own background is transparent, so the walk starts at
+		// the chip. The saved/error dots (status inks) are static-linted only.
+		id: "save-dot",
+		pairId: "save-dot-untitled-vs-toolbar",
+		stage: "page",
+		selector: `header [${SAVE_STATE_ATTR}]`,
+		property: "border-top-color",
+		paint: "around",
+		evidence: "packages/desktop/src/mainview/lib/saveDot.ts:12",
 	},
 	{
 		id: "document-chip",
 		pairId: "text-secondary-on-toolbar",
 		stage: "page",
-		selector: "header button:has([data-save-state])",
+		selector: `header button:has([${SAVE_STATE_ATTR}])`,
 		property: "color",
 		paint: "behind",
-		evidence: "packages/desktop/src/mainview/components/DocumentChip.tsx:39",
+		evidence: "packages/desktop/src/mainview/components/DocumentChip.tsx:40",
 	},
 	{
 		id: "status-bar-version",
@@ -163,6 +202,28 @@ export const SAMPLES: readonly SampleSpec[] = [
 		property: "color",
 		paint: "behind",
 		evidence: "packages/desktop/src/mainview/components/Outline.tsx:206",
+	},
+	{
+		// The Hello World root row is in-progress; its 7px dot is the second
+		// span in the row (chevron slot, dot, title). The dot's own background
+		// is the ink, so the surface walk starts at the row.
+		id: "outline-dot",
+		pairId: "status-in-progress-vs-surface",
+		stage: "page",
+		selector: '[data-outline-tree] [role="treeitem"] > span:nth-child(2)',
+		property: "background-color",
+		paint: "around",
+		evidence: "packages/desktop/src/mainview/components/Outline.tsx:246",
+	},
+	{
+		id: "context-menu-delete",
+		pairId: "status-blocked-text-on-elevated",
+		stage: "context-menu",
+		selector: '[role="menu"] [role="menuitem"]',
+		text: "Delete",
+		property: "color",
+		paint: "behind",
+		evidence: "packages/desktop/src/mainview/components/ContextMenu.tsx:251",
 	},
 	{
 		id: "menu-item",
@@ -187,17 +248,17 @@ export const SAMPLES: readonly SampleSpec[] = [
 		id: "focus-ring",
 		pairId: "focus-outline-vs-canvas",
 		stage: "focus",
-		selector: '[data-source-id][data-focused="true"]',
+		selector: `${CARD}[${NODE_FOCUSED_ATTR}="true"]`,
 		property: "outline-color",
 		paint: "around",
-		evidence: "packages/desktop/src/mainview/index.css:786",
+		evidence: "packages/desktop/src/mainview/index.css:807",
 	},
 	{
 		// Advisory: reported in the markdown, never gated.
 		id: "card-vs-canvas",
 		pairId: "card-vs-canvas",
 		stage: "page",
-		selector: "[data-source-id]",
+		selector: CARD,
 		property: "background-color",
 		paint: "around",
 		evidence: "packages/desktop/src/mainview/components/Canvas.tsx:320",
@@ -209,7 +270,11 @@ export const SAMPLES: readonly SampleSpec[] = [
  * function source, so it may reference nothing from this module.
  */
 export function readSampleInPage(spec: SampleSpec): SampleReading {
-	const el = document.querySelector(spec.selector);
+	const el = spec.text
+		? [...document.querySelectorAll(spec.selector)].find((e) =>
+				(e.textContent ?? "").trim().startsWith(spec.text as string),
+			)
+		: document.querySelector(spec.selector);
 	if (!el) {
 		return { id: spec.id, ink: null, layers: [], reason: "element not found" };
 	}

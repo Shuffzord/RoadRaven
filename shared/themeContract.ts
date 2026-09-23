@@ -13,9 +13,47 @@
  *   bottom -> top (a translucent badge fill over an opaque card), `min` is
  *   the WCAG 2.x ratio, and `evidence` points at the component or rule that
  *   actually paints that ink on that surface. Do not add a pair without one.
+ * - `DERIVED_TOKENS` (Phase 2) fills an optional token a theme leaves unset
+ *   from the required ones, exactly as the CSS `var(--x, var(--y))` fallback
+ *   the components read does. The linter resolves through it before
+ *   measuring, so a theme is scored on what the cascade paints.
  */
 
 import type { ThemePreference } from "./types";
+
+/** Node-card ink: title, rename input and card body (RoadmapNode.tsx). */
+export const TEXT_NODE_TOKEN = "--rv-text-node";
+
+export const STATUS_IDS = [
+	"not-started",
+	"in-progress",
+	"completed",
+	"blocked",
+] as const;
+export type StatusId = (typeof STATUS_IDS)[number];
+
+/**
+ * Per-status token names, one ink per surface family. `ink` is the general
+ * status ink — chrome, menus, dialogs, pills, toasts: everything that is not
+ * the card or the badge fill — and the safe default. `card` is the ink on
+ * the card (the stripe) and falls back to `ink`; `fg` is the ink on the badge
+ * fill (badge text, badge dot, chevron text and border) and falls back to
+ * `card`, then `ink`; `bg` is the badge fill itself.
+ */
+export const STATUS_TOKENS: Record<
+	StatusId,
+	{ ink: string; card: string; fg: string; bg: string }
+> = Object.fromEntries(
+	STATUS_IDS.map((s) => [
+		s,
+		{
+			ink: `--rv-status-${s}`,
+			card: `--rv-status-${s}-card`,
+			fg: `--rv-status-${s}-fg`,
+			bg: `--rv-status-${s}-bg`,
+		},
+	]),
+) as Record<StatusId, { ink: string; card: string; fg: string; bg: string }>;
 
 /** The shipped theme ids — the `data-theme` values — in picker order. */
 export const THEME_IDS = [
@@ -80,6 +118,7 @@ export const THEME_TOKENS: readonly ThemeToken[] = [
 	required("--rv-text-secondary"),
 	optional("--rv-text-tertiary"),
 	optional("--rv-text-on-accent"),
+	optional(TEXT_NODE_TOKEN),
 	// Borders
 	required("--rv-border"),
 	optional("--rv-border-subtle"),
@@ -101,15 +140,13 @@ export const THEME_TOKENS: readonly ThemeToken[] = [
 	// Scrollbar
 	optional("--rv-scrollbar-track"),
 	optional("--rv-scrollbar-thumb"),
-	// Status (ink + badge fill per status)
-	required("--rv-status-not-started"),
-	optional("--rv-status-not-started-bg"),
-	required("--rv-status-in-progress"),
-	optional("--rv-status-in-progress-bg"),
-	required("--rv-status-completed"),
-	optional("--rv-status-completed-bg"),
-	required("--rv-status-blocked"),
-	optional("--rv-status-blocked-bg"),
+	// Status (general ink; ink on the card; ink on the badge fill; badge fill)
+	...STATUS_IDS.flatMap((s) => [
+		required(STATUS_TOKENS[s].ink),
+		optional(STATUS_TOKENS[s].card),
+		optional(STATUS_TOKENS[s].fg),
+		optional(STATUS_TOKENS[s].bg),
+	]),
 	// Live event pulse and search highlight rings
 	optional("--rv-pulse"),
 	optional("--rv-search"),
@@ -127,56 +164,163 @@ export const THEME_TOKENS: readonly ThemeToken[] = [
 	nonColor("--rv-font-sans"),
 ];
 
+/**
+ * Optional tokens the components read with a `var()` fallback. The value is
+ * what the cascade paints when a theme leaves the token unset; `undefined`
+ * when the fallback itself is missing.
+ */
+export const DERIVED_TOKENS: Record<
+	string,
+	(tokens: Record<string, string>) => string | undefined
+> = {
+	[TEXT_NODE_TOKEN]: (t) => t["--rv-text-primary"],
+	...Object.fromEntries(
+		STATUS_IDS.flatMap((s) => [
+			[
+				STATUS_TOKENS[s].card,
+				(t: Record<string, string>) => t[STATUS_TOKENS[s].ink],
+			],
+			// The badge sits on the card, so its ink follows the card ink first
+			// (`var(--x-fg, var(--x-card, var(--x)))` in RoadmapNode.tsx).
+			[
+				STATUS_TOKENS[s].fg,
+				(t: Record<string, string>) =>
+					t[STATUS_TOKENS[s].card] ?? t[STATUS_TOKENS[s].ink],
+			],
+		]),
+	),
+};
+
 const TEXT = 4.5;
 const NON_TEXT = 3;
 
-const STATUSES = [
-	"not-started",
-	"in-progress",
-	"completed",
-	"blocked",
-] as const;
-
-const statusPairs: ContrastPair[] = STATUSES.flatMap((s) => [
+const statusPairs: ContrastPair[] = STATUS_IDS.flatMap((s) => [
 	{
 		id: `badge-${s}`,
-		label: `${s} badge text on its fill over the card`,
-		ink: `--rv-status-${s}`,
-		surface: ["--rv-bg-node", `--rv-status-${s}-bg`],
+		label: `${s} badge text and dot on its fill over the card`,
+		ink: STATUS_TOKENS[s].fg,
+		surface: ["--rv-bg-node", STATUS_TOKENS[s].bg],
 		min: TEXT,
 		tier: "required",
-		evidence: "packages/desktop/src/mainview/components/RoadmapNode.tsx:346",
+		evidence: "packages/desktop/src/mainview/components/RoadmapNode.tsx:367",
 	},
 	{
 		id: `stripe-${s}`,
-		label: `${s} status stripe and badge dot vs card`,
-		ink: `--rv-status-${s}`,
+		label: `${s} status stripe vs card`,
+		ink: STATUS_TOKENS[s].card,
 		surface: ["--rv-bg-node"],
 		min: NON_TEXT,
 		tier: "required",
-		evidence: "packages/desktop/src/mainview/index.css:736",
+		evidence: "packages/desktop/src/mainview/index.css:758",
+	},
+	{
+		id: `status-${s}-vs-surface`,
+		label: `${s} outline dot on the sidebar`,
+		ink: STATUS_TOKENS[s].ink,
+		surface: ["--rv-bg-surface"],
+		min: NON_TEXT,
+		tier: "required",
+		evidence: "packages/desktop/src/mainview/components/Outline.tsx:187",
 	},
 ]);
+
+// The general status ink on chrome (v0.8.3 Phase 2): everything outside the
+// card reads the base token, so a light-card theme tunes `--rv-status-<s>-card`
+// for its card and leaves these as they are.
+const statusChromePairs: ContrastPair[] = [
+	{
+		id: "status-blocked-text-on-elevated",
+		label: "Delete item in the context menu",
+		ink: STATUS_TOKENS.blocked.ink,
+		surface: ["--rv-bg-elevated"],
+		min: TEXT,
+		tier: "required",
+		evidence: "packages/desktop/src/mainview/components/ContextMenu.tsx:251",
+	},
+	{
+		id: "status-completed-text-on-panel",
+		label: "Saved flash in the side panel",
+		ink: STATUS_TOKENS.completed.ink,
+		surface: ["--rv-bg-panel"],
+		min: TEXT,
+		tier: "required",
+		evidence: "packages/desktop/src/mainview/components/SidePanel.tsx:21",
+	},
+	{
+		id: "status-blocked-on-panel",
+		label: "event log node id of an errored row",
+		ink: STATUS_TOKENS.blocked.ink,
+		surface: ["--rv-bg-panel"],
+		min: TEXT,
+		tier: "required",
+		evidence: "packages/desktop/src/mainview/components/EventLogRow.tsx:179",
+	},
+	{
+		id: "status-blocked-text-on-statusbar",
+		label: "save error text in the status bar",
+		ink: STATUS_TOKENS.blocked.ink,
+		surface: ["--rv-bg-statusbar"],
+		min: TEXT,
+		tier: "required",
+		evidence: "packages/desktop/src/mainview/components/SaveIndicator.tsx:102",
+	},
+	{
+		id: "status-completed-text-on-statusbar",
+		label: "Event API pill copied text in the status bar",
+		ink: STATUS_TOKENS.completed.ink,
+		surface: ["--rv-bg-statusbar"],
+		min: TEXT,
+		tier: "required",
+		evidence: "packages/desktop/src/mainview/components/EventApiPill.tsx:101",
+	},
+	{
+		id: "save-dot-completed-vs-toolbar",
+		label: "saved dot in the document chip",
+		ink: STATUS_TOKENS.completed.ink,
+		surface: ["--rv-bg-toolbar"],
+		min: NON_TEXT,
+		tier: "required",
+		evidence: "packages/desktop/src/mainview/lib/saveDot.ts:14",
+	},
+	{
+		id: "save-dot-blocked-vs-toolbar",
+		label: "save-error dot in the document chip",
+		ink: STATUS_TOKENS.blocked.ink,
+		surface: ["--rv-bg-toolbar"],
+		min: NON_TEXT,
+		tier: "required",
+		evidence: "packages/desktop/src/mainview/lib/saveDot.ts:18",
+	},
+	{
+		id: "save-dot-untitled-vs-toolbar",
+		label: "untitled (hollow) dot ring in the document chip",
+		ink: "--rv-text-tertiary",
+		surface: ["--rv-bg-toolbar"],
+		min: NON_TEXT,
+		tier: "required",
+		evidence: "packages/desktop/src/mainview/lib/saveDot.ts:12",
+	},
+];
 
 export const CONTRAST_PAIRS: readonly ContrastPair[] = [
 	// --- Text on its surface (WCAG 1.4.3, 4.5:1) ---
 	{
 		id: "node-title",
 		label: "node title on card",
-		ink: "--rv-text-primary",
+		ink: TEXT_NODE_TOKEN,
 		surface: ["--rv-bg-node"],
 		min: TEXT,
 		tier: "required",
-		evidence: "packages/desktop/src/mainview/components/RoadmapNode.tsx:339",
+		evidence: "packages/desktop/src/mainview/components/RoadmapNode.tsx:360",
 	},
 	{
 		id: "node-title-hover",
 		label: "node title on hovered card",
-		ink: "--rv-text-primary",
+		ink: TEXT_NODE_TOKEN,
 		surface: ["--rv-bg-node-hover"],
 		min: TEXT,
 		tier: "required",
-		evidence: "packages/desktop/src/mainview/components/RoadmapNode.tsx:235",
+		evidence: "packages/desktop/src/mainview/components/RoadmapNode.tsx:251",
 	},
 	{
 		id: "text-primary-on-base",
@@ -342,18 +486,19 @@ export const CONTRAST_PAIRS: readonly ContrastPair[] = [
 		tier: "required",
 		evidence: "packages/desktop/src/mainview/components/SidePanel.tsx:402",
 	},
+	{
+		id: "accent-text-on-accent-muted-input",
+		label: "active layout toggle in top bar",
+		ink: "--rv-accent",
+		surface: ["--rv-bg-input", "--rv-accent-muted"],
+		min: TEXT,
+		tier: "required",
+		evidence: "packages/desktop/src/mainview/components/TopBar.tsx:371",
+	},
 	...statusPairs,
+	...statusChromePairs,
 
 	// --- Non-text UI (WCAG 1.4.11, 3:1) ---
-	{
-		id: "selection-outline-vs-node",
-		label: "selection outline inside card edge",
-		ink: "--rv-accent",
-		surface: ["--rv-bg-node"],
-		min: NON_TEXT,
-		tier: "required",
-		evidence: "packages/desktop/src/mainview/components/RoadmapNode.tsx:235",
-	},
 	{
 		id: "focus-outline-vs-canvas",
 		label: "keyboard focus ring outside card",
@@ -361,7 +506,7 @@ export const CONTRAST_PAIRS: readonly ContrastPair[] = [
 		surface: ["--rv-bg-canvas"],
 		min: NON_TEXT,
 		tier: "required",
-		evidence: "packages/desktop/src/mainview/index.css:786",
+		evidence: "packages/desktop/src/mainview/index.css:807",
 	},
 	{
 		id: "search-outline-vs-canvas",
@@ -406,10 +551,24 @@ export const CONTRAST_PAIRS: readonly ContrastPair[] = [
 		surface: ["--rv-bg-canvas"],
 		min: 2,
 		tier: "required",
-		evidence: "packages/desktop/src/mainview/index.css:721",
+		evidence: "packages/desktop/src/mainview/index.css:743",
 	},
 
 	// --- Advisory (design taste; reported, never gated) ---
+	{
+		// The 2px ring sits at `outline-offset: -1px`, so one pixel is over the
+		// card and one over the canvas; the canvas side is the required
+		// `focus-outline-vs-canvas` pair above (same ink). Against the card it
+		// is advisory: a light-card theme (contrast, moss) cannot put its accent
+		// at 3:1 on the card and at 4.5:1 as text on its dark chrome at once.
+		id: "selection-outline-vs-node",
+		label: "selection outline inside card edge",
+		ink: "--rv-accent",
+		surface: ["--rv-bg-node"],
+		min: NON_TEXT,
+		tier: "advisory",
+		evidence: "packages/desktop/src/mainview/components/RoadmapNode.tsx:251",
+	},
 	{
 		id: "connector",
 		label: "tree connector",
@@ -417,7 +576,7 @@ export const CONTRAST_PAIRS: readonly ContrastPair[] = [
 		surface: ["--rv-bg-canvas"],
 		min: NON_TEXT,
 		tier: "advisory",
-		evidence: "packages/desktop/src/mainview/index.css:721",
+		evidence: "packages/desktop/src/mainview/index.css:743",
 	},
 	{
 		id: "border-vs-node",
@@ -426,7 +585,7 @@ export const CONTRAST_PAIRS: readonly ContrastPair[] = [
 		surface: ["--rv-bg-node"],
 		min: NON_TEXT,
 		tier: "advisory",
-		evidence: "packages/desktop/src/mainview/components/RoadmapNode.tsx:235",
+		evidence: "packages/desktop/src/mainview/components/RoadmapNode.tsx:251",
 	},
 	{
 		id: "border-vs-panel",

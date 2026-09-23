@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import { lintTheme, parseThemeBlocks } from "../../../../../shared/contrast";
@@ -10,10 +10,11 @@ import {
 // Static contrast gate over the shipped themes (v0.8.3 Phase 0).
 //
 // Every [data-theme] block in index.css is linted against the shared pair
-// registry. Required-tier failures must be listed in known-failures.json —
-// a snapshot of today's debt that Phase 2 burns down to zero. A new failure
-// fails CI; a baseline row that starts passing also fails, so the snapshot
-// can only shrink.
+// registry. A required-tier failure fails CI unless it is listed in
+// known-failures.json; that file was burnt down to nothing and deleted in
+// Phase 2, so a missing file is an empty baseline. If debt is ever taken on
+// again the file can come back: a baseline row that starts passing fails
+// too, so the snapshot can only shrink.
 
 const css = readFileSync(
 	resolve(__dirname, "../../../src/mainview/index.css"),
@@ -30,9 +31,10 @@ const resolvedTokens = (theme: string) => ({
 });
 
 type KnownFailure = { theme: string; pairId: string };
-const baseline: KnownFailure[] = JSON.parse(
-	readFileSync(resolve(__dirname, "known-failures.json"), "utf8"),
-);
+const BASELINE_PATH = resolve(__dirname, "known-failures.json");
+const baseline: KnownFailure[] = existsSync(BASELINE_PATH)
+	? JSON.parse(readFileSync(BASELINE_PATH, "utf8"))
+	: [];
 const baselineKeys = new Set(baseline.map((b) => `${b.theme}/${b.pairId}`));
 
 const requiredTokens = THEME_TOKENS.filter(
@@ -107,16 +109,19 @@ describe("contrast gate", () => {
 		}
 	});
 
-	it.each(baseline)("$theme/$pairId still fails (burn-down hygiene)", ({
-		theme,
-		pairId,
-	}) => {
-		const finding = lintTheme(resolvedTokens(theme)).find(
-			(f) => f.pairId === pairId && f.tier === "required",
-		);
-		expect(
-			finding?.pass,
-			`remove ${theme}/${pairId} from known-failures.json`,
-		).toBe(false);
+	it("ships with no contrast debt: known-failures.json does not exist", () => {
+		expect(existsSync(BASELINE_PATH)).toBe(false);
+	});
+
+	it("every known-failures.json row still fails (burn-down hygiene)", () => {
+		const stale = baseline
+			.filter(
+				({ theme, pairId }) =>
+					lintTheme(resolvedTokens(theme)).find(
+						(f) => f.pairId === pairId && f.tier === "required",
+					)?.pass,
+			)
+			.map((b) => `remove ${b.theme}/${b.pairId} from known-failures.json`);
+		expect(stale).toEqual([]);
 	});
 });

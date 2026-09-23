@@ -7,7 +7,8 @@
  * Lints every [data-theme] block in index.css against the shared pair
  * registry. Exits 1 when a required-tier pair fails and is not listed in
  * tests/unit/theme/known-failures.json (the same rule the vitest gate
- * applies). Advisory failures are reported only.
+ * applies; the file was burnt down and deleted in Phase 2, so a missing
+ * file is an empty baseline). Advisory failures are reported only.
  */
 
 import { existsSync, readFileSync } from "node:fs";

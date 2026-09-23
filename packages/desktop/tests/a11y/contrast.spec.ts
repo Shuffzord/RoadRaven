@@ -2,7 +2,9 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { expect, type Page, test } from "@playwright/test";
 import { CONTRAST_PAIRS, THEME_IDS } from "../../../../shared/themeContract";
+import { NODE_FOCUSED_ATTR } from "../../src/mainview/lib/domContract";
 import {
+	CARD,
 	readSampleInPage,
 	renderReport,
 	SAMPLES,
@@ -18,15 +20,17 @@ import {
 //
 // For every shipped theme this reads the computed colours of real elements
 // on the Hello World sample (see SAMPLES in contrastSampler.ts) and scores
-// them with the Phase 0 pair registry. Required-tier failures must be listed
-// in known-failures.json — a snapshot of today's rendered debt that Phase 2
-// burns down; a new failure fails, and a baseline row that starts passing
-// fails too, so the list can only shrink. Every ratio, advisory rows
-// included, goes to test-results/contrast-report.md.
+// them with the Phase 0 pair registry. A required-tier failure fails unless
+// it is listed in known-failures.json; Phase 2 burnt that file down to
+// nothing and deleted it, so a missing file is an empty baseline. A baseline
+// row that starts passing fails too, so the list can only shrink. Every
+// ratio, advisory rows included, goes to test-results/contrast-report.md,
+// and one full-window screenshot per theme goes to
+// test-results/theme-<id>.png for the owner's review.
 //
-// Selectors: the card is `[data-source-id]` and the canvas wrapper is
-// `[role="application"]`, as in audit.spec.ts (RoadmapNode.tsx:238,
-// Canvas.tsx:322). Theme switching sets `data-theme` on <html> directly, as
+// Selectors: the card is `[NODE_CARD_ATTR]` (src/mainview/lib/domContract.ts)
+// and the canvas wrapper is `[role="application"]`, as in audit.spec.ts
+// (Canvas.tsx:322). Theme switching sets `data-theme` on <html> directly, as
 // ThemeProvider.tsx does — the Zustand path would call the saveSettings RPC,
 // which does not exist under vite preview.
 
@@ -71,7 +75,7 @@ async function loadHelloWorld(page: Page, theme: string): Promise<void> {
 	await page.waitForLoadState("networkidle");
 	await page.getByRole("button", { name: "Hello World" }).click();
 	await page.waitForSelector('[role="application"]', { timeout: 5000 });
-	await page.waitForSelector("[data-source-id]", { timeout: 5000 });
+	await page.waitForSelector(CARD, { timeout: 5000 });
 	// Cards transition background/colour over 150ms; a computed colour read
 	// mid-transition is an interpolated one, so transitions are off.
 	await page.addStyleTag({
@@ -103,6 +107,7 @@ async function sampleTheme(
 ): Promise<SampleFinding[]> {
 	await loadHelloWorld(page, theme);
 	const mine = await readStage(page, theme, "page");
+	await page.screenshot({ path: join(RESULTS_DIR, `theme-${theme}.png`) });
 
 	// File menu (TopBar.tsx "File" trigger; items from FileMenu.tsx).
 	await page
@@ -113,12 +118,23 @@ async function sampleTheme(
 	mine.push(...(await readStage(page, theme, "menu")));
 	await page.keyboard.press("Escape");
 
+	// Context menu on the first card (ContextMenu.tsx; Radix renders
+	// [role="menu"]), for the Delete item's status ink on the menu surface.
+	await page.locator(CARD).first().click({ button: "right" });
+	await page.waitForSelector('[role="menu"]', { timeout: 3000 });
+	mine.push(...(await readStage(page, theme, "context-menu")));
+	await page.keyboard.press("Escape");
+	await page.waitForSelector('[role="menu"]', {
+		state: "detached",
+		timeout: 3000,
+	});
+
 	// Keyboard focus ring: select a card, then any key puts the app in
 	// keyboard mode (useKeyboardRouter.ts KEYBOARD_NAV_CLASS), which is what
 	// shows the ring on the focused card (index.css:786).
-	await page.locator("[data-source-id]").first().click();
+	await page.locator(CARD).first().click();
 	await page.keyboard.press("Shift");
-	await page.waitForSelector('[data-source-id][data-focused="true"]', {
+	await page.waitForSelector(`${CARD}[${NODE_FOCUSED_ATTR}="true"]`, {
 		timeout: 3000,
 	});
 	mine.push(...(await readStage(page, theme, "focus")));
@@ -126,6 +142,10 @@ async function sampleTheme(
 }
 
 test.describe("Rendered contrast (production bundle, vite preview port 4173)", () => {
+	test("ships with no rendered contrast debt: known-failures.json does not exist", () => {
+		expect(existsSync(BASELINE_PATH)).toBe(false);
+	});
+
 	test("known-failures.json names only shipped themes and registered samples", () => {
 		const sampleIds = new Set(SAMPLES.map((s) => s.id));
 		for (const row of baseline) {

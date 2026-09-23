@@ -24,7 +24,7 @@ const THEMES: ThemeOption[] = [
 	{ id: "amber", label: "Amber", bg: "#1a1612", accent: "#ffa83d" },
 	{ id: "contrast", label: "Contrast", bg: "#000000", accent: "#ffe046" },
 	{ id: "slate", label: "Slate", bg: "#1e232b", accent: "#e9b675" },
-	{ id: "moss", label: "Moss", bg: "#3b4338", accent: "#d4a94e" },
+	{ id: "moss", label: "Moss", bg: "#3b4338", accent: "#e0b862" },
 	/* System shows a diagonal dark/light split to signal "follows OS" */
 	{ id: "system", label: "System", bg: "#131313", accent: "#ffffff" },
 ];

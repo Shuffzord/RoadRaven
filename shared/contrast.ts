@@ -6,7 +6,11 @@
  * findings back.
  */
 
-import { CONTRAST_PAIRS, type ContrastPair } from "./themeContract";
+import {
+	CONTRAST_PAIRS,
+	type ContrastPair,
+	DERIVED_TOKENS,
+} from "./themeContract";
 
 export type RGB = readonly [number, number, number];
 export type RGBA = readonly [number, number, number, number];
@@ -80,14 +84,31 @@ function describe(token: string, value: string | undefined): string {
 }
 
 /**
+ * Fills every `DERIVED_TOKENS` entry the map leaves unset, the way the
+ * components' `var(--x, var(--y))` fallbacks do. An explicit value wins.
+ */
+export function resolveDerivedTokens(
+	tokens: Record<string, string>,
+): Record<string, string> {
+	const out = { ...tokens };
+	for (const [name, derive] of Object.entries(DERIVED_TOKENS)) {
+		if (out[name] !== undefined) continue;
+		const value = derive(tokens);
+		if (value !== undefined) out[name] = value;
+	}
+	return out;
+}
+
+/**
  * Measures every pair against a token map. A pair whose ink or surface
  * cannot be parsed yields a failing finding with a `reason` instead of
  * throwing, so one bad value never hides the rest of the report.
  */
 export function lintTheme(
-	tokens: Record<string, string>,
+	rawTokens: Record<string, string>,
 	pairs: readonly ContrastPair[] = CONTRAST_PAIRS,
 ): Finding[] {
+	const tokens = resolveDerivedTokens(rawTokens);
 	return pairs.map((pair) => {
 		const base = { pairId: pair.id, min: pair.min, tier: pair.tier };
 		const unmeasurable = (reason: string): Finding => ({

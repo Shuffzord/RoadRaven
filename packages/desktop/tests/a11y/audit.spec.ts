@@ -3,6 +3,7 @@ import { join } from "node:path";
 import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
 import { THEME_IDS } from "../../../../shared/themeContract";
+import { NODE_CARD_ATTR } from "../../src/mainview/lib/domContract";
 
 // Pre-condition: `bun run --cwd packages/desktop build` has produced
 // packages/desktop/dist/. Vite preview serves dist/ on port 4173.
@@ -13,7 +14,8 @@ import { THEME_IDS } from "../../../../shared/themeContract";
 //
 // Selectors verified against source 2026-05-03 per checker B-4/W-1/W-2:
 //   - Canvas wrapper: [role="application"] (Canvas.tsx line 344)
-//   - Node card: [data-source-id] (RoadmapNode.tsx line 113); [role="treeitem"] (line 126)
+//   - Node card: [NODE_CARD_ATTR] (src/mainview/lib/domContract.ts, rendered by
+//     RoadmapNode.tsx); [role="treeitem"] on the same element
 //   - Sample loading: getByRole('button', { name: 'Hello World' }) (WelcomeScreen.tsx line 131-137)
 //   - Theme switching: document.documentElement.setAttribute("data-theme", t) directly
 //     (ThemeProvider.tsx line 33 — there is NO localStorage theme key; RPC saveSettings
@@ -21,15 +23,7 @@ import { THEME_IDS } from "../../../../shared/themeContract";
 
 const DIST_DIR = join(process.cwd(), "dist");
 const hasDist = existsSync(DIST_DIR);
-
-// Themes whose chrome text axe flags today (v0.8.3 Phase 1 run, 2026-09-22).
-// Phase 2 empties this set as it fixes each theme.
-const AXE_KNOWN_FAILING_THEMES = new Set<string>([
-	"paper",
-	"amber",
-	"slate",
-	"moss",
-]);
+const CARD = `[${NODE_CARD_ATTR}]`;
 
 test.skip(
 	!hasDist,
@@ -86,7 +80,7 @@ async function loadHelloWorldSample(page: Page): Promise<void> {
 	// Wait for tree canvas to render — role="application" on Canvas wrapper
 	await page.waitForSelector('[role="application"]', { timeout: 5000 });
 	// Wait for at least one node card to render
-	await page.waitForSelector("[data-source-id]", { timeout: 5000 });
+	await page.waitForSelector(CARD, { timeout: 5000 });
 }
 
 test.describe("Accessibility audit (production bundle, vite preview port 4173)", () => {
@@ -108,8 +102,7 @@ test.describe("Accessibility audit (production bundle, vite preview port 4173)",
 	test("3. Side panel open on a node passes WCAG 2.1 AA", async ({ page }) => {
 		await loadHelloWorldSample(page);
 		// Click the first node card to open the side panel.
-		// Verified selector: [data-source-id] (RoadmapNode.tsx line 113)
-		await page.locator("[data-source-id]").first().click();
+		await page.locator(CARD).first().click();
 		// Wait for side panel <aside role="complementary"> to render
 		// (SidePanel.tsx line 233/243). Use a generous timeout for animation.
 		await page.waitForSelector('aside[role="complementary"]', {
@@ -125,8 +118,7 @@ test.describe("Accessibility audit (production bundle, vite preview port 4173)",
 	}) => {
 		await loadHelloWorldSample(page);
 		// Right-click on a node to open Radix ContextMenu.
-		// Verified selector: [data-source-id] (RoadmapNode.tsx line 113)
-		await page.locator("[data-source-id]").first().click({ button: "right" });
+		await page.locator(CARD).first().click({ button: "right" });
 		// Wait for Radix-rendered menu — Radix ContextMenu renders [role="menu"]
 		await page.waitForSelector('[role="menu"]', { timeout: 3000 });
 		// Exclude Radix Portal's aria-hidden=true overlay on #root (Radix v2
@@ -147,7 +139,7 @@ test.describe("Accessibility audit (production bundle, vite preview port 4173)",
 		// Select the first node card (root). The Hello World sample's root is a
 		// non-leaf (has children), so requestDelete triggers the confirmation
 		// dialog (per useKeyboardRouter.ts requestDelete contract).
-		await page.locator("[data-source-id]").first().click();
+		await page.locator(CARD).first().click();
 		// Focus the canvas (role="application" tabIndex=0 on Canvas wrapper) so
 		// keyboard events route through useKeyboardRouter.
 		await page.locator('[role="application"]').focus();
@@ -173,15 +165,6 @@ test.describe("Accessibility audit (production bundle, vite preview port 4173)",
 	// is contrast.spec.ts's job; this loop keeps the ARIA/structure audit.
 	for (const theme of THEME_IDS) {
 		test(`6. Theme '${theme}' passes WCAG 2.1 AA`, async ({ page }) => {
-			// RED until Phase 2 fixes the themes: axe reports serious
-			// color-contrast on chrome text (sidebar/footer tertiary text, kbd,
-			// the accent-muted chip) — the same rows the static linter baselines
-			// in tests/unit/theme/known-failures.json. test.fail() keeps the
-			// suite green and fails loudly the moment a theme starts passing.
-			test.fail(
-				AXE_KNOWN_FAILING_THEMES.has(theme),
-				`${theme}: serious color-contrast on chrome text until Phase 2`,
-			);
 			await loadHelloWorldSample(page);
 			// Set the data-theme attribute directly (matches ThemeProvider.tsx
 			// line 33 behavior). No reload needed — CSS responds to the
@@ -219,7 +202,7 @@ test.describe("Accessibility audit (production bundle, vite preview port 4173)",
 			document.documentElement.setAttribute("data-theme", "light");
 		});
 		await page.waitForTimeout(200);
-		await page.locator("[data-source-id]").first().click({ button: "right" });
+		await page.locator(CARD).first().click({ button: "right" });
 		await page.waitForSelector('[role="menu"]', { timeout: 3000 });
 		await auditPage(page, "context-menu-open-light", {
 			exclude: ["svg .rd3t-link", "#root[aria-hidden='true']"],

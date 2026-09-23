@@ -1,30 +1,47 @@
 import { memo, useEffect, useRef } from "react";
 import type { NodeStatus } from "../../../../../packages/core/src/schema";
+import {
+	STATUS_TOKENS,
+	TEXT_NODE_TOKEN,
+} from "../../../../../shared/themeContract";
 import { isKeyboardNav } from "../hooks/useKeyboardRouter";
+import {
+	NODE_CARD_ATTR,
+	NODE_FOCUSED_ATTR,
+	NODE_SURFACE_ATTR,
+} from "../lib/domContract";
 import { requestNodeFocus } from "../lib/focusRequest";
 import { useIsNodeLive, useRoadmapStore } from "../store/roadmapStore";
+
+// Token names come from the shared theme contract (the linter and the
+// rendered sampler read the same names). `color` is the general status ink
+// (chrome, menus, dialogs — what every consumer outside this card reads);
+// `card` is the ink on the card (stripe) and falls back to `color` in the
+// CSS `var()` below; `fg` is the ink on the badge fill and falls back to
+// `card`, then `color`; `bg` is the badge fill.
+const statusTokens = (s: NodeStatus) => ({
+	color: STATUS_TOKENS[s].ink,
+	card: STATUS_TOKENS[s].card,
+	fg: STATUS_TOKENS[s].fg,
+	bg: STATUS_TOKENS[s].bg,
+});
 
 // Typed as Record<NodeStatus, ...> so the schema's status enum is the single
 // source of truth — adding/removing a status in schema.ts forces this map to
 // be updated, preventing the silent drift that fallow flagged.
 export const STATUS_TOKEN_MAP: Record<
 	NodeStatus,
-	{ color: string; bg: string }
+	{ color: string; bg: string; card: string; fg: string }
 > = {
-	"not-started": {
-		color: "--rv-status-not-started",
-		bg: "--rv-status-not-started-bg",
-	},
-	"in-progress": {
-		color: "--rv-status-in-progress",
-		bg: "--rv-status-in-progress-bg",
-	},
-	completed: {
-		color: "--rv-status-completed",
-		bg: "--rv-status-completed-bg",
-	},
-	blocked: { color: "--rv-status-blocked", bg: "--rv-status-blocked-bg" },
+	"not-started": statusTokens("not-started"),
+	"in-progress": statusTokens("in-progress"),
+	completed: statusTokens("completed"),
+	blocked: statusTokens("blocked"),
 };
+
+// Node ink: a theme with light cards on dark chrome (contrast, moss) sets
+// --rv-text-node; every other theme falls through to --rv-text-primary.
+const NODE_INK = `var(${TEXT_NODE_TOKEN}, var(--rv-text-primary))`;
 
 // Render a boolean as the string "true" or undefined so a `data-*` attribute
 // drops out of the DOM when false. Factored out of the card body because six
@@ -197,6 +214,10 @@ export const RoadmapNodeCard = memo(function RoadmapNodeCard({
 	});
 	const status = liveStatus as NodeStatus;
 	const tokens = STATUS_TOKEN_MAP[status] ?? STATUS_TOKEN_MAP["not-started"];
+	// Ink on the card: the status stripe (index.css `.node::before`).
+	const statusCard = `var(${tokens.card}, var(${tokens.color}))`;
+	// Ink on the badge fill: badge text, badge dot, chevron text and border.
+	const statusFg = `var(${tokens.fg}, ${statusCard})`;
 
 	// Live pulse: true iff this node received an event within the last 30s (D-14/D-15).
 	// Re-evaluates on every 1Hz liveTick bump from App.tsx setInterval.
@@ -233,19 +254,22 @@ export const RoadmapNodeCard = memo(function RoadmapNodeCard({
 		<div
 			ref={cardRef}
 			className={`node relative min-w-[180px] max-w-[220px] rounded-[var(--node-radius,8px)] border-[length:var(--rv-border-width,1px)] border-[color:var(--rv-border)] bg-[var(--rv-bg-node)] pl-4 pr-3 py-[10px] select-none transition-[box-shadow,border-color,background] duration-150 hover:bg-[var(--rv-bg-node-hover)] group ${isSelected ? "outline outline-2 -outline-offset-1 outline-[var(--rv-accent)]" : ""}`}
-			data-source-id={nodeId}
+			{...{
+				[NODE_CARD_ATTR]: nodeId,
+				[NODE_FOCUSED_ATTR]: dataFlag(isFocused),
+				[NODE_SURFACE_ATTR]: "node",
+			}}
 			data-selected={dataFlag(isSelected)}
-			data-focused={dataFlag(isFocused)}
 			data-live={dataFlag(isLive)}
 			data-search-match={dataFlag(isSearchMatch)}
 			data-search-current={dataFlag(isSearchCurrent)}
 			data-search-dim={dataFlag(isSearchDimmed)}
-			data-rv-surface="node"
 			style={
 				{
 					boxShadow: "var(--rv-shadow-node)",
-					"--node-stripe-color": `var(${tokens.color})`,
-					"--badge-color": `var(${tokens.color})`,
+					color: NODE_INK,
+					"--node-stripe-color": statusCard,
+					"--badge-color": statusFg,
 					"--badge-bg": `var(${tokens.bg})`,
 				} as React.CSSProperties
 			}
@@ -332,11 +356,13 @@ export const RoadmapNodeCard = memo(function RoadmapNodeCard({
 					onBlur={() => onRenameCommit?.()}
 					placeholder="Enter title…"
 					aria-label="Rename node"
-					className={`block w-full text-[13px] font-semibold leading-[1.3] text-[var(--rv-text-primary)] mb-[6px] bg-transparent border-0 border-b-2 border-[var(--rv-accent)] outline-none px-0 py-0 ${pluginGlyph ? "pr-6" : ""}`}
+					className={`block w-full text-[13px] font-semibold leading-[1.3] mb-[6px] bg-transparent border-0 border-b-2 border-[var(--rv-accent)] outline-none px-0 py-0 ${pluginGlyph ? "pr-6" : ""}`}
+					style={{ color: NODE_INK }}
 				/>
 			) : (
 				<span
-					className={`block text-[13px] font-semibold leading-[1.3] text-[var(--rv-text-primary)] mb-[6px] ${pluginGlyph ? "pr-6" : ""}`}
+					className={`block text-[13px] font-semibold leading-[1.3] mb-[6px] ${pluginGlyph ? "pr-6" : ""}`}
+					style={{ color: NODE_INK }}
 				>
 					{title}
 				</span>
@@ -363,8 +389,8 @@ export const RoadmapNodeCard = memo(function RoadmapNodeCard({
 					aria-label={isCollapsed ? "Expand subtree" : "Collapse subtree"}
 					style={{
 						backgroundColor: `var(${tokens.bg})`,
-						borderColor: `var(${tokens.color})`,
-						color: `var(${tokens.color})`,
+						borderColor: statusFg,
+						color: statusFg,
 					}}
 					onClick={(e) => {
 						e.stopPropagation();

@@ -6,8 +6,17 @@ import {
 	parseColor,
 	parseThemeBlocks,
 	relativeLuminance,
+	resolveDerivedTokens,
 } from "../../../../../shared/contrast";
-import type { ContrastPair } from "../../../../../shared/themeContract";
+import {
+	CONTRAST_PAIRS,
+	type ContrastPair,
+	DERIVED_TOKENS,
+	STATUS_IDS,
+	STATUS_TOKENS,
+	TEXT_NODE_TOKEN,
+	THEME_TOKENS,
+} from "../../../../../shared/themeContract";
 
 describe("parseColor", () => {
 	it("parses 6-digit hex", () => {
@@ -120,6 +129,97 @@ describe("lintTheme", () => {
 			pair({ min: 2, tier: "advisory" }),
 		]);
 		expect(f).toMatchObject({ min: 2, tier: "advisory", pass: true });
+	});
+});
+
+// Phase 2: optional tokens the components read with a var() fallback are
+// filled from the required ones before measuring, so the linter scores what
+// the cascade paints when a theme leaves them unset.
+describe("derived tokens", () => {
+	it("covers exactly the node ink, the four card inks and the four badge inks", () => {
+		expect(Object.keys(DERIVED_TOKENS).sort()).toEqual(
+			[
+				TEXT_NODE_TOKEN,
+				...STATUS_IDS.map((s) => STATUS_TOKENS[s].card),
+				...STATUS_IDS.map((s) => STATUS_TOKENS[s].fg),
+			].sort(),
+		);
+	});
+
+	it.each(
+		STATUS_IDS,
+	)("fills a missing %s card ink from the general status ink", (s) => {
+		const out = resolveDerivedTokens({ [STATUS_TOKENS[s].ink]: "#4a9eff" });
+		expect(out[STATUS_TOKENS[s].card]).toBe("#4a9eff");
+	});
+
+	it("a badge ink follows an explicit card ink before the general ink", () => {
+		const out = resolveDerivedTokens({
+			"--rv-status-completed": "#ffffff",
+			"--rv-status-completed-card": "#000000",
+		});
+		expect(out["--rv-status-completed-fg"]).toBe("#000000");
+	});
+
+	it("fills a missing --rv-text-node from --rv-text-primary", () => {
+		const out = resolveDerivedTokens({ "--rv-text-primary": "#e0e0e0" });
+		expect(out[TEXT_NODE_TOKEN]).toBe("#e0e0e0");
+	});
+
+	it.each(
+		STATUS_IDS,
+	)("fills a missing %s badge ink from the general status ink when no card ink is set", (s) => {
+		const out = resolveDerivedTokens({ [STATUS_TOKENS[s].ink]: "#4a9eff" });
+		expect(out[STATUS_TOKENS[s].fg]).toBe("#4a9eff");
+	});
+
+	it("an explicit value wins over derivation", () => {
+		const out = resolveDerivedTokens({
+			"--rv-text-primary": "#d1d1d1",
+			[TEXT_NODE_TOKEN]: "#000000",
+			"--rv-status-completed": "#000000",
+			"--rv-status-completed-fg": "#ffffff",
+		});
+		expect(out[TEXT_NODE_TOKEN]).toBe("#000000");
+		expect(out["--rv-status-completed-fg"]).toBe("#ffffff");
+	});
+
+	it("leaves a token undefined when its source is missing too", () => {
+		expect(resolveDerivedTokens({})).toEqual({});
+	});
+
+	it("lintTheme measures a derived ink instead of reporting it missing", () => {
+		const [f] = lintTheme(
+			{ "--rv-text-primary": "#000000", "--rv-bg-node": "#ffffff" },
+			CONTRAST_PAIRS.filter((p) => p.id === "node-title"),
+		);
+		expect(f.reason).toBeUndefined();
+		expect(f.ratio).toBeCloseTo(21, 6);
+	});
+
+	it("lintTheme on the required tokens plus the explicit derived ones finds no unmeasurable pair among them", () => {
+		const required = THEME_TOKENS.filter(
+			(t) => t.kind === "color" && t.tier === "required",
+		).map((t) => t.name);
+		const tokens = Object.fromEntries([
+			...required.map((n) => [n, "#808080"]),
+			[TEXT_NODE_TOKEN, "#000000"],
+			...STATUS_IDS.map((s) => [STATUS_TOKENS[s].card, "#000000"]),
+			...STATUS_IDS.map((s) => [STATUS_TOKENS[s].fg, "#ffffff"]),
+		]);
+		const touched = new Set([
+			"node-title",
+			...STATUS_IDS.map((s) => `badge-${s}`),
+			...STATUS_IDS.map((s) => `stripe-${s}`),
+			...STATUS_IDS.map((s) => `status-${s}-vs-surface`),
+		]);
+		const unmeasurable = lintTheme(tokens)
+			.filter((f) => touched.has(f.pairId) && f.reason)
+			// badge-<s> also needs the optional badge fill; only the node title
+			// and the stripes are fully covered by the required set.
+			.filter((f) => !f.reason?.includes("-bg"))
+			.map((f) => `${f.pairId}: ${f.reason}`);
+		expect(unmeasurable).toEqual([]);
 	});
 });
 
