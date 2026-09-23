@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useEditModeFocus } from "../hooks/useEditModeFocus";
 import { useRoadmapStore } from "../store/roadmapStore";
 import { IntegrationZone } from "./IntegrationZone";
 import { MarkdownRenderer } from "./MarkdownRenderer";
@@ -10,14 +11,6 @@ import { formatStatus, STATUS_TOKEN_MAP } from "./RoadmapNode";
 const FLASH_MS = 2000;
 
 type EditableField = "title" | "status" | "type" | "metadata" | "notes";
-
-function isTextInputFocused(): boolean {
-	const el = document.activeElement;
-	if (!el || !(el instanceof HTMLElement)) return false;
-	if (el.isContentEditable) return true;
-	const tag = el.tagName;
-	return tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT";
-}
 
 function SavedFlash({ visible }: { visible: boolean }) {
 	if (!visible) return null;
@@ -149,20 +142,15 @@ export function SidePanel({ isOpen, onClose }: SidePanelProps) {
 		return () => document.removeEventListener("keydown", handler);
 	}, [isEditing, selectedNode?.title]);
 
-	// E shortcut to enter edit mode (D-10). Skipped when text input focused
-	// (D-08 context-aware) or already editing.
-	useEffect(() => {
-		if (!isOpen || !selectedNode || isEditing) return;
-		const handler = (e: KeyboardEvent) => {
-			if (e.key !== "e" && e.key !== "E") return;
-			if (e.ctrlKey || e.metaKey || e.altKey) return;
-			if (isTextInputFocused()) return;
-			e.preventDefault();
-			setIsEditing(true);
-		};
-		window.addEventListener("keydown", handler);
-		return () => window.removeEventListener("keydown", handler);
-	}, [isOpen, selectedNode, isEditing]);
+	// The `E` shortcut, the caret it puts in the title, and the focus it hands
+	// back when edit mode closes (v0.8.1 Phase 5). All of it lives in the hook
+	// so this component keeps one call rather than another three branches.
+	const { titleInputRef, beginEdit } = useEditModeFocus({
+		isOpen,
+		hasNode: !!selectedNode,
+		isEditing,
+		setIsEditing,
+	});
 
 	const handleCopyId = useCallback(async () => {
 		if (!selectedNode) return;
@@ -268,9 +256,13 @@ export function SidePanel({ isOpen, onClose }: SidePanelProps) {
 						<button
 							className="flex items-center justify-center w-7 h-7 rounded-[6px] text-rv-text-tertiary hover:bg-rv-bg-hover hover:text-rv-text-primary transition-colors duration-150"
 							type="button"
-							onClick={() => setIsEditing(true)}
+							onClick={beginEdit}
 							aria-label="Edit node"
 							title="Edit node (E)"
+							// Where F6 lands when it switches into this panel: the
+							// panel's primary action, not the resize grip that
+							// happens to come first in the DOM (lib/focusHandoff.ts).
+							data-panel-focus=""
 						>
 							<svg
 								aria-hidden="true"
@@ -324,6 +316,7 @@ export function SidePanel({ isOpen, onClose }: SidePanelProps) {
 						<FieldLabel flashing={flashedFields.has("title")}>TITLE</FieldLabel>
 						{isEditing ? (
 							<input
+								ref={titleInputRef}
 								type="text"
 								value={titleDraft}
 								onChange={(e) => setTitleDraft(e.target.value)}
@@ -335,13 +328,16 @@ export function SidePanel({ isOpen, onClose }: SidePanelProps) {
 									}
 								}}
 								aria-label="Title"
+								// The Edit button is gone while editing, so the
+								// pane switch lands on the field it opened.
+								data-panel-focus=""
 								className="w-full text-[14px] font-semibold text-rv-text-primary bg-rv-bg-input border border-rv-border rounded-[6px] px-2 py-1 mb-4 focus:border-rv-border-focus outline-none"
 							/>
 						) : (
 							// biome-ignore lint/a11y/useKeyWithClickEvents: preview-to-edit entry parallels the explicit [E] button in header; no new keyboard path needed.
 							<h2
 								className="text-[14px] font-semibold text-rv-text-primary mb-4 cursor-text hover:bg-rv-bg-hover rounded px-1 -mx-1"
-								onClick={() => setIsEditing(true)}
+								onClick={beginEdit}
 							>
 								{selectedNode.title}
 							</h2>

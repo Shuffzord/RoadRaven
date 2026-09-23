@@ -431,10 +431,10 @@ interface RoadmapState {
 	pasteFromClipboard: (parentId: string | null) => Promise<string | null>;
 
 	// Viewport actions
-	resetView: () => void;
 	fitView: () => void;
 	setTranslate: (translate: { x: number; y: number }) => void;
 	setZoomLevel: (zoom: number) => void;
+	setViewport: (translate: { x: number; y: number }, zoom: number) => void;
 
 	// Schema error actions
 	setSchemaErrors: (
@@ -636,7 +636,10 @@ export const useRoadmapStore = create<RoadmapState>((set, get) => {
 				nodeIndex,
 				dataKey: nextKey,
 				statusTick: 0,
+				// RC9: a different file's ids can never be the target here, so the
+				// selection goes with the focus.
 				focusedNodeId: null,
+				selectedNodeId: null,
 				searchQuery: "",
 				searchMatchIds: [],
 				searchCurrentIndex: -1,
@@ -660,6 +663,11 @@ export const useRoadmapStore = create<RoadmapState>((set, get) => {
 			const nextKey = String(Number(get().dataKey) + 1);
 			const agentRevision =
 				Math.max(schema.revision ?? 0, get().agentRevision) + 1;
+			// RC9: the same file came back from disk, so a target that survived
+			// the edit is still the user's place in the tree. One that did not
+			// must be dropped rather than left pointing at a dead id.
+			const survives = (id: string | null): string | null =>
+				id && nodeIndex.has(id) ? id : null;
 			set({
 				schema: { ...schema },
 				agentRevision,
@@ -667,7 +675,8 @@ export const useRoadmapStore = create<RoadmapState>((set, get) => {
 				nodeIndex,
 				dataKey: nextKey,
 				statusTick: 0,
-				focusedNodeId: null,
+				focusedNodeId: survives(get().focusedNodeId),
+				selectedNodeId: survives(get().selectedNodeId),
 				searchQuery: "",
 				searchMatchIds: [],
 				searchCurrentIndex: -1,
@@ -1135,22 +1144,12 @@ export const useRoadmapStore = create<RoadmapState>((set, get) => {
 
 		// --- Viewport ------------------------------------------------------------
 
-		resetView: () => {
-			// Center the root node in the canvas area.
-			const canvasWidth =
-				typeof window !== "undefined" ? window.innerWidth - 40 : 800;
-			const canvasHeight =
-				typeof window !== "undefined" ? window.innerHeight - 50 - 26 : 600;
-			set({
-				translate: { x: canvasWidth / 2, y: canvasHeight / 3 },
-				zoomLevel: 0.8,
-			});
-		},
-
-		// Fit the entire tree into the viewport by computing a bounding box from
-		// the cached node positions inside Canvas and applying a fit-zoom + center.
-		// Implementation lives in Canvas (it owns nodePositionsRef); the store
-		// dispatches a CustomEvent the Canvas listener consumes.
+		// The one camera command (v0.8.1 D3): fit the whole tree. The bounding
+		// box is the union of the cards actually mounted, so only the Canvas can
+		// compute it — the store dispatches a CustomEvent its listener consumes.
+		// `resetView` used to sit beside this, setting a translate from
+		// window.innerWidth and zoom 0.8 under a "Fit to View" label; TopBar and
+		// the canvas context menu both call `fitView` now, so it is gone.
 		fitView: () => {
 			if (typeof window === "undefined") return;
 			window.dispatchEvent(new CustomEvent("roadraven:fit-view"));
@@ -1162,7 +1161,27 @@ export const useRoadmapStore = create<RoadmapState>((set, get) => {
 			set({ translate });
 		},
 
-		setZoomLevel: (zoom) => set({ zoomLevel: zoom }),
+		setZoomLevel: (zoom) => {
+			if (get().zoomLevel === zoom) return;
+			set({ zoomLevel: zoom });
+		},
+
+		// Single write for a d3 gesture: the canvas learns translate and zoom
+		// in the same event and must not publish a half-updated viewport.
+		// The no-op guard is load-bearing — react-d3-tree echoes the props it
+		// was just handed back through onUpdate, and an unguarded write would
+		// turn that echo into a render loop.
+		setViewport: (translate, zoom) => {
+			const cur = get();
+			if (
+				cur.translate.x === translate.x &&
+				cur.translate.y === translate.y &&
+				cur.zoomLevel === zoom
+			) {
+				return;
+			}
+			set({ translate, zoomLevel: zoom });
+		},
 
 		setSchemaErrors: (errors) => set({ schemaErrors: errors }),
 

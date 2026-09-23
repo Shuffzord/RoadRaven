@@ -3,12 +3,31 @@
 // Sources: D-18, D-19 in 04-CONTEXT.md, PLUG-07.
 
 import "@testing-library/jest-dom";
-import { act, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import type { RoadmapSchema } from "../../../../../packages/core/src/schema";
 import type { IntegrationEvent } from "../../../../../shared/types";
+import {
+	FOCUS_NODE_EVENT,
+	type NodeFocusRequest,
+} from "../../../src/mainview/lib/focusRequest";
 import { useEventApiStore } from "../../../src/mainview/store/eventApiStore";
 import { useEventLogStore } from "../../../src/mainview/store/eventLogStore";
 import { useRoadmapStore } from "../../../src/mainview/store/roadmapStore";
+
+/** A focus request only fires for a node the roadmap actually holds. */
+const ROW_SCHEMA: RoadmapSchema = {
+	version: "1.0",
+	title: "Event log rows",
+	nodes: [
+		{
+			id: "node-a",
+			title: "A",
+			status: "not-started",
+			children: [{ id: "node-b", title: "B", status: "not-started" }],
+		},
+	],
+};
 
 // Mock @tanstack/react-virtual to avoid jsdom infinite loop.
 // In jsdom, ResizeObserver + getBoundingClientRect always return 0, which
@@ -97,6 +116,30 @@ describe("EventLogDrawer (D-18, D-19)", () => {
 		const listItems = screen.queryAllByRole("listitem");
 		expect(listItems.length).toBeLessThan(1000);
 		expect(listItems.length).toBeGreaterThan(0);
+	});
+
+	// v0.8.1 Phase 2 (RC3): the row used to set only `selectedNodeId` and lean
+	// on Canvas's implicit `focusedNodeId ?? selectedNodeId` viewport target,
+	// so a click moved nothing whenever the canvas already had a focused node.
+	it("row click selects synchronously and asks the canvas to centre the node", () => {
+		const seen: NodeFocusRequest[] = [];
+		const listener = (e: Event): void => {
+			seen.push((e as CustomEvent<NodeFocusRequest>).detail);
+		};
+		window.addEventListener(FOCUS_NODE_EVENT, listener);
+		act(() => {
+			useRoadmapStore.getState().loadSchema(ROW_SCHEMA, "/tmp/rows.json");
+			useEventLogStore.getState().appendEvents([makeEvent("node-b", 0)]);
+		});
+		render(<EventLogDrawer />);
+
+		fireEvent.click(screen.getAllByRole("listitem")[0]);
+		window.removeEventListener(FOCUS_NODE_EVENT, listener);
+
+		expect(useRoadmapStore.getState().selectedNodeId).toBe("node-b");
+		expect(seen).toEqual([
+			{ nodeId: "node-b", align: "center", select: true, rename: false },
+		]);
 	});
 
 	it("collapsed state shows 24px header strip when drawerHeightPx=24", () => {

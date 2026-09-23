@@ -18,7 +18,7 @@ no cloud, no accounts. It's just a file, living in your repo.
 
 > Built on **Electrobun** (not Electron). Runtime is **Bun**.
 
-> ⚠️ **Alpha (v0.8.0).** RoadRaven is an early public release. Core editing and
+> ⚠️ **Alpha (v0.8.1).** RoadRaven is an early public release. Core editing and
 > the live Event API work today, but expect rough edges — the data format, APIs, and
 > packaging may still change before v1.0. Bug reports and feedback are very welcome.
 
@@ -133,8 +133,8 @@ Or by hand:
 
 ### Packages (for producers and library consumers)
 
-> **v0.8.0:** `@roadraven/mcp` is on npm. Pin the version that matches your
-> installed app, e.g. `@roadraven/mcp@0.8.0` —
+> **v0.8.1:** `@roadraven/mcp` is on npm. Pin the version that matches your
+> installed app, e.g. `@roadraven/mcp@0.8.1` —
 > the app warns when the server's major.minor differs from its own.
 > `@roadraven/core` is **not published yet**; clone the repo and build from source.
 > RoadRaven is **bun-first**, but these are plain npm packages, so any package manager works.
@@ -182,7 +182,7 @@ Zero commands, works fully offline, **works today** — no npm publish needed.
 Restart your MCP host with RoadRaven running and the tools are live.
 
 **Path 2 (Claude Code plugin).** Requires **Node.js >= 22** (the plugin's
-`.mcp.json` runs `npx -y @roadraven/mcp@0.8.0`). Install straight from
+`.mcp.json` runs `npx -y @roadraven/mcp@0.8.1`). Install straight from
 this repo's marketplace, from inside Claude Code:
 
 ```
@@ -195,11 +195,11 @@ version that matches your installed app (the app warns on a major.minor
 mismatch):
 
 ```bash
-claude mcp add -s user roadraven -- npx -y @roadraven/mcp@0.8.0
+claude mcp add -s user roadraven -- npx -y @roadraven/mcp@0.8.1
 ```
 
 ```bash
-opencode mcp add roadraven   # interactive — prompts for the command to run; give it `npx -y @roadraven/mcp@0.8.0`
+opencode mcp add roadraven   # interactive — prompts for the command to run; give it `npx -y @roadraven/mcp@0.8.1`
 ```
 
 For Cursor, Codex, Copilot, Gemini, or another MCP host, see the

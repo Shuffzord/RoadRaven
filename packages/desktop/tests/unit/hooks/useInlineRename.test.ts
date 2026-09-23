@@ -7,12 +7,20 @@ import { useRoadmapStore } from "../../../src/mainview/store/roadmapStore";
 import { resetStore } from "../../helpers/resetStore";
 
 const NODE_ID = "aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee";
+const OTHER_ID = "11111111-2222-4333-8444-555555555555";
 
 function loadSchema(): void {
 	const schema: RoadmapSchema = {
 		version: "1.0",
 		title: "T",
-		nodes: [{ id: NODE_ID, title: "Original", status: "not-started" }],
+		nodes: [
+			{
+				id: NODE_ID,
+				title: "Original",
+				status: "not-started",
+				children: [{ id: OTHER_ID, title: "Other", status: "not-started" }],
+			},
+		],
 	};
 	useRoadmapStore.getState().loadSchema(schema, "/tmp/t.json");
 }
@@ -29,19 +37,15 @@ afterEach(() => {
 });
 
 describe("useInlineRename", () => {
-	it("open() sets screenPos to localX*k + tx + rect.left, localY*k + ty + rect.top", () => {
+	// v0.8.1 Phase 2: the input renders inside the node card, so the hook no
+	// longer carries a screen position — `open` takes the node id alone and the
+	// overlay's transform plumbing (`screenPos`, `updateForTransform`) is gone
+	// with Canvas's layout-position cache.
+	it("open() targets the node and seeds the draft from its current title", () => {
 		const { result } = renderHook(() => useInlineRename());
 		act(() => {
-			result.current.open(
-				NODE_ID,
-				100,
-				50,
-				{ x: 20, y: 10, k: 2 },
-				{ left: 30, top: 40 },
-			);
+			result.current.open(NODE_ID);
 		});
-		expect(result.current.state.screenPos?.x).toBe(100 * 2 + 20 + 30); // 250
-		expect(result.current.state.screenPos?.y).toBe(50 * 2 + 10 + 40); // 150
 		expect(result.current.state.nodeId).toBe(NODE_ID);
 		expect(result.current.state.title).toBe("Original");
 	});
@@ -50,13 +54,7 @@ describe("useInlineRename", () => {
 		const renameSpy = vi.spyOn(useRoadmapStore.getState(), "renameNode");
 		const { result } = renderHook(() => useInlineRename());
 		act(() => {
-			result.current.open(
-				NODE_ID,
-				0,
-				0,
-				{ x: 0, y: 0, k: 1 },
-				{ left: 0, top: 0 },
-			);
+			result.current.open(NODE_ID);
 			result.current.setTitle("  New Title  ");
 		});
 		act(() => {
@@ -70,13 +68,7 @@ describe("useInlineRename", () => {
 		const renameSpy = vi.spyOn(useRoadmapStore.getState(), "renameNode");
 		const { result } = renderHook(() => useInlineRename());
 		act(() => {
-			result.current.open(
-				NODE_ID,
-				0,
-				0,
-				{ x: 0, y: 0, k: 1 },
-				{ left: 0, top: 0 },
-			);
+			result.current.open(NODE_ID);
 			result.current.setTitle("   ");
 		});
 		act(() => {
@@ -89,13 +81,7 @@ describe("useInlineRename", () => {
 		const renameSpy = vi.spyOn(useRoadmapStore.getState(), "renameNode");
 		const { result } = renderHook(() => useInlineRename());
 		act(() => {
-			result.current.open(
-				NODE_ID,
-				0,
-				0,
-				{ x: 0, y: 0, k: 1 },
-				{ left: 0, top: 0 },
-			);
+			result.current.open(NODE_ID);
 			result.current.setTitle("Different");
 		});
 		act(() => {
@@ -105,40 +91,49 @@ describe("useInlineRename", () => {
 		expect(result.current.state.nodeId).toBeNull();
 	});
 
-	it("updateForTransform recomputes screenPos when transform changes", () => {
+	// v0.8.1 Phase 4: the focus controller is now the only thing that opens a
+	// rename, and a newer request supersedes an older one. React fires no blur
+	// when the input unmounts, so switching the target would silently discard
+	// the draft — while every other way of leaving a rename in this app
+	// commits it (the card's onBlur). Escape stays the one route that discards.
+	it("open() on another node commits the draft in flight", () => {
+		const renameSpy = vi.spyOn(useRoadmapStore.getState(), "renameNode");
 		const { result } = renderHook(() => useInlineRename());
 		act(() => {
-			result.current.open(
-				NODE_ID,
-				100,
-				50,
-				{ x: 0, y: 0, k: 1 },
-				{ left: 0, top: 0 },
-			);
+			result.current.open(NODE_ID);
+			result.current.setTitle("Typed but not confirmed");
 		});
-		expect(result.current.state.screenPos?.x).toBe(100);
+
 		act(() => {
-			result.current.updateForTransform(
-				100,
-				50,
-				{ x: 50, y: 25, k: 2 },
-				{ left: 10, top: 5 },
-			);
+			result.current.open(OTHER_ID);
 		});
-		expect(result.current.state.screenPos?.x).toBe(100 * 2 + 50 + 10); // 260
-		expect(result.current.state.screenPos?.y).toBe(50 * 2 + 25 + 5); // 130
+
+		expect(renameSpy).toHaveBeenCalledWith(NODE_ID, "Typed but not confirmed");
+		expect(result.current.state.nodeId).toBe(OTHER_ID);
+		expect(result.current.state.title).toBe("Other");
+	});
+
+	it("open() on the same node does not commit anything", () => {
+		const renameSpy = vi.spyOn(useRoadmapStore.getState(), "renameNode");
+		const { result } = renderHook(() => useInlineRename());
+		act(() => {
+			result.current.open(NODE_ID);
+			result.current.setTitle("Half typed");
+		});
+
+		act(() => {
+			result.current.open(NODE_ID);
+		});
+
+		expect(renameSpy).not.toHaveBeenCalled();
+		// Re-opening reseeds the draft from the stored title.
+		expect(result.current.state.title).toBe("Original");
 	});
 
 	it("state.nodeId is null after commit", () => {
 		const { result } = renderHook(() => useInlineRename());
 		act(() => {
-			result.current.open(
-				NODE_ID,
-				0,
-				0,
-				{ x: 0, y: 0, k: 1 },
-				{ left: 0, top: 0 },
-			);
+			result.current.open(NODE_ID);
 			result.current.setTitle("abc");
 		});
 		act(() => {

@@ -1,0 +1,14 @@
+{
+	// Typecheck gate for the whole tests folder. Vitest strips types at run
+	// time and the base tsconfig.json only includes src + shared, so without
+	// this config test files are never typechecked. A separate
+	// `typecheck:tests` script (see package.json) runs this — wired into the
+	// root `verify` script alongside `typecheck` — so it can be told apart
+	// from the app build's own typecheck.
+	"extends": "./tsconfig.json",
+	"compilerOptions": {
+		"types": ["vitest/globals", "node"]
+	},
+	"include": ["src", "../../shared", "tests"],
+	"exclude": ["node_modules", "dist", "build"]
+}

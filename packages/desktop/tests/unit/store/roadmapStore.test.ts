@@ -126,6 +126,22 @@ describe("loadSchema", () => {
 		expect(nodeIndex.has("aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee")).toBe(true);
 		expect(nodeIndex.has("33333333-4444-4555-8666-777777777777")).toBe(true);
 	});
+
+	// v0.8.1 RC9: loading another file used to clear focus but keep the
+	// selection, so the SidePanel kept showing (and editing) a node id that
+	// belonged to the previous document.
+	it("clears BOTH the selected and the focused node", () => {
+		useRoadmapStore.setState({
+			selectedNodeId: "11111111-2222-4333-8444-555555555555",
+			focusedNodeId: "11111111-2222-4333-8444-555555555555",
+		});
+
+		useRoadmapStore.getState().loadSchema(TEST_SCHEMA, TEST_FILE_PATH);
+
+		const state = useRoadmapStore.getState();
+		expect(state.selectedNodeId).toBeNull();
+		expect(state.focusedNodeId).toBeNull();
+	});
 });
 
 describe("updateNodeStatus", () => {
@@ -233,26 +249,124 @@ describe("reloadSchema", () => {
 			Number(keyAfterLoad),
 		);
 	});
-});
 
-describe("resetView", () => {
-	it("resets translate and zoomLevel to defaults", () => {
-		// Move viewport away from defaults
-		useRoadmapStore.getState().setTranslate({ x: 999, y: 999 });
-		useRoadmapStore.getState().setZoomLevel(2.5);
+	// v0.8.1 RC9: an external edit is the SAME document coming back, so the
+	// user's place in it survives — unless the node it pointed at is gone.
+	it("keeps a selection and focus whose node survived the reload", () => {
+		useRoadmapStore.getState().loadSchema(TEST_SCHEMA, TEST_FILE_PATH);
+		useRoadmapStore.setState({
+			selectedNodeId: "11111111-2222-4333-8444-555555555555",
+			focusedNodeId: "33333333-4444-4555-8666-777777777777",
+		});
 
-		// Reset
-		useRoadmapStore.getState().resetView();
+		useRoadmapStore.getState().reloadSchema(TEST_SCHEMA);
 
 		const state = useRoadmapStore.getState();
-		expect(state.zoomLevel).toBe(0.8);
-		// translate.y should be roughly canvasHeight/3 (calculation depends on window size)
-		expect(state.translate.y).toBeGreaterThan(0);
-		expect(state.translate.x).toBeGreaterThan(0);
+		expect(state.selectedNodeId).toBe("11111111-2222-4333-8444-555555555555");
+		expect(state.focusedNodeId).toBe("33333333-4444-4555-8666-777777777777");
 	});
 
-	it("does not contain viewResetKey in state", () => {
+	it("clears a selection and focus whose node the reload removed", () => {
+		useRoadmapStore.getState().loadSchema(TEST_SCHEMA, TEST_FILE_PATH);
+		useRoadmapStore.setState({
+			selectedNodeId: "11111111-2222-4333-8444-555555555555",
+			focusedNodeId: "33333333-4444-4555-8666-777777777777",
+		});
+		const withoutChildren: RoadmapSchema = {
+			...TEST_SCHEMA,
+			nodes: [{ ...TEST_SCHEMA.nodes[0], children: [] }],
+		};
+
+		useRoadmapStore.getState().reloadSchema(withoutChildren);
+
 		const state = useRoadmapStore.getState();
-		expect(state).not.toHaveProperty("viewResetKey");
+		expect(state.selectedNodeId).toBeNull();
+		expect(state.focusedNodeId).toBeNull();
+	});
+});
+
+// v0.8.1 Phase 5: there is ONE "Fit to View". `resetView` set a translate
+// computed from window.innerWidth and zoom 0.8 — a fixed camera that ignored
+// where the tree actually was — and TopBar and the canvas context menu both
+// called it under a "Fit to View" label. Both call `fitView` now, which the
+// canvas answers by measuring the cards that are really mounted (D3), so the
+// store action is gone rather than left as a second, wrong camera command.
+describe("viewport commands", () => {
+	it("no longer exposes resetView", () => {
+		const state = useRoadmapStore.getState();
+		expect(state).not.toHaveProperty("resetView");
+	});
+
+	// Runs in the `node` environment, where the action's own `typeof window`
+	// guard is the behaviour under test: fitView is a message to the canvas,
+	// never a camera write of its own.
+	it("fitView is a no-op on the camera with no window to dispatch into", () => {
+		useRoadmapStore.getState().setTranslate({ x: 999, y: 999 });
+		useRoadmapStore.getState().setZoomLevel(0.5);
+
+		useRoadmapStore.getState().fitView();
+
+		const state = useRoadmapStore.getState();
+		expect(state.translate).toEqual({ x: 999, y: 999 });
+		expect(state.zoomLevel).toBe(0.5);
+	});
+});
+
+// v0.8.1 Phase 1 (RC1) — the store is the single truthful viewport owner, so
+// every d3 gesture reports translate AND zoom back through one guarded write.
+// The guards matter: react-d3-tree echoes the values it was just given back
+// through onUpdate (componentDidUpdate), and an unguarded write would turn
+// that echo into an infinite render loop.
+describe("setViewport", () => {
+	it("writes translate and zoom in a single store update", () => {
+		let notifications = 0;
+		const unsubscribe = useRoadmapStore.subscribe(() => {
+			notifications++;
+		});
+
+		useRoadmapStore.getState().setViewport({ x: 12, y: 34 }, 0.55);
+
+		const state = useRoadmapStore.getState();
+		expect(state.translate).toEqual({ x: 12, y: 34 });
+		expect(state.zoomLevel).toBe(0.55);
+		expect(notifications).toBe(1);
+		unsubscribe();
+	});
+
+	it("does not write when translate and zoom are both unchanged (echo guard)", () => {
+		useRoadmapStore.getState().setViewport({ x: 12, y: 34 }, 0.55);
+
+		let notifications = 0;
+		const unsubscribe = useRoadmapStore.subscribe(() => {
+			notifications++;
+		});
+		useRoadmapStore.getState().setViewport({ x: 12, y: 34 }, 0.55);
+		unsubscribe();
+
+		expect(notifications).toBe(0);
+	});
+
+	it("writes when only the zoom changed", () => {
+		useRoadmapStore.getState().setViewport({ x: 12, y: 34 }, 0.55);
+		useRoadmapStore.getState().setViewport({ x: 12, y: 34 }, 0.6);
+
+		expect(useRoadmapStore.getState().zoomLevel).toBe(0.6);
+		expect(useRoadmapStore.getState().translate).toEqual({ x: 12, y: 34 });
+	});
+});
+
+describe("setZoomLevel", () => {
+	it("does not write when the zoom is unchanged", () => {
+		useRoadmapStore.getState().setZoomLevel(0.42);
+
+		let notifications = 0;
+		const unsubscribe = useRoadmapStore.subscribe(() => {
+			notifications++;
+		});
+		useRoadmapStore.getState().setZoomLevel(0.42);
+		unsubscribe();
+
+		expect(notifications).toBe(0);
+		expect(useRoadmapStore.getState().zoomLevel).toBe(0.42);
 	});
 });

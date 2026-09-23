@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { expect, type Page, test } from "@playwright/test";
+import { seedSchema as seedRoadmapSchema } from "./helpers/seed";
 
 const SMALL_FIXTURE = join(__dirname, "../fixtures/basic-schema.json");
 const LARGE_FIXTURE = join(__dirname, "../fixtures/large-schema.json");
@@ -45,21 +46,7 @@ async function closeMenu(page: Page): Promise<void> {
 
 async function seedSchema(page: Page, fixturePath: string): Promise<void> {
 	const schema = JSON.parse(readFileSync(fixturePath, "utf-8"));
-	await page.waitForFunction(() =>
-		Boolean(
-			(window as { __ROADRAVEN_TEST__?: { loadSchema?: unknown } })
-				.__ROADRAVEN_TEST__?.loadSchema,
-		),
-	);
-	await page.evaluate(
-		(s) =>
-			(
-				window as {
-					__ROADRAVEN_TEST__: { loadSchema: (schema: unknown) => void };
-				}
-			).__ROADRAVEN_TEST__.loadSchema(s),
-		schema,
-	);
+	await seedRoadmapSchema(page, schema);
 	await page.waitForSelector("[data-source-id]");
 }
 
@@ -104,7 +91,6 @@ const LARGE_SAMPLE_HARD_CEILING_MS = 150;
 
 test.describe("ContextMenu render budget (EDIT-09)", () => {
 	test("opens within 50ms on a small tree", async ({ page }) => {
-		await page.goto("/");
 		await seedSchema(page, SMALL_FIXTURE);
 		const { samples, median } = await medianOfFive(page);
 		console.log(JSON.stringify({ tree: "small", samples, median }));
@@ -114,7 +100,6 @@ test.describe("ContextMenu render budget (EDIT-09)", () => {
 	test(`opens within ${LARGE_DEV_MODE_CEILING_MS}ms (dev) / 50ms (prod UAT) on a 300-node tree`, async ({
 		page,
 	}) => {
-		await page.goto("/");
 		await seedSchema(page, LARGE_FIXTURE);
 		const { samples, median } = await medianOfFive(page);
 		console.log(

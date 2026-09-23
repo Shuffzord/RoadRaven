@@ -140,6 +140,44 @@ describe("agentRpcHandler — dispatch + drawer audit (D-09 / PLUG-AGENT-SAFETY-
 	});
 });
 
+// v0.8.1 test audit gap (2026-09-21) — the MCP-facing "one Fit to View":
+// cameraFitView is viewport-only (no node target), so it dispatches through
+// store.fitView() (the same roadraven:fit-view event TopBar and the canvas
+// context menu use) rather than mutating the tree. This suite runs in the
+// `node` test environment (no `window`), where fitView's own `typeof window`
+// guard makes it a no-op on the camera — see roadmapStore.test.ts's "fitView
+// is a no-op on the camera with no window to dispatch into" — so the
+// dispatcher contract under test here is that cameraFitView CALLS
+// store.fitView() and audits the call, not that a camera event actually
+// fires (that is the Canvas.viewport.test.tsx / canvas-focus.spec.ts layer).
+describe("agentRpcHandler — cameraFitView (v0.8.1 viewport tool)", () => {
+	beforeEach(() => {
+		useRoadmapStore.getState().loadSchema(makeSchema(), "/tmp/test.json");
+		useEventLogStore.setState({ rows: [] });
+	});
+	afterEach(() => {
+		useRoadmapStore.setState({
+			schema: null,
+			filePath: null,
+			nodeIndex: new Map(),
+		});
+		useEventLogStore.setState({ rows: [] });
+	});
+
+	it("calls store.fitView() AND emits a drawer event with meta.tool='cameraFitView'", async () => {
+		const fitViewSpy = vi.spyOn(useRoadmapStore.getState(), "fitView");
+
+		const result = await handleAgentRequest("cameraFitView", {});
+
+		expect(result).toEqual({ ok: true, data: { ok: true } });
+		expect(fitViewSpy).toHaveBeenCalledTimes(1);
+		const rows = useEventLogStore.getState().rows;
+		expect(rows.length).toBe(1);
+		expect(rows[0].source).toBe("claude-code");
+		expect(rows[0].meta?.tool).toBe("cameraFitView");
+	});
+});
+
 describe("agentRpcHandler — updateNodeMetadata PATCH (D-04)", () => {
 	beforeEach(() => {
 		useRoadmapStore.getState().loadSchema(makeSchema(), "/tmp/test.json");

@@ -13,21 +13,23 @@
  * chevron carries `aria-label="Collapse subtree" | "Expand subtree"`.
  */
 
+import { findNodeCard } from "./nodeCard";
+
 const EXPAND_LABEL = "Expand subtree";
 
+/**
+ * The one chevron button a node card renders, by accessible name.
+ *
+ * Exported because every collapse in the app — the `C` key, the context
+ * menu's "Collapse subtree" and the mouse — ends in a click on this button,
+ * which makes it the single place a delegated listener can watch to keep
+ * focus on a mounted card (RC6, useCanvasFocusController.ts).
+ */
+export const CHEVRON_SELECTOR = 'button[aria-label$="subtree"]';
+
 function findChevron(nodeId: string): HTMLButtonElement | null {
-	// Match by dataset value rather than a `[data-source-id="..."]` selector so
-	// arbitrary id characters need no escaping (and `CSS.escape`, absent in
-	// jsdom, is never required).
-	let card: HTMLElement | null = null;
-	for (const el of document.querySelectorAll<HTMLElement>("[data-source-id]")) {
-		if (el.dataset.sourceId === nodeId) {
-			card = el;
-			break;
-		}
-	}
 	return (
-		card?.querySelector<HTMLButtonElement>('button[aria-label$="subtree"]') ??
+		findNodeCard(nodeId)?.querySelector<HTMLButtonElement>(CHEVRON_SELECTOR) ??
 		null
 	);
 }

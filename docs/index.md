@@ -45,7 +45,7 @@ for the full v1 vs. v1.1 split.
 ## Packages on npm
 
 > `@roadraven/mcp` is [on npm](https://www.npmjs.com/package/@roadraven/mcp)
-> (pin the version matching your app, e.g. `@roadraven/mcp@0.8.0`);
+> (pin the version matching your app, e.g. `@roadraven/mcp@0.8.1`);
 > `@roadraven/core` is not published yet — see the main README's
 > [Packages](https://github.com/Shuffzord/RoadRaven#packages-for-producers-and-library-consumers)
 > section.

@@ -41,7 +41,7 @@ import { loadSettings, saveSettings } from "./settings";
 // App version shown in the Setup Wizard. scripts/bump-version.ts rewrites this
 // literal (alongside the package.json + electrobun.config.ts versions) so it
 // stays in lockstep — do not edit by hand.
-const APP_VERSION = "0.8.0";
+const APP_VERSION = "0.8.1";
 
 // Re-export the RPC type so downstream modules can import from the app entry
 export type { RoadmapRPCType };

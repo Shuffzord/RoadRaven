@@ -24,11 +24,7 @@ const deps = {
 		commit: noop,
 		cancel: noop,
 		setTitle: noop,
-		updateForTransform: noop,
 	},
-	getTransform: () => ({ x: 0, y: 0, k: 1 }),
-	getContainerRect: () => ({ left: 0, top: 0 }),
-	getNodePosition: () => null,
 	togglePanelFocus: noop,
 } as unknown as Parameters<typeof useKeyboardRouter>[0];
 

@@ -1,10 +1,26 @@
 /** @vitest-environment jsdom */
-import { fireEvent, render, screen } from "@testing-library/react";
-import { useState } from "react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { RoadRavenContextMenu } from "../../../src/mainview/components/ContextMenu";
+import {
+	FOCUS_NODE_EVENT,
+	type NodeFocusRequest,
+} from "../../../src/mainview/lib/focusRequest";
 import { useRoadmapStore } from "../../../src/mainview/store/roadmapStore";
 import { resetStore } from "../../helpers/resetStore";
+
+/** Listener teardown for the tests that observe the focus-request bridge. */
+const cleanups: Array<() => void> = [];
+
+function captureRequests(): NodeFocusRequest[] {
+	const seen: NodeFocusRequest[] = [];
+	const listener = (e: Event): void => {
+		seen.push((e as CustomEvent<NodeFocusRequest>).detail);
+	};
+	window.addEventListener(FOCUS_NODE_EVENT, listener);
+	cleanups.push(() => window.removeEventListener(FOCUS_NODE_EVENT, listener));
+	return seen;
+}
 
 // Radix relies on PointerEvent APIs that jsdom does not implement.
 const noop = (): void => {
@@ -23,7 +39,19 @@ beforeAll(() => {
 	}
 });
 
-afterEach(() => {
+/** One animation frame, for the menu-close focus restore (Phase 5). */
+function nextFrame(): Promise<void> {
+	return new Promise((resolve) => {
+		requestAnimationFrame(() => resolve());
+	});
+}
+
+afterEach(async () => {
+	// A menu closing without a focus intent schedules its restore one frame
+	// later. Drain it here so it cannot land inside the NEXT test's listener.
+	await nextFrame();
+	await nextFrame();
+	while (cleanups.length) cleanups.pop()?.();
 	resetStore();
 	vi.restoreAllMocks();
 });
@@ -67,9 +95,8 @@ function seedSchema(withStatusConfig = true) {
  * The trigger has `data-source-id` so ContextMenu's onOpen receives it.
  */
 function NodeHarness({ nodeId = "root-id" }: { nodeId?: string | null }) {
-	const [target, setTarget] = useState<string | null>(nodeId);
 	return (
-		<RoadRavenContextMenu onOpen={setTarget} targetNodeId={target}>
+		<RoadRavenContextMenu>
 			<div data-testid="trigger" data-source-id={nodeId ?? undefined}>
 				trigger
 			</div>
@@ -79,9 +106,8 @@ function NodeHarness({ nodeId = "root-id" }: { nodeId?: string | null }) {
 
 /** Canvas-background harness (no data-source-id). */
 function CanvasHarness() {
-	const [target, setTarget] = useState<string | null>(null);
 	return (
-		<RoadRavenContextMenu onOpen={setTarget} targetNodeId={target}>
+		<RoadRavenContextMenu>
 			<div data-testid="trigger">trigger</div>
 		</RoadRavenContextMenu>
 	);
@@ -265,6 +291,170 @@ describe("Canvas menu — Add Root Child disabled when no schema", () => {
 		).find((el) => el.textContent?.includes("Add Root Child"));
 		expect(addRoot).toBeTruthy();
 		expect(addRoot?.getAttribute("aria-disabled")).toBe("true");
+	});
+});
+
+// v0.8.1 Phase 4 (RC4): every menu entry that renames — the Rename item and
+// the five create items — states ONE intent through `requestNodeFocus`. It
+// used to be `setFocusedNode` plus a `roadraven:open-rename` window event that
+// Canvas answered one rAF later, knowing nothing about where the new card had
+// landed. Now the reveal owns both: it waits for the card, measures it, pans
+// to it and only then opens the input — which is also what keeps the Radix
+// close-autofocus race shut (the menu's FocusScope is long gone by then).
+describe("RoadRavenContextMenu — create and rename intents (RC4)", () => {
+	function clickItem(menuName: RegExp, label: string): void {
+		const menu = screen.getByRole("menu", { name: menuName });
+		const item = Array.from(
+			menu.querySelectorAll<HTMLElement>('[role="menuitem"]'),
+		).find((el) => el.textContent?.startsWith(label));
+		if (!item) throw new Error(`no menu item "${label}"`);
+		fireEvent.click(item);
+	}
+
+	function childIdsOf(nodeId: string): string[] {
+		return (
+			useRoadmapStore
+				.getState()
+				.nodeIndex.get(nodeId)
+				?.children?.map((c) => c.id) ?? []
+		);
+	}
+
+	function openNodeMenu(nodeId: string): NodeFocusRequest[] {
+		seedSchema();
+		const seen = captureRequests();
+		render(<NodeHarness nodeId={nodeId} />);
+		openMenu(screen.getByTestId("trigger"));
+		return seen;
+	}
+
+	function openCanvasMenu(): NodeFocusRequest[] {
+		seedSchema();
+		const seen = captureRequests();
+		render(<CanvasHarness />);
+		openMenu(screen.getByTestId("trigger"));
+		return seen;
+	}
+
+	const CREATED = { align: "center", select: false, rename: true };
+
+	it("Rename reveals the node in place and opens its input", () => {
+		const seen = openNodeMenu("child-1");
+
+		clickItem(/node actions/i, "Rename");
+
+		expect(seen).toEqual([
+			{ nodeId: "child-1", align: "nearest", select: false, rename: true },
+		]);
+		expect(useRoadmapStore.getState().focusedNodeId).toBe("child-1");
+	});
+
+	it.each([
+		[
+			"Add Child",
+			/node actions/i,
+			() => openNodeMenu("child-1"),
+			() => childIdsOf("child-1")[0],
+		],
+		[
+			"Add Sibling Above",
+			/node actions/i,
+			() => openNodeMenu("child-1"),
+			() => childIdsOf("root-id")[0],
+		],
+		[
+			"Add Sibling Below",
+			/node actions/i,
+			() => openNodeMenu("child-1"),
+			() => childIdsOf("root-id")[1],
+		],
+		[
+			"Duplicate",
+			/node actions/i,
+			() => openNodeMenu("child-1"),
+			() => childIdsOf("root-id")[1],
+		],
+		[
+			"Add Root Child",
+			/canvas actions/i,
+			() => openCanvasMenu(),
+			() => childIdsOf("root-id")[1],
+		],
+	] as const)("%s centres the new node and renames it", (label, menuName, open, expectedId) => {
+		const seen = open();
+
+		clickItem(menuName, label);
+
+		expect(seen).toEqual([{ nodeId: expectedId(), ...CREATED }]);
+		expect(useRoadmapStore.getState().focusedNodeId).toBe(seen[0].nodeId);
+	});
+});
+
+// v0.8.1 Phase 5 (D3): ONE "Fit to View". The item used to call `resetView`,
+// a fixed camera derived from window.innerWidth — never a fit.
+describe("Canvas menu — Fit to View", () => {
+	it("asks the store to fit the whole tree", () => {
+		seedSchema();
+		const fitView = vi.spyOn(useRoadmapStore.getState(), "fitView");
+		render(<CanvasHarness />);
+		openMenu(screen.getByTestId("trigger"));
+		const menu = screen.getByRole("menu", { name: /canvas actions/i });
+		const item = Array.from(
+			menu.querySelectorAll<HTMLElement>('[role="menuitem"]'),
+		).find((el) => el.textContent?.includes("Fit to View"));
+
+		fireEvent.click(item as HTMLElement);
+
+		expect(fitView).toHaveBeenCalledTimes(1);
+	});
+});
+
+// v0.8.1 Phase 5: a menu that closes without an action used to leave
+// `document.activeElement` on `<body>` — `onCloseAutoFocus` is prevented (it
+// would restore focus to the element that had it when the Content mounted,
+// which for a create item is the OLD card, cancelling the new node's pending
+// rename). The close therefore hands focus back itself, one frame later, as an
+// `align: "none"` request so the canvas controller's never-steal guard decides
+// and a "Fit to View" animation is not disturbed.
+describe("RoadRavenContextMenu — focus after a plain close", () => {
+	it("asks the canvas to take its card back when Escape closes the menu", async () => {
+		seedSchema();
+		useRoadmapStore.getState().setFocusedNode("child-1");
+		const seen = captureRequests();
+		render(<NodeHarness nodeId="child-1" />);
+		openMenu(screen.getByTestId("trigger"));
+		const menu = screen.getByRole("menu", { name: /node actions/i });
+
+		fireEvent.keyDown(document.activeElement ?? menu, { key: "Escape" });
+
+		await waitFor(() => expect(seen).toHaveLength(1));
+		expect(seen[0]).toEqual({
+			nodeId: "child-1",
+			align: "none",
+			select: false,
+			rename: false,
+		});
+	});
+
+	it("stands down when the item that closed it already stated an intent", async () => {
+		seedSchema();
+		useRoadmapStore.getState().setFocusedNode("child-1");
+		const seen = captureRequests();
+		render(<NodeHarness nodeId="child-1" />);
+		openMenu(screen.getByTestId("trigger"));
+		const menu = screen.getByRole("menu", { name: /node actions/i });
+		const addChild = Array.from(
+			menu.querySelectorAll<HTMLElement>('[role="menuitem"]'),
+		).find((el) => el.textContent?.startsWith("Add Child"));
+
+		fireEvent.click(addChild as HTMLElement);
+		await waitFor(() => expect(seen).toHaveLength(1));
+		await nextFrame();
+
+		// Only the create's own centre+rename request: a restore here would
+		// supersede it and the new node would never get its input.
+		expect(seen).toHaveLength(1);
+		expect(seen[0].rename).toBe(true);
 	});
 });
 

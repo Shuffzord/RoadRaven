@@ -1,19 +1,46 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import type { CustomNodeElementProps } from "react-d3-tree";
 import Tree from "react-d3-tree";
 import { useShallow } from "zustand/react/shallow";
 import type { NodeStatus } from "../../../../../packages/core/src/schema";
 import ravenLogo from "../assets/raven-logo.svg";
+import { useCanvasFocusController } from "../hooks/useCanvasFocusController";
+import { useCanvasViewport } from "../hooks/useCanvasViewport";
 import { useFileActions } from "../hooks/useFileActions";
-import { OPEN_RENAME_EVENT, useInlineRename } from "../hooks/useInlineRename";
+import { useInlineRename } from "../hooks/useInlineRename";
 import { useKeyboardRouter } from "../hooks/useKeyboardRouter";
 import { useRecentFiles } from "../hooks/useRecentFiles";
-import { expandAncestors } from "../lib/nodeCollapse";
-import { getAncestorPath, useRoadmapStore } from "../store/roadmapStore";
+import { togglePanelFocus } from "../lib/focusHandoff";
+import { requestNodeFocus } from "../lib/focusRequest";
+import { listNodeCards } from "../lib/nodeCard";
+import { computeFit, SCALE_EXTENT } from "../lib/viewportMath";
+import { useRoadmapStore } from "../store/roadmapStore";
 import { RoadRavenContextMenu } from "./ContextMenu";
 import { RoadmapNodeCard } from "./RoadmapNode";
 import { SchemaErrorPanel } from "./SchemaErrorPanel";
 import { WelcomeScreen } from "./WelcomeScreen";
+
+/**
+ * Roving tabindex (WAI-ARIA tree): exactly one card sits in the document tab
+ * order — the focused one, or the root while nothing is focused, so Tab can
+ * still get into the tree. `__rd3t.depth` is react-d3-tree's own depth, which
+ * names the root without a second store read.
+ */
+function isTabStop(
+	focusedNodeId: string | null,
+	nodeId: string,
+	depth: number | undefined,
+): boolean {
+	return focusedNodeId ? focusedNodeId === nodeId : depth === 0;
+}
+
+/** Stop an in-flight pan animation, if any. */
+function cancelPan(ref: { current: number | null }): void {
+	if (ref.current !== null) {
+		cancelAnimationFrame(ref.current);
+		ref.current = null;
+	}
+}
 
 export function Canvas() {
 	const {
@@ -35,28 +62,18 @@ export function Canvas() {
 	);
 	const setSchemaErrors = useRoadmapStore((s) => s.setSchemaErrors);
 	const setSelectedNode = useRoadmapStore((s) => s.setSelectedNode);
-	const setFocusedNode = useRoadmapStore((s) => s.setFocusedNode);
 	const setTranslate = useRoadmapStore((s) => s.setTranslate);
 	const selectedNodeId = useRoadmapStore((s) => s.selectedNodeId);
 	const focusedNodeId = useRoadmapStore((s) => s.focusedNodeId);
 	const searchMatchIds = useRoadmapStore((s) => s.searchMatchIds);
 	const searchCurrentIndex = useRoadmapStore((s) => s.searchCurrentIndex);
 
-	// Container ref for dimensions + getBoundingClientRect for rename math
+	// The canvas container: every pan/fit measurement is taken against its rect.
 	const containerRef = useRef<HTMLDivElement>(null);
-	const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
 
-	// Track the current Tree transform (zoom + pan) via onUpdate
-	const transformRef = useRef<{ x: number; y: number; k: number }>({
-		x: 0,
-		y: 0,
-		k: 1,
-	});
-
-	// Cache node positions (in react-d3-tree local coords) keyed by nodeId
-	const nodePositionsRef = useRef<Map<string, { x: number; y: number }>>(
-		new Map(),
-	);
+	// Viewport truth (RC1) — the store is the single owner; this hook keeps it
+	// honest about d3 gestures without paying a full tree re-render per frame.
+	const { getTransform, flushViewport, syncGesture } = useCanvasViewport();
 
 	// Recent files for WelcomeScreen — shared with Sidebar via useRecentFiles
 	const recentFiles = useRecentFiles();
@@ -64,33 +81,18 @@ export function Canvas() {
 	// Inline rename state
 	const inlineRename = useInlineRename();
 
-	// Target of the most recent right-click — null when opened on empty canvas.
-	// Drives RoadRavenContextMenu's node-vs-canvas content switch.
-	const [contextTargetId, setContextTargetId] = useState<string | null>(null);
-
-	useEffect(() => {
-		if (!containerRef.current) return;
-		const observer = new ResizeObserver((entries) => {
-			const { width, height } = entries[0].contentRect;
-			setDimensions({ width, height });
-		});
-		observer.observe(containerRef.current);
-		return () => observer.disconnect();
-	}, []);
-
 	// Self-animated because Tree's `centeringTransitionDuration` only fires
 	// on initial mount — runtime `translate` prop changes are applied instantly.
 	const panAnimRef = useRef<number | null>(null);
 	const animatePanTo = useCallback(
 		(target: { x: number; y: number }) => {
-			if (panAnimRef.current !== null) {
-				cancelAnimationFrame(panAnimRef.current);
-				panAnimRef.current = null;
-			}
-			const start = {
-				x: transformRef.current.x,
-				y: transformRef.current.y,
-			};
+			cancelPan(panAnimRef);
+			// Programmatic pans start from the live transform, and publish it as
+			// one translate+zoom write so a gesture that has not been synced yet
+			// cannot be undone halfway through the animation. No-op (guarded in
+			// the store) whenever the store is already up to date.
+			const start = getTransform();
+			flushViewport();
 			const reduced =
 				typeof window !== "undefined" &&
 				window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
@@ -121,81 +123,68 @@ export function Canvas() {
 			};
 			panAnimRef.current = requestAnimationFrame(step);
 		},
-		[setTranslate],
+		[setTranslate, getTransform, flushViewport],
 	);
-	useEffect(() => {
-		return () => {
-			if (panAnimRef.current !== null) {
-				cancelAnimationFrame(panAnimRef.current);
-			}
-		};
-	}, []);
 
-	// Fit-to-view: if a node is focused/selected, zoom in close on it; otherwise
-	// fall back to fitting the whole tree (Act 4 pullback for the storytelling
-	// video). Triggered by store.fitView() via the `roadraven:fit-view` event.
+	// RC10: user input wins over an in-flight animation. Capture phase so the
+	// gesture is caught even though it starts on the rd3t <svg> deeper in the
+	// tree, which stops propagation of its own pan/zoom events. `pointerup`
+	// ends a drag, which is the earliest point the store can be made truthful
+	// without paying for a re-render per gesture frame.
+	useEffect(() => {
+		const el = containerRef.current;
+		const cancel = (): void => cancelPan(panAnimRef);
+		el?.addEventListener("pointerdown", cancel, true);
+		el?.addEventListener("wheel", cancel, true);
+		el?.addEventListener("pointerup", flushViewport, true);
+		return () => {
+			el?.removeEventListener("pointerdown", cancel, true);
+			el?.removeEventListener("wheel", cancel, true);
+			el?.removeEventListener("pointerup", flushViewport, true);
+			cancelPan(panAnimRef);
+		};
+	}, [flushViewport]);
+
+	// Fit-to-view always fits the WHOLE tree (user decision D3 — the implicit
+	// close-up on the focused node is gone). The box is the union of the cards
+	// actually mounted, so a collapsed subtree cannot inflate it (RC5).
+	// Triggered by store.fitView() via the `roadraven:fit-view` event.
 	const setZoomLevel = useRoadmapStore((s) => s.setZoomLevel);
 	useEffect(() => {
 		const handler = () => {
-			const store = useRoadmapStore.getState();
-			const targetId = store.focusedNodeId ?? store.selectedNodeId;
-			const targetPos = targetId
-				? nodePositionsRef.current.get(targetId)
-				: null;
-
-			if (targetPos) {
-				// Close-up on a single node — zoom in tight, center the node card.
-				const FOCUS_ZOOM = 1.6;
-				setZoomLevel(FOCUS_ZOOM);
-				animatePanTo({
-					x: dimensions.width / 2 - targetPos.x * FOCUS_ZOOM,
-					y: dimensions.height / 2 - targetPos.y * FOCUS_ZOOM,
-				});
-				return;
-			}
-
-			// Fall-through: fit the whole tree (Act 4 pullback).
-			const positions = Array.from(nodePositionsRef.current.values());
-			if (positions.length === 0) return;
-			let minX = Number.POSITIVE_INFINITY;
-			let maxX = Number.NEGATIVE_INFINITY;
-			let minY = Number.POSITIVE_INFINITY;
-			let maxY = Number.NEGATIVE_INFINITY;
-			for (const p of positions) {
-				if (p.x < minX) minX = p.x;
-				if (p.x > maxX) maxX = p.x;
-				if (p.y < minY) minY = p.y;
-				if (p.y > maxY) maxY = p.y;
-			}
-			// Pad bounds for the node card extents (240×100 per nodeSize prop).
-			const NODE_W = 240;
-			const NODE_H = 100;
-			const treeW = maxX - minX + NODE_W;
-			const treeH = maxY - minY + NODE_H;
-			const MARGIN = 0.85; // leave 15% breathing room
-			const targetZoom = Math.min(
-				1,
-				Math.max(
-					0.2,
-					Math.min(
-						(dimensions.width * MARGIN) / treeW,
-						(dimensions.height * MARGIN) / treeH,
-					),
-				),
+			// Before the first store write, or a gesture still waiting to be
+			// synced would be dropped by it and its translate lost.
+			flushViewport();
+			const container = containerRef.current;
+			if (!container) return;
+			const fit = computeFit(
+				listNodeCards().map((card) => card.getBoundingClientRect()),
+				container.getBoundingClientRect(),
+				getTransform(),
 			);
-			const treeCenterLocal = {
-				x: (minX + maxX) / 2,
-				y: (minY + maxY) / 2,
-			};
-			setZoomLevel(targetZoom);
-			animatePanTo({
-				x: dimensions.width / 2 - treeCenterLocal.x * targetZoom,
-				y: dimensions.height / 2 - treeCenterLocal.y * targetZoom,
-			});
+			if (!fit) return;
+			setZoomLevel(fit.zoom);
+			animatePanTo(fit.translate);
 		};
 		window.addEventListener("roadraven:fit-view", handler);
 		return () => window.removeEventListener("roadraven:fit-view", handler);
-	}, [dimensions, animatePanTo, setZoomLevel]);
+	}, [animatePanTo, setZoomLevel, getTransform, flushViewport]);
+
+	// Reveal side of every focus request: expand, wait for mount, measure, pan.
+	const panBy = useCallback(
+		(dx: number, dy: number) => {
+			const t = getTransform();
+			animatePanTo({ x: t.x + dx, y: t.y + dy });
+		},
+		[getTransform, animatePanTo],
+	);
+	// `inlineRename.open` is a stable useCallback, so handing it over does not
+	// re-register the controller on every rename keystroke.
+	useCanvasFocusController({
+		containerRef,
+		panBy,
+		openRename: inlineRename.open,
+	});
 
 	// Search highlight derivations. Set membership drives the per-card dim /
 	// outline; the current match drives the pulse + camera follow.
@@ -209,115 +198,19 @@ export function Canvas() {
 			? searchMatchIds[searchCurrentIndex]
 			: null;
 
-	// Pan only enough to land the node inside a comfort zone (middle 50% of
-	// viewport) — recentering on every edge click whips the camera across
-	// long distances and reads as jarring.
-	const targetNodeId = focusedNodeId ?? selectedNodeId;
-	useEffect(() => {
-		if (!targetNodeId) return;
-		const pos = nodePositionsRef.current.get(targetNodeId);
-		if (!pos) return;
-		const t = transformRef.current;
-		const screenX = pos.x * t.k + t.x;
-		const screenY = pos.y * t.k + t.y;
-		const clamp = (v: number, lo: number, hi: number): number =>
-			Math.min(hi, Math.max(lo, v));
-		const zoneX = {
-			min: dimensions.width * 0.25,
-			max: dimensions.width * 0.75,
-		};
-		const zoneY = {
-			min: dimensions.height * 0.25,
-			max: dimensions.height * 0.75,
-		};
-		const targetScreenX = clamp(screenX, zoneX.min, zoneX.max);
-		const targetScreenY = clamp(screenY, zoneY.min, zoneY.max);
-		if (targetScreenX === screenX && targetScreenY === screenY) return;
-		animatePanTo({
-			x: t.x + (targetScreenX - screenX),
-			y: t.y + (targetScreenY - screenY),
-		});
-	}, [targetNodeId, dimensions, animatePanTo]);
-
 	// Search match follow: when the current match changes (type or Enter/F3),
-	// expand any collapsed ancestors so the node is mounted, then select +
-	// focus it. Selecting drives the comfort-zone pan effect above; expanding
-	// first guarantees the node has a recorded position so the pan isn't a
-	// silent no-op for matches buried in collapsed subtrees.
+	// jump to it. The controller owns expanding collapsed ancestors and waiting
+	// for the card, and requestNodeFocus ignores an id that is no longer in the
+	// index (a match deleted between query and follow).
 	useEffect(() => {
 		if (!searchCurrentId) return;
-		const store = useRoadmapStore.getState();
-		// Guard against a stale match id (e.g. the matched node was deleted
-		// between query and follow) — never point selection/focus at a dead id.
-		if (!store.nodeIndex.has(searchCurrentId)) return;
-		const path = getAncestorPath(store.schema?.nodes ?? [], searchCurrentId);
-		// Cancel on cleanup so a superseded walk (rapid typing / F3) can't fire
-		// its select/focus after a newer match has taken over.
-		return expandAncestors(path, () => {
-			const s = useRoadmapStore.getState();
-			if (!s.nodeIndex.has(searchCurrentId)) return; // re-check after frames
-			s.setSelectedNode(searchCurrentId);
-			s.setFocusedNode(searchCurrentId);
-		});
+		requestNodeFocus(searchCurrentId, { align: "center", select: true });
 	}, [searchCurrentId]);
 
-	// Inline rename bridge: any caller that wants to enter rename mode on a
-	// node dispatches a window CustomEvent with the node's id. Sources:
-	//   - ContextMenu "Rename" item
-	//   - ContextMenu Add Child / Add Sibling / Duplicate (auto-rename after
-	//     create)
-	//   - useKeyboardRouter F2 + creation shortcuts
-	//   - MutationsPanel create buttons
-	// With card-matched rename, the position args to inlineRename.open are
-	// unused (the input renders inside the card itself), but the hook still
-	// accepts them — passing zeros avoids changing the hook's public API.
-	useEffect(() => {
-		const handler = (e: Event) => {
-			const detail = (e as CustomEvent<{ nodeId: string }>).detail;
-			if (!detail?.nodeId) return;
-			// Defer by one frame so Radix ContextMenu's onCloseAutoFocus can
-			// finish returning focus to the trigger BEFORE we focus the input.
-			// Without this, menu-sourced create-then-rename races: Radix's
-			// focus restore fires blur on the input, the blur handler commits
-			// and closes rename. Keyboard-sourced creates have no menu to
-			// close and therefore no race; the defer is a no-op for them.
-			requestAnimationFrame(() => {
-				inlineRename.open(
-					detail.nodeId,
-					0,
-					0,
-					{ x: 0, y: 0, k: 1 },
-					{ left: 0, top: 0 },
-				);
-			});
-		};
-		window.addEventListener(OPEN_RENAME_EVENT, handler);
-		return () => window.removeEventListener(OPEN_RENAME_EVENT, handler);
-		// inlineRename.open is stable (useCallback with empty deps), so this effect
-		// registers exactly once and is not torn down on every rename keystroke.
-	}, [inlineRename.open]);
-
-	// Wire the keyboard router
-	useKeyboardRouter({
-		inlineRename,
-		getTransform: () => transformRef.current,
-		getContainerRect: () => {
-			const rect = containerRef.current?.getBoundingClientRect();
-			return { left: rect?.left ?? 0, top: rect?.top ?? 0 };
-		},
-		getNodePosition: (nodeId: string) =>
-			nodePositionsRef.current.get(nodeId) ?? null,
-		togglePanelFocus: () => {
-			// Placeholder — Plan 03 implements panel-focus handoff. For now, move
-			// focus between selected node (panel) and focused node (canvas).
-			const store = useRoadmapStore.getState();
-			if (store.selectedNodeId && !store.focusedNodeId) {
-				store.setFocusedNode(store.selectedNodeId);
-			} else if (store.focusedNodeId) {
-				store.setSelectedNode(store.focusedNodeId);
-			}
-		},
-	});
+	// Wire the keyboard router. F6 moves REAL DOM focus between the canvas and
+	// the SidePanel (v0.8.1 Phase 5); it used to shuffle store ids here and
+	// leave the caret wherever it already was.
+	useKeyboardRouter({ inlineRename, togglePanelFocus });
 
 	const { openFile, openRecent, openSample, newRoadmap } = useFileActions();
 
@@ -327,42 +220,22 @@ export function Canvas() {
 			zoom: number;
 			translate: { x: number; y: number };
 		}) => {
-			transformRef.current = {
-				x: target.translate.x,
-				y: target.translate.y,
-				k: target.zoom,
-			};
-			// When a rename is open, keep the input anchored to the node as the user pans/zooms
-			if (inlineRename.state.nodeId) {
-				const pos = nodePositionsRef.current.get(inlineRename.state.nodeId);
-				const rect = containerRef.current?.getBoundingClientRect();
-				if (pos && rect) {
-					inlineRename.updateForTransform(pos.x, pos.y, transformRef.current, {
-						left: rect.left,
-						top: rect.top,
-					});
-				}
-			}
+			// RC1: the gesture is the only place d3 tells us where the camera
+			// actually is. The rename input rides along inside its card, so a
+			// pan/zoom needs no overlay repositioning.
+			syncGesture(target.translate, target.zoom);
 		},
-		[inlineRename],
+		[syncGesture],
 	);
 
 	const renderNode = useCallback(
-		({ nodeDatum, toggleNode, hierarchyPointNode }: CustomNodeElementProps) => {
+		({ nodeDatum, toggleNode }: CustomNodeElementProps) => {
 			const status = (nodeDatum.attributes?.status as string) ?? "not-started";
 			const nodeId = nodeDatum.attributes?.id as string;
 			const children = nodeDatum.children ?? [];
 			const hasChildren = children.length > 0;
-			const isCollapsed = nodeDatum.__rd3t?.collapsed;
-
-			// Record current local position for this node so the keyboard router
-			// can locate it for inline-rename positioning.
-			if (nodeId && hierarchyPointNode) {
-				nodePositionsRef.current.set(nodeId, {
-					x: hierarchyPointNode.x,
-					y: hierarchyPointNode.y,
-				});
-			}
+			const rd3t = nodeDatum.__rd3t;
+			const isRenaming = inlineRename.state.nodeId === nodeId;
 
 			return (
 				<foreignObject
@@ -378,29 +251,25 @@ export function Canvas() {
 						nodeId={nodeId}
 						isSelected={selectedNodeId === nodeId}
 						isFocused={focusedNodeId === nodeId}
+						isTabStop={isTabStop(focusedNodeId, nodeId, rd3t?.depth)}
 						isSearchMatch={searchMatchSet.has(nodeId)}
 						isSearchCurrent={searchCurrentId === nodeId}
 						isSearchDimmed={searchActive && !searchMatchSet.has(nodeId)}
 						hasChildren={hasChildren}
-						isCollapsed={!!isCollapsed}
+						isCollapsed={!!rd3t?.collapsed}
 						childCount={children.length}
 						onToggle={toggleNode}
 						onSelect={() => {
-							setSelectedNode(nodeId);
-							setFocusedNode(nodeId);
+							requestNodeFocus(nodeId, { align: "nearest", select: true });
 						}}
 						onDoubleClick={() => {
-							const pos = nodePositionsRef.current.get(nodeId);
-							const rect = containerRef.current?.getBoundingClientRect();
-							if (pos && rect) {
-								inlineRename.open(nodeId, pos.x, pos.y, transformRef.current, {
-									left: rect.left,
-									top: rect.top,
-								});
-							}
+							inlineRename.open(nodeId);
 						}}
-						isRenaming={inlineRename.state.nodeId === nodeId}
-						renameValue={inlineRename.state.title}
+						isRenaming={isRenaming}
+						// Only the renaming card may see the draft: handing the
+						// live text to all 1400 cards would change one prop on
+						// every card on every keystroke and defeat their memo.
+						renameValue={isRenaming ? inlineRename.state.title : ""}
 						onRenameChange={inlineRename.setTitle}
 						onRenameCommit={inlineRename.commit}
 						onRenameCancel={inlineRename.cancel}
@@ -414,20 +283,15 @@ export function Canvas() {
 			searchMatchSet,
 			searchCurrentId,
 			searchActive,
-			setSelectedNode,
-			setFocusedNode,
 			inlineRename,
 		],
 	);
 
 	return (
-		<RoadRavenContextMenu
-			onOpen={setContextTargetId}
-			targetNodeId={contextTargetId}
-		>
+		<RoadRavenContextMenu>
 			<div
 				ref={containerRef}
-				className="[grid-area:canvas] bg-rv-bg-canvas relative overflow-hidden"
+				className="[grid-area:canvas] bg-rv-bg-canvas relative rv-canvas"
 				role="application"
 				// biome-ignore lint/a11y/noNoninteractiveTabindex: role="application" is an interactive ARIA widget — must be focusable so Escape/onKeyDown reaches the canvas.
 				tabIndex={0}
@@ -489,6 +353,7 @@ export function Canvas() {
 							nodeSize={{ x: 240, y: 100 }}
 							renderCustomNodeElement={renderNode}
 							zoom={zoomLevel}
+							scaleExtent={SCALE_EXTENT}
 							enableLegacyTransitions={false}
 							centeringTransitionDuration={800}
 							collapsible={true}

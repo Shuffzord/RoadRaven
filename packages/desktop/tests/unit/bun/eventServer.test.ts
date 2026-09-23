@@ -64,7 +64,9 @@ async function withOccupiedPort<T>(
 		fetch: () => new Response("dummy"),
 	});
 	try {
-		return await fn(dummy.port);
+		// dummy.port is set synchronously by the Bun.serve() call above (it's
+		// only undefined for unix-socket servers, not the TCP server here).
+		return await fn(dummy.port!);
 	} finally {
 		dummy.stop(true);
 	}

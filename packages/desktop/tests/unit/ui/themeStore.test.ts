@@ -62,7 +62,8 @@ describe("themeStore", () => {
 
 	it("setTheme('light') calls saveSettings RPC with { theme: 'light' }", () => {
 		useThemeStore.getState().setTheme("light");
-		expect(electroview.rpc.request.saveSettings).toHaveBeenCalledWith({
+		expect(electroview?.rpc).toBeDefined();
+		expect(electroview!.rpc!.request.saveSettings).toHaveBeenCalledWith({
 			settings: { theme: "light" },
 		});
 	});
@@ -71,6 +72,7 @@ describe("themeStore", () => {
 		useThemeStore.getState().setTheme("light");
 		useThemeStore.getState().setTheme("dark");
 		useThemeStore.getState().setTheme("high-contrast");
-		expect(electroview.rpc.request.saveSettings).toHaveBeenCalledTimes(3);
+		expect(electroview?.rpc).toBeDefined();
+		expect(electroview!.rpc!.request.saveSettings).toHaveBeenCalledTimes(3);
 	});
 });

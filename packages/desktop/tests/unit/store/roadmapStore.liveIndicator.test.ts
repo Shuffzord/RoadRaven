@@ -3,10 +3,7 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { RoadmapSchema } from "../../../../../packages/core/src/schema";
-import {
-	useIsNodeLive,
-	useRoadmapStore,
-} from "../../../src/mainview/store/roadmapStore";
+import { useRoadmapStore } from "../../../src/mainview/store/roadmapStore";
 import { resetStore } from "../../helpers/resetStore";
 
 const TEST_SCHEMA: RoadmapSchema = {

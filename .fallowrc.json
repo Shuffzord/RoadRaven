@@ -39,6 +39,7 @@
     "**/dist/**",
     "**/.planning/**",
     "**/.fallow/**",
+    "**/coverage/**",
     "samples/**",
     "**/*.bak.json"
   ],

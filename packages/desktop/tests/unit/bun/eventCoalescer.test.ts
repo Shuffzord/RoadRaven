@@ -20,14 +20,14 @@ describe("EventCoalescer", () => {
 	});
 
 	it("last-write-wins per nodeId", () => {
-		let latest: { status: string } | null = null;
+		let latestStatus: string | undefined;
 		const c = new EventCoalescer(100, (updates) => {
-			latest = updates[0];
+			latestStatus = updates[0]?.status;
 		});
 		c.enqueue({ nodeId: "n1", status: "in-progress", lastEventAt: 1 });
 		c.enqueue({ nodeId: "n1", status: "completed", lastEventAt: 2 });
 		vi.advanceTimersByTime(100);
-		expect(latest?.status).toBe("completed");
+		expect(latestStatus).toBe("completed");
 	});
 
 	it("flushes exactly once per batch", () => {

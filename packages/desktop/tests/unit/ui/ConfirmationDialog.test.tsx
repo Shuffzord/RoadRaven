@@ -1,7 +1,7 @@
 /** @vitest-environment jsdom */
 import { fireEvent, render, screen } from "@testing-library/react";
 import { act } from "react";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { ConfirmationDialog } from "../../../src/mainview/components/ConfirmationDialog";
 import { useRoadmapStore } from "../../../src/mainview/store/roadmapStore";
 import { resetStore } from "../../helpers/resetStore";

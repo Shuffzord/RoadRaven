@@ -4,7 +4,6 @@
 // Run via: bun test (not vitest — uses Bun.serve + subprocess spawn with Bun runtime).
 
 import { spawn } from "node:child_process";
-import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 

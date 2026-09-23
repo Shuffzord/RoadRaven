@@ -13,7 +13,7 @@ import {
 const TEST_PORT = 47931;
 
 describe("eventServer EADDRINUSE regression (I-04)", () => {
-	let blockingServer: Server;
+	let blockingServer: Server<undefined>;
 	let eventHandle: Awaited<ReturnType<typeof startEventServer>> | null = null;
 
 	beforeAll(() => {
@@ -36,6 +36,10 @@ describe("eventServer EADDRINUSE regression (I-04)", () => {
 		eventHandle = await startEventServer({
 			requestedPort: TEST_PORT,
 			isUserSpecified: false,
+			appVersion: "0.8.0",
+			// v0.8: StartOptions now requires isWizardCopyCurrent (consulted on
+			// each version mismatch to pick the remedy).
+			isWizardCopyCurrent: () => false,
 			onFlush: () => {
 				/* noop */
 			},
@@ -63,6 +67,10 @@ describe("eventServer EADDRINUSE regression (I-04)", () => {
 		const result = await startEventServer({
 			requestedPort: TEST_PORT,
 			isUserSpecified: true,
+			appVersion: "0.8.0",
+			// v0.8: StartOptions now requires isWizardCopyCurrent (consulted on
+			// each version mismatch to pick the remedy).
+			isWizardCopyCurrent: () => false,
 			onFlush: () => {
 				/* noop */
 			},

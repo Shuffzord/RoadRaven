@@ -1,50 +1,30 @@
 import { useCallback, useRef, useState } from "react";
 import { useRoadmapStore } from "../store/roadmapStore";
 
-export const OPEN_RENAME_EVENT = "roadraven:open-rename";
-
-export interface OpenRenameEventDetail {
-	nodeId: string;
-}
-
-/** Dispatch the cross-component bridge so Canvas opens inline rename on a node. */
-export function dispatchOpenRename(nodeId: string | null | undefined): void {
-	if (!nodeId) return;
-	window.dispatchEvent(
-		new CustomEvent<OpenRenameEventDetail>(OPEN_RENAME_EVENT, {
-			detail: { nodeId },
-		}),
-	);
-}
-
 export interface InlineRenameState {
 	nodeId: string | null;
-	screenPos: { x: number; y: number } | null;
 	title: string;
 }
 
-export interface RenameTransform {
-	x: number;
-	y: number;
-	k: number;
+/** Write a non-empty draft back to the store. Shared by `commit` and `open`. */
+function commitDraft(draft: InlineRenameState): void {
+	if (draft.nodeId && draft.title.trim()) {
+		useRoadmapStore.getState().renameNode(draft.nodeId, draft.title.trim());
+	}
 }
 
 /**
- * Manages the floating inline-rename input overlay state.
+ * Which node is being renamed, and the draft title.
  *
- * Position math (per research Pattern 2):
- *   screenX = localX * k + t.x + containerRect.left
- *   screenY = localY * k + t.y + containerRect.top
- *
- * - `localX/Y` are the node's coordinates in react-d3-tree's local SVG space
- *   (from hierarchyPointNode.x / .y).
- * - `t` is the current zoom transform from the tree's onUpdate callback.
- * - `containerRect` is the canvas container's getBoundingClientRect().
+ * The input renders inside the node card itself (card-matched rename), so the
+ * hook carries no screen position: the card is already in the right place at
+ * the right zoom, and it moves with the camera for free. The floating-overlay
+ * position maths this hook used to own was orphaned when v0.8.1 Phase 2 made
+ * the DOM the node registry and deleted Canvas's layout-position cache.
  */
 export function useInlineRename() {
 	const [state, setState] = useState<InlineRenameState>({
 		nodeId: null,
-		screenPos: null,
 		title: "",
 	});
 	// Mirror the latest state in a ref so callbacks can read fresh values
@@ -54,28 +34,20 @@ export function useInlineRename() {
 	const stateRef = useRef(state);
 	stateRef.current = state;
 
-	const open = useCallback(
-		(
-			nodeId: string,
-			localX: number,
-			localY: number,
-			t: RenameTransform,
-			rect: { left: number; top: number },
-		) => {
-			const node = useRoadmapStore.getState().nodeIndex.get(nodeId);
-			const next: InlineRenameState = {
-				nodeId,
-				screenPos: {
-					x: localX * t.k + t.x + rect.left,
-					y: localY * t.k + t.y + rect.top,
-				},
-				title: node?.title ?? "",
-			};
-			stateRef.current = next;
-			setState(next);
-		},
-		[],
-	);
+	const open = useCallback((nodeId: string) => {
+		// Moving the rename to another node commits the draft in flight
+		// instead of dropping it: React fires no blur when the input
+		// unmounts, and every other way of leaving a rename in this app
+		// commits (the card's onBlur). Escape stays the one route that
+		// discards. Reachable since v0.8.1 Phase 4 made the focus controller
+		// the only opener — a newer request supersedes an older one.
+		const current = stateRef.current;
+		if (current.nodeId && current.nodeId !== nodeId) commitDraft(current);
+		const node = useRoadmapStore.getState().nodeIndex.get(nodeId);
+		const next: InlineRenameState = { nodeId, title: node?.title ?? "" };
+		stateRef.current = next;
+		setState(next);
+	}, []);
 
 	const setTitle = useCallback((title: string) => {
 		const next = { ...stateRef.current, title };
@@ -84,62 +56,17 @@ export function useInlineRename() {
 	}, []);
 
 	const commit = useCallback(() => {
-		const current = stateRef.current;
-		if (current.nodeId && current.title.trim()) {
-			useRoadmapStore
-				.getState()
-				.renameNode(current.nodeId, current.title.trim());
-		}
-		const next: InlineRenameState = {
-			nodeId: null,
-			screenPos: null,
-			title: "",
-		};
+		commitDraft(stateRef.current);
+		const next: InlineRenameState = { nodeId: null, title: "" };
 		stateRef.current = next;
 		setState(next);
 	}, []);
 
 	const cancel = useCallback(() => {
-		const next: InlineRenameState = {
-			nodeId: null,
-			screenPos: null,
-			title: "",
-		};
+		const next: InlineRenameState = { nodeId: null, title: "" };
 		stateRef.current = next;
 		setState(next);
 	}, []);
 
-	const updateForTransform = useCallback(
-		(
-			localX: number,
-			localY: number,
-			t: RenameTransform,
-			rect: { left: number; top: number },
-		) => {
-			const current = stateRef.current;
-			if (!current.nodeId) return;
-			const x = localX * t.k + t.x + rect.left;
-			const y = localY * t.k + t.y + rect.top;
-			// No-op guard: react-d3-tree's onUpdate can fire on every render. If
-			// we always call setState here, we re-render → Canvas re-runs
-			// useCallback → Tree sees a new onUpdate → Tree fires onUpdate → loop.
-			// Breaking the loop on unchanged position keeps the overlay cheap.
-			if (
-				current.screenPos &&
-				current.screenPos.x === x &&
-				current.screenPos.y === y
-			) {
-				return;
-			}
-			const next: InlineRenameState = {
-				...current,
-				screenPos: { x, y },
-			};
-			stateRef.current = next;
-			setState(next);
-		},
-		[],
-	);
-
-	return { state, open, setTitle, commit, cancel, updateForTransform };
+	return { state, open, setTitle, commit, cancel };
 }

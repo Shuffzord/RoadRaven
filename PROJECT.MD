@@ -39,6 +39,9 @@ bun run test                          # Full suite across all workspaces
 bun run test:desktop                  # Desktop package only (faster)
 bun run test:file path/to/file.test.ts  # Single file
 bun run test:typecheck                # tsc --noEmit
+bun run test:typecheck:tests          # tsc over src + all test files (vitest strips types)
+bun run test:coverage                 # vitest + istanbul -> packages/desktop/coverage/coverage-final.json
+bun run test:e2e:ui                   # Playwright ui project (Vite dev server, single worker)
 bun run test:lint                     # biome lint (matches CI)
 bun run verify                        # test + typecheck + build + lint (PR-readiness)
 
@@ -55,14 +58,15 @@ See `docs/` for detailed architecture documentation, design system guide, and de
 
 Before creating a PR, ensure:
 1. `bun run verify` — all tests pass
-2. `bunx vite build` — production build succeeds (catches import/CSS issues that unit tests miss)
+2. `bun run test:build` (or `bunx vite build` from `packages/desktop`; there is no vite config at the repo root) — production build succeeds (catches import/CSS issues that unit tests miss)
 3. `bunx @biomejs/biome lint packages/desktop/src/ shared/` — no lint errors
 4. `fallow audit --changed-since=HEAD` — no new dead code / duplication / complexity regressions in your diff (see below)
 
 ## Static analysis (fallow)
 
-Fallow is a Rust-based code-quality analyzer wired in as an *informational* fourth
-verification layer on top of the biome → tsc → vitest stack. Config lives at
+Fallow is a Rust-based code-quality analyzer wired in as the fourth
+verification layer on top of the biome → tsc → vitest stack, enforced at
+commit time (see below). Config lives at
 `.fallowrc.json` (JSONC); entry points for the Electrobun main process, the
 mainview HTML bootstrap, and the dev harness are declared there — without them
 the tool reports App.tsx and friends as dead code.
@@ -73,14 +77,23 @@ bunx fallow audit --changed-since=HEAD        # Scoped to your uncommitted diff 
 bunx fallow dead-code --summary               # Counts only
 bunx fallow health --score --trend            # Complexity + delta vs. last snapshot
 bunx fallow config                            # Print resolved config + which file loaded
+bunx fallow health --coverage packages/desktop/coverage   # Exact CRAP scores (run bun run test:coverage first)
 ```
 
-Treat fallow output as a signal, not a gate — it is not currently wired into
-`bun run verify`, pre-commit, or CI (commented-out placeholders exist in
-`.husky/pre-commit` and `.github/workflows/ci.yml`; enable after the post-GSD
-dead-code cleanup lands). When planning refactors, use it to locate complexity
-hotspots and circular dependencies rather than acting on each unused-export
-finding in isolation.
+`.husky/pre-commit` runs `bunx fallow audit --changed-since=HEAD --fail-on-issues`,
+so fallow blocks a commit that introduces dead code, duplication, or
+above-threshold complexity (default gate `new-only`; inherited findings are
+reported but do not block). It is not part of `bun run verify` or CI yet
+(commented-out placeholder job in `.github/workflows/ci.yml`). Never bypass
+it with `--no-verify` or suppression comments — fix the finding or split the
+work. Known quirk: when a file goes from untested to test-reachable, an
+existing complexity finding in it can change kind (`cognitive_crap` →
+`cognitive`) and get reported as introduced although nothing got worse;
+work around this without touching the gate by committing the source change
+(plus tests that don't import that file) first, then the test that makes
+the file test-reachable in a second commit. When planning refactors, use
+fallow to locate complexity hotspots and circular dependencies rather than
+acting on each unused-export finding in isolation.
 
 ## Electrobun-specific patterns
 

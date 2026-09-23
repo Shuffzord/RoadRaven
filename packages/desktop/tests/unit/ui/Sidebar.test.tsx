@@ -13,7 +13,7 @@ vi.mock("../../../src/mainview/hooks/useFileActions", () => ({
 }));
 
 // useRecentFiles is overridden per-test via the mock below.
-const recentFilesMock = vi.fn<[], string[]>(() => []);
+const recentFilesMock = vi.fn<() => string[]>(() => []);
 vi.mock("../../../src/mainview/hooks/useRecentFiles", () => ({
 	useRecentFiles: () => recentFilesMock(),
 }));
