@@ -1,0 +1,60 @@
+{
+	"id": "slate",
+	"meta": {
+		"name": "Slate",
+		"mode": "dark",
+		"description": "Deep slate-blue, cream type, brass accent. Typographic · Spacious · Quiet."
+	},
+	"colors": {
+		"bg-base": "#1e232b",
+		"bg-canvas": "#1a1f27",
+		"bg-surface": "#171b22",
+		"bg-node": "#242932",
+		"bg-input": "#1a1f27",
+		"bg-statusbar": "#13171d",
+		"bg-elevated": "#2f3542",
+		"bg-hover": "#2c323c",
+		"bg-active": "#353c48",
+		"bg-node-hover": "#2a303a",
+		"bg-toolbar": "#171b22",
+		"bg-panel": "#171b22",
+		"bg-config": "#242932",
+		"text-primary": "#ede4d0",
+		"text-secondary": "#9fa3a9",
+		"text-tertiary": "#9a9ea6",
+		"text-on-accent": "#1e232b",
+		"border": "#2a2f38",
+		"border-subtle": "#23282f",
+		"border-focus": "#e9b675",
+		"accent": "#e9b675",
+		"accent-hover": "#efc28a",
+		"accent-muted": "rgba(233, 182, 117, 0.1)",
+		"accent-border": "rgba(233, 182, 117, 0.3)",
+		"dot-grid": "rgba(237, 228, 208, 0.05)",
+		"line-connector": "rgba(237, 228, 208, 0.26)",
+		"scrollbar-track": "#171b22",
+		"scrollbar-thumb": "#3a4049",
+		"status-not-started": "#9ca0a8",
+		"status-not-started-bg": "rgba(156, 160, 168, 0.12)",
+		"status-in-progress": "#e9b675",
+		"status-in-progress-bg": "rgba(233, 182, 117, 0.12)",
+		"status-completed": "#9cc2a5",
+		"status-completed-bg": "rgba(156, 194, 165, 0.12)",
+		"status-blocked": "#e48573",
+		"status-blocked-bg": "rgba(228, 133, 115, 0.12)",
+		"pulse": "#e9b675",
+		"search": "#fb7185"
+	},
+	"shape": {
+		"border-width": "1px"
+	},
+	"fonts": {
+		"heading": "\"Newsreader\", \"IBM Plex Serif\", \"Iowan Old Style\", Georgia, Cambria, serif"
+	},
+	"shadows": {
+		"node": "0 1px 2px rgba(0, 0, 0, 0.12)",
+		"node-hover": "0 4px 14px rgba(0, 0, 0, 0.2)",
+		"panel": "-2px 0 20px rgba(0, 0, 0, 0.25)",
+		"config": "0 8px 30px rgba(0, 0, 0, 0.35)"
+	}
+}

@@ -11,16 +11,13 @@ type RPCSchema<T> = T;
 
 // -- Theme types -------------------------------------------------------------
 
-export type ThemePreference =
-	| "dark"
-	| "light"
-	| "high-contrast"
-	| "paper"
-	| "amber"
-	| "contrast"
-	| "slate"
-	| "moss"
-	| "system";
+/**
+ * A theme id (built-ins are registered in
+ * packages/desktop/src/mainview/themes; user themes arrive in v0.8.3 Phase 4)
+ * or `"system"`, which follows the OS colour scheme. The store maps an
+ * unknown id to the default theme.
+ */
+export type ThemePreference = string;
 
 /**
  * Strict settings interface — add fields here as new phases need them.

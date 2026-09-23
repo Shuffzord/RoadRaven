@@ -2,8 +2,9 @@ import { existsSync } from "node:fs";
 import { join } from "node:path";
 import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
-import { THEME_IDS } from "../../../../shared/themeContract";
 import { NODE_CARD_ATTR } from "../../src/mainview/lib/domContract";
+import { THEME_IDS } from "../../src/mainview/themes";
+import { selectTheme } from "./contrastSampler";
 
 // Pre-condition: `bun run --cwd packages/desktop build` has produced
 // packages/desktop/dist/. Vite preview serves dist/ on port 4173.
@@ -17,9 +18,10 @@ import { NODE_CARD_ATTR } from "../../src/mainview/lib/domContract";
 //   - Node card: [NODE_CARD_ATTR] (src/mainview/lib/domContract.ts, rendered by
 //     RoadmapNode.tsx); [role="treeitem"] on the same element
 //   - Sample loading: getByRole('button', { name: 'Hello World' }) (WelcomeScreen.tsx line 131-137)
-//   - Theme switching: document.documentElement.setAttribute("data-theme", t) directly
-//     (ThemeProvider.tsx line 33 — there is NO localStorage theme key; RPC saveSettings
-//     is Electrobun-only and unavailable under vite preview)
+//   - Theme switching: through the top-bar picker (selectTheme in
+//     contrastSampler.ts). Since v0.8.3 Phase 3 applyTheme paints the tokens,
+//     so setting data-theme by hand changes nothing; the saveSettings RPC the
+//     store fires is caught and warned under vite preview.
 
 const DIST_DIR = join(process.cwd(), "dist");
 const hasDist = existsSync(DIST_DIR);
@@ -153,11 +155,9 @@ test.describe("Accessibility audit (production bundle, vite preview port 4173)",
 		});
 	});
 
-	// Themes — applied by setting the data-theme attribute on documentElement.
-	// This matches what ThemeProvider.tsx does on every preference change.
-	// We bypass the Zustand store (which would invoke RPC saveSettings — not
-	// available under vite preview) and exercise the CSS directly. The CSS is
-	// the same that ships in the installer.
+	// Themes — applied through the picker (v0.8.3 Phase 3: the tokens are
+	// painted by applyTheme from the theme's JSON, the same data that ships
+	// in the installer).
 	// "contrast" added per code-review B-01: prior --rv-text-primary: #666666
 	// on #000000 = 3.66:1 (FAIL). Now d1d1d1 = 12.0:1. v0.8.3 Phase 1: every
 	// shipped theme, from the shared registry. axe cannot see node-card text
@@ -166,13 +166,7 @@ test.describe("Accessibility audit (production bundle, vite preview port 4173)",
 	for (const theme of THEME_IDS) {
 		test(`6. Theme '${theme}' passes WCAG 2.1 AA`, async ({ page }) => {
 			await loadHelloWorldSample(page);
-			// Set the data-theme attribute directly (matches ThemeProvider.tsx
-			// line 33 behavior). No reload needed — CSS responds to the
-			// attribute change immediately because all theme tokens are scoped
-			// under [data-theme="..."] selectors in the design system.
-			await page.evaluate((t) => {
-				document.documentElement.setAttribute("data-theme", t);
-			}, theme);
+			await selectTheme(page, theme);
 			// Sanity check the theme actually applied.
 			const actualTheme = await page.evaluate(() =>
 				document.documentElement.getAttribute("data-theme"),
@@ -198,9 +192,7 @@ test.describe("Accessibility audit (production bundle, vite preview port 4173)",
 		page,
 	}) => {
 		await loadHelloWorldSample(page);
-		await page.evaluate(() => {
-			document.documentElement.setAttribute("data-theme", "light");
-		});
+		await selectTheme(page, "light");
 		await page.waitForTimeout(200);
 		await page.locator(CARD).first().click({ button: "right" });
 		await page.waitForSelector('[role="menu"]', { timeout: 3000 });

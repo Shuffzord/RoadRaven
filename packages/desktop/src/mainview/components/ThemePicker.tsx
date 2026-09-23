@@ -1,6 +1,7 @@
 import { useEffect, useId, useRef, useState } from "react";
 import type { ThemePreference } from "../../../../../shared/types";
 import { useTheme } from "../hooks/useTheme";
+import { BUILT_IN_THEMES, DEFAULT_THEME_ID, themeForId } from "../themes";
 
 type ThemeOption = {
 	id: ThemePreference;
@@ -11,22 +12,22 @@ type ThemeOption = {
 	accent: string;
 };
 
+// Registry-driven (v0.8.3 Phase 3, D5): the swatch is the theme's own
+// bg-base and accent, so it cannot drift from what the theme paints.
 const THEMES: ThemeOption[] = [
-	{ id: "dark", label: "Dark", bg: "#131313", accent: "#4a9eff" },
-	{ id: "light", label: "Light", bg: "#ffffff", accent: "#4a9eff" },
-	{
-		id: "high-contrast",
-		label: "High Contrast",
-		bg: "#000000",
-		accent: "#60b0ff",
-	},
-	{ id: "paper", label: "Paper", bg: "#f6f3ec", accent: "#9a4a2a" },
-	{ id: "amber", label: "Amber", bg: "#1a1612", accent: "#ffa83d" },
-	{ id: "contrast", label: "Contrast", bg: "#000000", accent: "#ffe046" },
-	{ id: "slate", label: "Slate", bg: "#1e232b", accent: "#e9b675" },
-	{ id: "moss", label: "Moss", bg: "#3b4338", accent: "#e0b862" },
+	...BUILT_IN_THEMES.map((t) => ({
+		id: t.id,
+		label: t.meta.name,
+		bg: t.colors["bg-base"],
+		accent: t.colors.accent,
+	})),
 	/* System shows a diagonal dark/light split to signal "follows OS" */
-	{ id: "system", label: "System", bg: "#131313", accent: "#ffffff" },
+	{
+		id: "system",
+		label: "System",
+		bg: themeForId("dark").colors["bg-base"],
+		accent: themeForId("light").colors["bg-base"],
+	},
 ];
 
 function Swatch({ option }: { option: ThemeOption }) {
@@ -61,7 +62,11 @@ export function ThemePicker() {
 	const itemRefs = useRef<(HTMLButtonElement | null)[]>([]);
 	const menuId = useId();
 
-	const activeTheme = THEMES.find((t) => t.id === preference) ?? THEMES[0];
+	// An unknown preference paints the default (themeStore), so show that.
+	const activeTheme =
+		THEMES.find((t) => t.id === preference) ??
+		THEMES.find((t) => t.id === DEFAULT_THEME_ID) ??
+		THEMES[0];
 
 	useEffect(() => {
 		if (!open) return;

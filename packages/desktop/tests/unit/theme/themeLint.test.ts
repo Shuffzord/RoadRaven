@@ -1,34 +1,30 @@
 import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
-import { lintTheme, parseThemeBlocks } from "../../../../../shared/contrast";
+import { lintTheme } from "../../../../../shared/contrast";
 import {
 	CONTRAST_PAIRS,
 	THEME_TOKENS,
 } from "../../../../../shared/themeContract";
+import { resolveTheme } from "../../../../../shared/themeSchema";
+import { BUILT_IN_THEMES } from "../../../src/mainview/themes";
 
-// Static contrast gate over the shipped themes (v0.8.3 Phase 0).
+// Static contrast gate over the shipped themes (v0.8.3 Phase 0; registry-
+// driven since Phase 3).
 //
-// Every [data-theme] block in index.css is linted against the shared pair
-// registry. A required-tier failure fails CI unless it is listed in
-// known-failures.json; that file was burnt down to nothing and deleted in
-// Phase 2, so a missing file is an empty baseline. If debt is ever taken on
-// again the file can come back: a baseline row that starts passing fails
-// too, so the snapshot can only shrink.
+// Every built-in theme file is resolved through the derivation table and
+// linted against the shared pair registry. A required-tier failure fails CI
+// unless it is listed in known-failures.json; that file was burnt down to
+// nothing and deleted in Phase 2, so a missing file is an empty baseline. If
+// debt is ever taken on again the file can come back: a baseline row that
+// starts passing fails too, so the snapshot can only shrink.
 
-const css = readFileSync(
-	resolve(__dirname, "../../../src/mainview/index.css"),
-	"utf8",
-);
-const blocks = parseThemeBlocks(css);
-const themeNames = Object.keys(blocks);
-
-// Non-dark themes inherit any token they do not set from the dark block,
-// exactly as the cascade does (:root carries the dark values).
-const resolvedTokens = (theme: string) => ({
-	...blocks.dark,
-	...blocks[theme],
-});
+const themeNames = BUILT_IN_THEMES.map((t) => t.id);
+const resolvedTokens = (theme: string) => {
+	const file = BUILT_IN_THEMES.find((t) => t.id === theme);
+	if (!file) throw new Error(`${theme} is not a built-in theme`);
+	return resolveTheme(file);
+};
 
 type KnownFailure = { theme: string; pairId: string };
 const BASELINE_PATH = resolve(__dirname, "known-failures.json");
@@ -37,34 +33,28 @@ const baseline: KnownFailure[] = existsSync(BASELINE_PATH)
 	: [];
 const baselineKeys = new Set(baseline.map((b) => `${b.theme}/${b.pairId}`));
 
-const requiredTokens = THEME_TOKENS.filter(
+const requiredKeys = THEME_TOKENS.filter(
 	(t) => t.kind === "color" && t.tier === "required",
-).map((t) => t.name);
+).map((t) => t.name.replace(/^--rv-/, ""));
 
 describe("theme token contract", () => {
-	it("finds the eight shipped theme blocks", () => {
-		expect(themeNames).toEqual([
-			"dark",
-			"light",
-			"high-contrast",
-			"paper",
-			"amber",
-			"contrast",
-			"slate",
-			"moss",
-		]);
+	it("lints the eight registered themes", () => {
+		expect(themeNames).toHaveLength(8);
 	});
 
-	it.each(themeNames)("%s defines every required token itself", (theme) => {
-		const missing = requiredTokens.filter((name) => !(name in blocks[theme]));
+	it.each(themeNames)("%s sets every required colour itself", (theme) => {
+		const file = BUILT_IN_THEMES.find((t) => t.id === theme);
+		const missing = requiredKeys.filter(
+			(key) => !(key in (file?.colors ?? {})),
+		);
 		expect(missing).toEqual([]);
 	});
 
-	it("every token any theme defines is listed in THEME_TOKENS", () => {
+	it("every token a resolved theme carries is listed in THEME_TOKENS", () => {
 		const known = new Set(THEME_TOKENS.map((t) => t.name));
 		const unlisted = new Set<string>();
 		for (const theme of themeNames) {
-			for (const name of Object.keys(blocks[theme])) {
+			for (const name of Object.keys(resolvedTokens(theme))) {
 				if (!known.has(name)) unlisted.add(name);
 			}
 		}

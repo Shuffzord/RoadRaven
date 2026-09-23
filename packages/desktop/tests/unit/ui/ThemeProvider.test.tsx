@@ -15,10 +15,26 @@ vi.mock("../../../src/mainview/rpc", () => ({
 	},
 }));
 
+// Spy on applyTheme (v0.8.3 Phase 3) while keeping its real behaviour, so the
+// data-theme assertions below still see the attribute it sets.
+vi.mock("../../../src/mainview/theme/applyTheme", async (importOriginal) => {
+	const actual =
+		await importOriginal<
+			typeof import("../../../src/mainview/theme/applyTheme")
+		>();
+	return { applyTheme: vi.fn(actual.applyTheme) };
+});
+
+import { resolveTheme } from "../../../../../shared/themeSchema";
 import { ThemeProvider } from "../../../src/mainview/components/ThemeProvider";
 import { useTheme } from "../../../src/mainview/hooks/useTheme";
 import { electroview } from "../../../src/mainview/rpc";
 import { useThemeStore } from "../../../src/mainview/store/themeStore";
+import { applyTheme } from "../../../src/mainview/theme/applyTheme";
+import {
+	DEFAULT_THEME_ID,
+	getBuiltInTheme,
+} from "../../../src/mainview/themes";
 
 // Mock matchMedia
 function createMockMatchMedia(matches: boolean) {
@@ -51,9 +67,9 @@ describe("ThemeProvider", () => {
 	beforeEach(() => {
 		// Reset store
 		useThemeStore.setState({
-			preference: "dark",
+			preference: DEFAULT_THEME_ID,
 			systemResolution: "dark",
-			resolvedTheme: "dark",
+			resolvedTheme: DEFAULT_THEME_ID,
 		});
 		vi.clearAllMocks();
 
@@ -65,7 +81,7 @@ describe("ThemeProvider", () => {
 		cleanup();
 	});
 
-	it("sets data-theme='dark' on document.documentElement on mount", async () => {
+	it("sets data-theme to the default (amber, D-8) on document.documentElement on mount", async () => {
 		render(
 			<ThemeProvider>
 				<div>child</div>
@@ -75,7 +91,7 @@ describe("ThemeProvider", () => {
 		await act(async () => {
 			/* flush effects */
 		});
-		expect(document.documentElement.getAttribute("data-theme")).toBe("dark");
+		expect(document.documentElement.getAttribute("data-theme")).toBe("amber");
 	});
 
 	it("updates data-theme when store changes to 'light'", async () => {
@@ -88,6 +104,37 @@ describe("ThemeProvider", () => {
 			useThemeStore.getState().setTheme("light");
 		});
 		expect(document.documentElement.getAttribute("data-theme")).toBe("light");
+	});
+
+	it("paints the resolved theme through applyTheme on every resolved-theme change", async () => {
+		render(
+			<ThemeProvider>
+				<div>child</div>
+			</ThemeProvider>,
+		);
+		await act(async () => {
+			/* flush effects */
+		});
+		const initial = getBuiltInTheme(DEFAULT_THEME_ID);
+		expect(initial).toBeDefined();
+		if (!initial) return;
+		expect(applyTheme).toHaveBeenCalledWith(
+			resolveTheme(initial),
+			DEFAULT_THEME_ID,
+		);
+		vi.mocked(applyTheme).mockClear();
+
+		await act(async () => {
+			useThemeStore.getState().setTheme("paper");
+		});
+		const paper = getBuiltInTheme("paper");
+		expect(paper).toBeDefined();
+		if (!paper) return;
+		expect(applyTheme).toHaveBeenCalledTimes(1);
+		expect(applyTheme).toHaveBeenCalledWith(resolveTheme(paper), "paper");
+		expect(
+			document.documentElement.style.getPropertyValue("--rv-bg-base"),
+		).toBe(paper.colors["bg-base"]);
 	});
 
 	it("registers matchMedia listener when preference is 'system'", async () => {
@@ -140,7 +187,7 @@ describe("ThemeProvider", () => {
 		expect(useThemeStore.getState().preference).toBe("light");
 	});
 
-	it("uses default 'dark' when loadSettings RPC fails", async () => {
+	it("keeps the default (amber) when loadSettings RPC fails", async () => {
 		expect(electroview?.rpc).toBeDefined();
 		vi.mocked(electroview!.rpc!.request.loadSettings).mockRejectedValueOnce(
 			new Error("RPC not available"),
@@ -154,16 +201,16 @@ describe("ThemeProvider", () => {
 		await act(async () => {
 			await new Promise((r) => setTimeout(r, 10));
 		});
-		expect(useThemeStore.getState().preference).toBe("dark");
+		expect(useThemeStore.getState().preference).toBe(DEFAULT_THEME_ID);
 	});
 });
 
 describe("useTheme hook", () => {
 	beforeEach(() => {
 		useThemeStore.setState({
-			preference: "dark",
+			preference: DEFAULT_THEME_ID,
 			systemResolution: "dark",
-			resolvedTheme: "dark",
+			resolvedTheme: DEFAULT_THEME_ID,
 		});
 		vi.clearAllMocks();
 
@@ -190,8 +237,8 @@ describe("useTheme hook", () => {
 		);
 
 		expect(hookResult).toBeDefined();
-		expect(hookResult!.theme).toBe("dark");
-		expect(hookResult!.preference).toBe("dark");
+		expect(hookResult!.theme).toBe(DEFAULT_THEME_ID);
+		expect(hookResult!.preference).toBe(DEFAULT_THEME_ID);
 		expect(typeof hookResult!.setTheme).toBe("function");
 	});
 });

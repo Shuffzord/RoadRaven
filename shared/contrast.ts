@@ -73,8 +73,22 @@ export function contrastRatio(a: RGB, b: RGB): number {
 	return (Math.max(la, lb) + 0.05) / (Math.min(la, lb) + 0.05);
 }
 
-function toHex([r, g, b]: RGB): string {
+export function toHex([r, g, b]: RGB): string {
 	return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, "0")}`;
+}
+
+/** Per-channel blend: `weight` 0 is `a`, 1 is `b` (Phase 3 derivations). */
+export function mix(a: RGB, b: RGB, weight: number): RGB {
+	return [
+		Math.round(a[0] + (b[0] - a[0]) * weight),
+		Math.round(a[1] + (b[1] - a[1]) * weight),
+		Math.round(a[2] + (b[2] - a[2]) * weight),
+	];
+}
+
+/** The colour as an `rgba(r, g, b, a)` string, the form the theme files use. */
+export function withAlpha([r, g, b]: RGB, alpha: number): string {
+	return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
 function describe(token: string, value: string | undefined): string {
@@ -144,28 +158,4 @@ export function lintTheme(
 			pass: ratio >= pair.min,
 		};
 	});
-}
-
-const THEME_BLOCK = /\[data-theme="([a-z-]+)"\]\s*\{([^}]*)\}/g;
-const TOKEN_DECL = /(--rv-[a-z0-9-]+):\s*([^;]+);/g;
-
-/**
- * Reads the `[data-theme="x"] { --rv-*: ...; }` blocks out of index.css.
- * The dark block is `:root, [data-theme="dark"]`; other themes inherit any
- * token they do not set from it via the cascade, which is the caller's job
- * (`{ ...blocks.dark, ...blocks[name] }`). Multiple blocks for one theme
- * merge. Phase 3 moves themes to JSON and deletes this.
- */
-export function parseThemeBlocks(
-	css: string,
-): Record<string, Record<string, string>> {
-	const themes: Record<string, Record<string, string>> = {};
-	for (const block of css.matchAll(THEME_BLOCK)) {
-		themes[block[1]] ??= {};
-		const tokens = themes[block[1]];
-		for (const decl of block[2].matchAll(TOKEN_DECL)) {
-			tokens[decl[1]] = decl[2].replace(/\s+/g, " ").trim();
-		}
-	}
-	return themes;
 }

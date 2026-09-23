@@ -3,10 +3,12 @@ import {
 	composite,
 	contrastRatio,
 	lintTheme,
+	mix,
 	parseColor,
-	parseThemeBlocks,
 	relativeLuminance,
 	resolveDerivedTokens,
+	toHex,
+	withAlpha,
 } from "../../../../../shared/contrast";
 import {
 	CONTRAST_PAIRS,
@@ -63,6 +65,21 @@ describe("WCAG 2.x math", () => {
 
 	it("compositing an opaque colour returns it unchanged", () => {
 		expect(composite([10, 20, 30, 1], [255, 255, 255])).toEqual([10, 20, 30]);
+	});
+});
+
+// Phase 3: the small colour helpers the derivation table is built from.
+describe("colour helpers", () => {
+	it("mix blends per channel and rounds", () => {
+		expect(mix([0, 0, 0], [255, 255, 255], 0)).toEqual([0, 0, 0]);
+		expect(mix([0, 0, 0], [255, 255, 255], 1)).toEqual([255, 255, 255]);
+		expect(mix([19, 19, 19], [224, 224, 224], 0.04)).toEqual([27, 27, 27]);
+	});
+
+	it("toHex and withAlpha write the forms the theme files use", () => {
+		expect(toHex([74, 158, 255])).toBe("#4a9eff");
+		expect(toHex([0, 0, 1])).toBe("#000001");
+		expect(withAlpha([74, 158, 255], 0.12)).toBe("rgba(74, 158, 255, 0.12)");
 	});
 });
 
@@ -220,36 +237,5 @@ describe("derived tokens", () => {
 			.filter((f) => !f.reason?.includes("-bg"))
 			.map((f) => `${f.pairId}: ${f.reason}`);
 		expect(unmeasurable).toEqual([]);
-	});
-});
-
-describe("parseThemeBlocks", () => {
-	it("reads [data-theme] blocks, including the :root-joined dark block", () => {
-		const css = `
-:root,
-[data-theme="dark"] {
-	--rv-bg-base: #131313;
-	--rv-shadow-node:
-		0 1px 0 rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.06);
-}
-[data-theme="paper"] {
-	--rv-bg-base: #f6f3ec;
-}
-[data-theme="paper"] h1,
-[data-theme="paper"] .rv-heading {
-	font-family: serif;
-}
-[data-theme="paper"] {
-	--rv-font-sans: monospace;
-}
-`;
-		expect(parseThemeBlocks(css)).toEqual({
-			dark: {
-				"--rv-bg-base": "#131313",
-				"--rv-shadow-node":
-					"0 1px 0 rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.06)",
-			},
-			paper: { "--rv-bg-base": "#f6f3ec", "--rv-font-sans": "monospace" },
-		});
 	});
 });

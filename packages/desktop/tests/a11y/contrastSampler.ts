@@ -16,6 +16,7 @@
  * the step it refuses to take.
  */
 
+import type { Page } from "@playwright/test";
 import {
 	composite,
 	contrastRatio,
@@ -34,6 +35,21 @@ import {
 	NODE_FOCUSED_ATTR,
 	SAVE_STATE_ATTR,
 } from "../../src/mainview/lib/domContract";
+import { getBuiltInTheme } from "../../src/mainview/themes";
+
+/**
+ * Switches the theme the way the user does — the top-bar picker
+ * (TopBar.tsx:193, ThemePicker.tsx) — and waits until applyTheme has painted
+ * it. Since v0.8.3 Phase 3 the tokens live in JS, so setting `data-theme` on
+ * <html> by hand no longer changes a single colour.
+ */
+export async function selectTheme(page: Page, id: string): Promise<void> {
+	const label = getBuiltInTheme(id)?.meta.name;
+	if (!label) throw new Error(`${id} is not a built-in theme`);
+	await page.getByRole("button", { name: /^Theme:/ }).click();
+	await page.getByRole("menuitem", { name: label, exact: true }).click();
+	await page.waitForSelector(`html[data-theme="${id}"]`, { timeout: 3000 });
+}
 
 /** When in the walkthrough the element exists. */
 export type SampleStage = "page" | "menu" | "context-menu" | "focus";

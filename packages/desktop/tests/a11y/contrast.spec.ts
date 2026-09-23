@@ -1,8 +1,9 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { expect, type Page, test } from "@playwright/test";
-import { CONTRAST_PAIRS, THEME_IDS } from "../../../../shared/themeContract";
+import { CONTRAST_PAIRS } from "../../../../shared/themeContract";
 import { NODE_FOCUSED_ATTR } from "../../src/mainview/lib/domContract";
+import { getBuiltInTheme, THEME_IDS } from "../../src/mainview/themes";
 import {
 	CARD,
 	readSampleInPage,
@@ -11,6 +12,7 @@ import {
 	type SampleFinding,
 	type SampleStage,
 	scoreSample,
+	selectTheme,
 } from "./contrastSampler";
 
 // Rendered contrast gate (v0.8.3 Phase 1).
@@ -30,9 +32,10 @@ import {
 //
 // Selectors: the card is `[NODE_CARD_ATTR]` (src/mainview/lib/domContract.ts)
 // and the canvas wrapper is `[role="application"]`, as in audit.spec.ts
-// (Canvas.tsx:322). Theme switching sets `data-theme` on <html> directly, as
-// ThemeProvider.tsx does — the Zustand path would call the saveSettings RPC,
-// which does not exist under vite preview.
+// (Canvas.tsx:322). Theme switching goes through the top-bar picker
+// (selectTheme in contrastSampler.ts): since v0.8.3 Phase 3 the tokens are
+// painted by applyTheme, so the attribute alone changes nothing. The
+// saveSettings RPC the store fires is caught and warned under vite preview.
 
 const DIST_DIR = join(process.cwd(), "dist");
 test.skip(
@@ -82,9 +85,7 @@ async function loadHelloWorld(page: Page, theme: string): Promise<void> {
 		content:
 			"*, *::before, *::after { transition: none !important; animation: none !important; }",
 	});
-	await page.evaluate((t) => {
-		document.documentElement.setAttribute("data-theme", t);
-	}, theme);
+	await selectTheme(page, theme);
 }
 
 async function readStage(
@@ -162,6 +163,25 @@ test.describe("Rendered contrast (production bundle, vite preview port 4173)", (
 			(s) => `${s.id} -> ${s.pairId}`,
 		);
 		expect(unknown).toEqual([]);
+	});
+
+	// v0.8.3 Phase 3 (RC2): the per-theme heading rules are theme tokens now
+	// (fonts.heading, read by one global rule; fonts.sans is the body-face
+	// counterpart, unset in every built-in).
+	test("headings come from the theme's heading font token", async ({
+		page,
+	}) => {
+		await page.goto("/");
+		await page.waitForLoadState("networkidle");
+
+		await selectTheme(page, "paper");
+		const heading = await page.evaluate(() => {
+			const h1 = document.querySelector("h1");
+			return h1 ? getComputedStyle(h1).fontFamily : "";
+		});
+		const serif = getBuiltInTheme("paper")?.fonts?.heading ?? "";
+		expect(serif).not.toBe("");
+		expect(heading.startsWith(serif.split(",")[0])).toBe(true);
 	});
 
 	for (const theme of THEME_IDS) {

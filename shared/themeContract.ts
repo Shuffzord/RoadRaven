@@ -5,10 +5,11 @@
  * rendered sampler and, later, the in-app theme editor — so none of them can
  * disagree about which ink is allowed on which surface.
  *
- * - `THEME_TOKENS` lists every `--rv-*` token a theme block may set. Twelve
- *   colour tokens are `required`; the rest are `optional` (derived from the
- *   required ones once themes become data, Phase 3). Non-colour tokens are
- *   listed so a theme file can be validated, but the linter skips them.
+ * - `THEME_TOKENS` lists every `--rv-*` token a theme may set. Twelve colour
+ *   tokens are `required`; the rest are `optional` — a theme file that leaves
+ *   one unset gets it from the derivation table in `themeSchema.ts` (Phase
+ *   3). Non-colour tokens are listed so a theme file can be validated, but
+ *   the linter skips them.
  * - `CONTRAST_PAIRS` is the ink-on-surface registry. `surface` is composited
  *   bottom -> top (a translucent badge fill over an opaque card), `min` is
  *   the WCAG 2.x ratio, and `evidence` points at the component or rule that
@@ -18,8 +19,6 @@
  *   the components read does. The linter resolves through it before
  *   measuring, so a theme is scored on what the cascade paints.
  */
-
-import type { ThemePreference } from "./types";
 
 /** Node-card ink: title, rename input and card body (RoadmapNode.tsx). */
 export const TEXT_NODE_TOKEN = "--rv-text-node";
@@ -54,18 +53,6 @@ export const STATUS_TOKENS: Record<
 		},
 	]),
 ) as Record<StatusId, { ink: string; card: string; fg: string; bg: string }>;
-
-/** The shipped theme ids — the `data-theme` values — in picker order. */
-export const THEME_IDS = [
-	"dark",
-	"light",
-	"high-contrast",
-	"paper",
-	"amber",
-	"contrast",
-	"slate",
-	"moss",
-] as const satisfies readonly Exclude<ThemePreference, "system">[];
 
 export type ThemeToken =
 	| { name: string; kind: "color"; tier: "required" | "optional" }
@@ -162,6 +149,7 @@ export const THEME_TOKENS: readonly ThemeToken[] = [
 	nonColor("--rv-radius-xl"),
 	nonColor("--rv-radius-pill"),
 	nonColor("--rv-font-sans"),
+	nonColor("--rv-font-heading"),
 ];
 
 /**

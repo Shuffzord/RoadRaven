@@ -1,7 +1,10 @@
 import { useEffect, useRef } from "react";
+import { resolveTheme } from "../../../../../shared/themeSchema";
 import type { ThemePreference } from "../../../../../shared/types";
 import { electroview } from "../rpc";
 import { useThemeStore } from "../store/themeStore";
+import { applyTheme } from "../theme/applyTheme";
+import { themeForId } from "../themes";
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
 	const resolvedTheme = useThemeStore((s) => s.resolvedTheme);
@@ -28,9 +31,11 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 			});
 	}, []);
 
-	// Apply data-theme attribute to <html> (D-02)
+	// Paint the resolved theme's tokens onto <html> (v0.8.3 Phase 3; D-02
+	// kept the data-theme attribute, applyTheme sets it too).
 	useEffect(() => {
-		document.documentElement.setAttribute("data-theme", resolvedTheme);
+		const file = themeForId(resolvedTheme);
+		applyTheme(resolveTheme(file), file.id);
 	}, [resolvedTheme]);
 
 	// Listen for OS preference changes when in "system" mode (D-05)

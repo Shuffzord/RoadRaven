@@ -15,22 +15,24 @@ vi.mock("../../../src/mainview/rpc", () => ({
 
 import { electroview } from "../../../src/mainview/rpc";
 import { useThemeStore } from "../../../src/mainview/store/themeStore";
+import { DEFAULT_THEME_ID } from "../../../src/mainview/themes";
 
 describe("themeStore", () => {
 	beforeEach(() => {
 		// Reset store to defaults before each test
 		useThemeStore.setState({
-			preference: "dark",
+			preference: DEFAULT_THEME_ID,
 			systemResolution: "dark",
-			resolvedTheme: "dark",
+			resolvedTheme: DEFAULT_THEME_ID,
 		});
 		vi.clearAllMocks();
 	});
 
-	it("defaults to preference 'dark', resolvedTheme 'dark'", () => {
-		const state = useThemeStore.getState();
-		expect(state.preference).toBe("dark");
-		expect(state.resolvedTheme).toBe("dark");
+	it("starts on the default theme, amber (D-8), before any preference is loaded", () => {
+		const initial = useThemeStore.getInitialState();
+		expect(DEFAULT_THEME_ID).toBe("amber");
+		expect(initial.preference).toBe("amber");
+		expect(initial.resolvedTheme).toBe("amber");
 	});
 
 	it("setTheme('light') updates preference and resolvedTheme to 'light'", () => {
@@ -58,6 +60,21 @@ describe("themeStore", () => {
 		useThemeStore.setState({ preference: "dark", resolvedTheme: "dark" });
 		useThemeStore.getState().updateSystemResolution("light");
 		expect(useThemeStore.getState().resolvedTheme).toBe("dark");
+	});
+
+	it("setTheme with an unknown id keeps the preference but resolves to the default theme", () => {
+		const warn = vi.spyOn(console, "warn").mockImplementation(() => {
+			/* silence the fallback notice */
+		});
+		try {
+			useThemeStore.getState().setTheme("solarized");
+			const state = useThemeStore.getState();
+			expect(state.preference).toBe("solarized");
+			expect(state.resolvedTheme).toBe(DEFAULT_THEME_ID);
+			expect(warn).toHaveBeenCalledTimes(1);
+		} finally {
+			warn.mockRestore();
+		}
 	});
 
 	it("setTheme('light') calls saveSettings RPC with { theme: 'light' }", () => {
