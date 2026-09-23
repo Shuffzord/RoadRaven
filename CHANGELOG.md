@@ -3,6 +3,42 @@
 All notable changes to RoadRaven are documented in this file. The format
 follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.8.0] - 2026-09-23
+
+First stable 0.8 release; everything from 0.8.0-beta.1 below, plus:
+
+### Added
+
+- **One-line installers.** Linux:
+  `curl -fsSL https://raw.githubusercontent.com/Shuffzord/RoadRaven/master/install.sh | sh`;
+  Windows:
+  `irm https://raw.githubusercontent.com/Shuffzord/RoadRaven/master/install.ps1 | iex`.
+  Both download the latest release, verify it against the release's
+  `SHA256SUMS`, and refuse to install on a checksum mismatch.
+- Releases ship a `SHA256SUMS` asset and GitHub build attestations
+  (`gh attestation verify <file> --repo Shuffzord/RoadRaven`).
+- `@roadraven/mcp` is published on npm, so the Claude Code marketplace plugin
+  and the `npx -y @roadraven/mcp@0.8.0` one-liner work.
+- The version-mismatch toast now tells you how to fix it for the way the
+  server was installed (Setup Wizard, Claude Code plugin, or npm), with a
+  **Copy** button where there is a command to run. A wizard-installed server
+  is updated automatically at app startup.
+
+### Changed
+
+- **Windows uses the system WebView2** instead of bundling CEF: the Windows
+  installer drops from ~260 MB to ~18 MB.
+- **App identifier is now `io.github.shuffzord.roadraven`** (was the
+  Electrobun template default `RoadRaven.electrobun.dev`). New installs land
+  in `%LOCALAPPDATA%\io.github.shuffzord.roadraven\stable`
+  (Linux: `~/.local/share/io.github.shuffzord.roadraven/`). Settings, recent
+  files and backups stay in `%LOCALAPPDATA%\RoadRaven` and carry over.
+  **Upgrading from v0.6:** the old install in
+  `%LOCALAPPDATA%\RoadRaven.electrobun.dev\` and its Start-menu shortcut are
+  not removed (v0.6 had no uninstaller) — delete them by hand.
+- `bun install` is required for development; `npm`/`pnpm`/`yarn install` are
+  rejected with an explanatory error.
+
 ## [0.8.0-beta.1] - 2026-09-20
 
 ### Added

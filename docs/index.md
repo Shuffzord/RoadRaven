@@ -44,10 +44,11 @@ for the full v1 vs. v1.1 split.
 
 ## Packages on npm
 
-> Not published yet. `@roadraven/mcp` will go out as a **prerelease under the
-> `beta` dist-tag** (currently `0.8.0-beta.1`) — see the main README's
+> `@roadraven/mcp` is [on npm](https://www.npmjs.com/package/@roadraven/mcp)
+> (pin the version matching your app, e.g. `@roadraven/mcp@0.8.0`);
+> `@roadraven/core` is not published yet — see the main README's
 > [Packages](https://github.com/Shuffzord/RoadRaven#packages-for-producers-and-library-consumers)
-> section for what that means for install commands.
+> section.
 
 - `@roadraven/core` — Zod schemas + types (zero desktop deps)
 - `@roadraven/mcp` — MCP wrapper that lets Claude Code (and any MCP host)
