@@ -18,37 +18,12 @@ import {
 } from "../../../../../packages/core/src/schema";
 import type { IntegrationEvent } from "../../../../../shared/types";
 import { serializeFileOperation } from "../fileOperationQueue";
+import { isDescendantOf } from "../lib/treeWalk";
 import { withoutHistory } from "../store/historyStore";
 
 export type AgentResult =
 	| { ok: true; data: unknown }
 	| { ok: false; error: string; code: string; hint?: string; data?: unknown };
-
-/**
- * Returns true when `candidateId` is in the subtree rooted at `rootNodeId`,
- * INCLUDING the root itself (a node is in its own subtree). This is the
- * reflexive form — see CR-02 in 06-REVIEW.md: the previous form excluded the
- * root and silently allowed `moveNode(X, X)` past the cycle gate, which then
- * deleted X via the store action (CR-01). Reflexive coverage closes both
- * defects in one helper.
- */
-function isDescendantOf(
-	rootNodeId: string,
-	candidateId: string,
-	nodeIndex: Map<string, RoadmapNode>,
-): boolean {
-	if (rootNodeId === candidateId) return true; // a node is in its own subtree
-	const root = nodeIndex.get(rootNodeId);
-	if (!root) return false;
-	const stack: RoadmapNode[] = [...(root.children ?? [])];
-	while (stack.length) {
-		// biome-ignore lint/style/noNonNullAssertion: stack.length checked above
-		const n = stack.pop()!;
-		if (n.id === candidateId) return true;
-		if (n.children) stack.push(...n.children);
-	}
-	return false;
-}
 
 type LogStoreState = ReturnType<
 	typeof import("../store/eventLogStore").useEventLogStore.getState
@@ -815,7 +790,7 @@ export async function handleAgentRequest(
 					code: "node_not_found",
 				};
 			}
-			if (isDescendantOf(nodeId, newParentId, store.nodeIndex)) {
+			if (isDescendantOf(store.nodeIndex, nodeId, newParentId)) {
 				return {
 					ok: false,
 					error: "Cannot move a node into its own subtree.",

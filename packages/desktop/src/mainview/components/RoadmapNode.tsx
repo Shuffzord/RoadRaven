@@ -1,4 +1,5 @@
 import { memo, useEffect, useRef } from "react";
+import { useShallow } from "zustand/react/shallow";
 import type {
 	NodeStatus,
 	RoadmapNode,
@@ -95,7 +96,7 @@ const PLUGIN_GLYPH_STYLES: Record<
 // the card does not need the store's private state type.
 interface CardSource {
 	nodeIndex: Map<string, RoadmapNode>;
-	liveEventMeta: Record<string, { lastEventAt: number }>;
+	liveEventMeta: Record<string, { lastEventAt: number; source?: string }>;
 	schema: { typeConfig?: TypeConfig[] } | null;
 }
 
@@ -133,6 +134,62 @@ function typeLabel(s: CardSource, nodeId: string | undefined): string | null {
 	const type = nodeId ? s.nodeIndex.get(nodeId)?.type : undefined;
 	if (!type) return null;
 	return s.schema?.typeConfig?.find((t) => t.id === type)?.label ?? type;
+}
+
+/** A live event's plugin source, while it is inside the pulse window. */
+function liveSourceOf(
+	live: { lastEventAt: number; source?: string } | undefined,
+): string | null {
+	if (!live || typeof live.source !== "string") return null;
+	return Date.now() - live.lastEventAt < LIVE_WINDOW_MS ? live.source : null;
+}
+
+/** The persistent `node.plugin.id`, when it is a string. */
+function schemaPluginIdOf(plugin: unknown): string | null {
+	const id =
+		plugin && typeof plugin === "object"
+			? (plugin as { id?: unknown }).id
+			: undefined;
+	return typeof id === "string" ? id : null;
+}
+
+/**
+ * Plugin glyph attribution. Live source wins inside the 30s pulse window (so
+ * a `meta.source` from a fresh updateNodeStatus lights the badge even if
+ * node.plugin is unset). Falls back to the persistent schema slot.
+ */
+function pluginIdOf(s: CardSource, nodeId: string | undefined): string | null {
+	if (!nodeId) return null;
+	return (
+		liveSourceOf(s.liveEventMeta[nodeId]) ??
+		schemaPluginIdOf(s.nodeIndex.get(nodeId)?.plugin)
+	);
+}
+
+/**
+ * Everything the card reads from the store in place (v0.8.4 Phase 8: one
+ * selector, compared field by field with useShallow, so one store `set()`
+ * runs one selector body per card). Every field is a string or null, so only
+ * a card whose values changed re-renders.
+ */
+function readCardLive(
+	s: CardSource,
+	nodeId: string | undefined,
+	propStatus: NodeStatus,
+): {
+	status: NodeStatus;
+	pluginGlyph: string | null;
+	progress: string | null;
+	typeChip: string | null;
+} {
+	const live = nodeId ? s.nodeIndex.get(nodeId)?.status : undefined;
+	const status = live ?? propStatus;
+	return {
+		status,
+		pluginGlyph: pluginIdOf(s, nodeId),
+		progress: progressText(s, nodeId, status),
+		typeChip: typeLabel(s, nodeId),
+	};
 }
 
 function pluginGlyphFor(id: string): {
@@ -257,29 +314,22 @@ export const RoadmapNodeCard = memo(function RoadmapNodeCard({
 			renameInputRef.current?.select();
 		}
 	}, [isRenaming]);
-	// Live-status subscription (read-side of the in-place fast-path).
+	// Live-state subscription (read-side of the in-place fast-path).
 	//
 	// `updateNodeStatus` / `updateNodeType` / `updateNodeMetadata` /
 	// `updateNodeNotes` mutate `schema.nodes` in place and bump `statusTick`
 	// without touching `treeData` — that's the D-02 performance contract so
 	// status flips don't trigger react-d3-tree's deep-clone on every change.
 	// The side-effect is that `propStatus` (sourced from the treeData snapshot
-	// react-d3-tree passes to renderCustomNodeElement) goes stale. Subscribe
-	// to the tick here so every in-place write re-runs this selector and the
-	// card re-reads the live value from `nodeIndex`. Only the card whose node
-	// actually changed returns a new string, so zustand re-renders it alone —
-	// other cards' selectors return the same string and skip the update.
-	//
-	// Future phases (03-03 SidePanel editor, 04 Event API, v1.1 plugins) can
-	// extend this by reading additional in-place fields (title, notes, type,
-	// metadata) from the live node rather than introducing new dataKey bumps.
-	const liveStatus = useRoadmapStore((s) => {
-		void s.statusTick;
-		return nodeId
-			? (s.nodeIndex.get(nodeId)?.status ?? propStatus)
-			: propStatus;
-	});
-	const status = liveStatus as NodeStatus;
+	// react-d3-tree passes to renderCustomNodeElement) goes stale. The selector
+	// re-runs on every store set (statusTick, liveTick included) and re-reads
+	// the live values from `nodeIndex`; useShallow compares the returned
+	// fields, so only the card whose values changed re-renders. Status, the
+	// plugin glyph, the progress line (children's statuses, live-event age)
+	// and the type chip all come from this one read (readCardLive).
+	const { status, pluginGlyph, progress, typeChip } = useRoadmapStore(
+		useShallow((s) => readCardLive(s, nodeId, propStatus)),
+	);
 	const tokens = STATUS_TOKEN_MAP[status] ?? STATUS_TOKEN_MAP["not-started"];
 	// Ink on the card: the status stripe (index.css `.node::before`).
 	const statusCard = `var(${tokens.card}, var(${tokens.color}))`;
@@ -289,46 +339,6 @@ export const RoadmapNodeCard = memo(function RoadmapNodeCard({
 	// Live pulse: true iff this node received an event within the last 30s (D-14/D-15).
 	// Re-evaluates on every 1Hz liveTick bump from App.tsx setInterval.
 	const isLive = useIsNodeLive(nodeId ?? "");
-
-	// Plugin glyph attribution. Live source wins inside the 30s pulse window
-	// (so a `meta.source` from a fresh updateNodeStatus lights the badge even
-	// if node.plugin is unset). Falls back to the persistent schema slot.
-	const pluginGlyph = useRoadmapStore((s) => {
-		void s.statusTick;
-		void s.liveTick;
-		if (!nodeId) return null;
-		const live = s.liveEventMeta[nodeId];
-		if (
-			live &&
-			Date.now() - live.lastEventAt < 30_000 &&
-			typeof live.source === "string"
-		) {
-			return live.source;
-		}
-		const plugin = s.nodeIndex.get(nodeId)?.plugin;
-		if (
-			plugin &&
-			typeof plugin === "object" &&
-			"id" in plugin &&
-			typeof (plugin as { id: unknown }).id === "string"
-		) {
-			return (plugin as { id: string }).id;
-		}
-		return null;
-	});
-
-	// Progress line and type chip: same in-place read as the status above
-	// (`updateNodeStatus` on a child and `updateNodeType` bump statusTick, not
-	// dataKey). Both return a string or null, so only a changed card updates.
-	const progress = useRoadmapStore((s) => {
-		void s.statusTick;
-		void s.liveTick;
-		return progressText(s, nodeId, status);
-	});
-	const typeChip = useRoadmapStore((s) => {
-		void s.statusTick;
-		return typeLabel(s, nodeId);
-	});
 
 	return (
 		<div

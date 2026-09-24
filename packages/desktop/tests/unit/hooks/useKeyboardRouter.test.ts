@@ -3,7 +3,10 @@ import { fireEvent, renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { RoadmapSchema } from "../../../../../packages/core/src/schema";
 import { useKeyboardRouter } from "../../../src/mainview/hooks/useKeyboardRouter";
-import { STATUS_HOTKEYS } from "../../../src/mainview/lib/domContract";
+import {
+	STATUS_HOTKEYS,
+	STRUCTURE_KEYS,
+} from "../../../src/mainview/lib/domContract";
 import {
 	FOCUS_NODE_EVENT,
 	type NodeFocusRequest,
@@ -590,6 +593,42 @@ describe("useKeyboardRouter", () => {
 			useRoadmapStore.getState().setFocusedNode(CHILD_B1_ID);
 			fireEvent.keyDown(document, { key: "ArrowLeft", altKey: true });
 			expect(outdentSpy).toHaveBeenCalledWith(CHILD_B1_ID);
+		});
+
+		// v0.8.4 Phase 8: the router binds what STRUCTURE_KEYS says (the table
+		// the context menu's hints come from), so a rebind there is caught.
+		it("STRUCTURE_KEYS.TB.indent.key with Alt calls indentNode", () => {
+			useRoadmapStore.getState().setFocusedNode(CHILD_B_ID);
+			const spy = vi.spyOn(useRoadmapStore.getState(), "indentNode");
+			renderRouter();
+			fireEvent.keyDown(document, {
+				key: STRUCTURE_KEYS.TB.indent.key,
+				altKey: true,
+			});
+			expect(spy).toHaveBeenCalledWith(CHILD_B_ID);
+		});
+
+		// Indent needs a previous sibling (CHILD_B); outdent a non-root
+		// parent (CHILD_B1); move is called whatever the position.
+		it.each([
+			["TB", "outdent", "outdentNode", "altKey", CHILD_B1_ID],
+			["TB", "moveUp", "moveNodeUp", "ctrlKey", CHILD_B1_ID],
+			["TB", "moveDown", "moveNodeDown", "ctrlKey", CHILD_B1_ID],
+			["LR", "indent", "indentNode", "altKey", CHILD_B_ID],
+			["LR", "outdent", "outdentNode", "altKey", CHILD_B1_ID],
+			["LR", "moveUp", "moveNodeUp", "ctrlKey", CHILD_B1_ID],
+			["LR", "moveDown", "moveNodeDown", "ctrlKey", CHILD_B1_ID],
+		] as const)("STRUCTURE_KEYS.%s.%s drives %s", (layout, action, method, modifier, nodeId) => {
+			useRoadmapStore.getState().setLayout(layout);
+			useRoadmapStore.getState().setFocusedNode(nodeId);
+			const spy = vi.spyOn(useRoadmapStore.getState(), method);
+			spy.mockClear();
+			renderRouter();
+			fireEvent.keyDown(document, {
+				key: STRUCTURE_KEYS[layout][action].key,
+				[modifier]: true,
+			});
+			expect(spy).toHaveBeenCalledWith(nodeId);
 		});
 
 		it("Indent expands a collapsed previous sibling so the moved node does not vanish", () => {

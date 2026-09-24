@@ -13,6 +13,7 @@ import type {
 	NodeStatus,
 	RoadmapNode,
 } from "../../../../../packages/core/src/schema";
+import { isDescendantOf } from "./treeWalk";
 
 /** How many user edits the history keeps; the oldest drops off first. */
 export const HISTORY_LIMIT = 50;
@@ -38,12 +39,13 @@ type FieldEdit<K extends string, V> = Stamp & {
 type CreateEntry = Stamp & Placement & { kind: "create" };
 /** Running it removes `subtree` (by id). */
 type DeleteEntry = Stamp & Placement & { kind: "delete" };
+/** Parent ids are null at the root level. */
 type MoveEntry = Stamp & {
 	kind: "move";
 	nodeId: string;
-	fromParentId: string;
+	fromParentId: string | null;
 	fromIndex: number;
-	toParentId: string;
+	toParentId: string | null;
 	/** Index in the target's children AFTER the node left its old place. */
 	toIndex: number;
 };
@@ -106,11 +108,6 @@ export function coalesce(
 	return { ...next, before: prev.before } as HistoryEntry;
 }
 
-function containsId(node: RoadmapNode, id: string): boolean {
-	if (node.id === id) return true;
-	return (node.children ?? []).some((c) => containsId(c, id));
-}
-
 /**
  * Whether running `entry` against the current tree still makes sense. An
  * agent or live event may have removed a node (or re-parented one) since the
@@ -128,14 +125,13 @@ export function isApplicable(
 			);
 		case "delete":
 			return nodeIndex.has(entry.subtree.id);
-		case "move": {
-			const moved = nodeIndex.get(entry.nodeId);
+		case "move":
 			return (
-				!!moved &&
-				nodeIndex.has(entry.toParentId) &&
-				!containsId(moved, entry.toParentId)
+				nodeIndex.has(entry.nodeId) &&
+				(entry.toParentId === null ||
+					(nodeIndex.has(entry.toParentId) &&
+						!isDescendantOf(nodeIndex, entry.nodeId, entry.toParentId)))
 			);
-		}
 		default:
 			return nodeIndex.has(entry.nodeId);
 	}

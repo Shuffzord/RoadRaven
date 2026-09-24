@@ -225,3 +225,38 @@ describe("roadmapStore.indentNode / outdentNode (v0.8.4 Phase 5)", () => {
 		expect(useRoadmapStore.getState().dataKey).toBe(before);
 	});
 });
+
+// v0.8.4 Phase 8 (RC-A): a null parent is the root level, and the action
+// refuses a cycle itself (it used to rely on its callers).
+describe("roadmapStore.moveNode — root level and cycles (v0.8.4 Phase 8)", () => {
+	beforeEach(() => {
+		useRoadmapStore.getState().loadSchema(makeNestedSchema(), "/tmp/test.json");
+	});
+	afterEach(() => {
+		useRoadmapStore.setState({
+			schema: null,
+			filePath: null,
+			nodeIndex: new Map(),
+		});
+	});
+
+	it("a null parent moves the node to the root level at the given position", () => {
+		useRoadmapStore.getState().moveNode("a1", null, 0);
+		const nodes = useRoadmapStore.getState().schema!.nodes;
+		expect(nodes.map((n) => n.id)).toEqual(["a1", "root"]);
+		expect(
+			useRoadmapStore
+				.getState()
+				.nodeIndex.get("a")!
+				.children!.map((n) => n.id),
+		).toEqual(["a2"]);
+	});
+
+	it("never leaves zero roots: the sole root cannot move under its own descendant", () => {
+		const before = JSON.stringify(useRoadmapStore.getState().schema);
+		useRoadmapStore.getState().moveNode("root", "a1");
+		useRoadmapStore.getState().moveNode("a", "a2");
+		expect(JSON.stringify(useRoadmapStore.getState().schema)).toBe(before);
+		expect(useRoadmapStore.getState().schema!.nodes).toHaveLength(1);
+	});
+});

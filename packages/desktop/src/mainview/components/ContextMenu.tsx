@@ -11,12 +11,14 @@ import {
 	INDENT_LABEL,
 	OUTDENT_LABEL,
 	REDO_LABEL,
-	STRUCTURE_KEY_HINTS,
+	STRUCTURE_KEYS,
 	UNDO_LABEL,
 } from "../lib/domContract";
 import { trackMenuFocus } from "../lib/focusHandoff";
 import { requestNodeFocus } from "../lib/focusRequest";
+import { stepHistoryAndReveal } from "../lib/historyActions";
 import { getNodeCollapseState, toggleNodeCollapse } from "../lib/nodeCollapse";
+import { indentAndReveal, outdentAndReveal } from "../lib/structureActions";
 import { indentTarget, outdentTarget } from "../lib/treeEdits";
 import { useFileViewStore } from "../store/fileViewStore";
 import { useHistoryStore } from "../store/historyStore";
@@ -108,8 +110,6 @@ function NodeMenuItems({ nodeId }: { nodeId: string }) {
 		pasteFromClipboard,
 		moveNodeUp,
 		moveNodeDown,
-		indentNode,
-		outdentNode,
 		requestDelete,
 		updateNodeStatus,
 	} = useRoadmapStore(
@@ -122,18 +122,16 @@ function NodeMenuItems({ nodeId }: { nodeId: string }) {
 			pasteFromClipboard: s.pasteFromClipboard,
 			moveNodeUp: s.moveNodeUp,
 			moveNodeDown: s.moveNodeDown,
-			indentNode: s.indentNode,
-			outdentNode: s.outdentNode,
 			requestDelete: s.requestDelete,
 			updateNodeStatus: s.updateNodeStatus,
 		})),
 	);
 	const canPaste = useRoadmapStore((s) => s.lastCopiedSubtree !== null);
 	const schema = useRoadmapStore((s) => s.schema);
-	// v0.8.4 Phase 7 (UAT-3): hint text matches the keys actually bound for
-	// the current layout (useKeyboardRouter.ts restructureKeys/reorderKeys).
+	// v0.8.4 Phase 7 (UAT-3): hint text for the current layout, from the
+	// same table useKeyboardRouter.ts binds its keys from (Phase 8).
 	const layoutOrientation = useRoadmapStore((s) => s.layoutOrientation);
-	const hints = STRUCTURE_KEY_HINTS[layoutOrientation];
+	const keys = STRUCTURE_KEYS[layoutOrientation];
 	// v0.8.4 Phase 5: disabled exactly when the keyboard shortcut would no-op.
 	const canIndent = schema
 		? indentTarget(schema.nodes, nodeId) !== null
@@ -237,30 +235,30 @@ function NodeMenuItems({ nodeId }: { nodeId: string }) {
 				onSelect={() => moveNodeUp(nodeId)}
 			>
 				<span>Move Up</span>
-				<span className={HINT_CLASS}>{hints.moveUp}</span>
+				<span className={HINT_CLASS}>{keys.moveUp.hint}</span>
 			</ContextMenuPrimitive.Item>
 			<ContextMenuPrimitive.Item
 				className={ITEM_CLASS}
 				onSelect={() => moveNodeDown(nodeId)}
 			>
 				<span>Move Down</span>
-				<span className={HINT_CLASS}>{hints.moveDown}</span>
+				<span className={HINT_CLASS}>{keys.moveDown.hint}</span>
 			</ContextMenuPrimitive.Item>
 			<ContextMenuPrimitive.Item
 				className={ITEM_CLASS}
 				disabled={!canIndent}
-				onSelect={() => indentNode(nodeId)}
+				onSelect={() => indentAndReveal(nodeId)}
 			>
 				<span>{INDENT_LABEL}</span>
-				<span className={HINT_CLASS}>{hints.indent}</span>
+				<span className={HINT_CLASS}>{keys.indent.hint}</span>
 			</ContextMenuPrimitive.Item>
 			<ContextMenuPrimitive.Item
 				className={ITEM_CLASS}
 				disabled={!canOutdent}
-				onSelect={() => outdentNode(nodeId)}
+				onSelect={() => outdentAndReveal(nodeId)}
 			>
 				<span>{OUTDENT_LABEL}</span>
-				<span className={HINT_CLASS}>{hints.outdent}</span>
+				<span className={HINT_CLASS}>{keys.outdent.hint}</span>
 			</ContextMenuPrimitive.Item>
 			<ContextMenuPrimitive.Separator className={SEP_CLASS} />
 			<ContextMenuPrimitive.Sub>
@@ -337,7 +335,7 @@ function CanvasMenuItems() {
 			<ContextMenuPrimitive.Item
 				className={ITEM_CLASS}
 				disabled={!canUndo}
-				onSelect={() => revealHistoryStep("undo")}
+				onSelect={() => stepHistoryAndReveal("undo")}
 			>
 				<span>{UNDO_LABEL}</span>
 				<span className={HINT_CLASS}>Ctrl+Z</span>
@@ -345,7 +343,7 @@ function CanvasMenuItems() {
 			<ContextMenuPrimitive.Item
 				className={ITEM_CLASS}
 				disabled={!canRedo}
-				onSelect={() => revealHistoryStep("redo")}
+				onSelect={() => stepHistoryAndReveal("redo")}
 			>
 				<span>{REDO_LABEL}</span>
 				<span className={HINT_CLASS}>Ctrl+Y</span>
@@ -427,10 +425,4 @@ function CanvasMenuItems() {
 function renameNewNode(newId: string | null | undefined) {
 	if (!newId) return;
 	requestNodeFocus(newId, { align: "center", rename: true });
-}
-
-/** Undo/redo, then reveal the node it touched (the store focused it). */
-function revealHistoryStep(direction: "undo" | "redo") {
-	const target = useRoadmapStore.getState()[direction]();
-	if (target) requestNodeFocus(target, { align: "nearest", select: true });
 }

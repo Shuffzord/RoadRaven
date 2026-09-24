@@ -182,27 +182,42 @@ export const UNDO_LABEL = "Undo";
 /** Canvas-empty menu item: redo the last undone edit (Ctrl+Y / Ctrl+Shift+Z). */
 export const REDO_LABEL = "Redo";
 
-// -- Structure key hints (v0.8.4 Phase 7, UAT-3) -----------------------------
-// Rendered by ContextMenu.tsx (Indent/Outdent and Move up/down hints), keyed
-// by the store's `layoutOrientation` so the hint always matches the keys
-// actually bound in useKeyboardRouter.ts (`restructureKeys`/`reorderKeys`).
-// Selected on by tests/unit/ui/ContextMenu.test.tsx.
+// -- Structure keys (v0.8.4 Phase 7 UAT-3; one table since Phase 8) -----------
+// The single source for the indent/outdent/move key bindings AND their menu
+// hints: useKeyboardRouter.ts matches `key` (Alt for indent/outdent,
+// Ctrl/Cmd for move), ContextMenu.tsx renders `hint`, keyed by the store's
+// `layoutOrientation`. Indent follows the child (inward) direction, move the
+// sibling axis. Selected on by tests/unit/hooks/useKeyboardRouter.test.ts and
+// tests/unit/ui/ContextMenu.test.tsx.
 
-/** Menu shortcut-hint strings for indent/outdent/move, by layout orientation. */
-export const STRUCTURE_KEY_HINTS: Record<
+const ARROW_GLYPHS = {
+	ArrowUp: "↑",
+	ArrowDown: "↓",
+	ArrowLeft: "←",
+	ArrowRight: "→",
+} as const;
+
+type StructureKey = { key: keyof typeof ARROW_GLYPHS; hint: string };
+
+function bind(modifier: "Alt" | "Ctrl", key: StructureKey["key"]) {
+	return { key, hint: `${modifier}+${ARROW_GLYPHS[key]}` };
+}
+
+/** Key bindings and menu hints for indent/outdent/move, by layout orientation. */
+export const STRUCTURE_KEYS: Record<
 	"TB" | "LR",
-	{ indent: string; outdent: string; moveUp: string; moveDown: string }
+	Record<"indent" | "outdent" | "moveUp" | "moveDown", StructureKey>
 > = {
 	TB: {
-		indent: "Alt+↓",
-		outdent: "Alt+↑",
-		moveUp: "Ctrl+←",
-		moveDown: "Ctrl+→",
+		indent: bind("Alt", "ArrowDown"),
+		outdent: bind("Alt", "ArrowUp"),
+		moveUp: bind("Ctrl", "ArrowLeft"),
+		moveDown: bind("Ctrl", "ArrowRight"),
 	},
 	LR: {
-		indent: "Alt+→",
-		outdent: "Alt+←",
-		moveUp: "Ctrl+↑",
-		moveDown: "Ctrl+↓",
+		indent: bind("Alt", "ArrowRight"),
+		outdent: bind("Alt", "ArrowLeft"),
+		moveUp: bind("Ctrl", "ArrowUp"),
+		moveDown: bind("Ctrl", "ArrowDown"),
 	},
 };

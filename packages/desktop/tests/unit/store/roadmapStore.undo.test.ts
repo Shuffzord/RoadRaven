@@ -266,3 +266,73 @@ describe("roadmapStore undo/redo — what is not history", () => {
 		expect(history().future).toHaveLength(1);
 	});
 });
+
+// v0.8.4 Phase 8 RC-A: moves from or to the root level are history too.
+// Two roots is a real state (addSiblingAbove/Below on a root creates one).
+describe("roadmapStore undo/redo — root-level moves (RC-A)", () => {
+	beforeEach(() => {
+		store().loadSchema(
+			{
+				version: "1.0",
+				title: "Roots",
+				nodes: [node("ra", { children: [node("ra1")] }), node("rb")],
+			},
+			"/tmp/roots.json",
+		);
+		history().clear();
+	});
+
+	const rootIds = () => store().schema?.nodes.map((n) => n.id);
+
+	it.each([
+		["indent of root B under root A", () => store().indentNode("rb")],
+		[
+			"move A's child out to root level",
+			() => store().moveNode("ra1", null, 2),
+		],
+		["Move down on a root sibling", () => store().moveNodeDown("ra")],
+		["Move up on a root sibling", () => store().moveNodeUp("rb")],
+	])("%s: undo restores the pre-state, redo the post-state", (_name, edit) => {
+		const before = snapshot();
+		edit();
+		const after = snapshot();
+		expect(after).not.toEqual(before);
+		expect(history().past).toHaveLength(1);
+
+		store().undo();
+		expect(store().schema?.nodes).toEqual(before);
+		store().redo();
+		expect(store().schema?.nodes).toEqual(after);
+	});
+
+	it("undo of indenting B puts it back at root index 1", () => {
+		store().indentNode("rb");
+		expect(rootIds()).toEqual(["ra"]);
+		expect(store().undo()).toBe("rb");
+		expect(rootIds()).toEqual(["ra", "rb"]);
+	});
+
+	it("moveNode refuses a move into the node's own subtree, at any depth", () => {
+		const before = snapshot();
+		store().moveNode("ra", "ra1");
+		expect(store().schema?.nodes).toEqual(before);
+		expect(history().past).toEqual([]);
+	});
+});
+
+// v0.8.4 Phase 8 item 5: undoing the first assignment of an optional field
+// removes the key, so the saved file loses it (not `"type": undefined`).
+describe("roadmapStore undo/redo — optional fields come back absent", () => {
+	it.each([
+		["type", () => store().updateNodeType("b1", "task")],
+		["notes", () => store().updateNodeNotes("b1", "new")],
+		["metadata", () => store().updateNodeMetadata("b1", { owner: "ann" })],
+	] as const)("undo of a first %s assignment deletes the key", (key, edit) => {
+		edit();
+		store().undo();
+		const b1 = store().nodeIndex.get("b1");
+		expect(b1 && key in b1).toBe(false);
+		store().redo();
+		expect(b1 && key in b1).toBe(true);
+	});
+});

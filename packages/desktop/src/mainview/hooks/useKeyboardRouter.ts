@@ -1,12 +1,12 @@
 import { useEffect, useRef } from "react";
 import type { RoadmapNode } from "../../../../../packages/core/src/schema";
-import { STATUS_HOTKEYS } from "../lib/domContract";
+import { STATUS_HOTKEYS, STRUCTURE_KEYS } from "../lib/domContract";
 import { type FileCommandId, getFileCommand } from "../lib/fileCommands";
 import { requestNodeFocus } from "../lib/focusRequest";
+import { stepHistoryAndReveal } from "../lib/historyActions";
 import { getNodeCollapseState, toggleNodeCollapse } from "../lib/nodeCollapse";
-import { indentTarget, outdentTarget } from "../lib/treeEdits";
+import { indentAndReveal, outdentAndReveal } from "../lib/structureActions";
 import { useEventLogStore } from "../store/eventLogStore";
-import { useFileViewStore } from "../store/fileViewStore";
 import { usePreferencesStore } from "../store/preferencesStore";
 import { findParentAndIndex, useRoadmapStore } from "../store/roadmapStore";
 import { useUiStore } from "../store/uiStore";
@@ -116,36 +116,6 @@ function returnToParent(nodeId: string): void {
 }
 
 /**
- * Alt+<child-key> — indent: make the focused node the last child of its
- * previous sibling (v0.8.4 Phase 5). Target math is pure (lib/treeEdits.ts);
- * here we also expand a collapsed target so the moved node doesn't vanish,
- * then reveal it (keeping its focus and selection).
- */
-function indentFocused(nodeId: string): void {
-	const schema = useRoadmapStore.getState().schema;
-	if (!schema) return;
-	const target = indentTarget(schema.nodes, nodeId);
-	if (!target) return;
-	useFileViewStore.getState().setCollapsed(target.newParentId, false);
-	useRoadmapStore.getState().indentNode(nodeId);
-	requestNodeFocus(nodeId, { align: "nearest" });
-}
-
-/**
- * Alt+<parent-key> — outdent: move the focused node out to right after its
- * parent (v0.8.4 Phase 5). No-op when the parent is a root (see
- * lib/treeEdits.ts); the target is always visible already, so no collapse
- * check is needed here.
- */
-function outdentFocused(nodeId: string): void {
-	const schema = useRoadmapStore.getState().schema;
-	if (!schema) return;
-	if (!outdentTarget(schema.nodes, nodeId)) return;
-	useRoadmapStore.getState().outdentNode(nodeId);
-	requestNodeFocus(nodeId, { align: "nearest" });
-}
-
-/**
  * v0.8.2 F3 — file shortcuts, routed through the fileCommands registry so the
  * keyboard, the File menu and the Welcome screen share one definition of
  * each verb. Returns true when the key was claimed.
@@ -222,15 +192,6 @@ function historyKeyStep(e: KeyboardEvent): "undo" | "redo" | null {
 	if (key === "z") return e.shiftKey ? "redo" : "undo";
 	if (key === "y" && !e.shiftKey) return "redo";
 	return null;
-}
-
-/**
- * Undo/redo (v0.8.4 Phase 6), then take the user back to the node it touched.
- * The store already focused and selected it; this reveals it.
- */
-function stepHistory(direction: "undo" | "redo"): void {
-	const target = useRoadmapStore.getState()[direction]();
-	if (target) requestNodeFocus(target, { align: "nearest", select: true });
 }
 
 export function useKeyboardRouter(deps: RouterDeps): void {
@@ -328,7 +289,7 @@ export function useKeyboardRouter(deps: RouterDeps): void {
 			if (historyStep) {
 				if (inTextInput) return;
 				e.preventDefault();
-				stepHistory(historyStep);
+				stepHistoryAndReveal(historyStep);
 				return;
 			}
 
@@ -378,7 +339,9 @@ export function useKeyboardRouter(deps: RouterDeps): void {
 				return;
 			}
 
-			// Ctrl+Up / Ctrl+Down — reorder siblings
+			// Ctrl+Up / Ctrl+Down — reorder siblings in BOTH layouts. D-8: this
+			// legacy pair is deliberately separate from STRUCTURE_KEYS below
+			// (in LR it equals that table's move pair; in TB it is an extra).
 			if ((e.ctrlKey || e.metaKey) && e.key === "ArrowUp") {
 				if (focusedId) {
 					e.preventDefault();
@@ -450,7 +413,7 @@ export function useKeyboardRouter(deps: RouterDeps): void {
 			// Arrow navigation, reorder and indent/outdent — axis depends on
 			// layout orientation. TB: children flow downward, siblings are
 			// horizontal neighbors. LR: children flow rightward, siblings are
-			// vertical neighbors. Four pairs read the same isLR switch: plain
+			// vertical neighbors. Four pairs switch on the layout: plain
 			// navigation, Ctrl/Cmd reorder (sibling axis), Alt indent/outdent
 			// (hierarchy axis). Holding a modifier with an arrow never
 			// navigates (v0.8.4 Phase 5, RC2).
@@ -462,36 +425,32 @@ export function useKeyboardRouter(deps: RouterDeps): void {
 				const hierarchyKeys = isLR
 					? { child: "ArrowRight", parent: "ArrowLeft" }
 					: { child: "ArrowDown", parent: "ArrowUp" };
-				// D-8: the legacy Ctrl+Up/Down pair above always reorders in
-				// both layouts; this pair adds the sibling axis for the OTHER
-				// layout (TB gains Ctrl+Left/Right — in LR these keys equal
-				// the legacy pair, already handled and returned above).
-				const reorderKeys = isLR
-					? { prev: "ArrowUp", next: "ArrowDown" }
-					: { prev: "ArrowLeft", next: "ArrowRight" };
-				// Indent follows the child (inward) direction, outdent the
-				// parent (outward) direction.
-				const restructureKeys = isLR
-					? { indent: "ArrowRight", outdent: "ArrowLeft" }
-					: { indent: "ArrowDown", outdent: "ArrowUp" };
+				// Move and indent/outdent keys come from STRUCTURE_KEYS
+				// (domContract.ts), the same table the context menu's hints
+				// read. D-8: the legacy Ctrl+Up/Down pair above always
+				// reorders in both layouts; the table's move pair adds the
+				// sibling axis for the OTHER layout (TB gains Ctrl+Left/Right
+				// — in LR these keys equal the legacy pair, already handled
+				// and returned above).
+				const keys = STRUCTURE_KEYS[store.layoutOrientation];
 
 				if ((e.ctrlKey || e.metaKey) && !e.altKey) {
-					if (e.key === reorderKeys.prev) {
+					if (e.key === keys.moveUp.key) {
 						e.preventDefault();
 						store.moveNodeUp(focusedId);
-					} else if (e.key === reorderKeys.next) {
+					} else if (e.key === keys.moveDown.key) {
 						e.preventDefault();
 						store.moveNodeDown(focusedId);
 					}
 					return;
 				}
 				if (e.altKey && !e.ctrlKey && !e.metaKey) {
-					if (e.key === restructureKeys.indent) {
+					if (e.key === keys.indent.key) {
 						e.preventDefault();
-						indentFocused(focusedId);
-					} else if (e.key === restructureKeys.outdent) {
+						indentAndReveal(focusedId);
+					} else if (e.key === keys.outdent.key) {
 						e.preventDefault();
-						outdentFocused(focusedId);
+						outdentAndReveal(focusedId);
 					}
 					return;
 				}

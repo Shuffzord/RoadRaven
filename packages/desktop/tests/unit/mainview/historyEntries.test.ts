@@ -84,6 +84,23 @@ describe("historyEntries — invert", () => {
 		});
 	});
 
+	it("a move from the root level inverts to a move to the root level", () => {
+		const fromRoot: HistoryEntry = {
+			kind: "move",
+			at: 1,
+			nodeId: "n",
+			fromParentId: null,
+			fromIndex: 1,
+			toParentId: "a",
+			toIndex: 0,
+		};
+		expect(invert(fromRoot)).toMatchObject({
+			fromParentId: "a",
+			toParentId: null,
+			toIndex: 1,
+		});
+	});
+
 	it("field edits swap before and after", () => {
 		expect(invert(ENTRIES[3])).toMatchObject({ before: "New", after: "Old" });
 		expect(invert(ENTRIES[6])).toMatchObject({
@@ -189,6 +206,20 @@ describe("historyEntries — isApplicable / focusTargetOf", () => {
 		expect(isApplicable(move("a", "a1"), index)).toBe(false);
 		expect(isApplicable(move("a", "a"), index)).toBe(false);
 		expect(isApplicable(move("a", "gone"), index)).toBe(false);
+	});
+
+	it("a move to the root level only needs its node", () => {
+		const toRoot = (nodeId: string): HistoryEntry => ({
+			kind: "move",
+			at: 0,
+			nodeId,
+			fromParentId: "root",
+			fromIndex: 0,
+			toParentId: null,
+			toIndex: 1,
+		});
+		expect(isApplicable(toRoot("a1"), index)).toBe(true);
+		expect(isApplicable(toRoot("gone"), index)).toBe(false);
 	});
 
 	it("focus lands on the inserted node, the parent of a removed one, or the edited node", () => {

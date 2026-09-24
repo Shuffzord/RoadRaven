@@ -14,7 +14,7 @@ import {
 	type UnstampedEntry,
 } from "../lib/historyEntries";
 import { indentTarget, outdentTarget } from "../lib/treeEdits";
-import { findParentAndIndex } from "../lib/treeWalk";
+import { findParentAndIndex, isDescendantOf } from "../lib/treeWalk";
 import { parseSubtree, refreshNodeIds, serializeSubtree } from "./clipboard";
 import { useHistoryStore } from "./historyStore";
 
@@ -257,16 +257,14 @@ function record(entry: UnstampedEntry): void {
 }
 
 /**
- * Record a move. `moveNode` cannot target the root level, so a root-level
- * reorder has no inverse to run and is not recorded; neither is a move that
- * lands where it started.
+ * Record a move (a null parent is the root level). A move that lands where
+ * it started is not recorded.
  */
 function recordMove(
 	nodeId: string,
 	from: { parentId: string | null; index: number },
 	to: { parentId: string | null; index: number },
 ): void {
-	if (from.parentId === null || to.parentId === null) return;
 	if (from.parentId === to.parentId && from.index === to.index) return;
 	record({
 		kind: "move",
@@ -276,6 +274,36 @@ function recordMove(
 		toParentId: to.parentId,
 		toIndex: to.index,
 	});
+}
+
+/**
+ * Whether `nodeId` may move under `newParentId` (null = root level): the
+ * parent exists and is not inside the moved node's own subtree. That also
+ * keeps at least one root: a sole root's subtree is the whole tree.
+ */
+function canMoveUnder(
+	nodeIndex: ReadonlyMap<string, RoadmapNode>,
+	nodeId: string,
+	newParentId: string | null,
+): boolean {
+	if (newParentId === null) return true;
+	return (
+		nodeIndex.has(newParentId) &&
+		!isDescendantOf(nodeIndex, nodeId, newParentId)
+	);
+}
+
+/** The in-place fields an undo can edit; each is also its history kind. */
+type FieldKey = "status" | "type" | "metadata" | "notes";
+
+/** Write `value` into `node[key]`; `undefined` removes the key entirely. */
+function writeField<K extends FieldKey>(
+	node: RoadmapNode,
+	key: K,
+	value: RoadmapNode[K],
+): void {
+	if (value === undefined) Reflect.deleteProperty(node, key);
+	else node[key] = value;
 }
 
 /**
@@ -431,7 +459,13 @@ interface RoadmapState {
 	duplicateNode: (nodeId: string) => string | null;
 	moveNodeUp: (nodeId: string) => void;
 	moveNodeDown: (nodeId: string) => void;
-	moveNode: (nodeId: string, newParentId: string, position?: number) => void;
+	/** `newParentId` null moves to the root level. No-op for an unknown
+	 *  node or parent, or a parent inside the node's own subtree. */
+	moveNode: (
+		nodeId: string,
+		newParentId: string | null,
+		position?: number,
+	) => void;
 	/** v0.8.4 Phase 5: make nodeId the last child of its previous sibling. No-op (see lib/treeEdits.ts) when there is none. */
 	indentNode: (nodeId: string) => void;
 	/** v0.8.4 Phase 5: move nodeId out to right after its parent. No-op (see lib/treeEdits.ts) when the parent is a root. */
@@ -448,12 +482,13 @@ interface RoadmapState {
 
 	// Actions -- in-place (no dataKey change)
 	updateNodeStatus: (nodeId: string, status: string) => void;
-	updateNodeType: (nodeId: string, type: string) => void;
+	// `undefined` removes the field (undo of its first assignment).
+	updateNodeType: (nodeId: string, type: string | undefined) => void;
 	updateNodeMetadata: (
 		nodeId: string,
-		metadata: Record<string, unknown>,
+		metadata: Record<string, unknown> | undefined,
 	) => void;
-	updateNodeNotes: (nodeId: string, notes: string) => void;
+	updateNodeNotes: (nodeId: string, notes: string | undefined) => void;
 	/** v0.7 Phase 2 (batch updateNodes): apply many in-place item updates as ONE
 	 *  logical change — single revision bump + single statusTick bump. Items are
 	 *  pre-validated by the caller (agentRpcHandler batch gate); unknown nodeIds
@@ -727,13 +762,35 @@ export const useRoadmapStore = create<RoadmapState>((set, get) => {
 		move: (e) => get().moveNode(e.nodeId, e.toParentId, e.toIndex),
 		rename: (e) => get().renameNode(e.nodeId, e.after),
 		status: (e) => get().updateNodeStatus(e.nodeId, e.after),
-		// Restoring an absent field writes `undefined` back, which serializes
-		// the same as the field never having been set.
-		type: (e) => get().updateNodeType(e.nodeId, e.after as string),
-		metadata: (e) =>
-			get().updateNodeMetadata(e.nodeId, e.after as Record<string, unknown>),
-		notes: (e) => get().updateNodeNotes(e.nodeId, e.after as string),
+		// An `undefined` after removes the field again (writeField).
+		type: (e) => get().updateNodeType(e.nodeId, e.after),
+		metadata: (e) => get().updateNodeMetadata(e.nodeId, e.after),
+		notes: (e) => get().updateNodeNotes(e.nodeId, e.after),
 	};
+
+	/**
+	 * The one in-place field edit: capture before, mutate the node object in
+	 * place, bump statusTick + revisions, record. D-02: no dataKey bump and
+	 * no treeData clone. Status edits leave updatedAt alone; the rest stamp it.
+	 */
+	function editField<K extends FieldKey>(
+		nodeId: string,
+		key: K,
+		value: RoadmapNode[K],
+	): void {
+		const node = get().nodeIndex.get(nodeId);
+		if (!node || node[key] === value) return;
+		const before = node[key];
+		writeField(node, key, value);
+		if (key !== "status") node.updatedAt = new Date().toISOString();
+		set({
+			statusTick: get().statusTick + 1,
+			...advanceRevisions(),
+		});
+		// `kind` and the field key are the same string; TS cannot correlate
+		// them through the generic.
+		record({ kind: key, nodeId, before, after: value } as UnstampedEntry);
+	}
 
 	function applyHistoryEffect(effect: HistoryEntry): boolean {
 		if (!isApplicable(effect, get().nodeIndex)) return false;
@@ -1068,8 +1125,9 @@ export const useRoadmapStore = create<RoadmapState>((set, get) => {
 
 		// Phase 6 PLUG-AGENT-UPDATE-05: re-parent a node to a new parent at optional position.
 		// Cycle detection and cross-ref-boundary check are performed by callers
-		// (agentRpcHandler.ts cycle gate; agentRequestHandler.ts cross-ref gate); this action
-		// assumes those have already passed. No-op when nodeId or newParentId not found.
+		// (agentRpcHandler.ts cycle gate; agentRequestHandler.ts cross-ref gate). v0.8.4
+		// Phase 8: the action also refuses a cycle itself (canMoveUnder), and a null
+		// newParentId moves to the root level. No-op when nodeId or newParentId not found.
 		//
 		// CR-01 (06-REVIEW): explicit self-move guard inside the store action as
 		// defense-in-depth. Without it, moveNode(X, X) removed X from its parent
@@ -1079,13 +1137,13 @@ export const useRoadmapStore = create<RoadmapState>((set, get) => {
 		// agentRpcHandler also rejects self-moves, but every caller-trusts-caller
 		// chain needs a self-protective base case.
 		moveNode: (nodeId, newParentId, position) => {
-			if (nodeId === newParentId) return;
 			const schema = get().schema;
 			if (!schema) return;
 			const nodes = schema.nodes;
 			const found = findParentAndIndex(nodes, nodeId);
 			if (!found) return;
-			if (!get().nodeIndex.get(newParentId)) return;
+			// Also the CR-01 self-move guard: isDescendantOf is reflexive.
+			if (!canMoveUnder(get().nodeIndex, nodeId, newParentId)) return;
 			const node = found.parentArray[found.index];
 			const currentParentId = found.parent ? found.parent.id : null;
 			const nodesAfterRemove = immutablyReplaceArray(
@@ -1160,63 +1218,15 @@ export const useRoadmapStore = create<RoadmapState>((set, get) => {
 
 		updateNodeStatus: (nodeId, status) => {
 			const parsed = NodeStatusSchema.safeParse(status);
-			if (!parsed.success) return;
-			const node = get().nodeIndex.get(nodeId);
-			if (!node) return;
-			if (node.status === parsed.data) return;
-			const before = node.status;
-			// Mutate in-place -- do NOT increment dataKey or create new treeData ref.
-			// This is the critical performance path per D-02: status-only updates
-			// bypass react-d3-tree's deep-clone by keeping the same data reference.
-			node.status = parsed.data;
-			set({
-				statusTick: get().statusTick + 1,
-				...advanceRevisions(),
-			});
-			record({ kind: "status", nodeId, before, after: parsed.data });
+			if (parsed.success) editField(nodeId, "status", parsed.data);
 		},
 
-		updateNodeType: (nodeId, type) => {
-			const node = get().nodeIndex.get(nodeId);
-			if (!node) return;
-			if (node.type === type) return;
-			const before = node.type;
-			node.type = type;
-			node.updatedAt = new Date().toISOString();
-			set({
-				statusTick: get().statusTick + 1,
-				...advanceRevisions(),
-			});
-			record({ kind: "type", nodeId, before, after: type });
-		},
+		updateNodeType: (nodeId, type) => editField(nodeId, "type", type),
 
-		updateNodeMetadata: (nodeId, metadata) => {
-			const node = get().nodeIndex.get(nodeId);
-			if (!node) return;
-			if (node.metadata === metadata) return;
-			const before = node.metadata;
-			node.metadata = metadata;
-			node.updatedAt = new Date().toISOString();
-			set({
-				statusTick: get().statusTick + 1,
-				...advanceRevisions(),
-			});
-			record({ kind: "metadata", nodeId, before, after: metadata });
-		},
+		updateNodeMetadata: (nodeId, metadata) =>
+			editField(nodeId, "metadata", metadata),
 
-		updateNodeNotes: (nodeId, notes) => {
-			const node = get().nodeIndex.get(nodeId);
-			if (!node) return;
-			if (node.notes === notes) return;
-			const before = node.notes;
-			node.notes = notes;
-			node.updatedAt = new Date().toISOString();
-			set({
-				statusTick: get().statusTick + 1,
-				...advanceRevisions(),
-			});
-			record({ kind: "notes", nodeId, before, after: notes });
-		},
+		updateNodeNotes: (nodeId, notes) => editField(nodeId, "notes", notes),
 
 		updateNodesBatch: (updates) => {
 			const nodeIndex = get().nodeIndex;

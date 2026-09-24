@@ -4,7 +4,11 @@
 // itself now that it lives in lib/treeWalk.ts, independent of the store.
 import { describe, expect, it } from "vitest";
 import type { RoadmapNode } from "../../../../../packages/core/src/schema";
-import { findParentAndIndex } from "../../../src/mainview/lib/treeWalk";
+import {
+	findParentAndIndex,
+	isDescendantOf,
+} from "../../../src/mainview/lib/treeWalk";
+import { buildNodeIndex } from "../../../src/mainview/store/roadmapStore";
 
 // Root
 //  ├─ A
@@ -57,5 +61,22 @@ describe("findParentAndIndex", () => {
 
 	it("returns null when the id is not found", () => {
 		expect(findParentAndIndex(makeNodes(), "missing")).toBeNull();
+	});
+});
+
+// v0.8.4 Phase 8: the one cycle check (store moveNode, undo history, agent
+// moveNode tool). Reflexive — a node is in its own subtree (CR-02).
+describe("isDescendantOf", () => {
+	const index = buildNodeIndex(makeNodes());
+
+	it.each([
+		["direct child", "root", "a", true],
+		["deep descendant", "root", "a1", true],
+		["self", "a", "a", true],
+		["unrelated sibling branch", "b", "a1", false],
+		["ancestor is not a descendant", "a1", "a", false],
+		["unknown ancestor", "gone", "a", false],
+	] as const)("%s", (_name, ancestorId, nodeId, expected) => {
+		expect(isDescendantOf(index, ancestorId, nodeId)).toBe(expected);
 	});
 });

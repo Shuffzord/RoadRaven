@@ -11,7 +11,7 @@ import {
 	INDENT_LABEL,
 	OUTDENT_LABEL,
 	REDO_LABEL,
-	STRUCTURE_KEY_HINTS,
+	STRUCTURE_KEYS,
 	UNDO_LABEL,
 } from "../../../src/mainview/lib/domContract";
 import {
@@ -661,6 +661,28 @@ describe("RoadRavenContextMenu — indent/outdent (Phase 5)", () => {
 		expect(spy).toHaveBeenCalledWith("child-2");
 	});
 
+	// v0.8.4 Phase 8 follow-up: the menu goes through the keyboard's glue
+	// (lib/structureActions.ts), so a collapsed target is expanded first and
+	// the moved node does not vanish.
+	it("Indent expands a collapsed previous sibling, like Alt+arrow", () => {
+		seedNestedSchema();
+		useFileViewStore.getState().setCollapsed("child-1", true);
+		render(<NodeHarness nodeId="child-2" />);
+		openMenu(screen.getByTestId("trigger"));
+		const menu = screen.getByRole("menu", { name: /node actions/i });
+		const indentItem = Array.from(
+			menu.querySelectorAll<HTMLElement>('[role="menuitem"]'),
+		).find((el) => el.textContent?.startsWith(INDENT_LABEL));
+		fireEvent.click(indentItem as HTMLElement);
+		expect(useFileViewStore.getState().collapsedIds.has("child-1")).toBe(false);
+		expect(
+			useRoadmapStore
+				.getState()
+				.nodeIndex.get("child-1")
+				?.children?.map((c) => c.id),
+		).toContain("child-2");
+	});
+
 	it("Outdent is enabled and calls outdentNode when a grandparent exists", () => {
 		seedNestedSchema();
 		const spy = vi.spyOn(useRoadmapStore.getState(), "outdentNode");
@@ -676,24 +698,24 @@ describe("RoadRavenContextMenu — indent/outdent (Phase 5)", () => {
 	});
 });
 
-// v0.8.4 Phase 7 (UAT-3) — Indent/Outdent/Move up/down hints match the keys
-// useKeyboardRouter.ts actually binds for the current layout orientation.
+// v0.8.4 Phase 7 (UAT-3) — Indent/Outdent/Move up/down hints come from
+// STRUCTURE_KEYS, the table useKeyboardRouter.ts binds its keys from (Phase 8).
 describe("RoadRavenContextMenu — structure key hints follow layout orientation (Phase 7)", () => {
 	it.each([
 		"TB",
 		"LR",
-	] as const)("Move Up/Down and Indent/Outdent hints match STRUCTURE_KEY_HINTS.%s", (orientation) => {
+	] as const)("Move Up/Down and Indent/Outdent hints match STRUCTURE_KEYS.%s", (orientation) => {
 		seedSchema();
 		useRoadmapStore.setState({ layoutOrientation: orientation });
 		render(<NodeHarness />);
 		openMenu(screen.getByTestId("trigger"));
 		const menu = screen.getByRole("menu", { name: /node actions/i });
 		const text = menu.textContent ?? "";
-		const hints = STRUCTURE_KEY_HINTS[orientation];
-		expect(text).toContain(hints.moveUp);
-		expect(text).toContain(hints.moveDown);
-		expect(text).toContain(hints.indent);
-		expect(text).toContain(hints.outdent);
+		const keys = STRUCTURE_KEYS[orientation];
+		expect(text).toContain(keys.moveUp.hint);
+		expect(text).toContain(keys.moveDown.hint);
+		expect(text).toContain(keys.indent.hint);
+		expect(text).toContain(keys.outdent.hint);
 	});
 });
 

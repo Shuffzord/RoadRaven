@@ -46,3 +46,24 @@ export function findParentAndIndex(
 	}
 	return walk(nodes);
 }
+
+/**
+ * Whether `nodeId` is in the subtree rooted at `ancestorId`, INCLUDING the
+ * ancestor itself (a node is in its own subtree — the reflexive form, CR-02
+ * in 06-REVIEW.md: excluding the root once let `moveNode(X, X)` through and
+ * deleted X). False when `ancestorId` is unknown. The one cycle check shared
+ * by the store's `moveNode`, the undo history and the agent `moveNode` tool.
+ */
+export function isDescendantOf(
+	nodeIndex: ReadonlyMap<string, RoadmapNode>,
+	ancestorId: string,
+	nodeId: string,
+): boolean {
+	if (ancestorId === nodeId) return true;
+	const stack = [...(nodeIndex.get(ancestorId)?.children ?? [])];
+	for (let n = stack.pop(); n; n = stack.pop()) {
+		if (n.id === nodeId) return true;
+		if (n.children) stack.push(...n.children);
+	}
+	return false;
+}
