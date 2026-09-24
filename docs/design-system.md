@@ -304,7 +304,18 @@ export const STATUS_TOKEN_MAP: Record<
 const NODE_INK = `var(${TEXT_NODE_TOKEN}, var(--rv-text-primary))`;
 ```
 
-The card reads `--node-radius` from the theme (defaulting to `8px`), shows the selection ring with `outline outline-2 -outline-offset-1 outline-[var(--rv-accent)]`, and sets the node shadow via `var(--rv-shadow-node)`. Title, rename input and body text use `NODE_INK`.
+The card reads `--node-radius` from the theme (defaulting to `8px`), shows the selection ring with `outline outline-2 -outline-offset-1 outline-[var(--rv-accent)]`, and sets the node shadow via `var(--node-shadow, var(--rv-shadow-node))`. Title, rename input and body text use `NODE_INK`.
+
+Status at a glance (v0.8.4):
+
+- **Ribbon.** Every card carries a 45° band across its top-right corner, filled with the same card status ink as the stripe (`var(--rv-status-<s>-card, var(--rv-status-<s>))`), with no text. It is clipped by its own wrapper (`.node-ribbon-clip`: `overflow: hidden`, `border-radius: inherit`), never by `.node`, because the live pulse ring (`.node::after`, `inset: -3px`) and the search outline paint outside the card. The contrast registry checks it as `ribbon-<s>` (same numbers as `stripe-<s>`).
+- **In Progress weight.** `.node[data-status="in-progress"]` scales the card by 1.06 around its centre and sets `--node-shadow` to a ring plus a soft drop shadow in the status ink, with the border in the same ink. It is CSS only, not an inline style. Canvas spaces siblings at `separation.siblings: 1.1` so scaled neighbours never touch.
+- **Progress line.** In Progress cards add one line under the badge: `n / m done` over the direct children, or `last event Xs ago` for a leaf with a live event inside the 30s window (`lib/nodeProgress.ts`). The card reads children from `nodeIndex` under the `statusTick` subscription, because in-place status flips do not touch `treeData`.
+- **Type chip.** When `node.type` is set, a chip left of the badge shows the `typeConfig` label, or the raw id when the type is unknown.
+- **Card ink for secondary text.** The chip and the progress line use `NODE_INK` at a smaller size and normal weight, not `--rv-text-secondary` (chrome ink, unreadable on the light cards of Contrast and Moss) and not `opacity` (the rendered sampler reads computed colour, so faded ink would pass the gate while failing on screen). Both are sampled against the `node-title` pair.
+- **Plugin glyph** sits top-left, right of the stripe, since the ribbon owns the top-right corner.
+
+Tests and the contrast sampler pick these parts by `data-*` hooks exported from `lib/domContract.ts` (`NODE_STATUS_ATTR`, `NODE_RIBBON_ATTR`, `NODE_PROGRESS_ATTR`, `NODE_TYPE_CHIP_ATTR`), not by class names.
 
 Source: [`packages/desktop/src/mainview/components/RoadmapNode.tsx`](../packages/desktop/src/mainview/components/RoadmapNode.tsx)
 

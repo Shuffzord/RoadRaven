@@ -1,5 +1,9 @@
 import { memo, useEffect, useRef } from "react";
-import type { NodeStatus } from "../../../../../packages/core/src/schema";
+import type {
+	NodeStatus,
+	RoadmapNode,
+	TypeConfig,
+} from "../../../../../packages/core/src/schema";
 import {
 	STATUS_TOKENS,
 	TEXT_NODE_TOKEN,
@@ -10,9 +14,14 @@ import {
 	CHEVRON_EXPAND_LABEL,
 	NODE_CARD_ATTR,
 	NODE_FOCUSED_ATTR,
+	NODE_PROGRESS_ATTR,
+	NODE_RIBBON_ATTR,
+	NODE_STATUS_ATTR,
 	NODE_SURFACE_ATTR,
+	NODE_TYPE_CHIP_ATTR,
 } from "../lib/domContract";
 import { requestNodeFocus } from "../lib/focusRequest";
+import { countDone, formatAge } from "../lib/nodeProgress";
 import { useIsNodeLive, useRoadmapStore } from "../store/roadmapStore";
 
 // Token names come from the shared theme contract (the linter and the
@@ -60,7 +69,8 @@ export function formatStatus(status: string): string {
 		.join(" ");
 }
 
-// Plugin attribution glyph — small badge in the top-right of the node card.
+// Plugin attribution glyph — small badge in the top-left of the node card,
+// right of the stripe (the status ribbon owns the top-right corner).
 // Lit when node.plugin.id is set OR a recent live event carried a source within
 // the 30s pulse window (D-14). Known sources get a branded letter+color; unknown
 // sources fall back to the first letter on slate.
@@ -79,6 +89,45 @@ const PLUGIN_GLYPH_STYLES: Record<
 		label: "GitHub Actions",
 	},
 };
+
+// The store slice the card's progress line and type chip read. Structural so
+// the card does not need the store's private state type.
+interface CardSource {
+	nodeIndex: Map<string, RoadmapNode>;
+	liveEventMeta: Record<string, { lastEventAt: number }>;
+	schema: { typeConfig?: TypeConfig[] } | null;
+}
+
+const LIVE_WINDOW_MS = 30_000;
+
+/**
+ * The in-progress card's extra line: `n / m done` over the direct children
+ * for a parent, `last event Xs ago` for a leaf inside the live window, else
+ * nothing. Children come from `nodeIndex` — in-place status flips do not
+ * touch treeData, so react-d3-tree's `nodeDatum.children` is stale (D-02).
+ */
+function progressText(
+	s: CardSource,
+	nodeId: string | undefined,
+	status: NodeStatus,
+): string | null {
+	if (status !== "in-progress" || !nodeId) return null;
+	const children = s.nodeIndex.get(nodeId)?.children ?? [];
+	if (children.length > 0) {
+		return `${countDone(children)} / ${children.length} done`;
+	}
+	const live = s.liveEventMeta[nodeId];
+	if (!live) return null;
+	const age = Date.now() - live.lastEventAt;
+	return age < LIVE_WINDOW_MS ? `last event ${formatAge(age)}` : null;
+}
+
+/** The node's type label from `typeConfig`, the raw id when unknown, or null. */
+function typeLabel(s: CardSource, nodeId: string | undefined): string | null {
+	const type = nodeId ? s.nodeIndex.get(nodeId)?.type : undefined;
+	if (!type) return null;
+	return s.schema?.typeConfig?.find((t) => t.id === type)?.label ?? type;
+}
 
 function pluginGlyphFor(id: string): {
 	letter: string;
@@ -136,7 +185,7 @@ interface RoadmapNodeCardProps {
  * runs for every mounted node on every Canvas render — a pan frame, a focus
  * write or one typed character re-rendered all 1400 card bodies. The element
  * is still recreated (that is the library's business); this stops the body,
- * its three store subscriptions and its DOM diff from running.
+ * its store subscriptions and its DOM diff from running.
  *
  * Function props are compared by intent, not identity: `onSelect` /
  * `onDoubleClick` are fresh arrows on every Canvas render but close over
@@ -252,6 +301,19 @@ export const RoadmapNodeCard = memo(function RoadmapNodeCard({
 		return null;
 	});
 
+	// Progress line and type chip: same in-place read as the status above
+	// (`updateNodeStatus` on a child and `updateNodeType` bump statusTick, not
+	// dataKey). Both return a string or null, so only a changed card updates.
+	const progress = useRoadmapStore((s) => {
+		void s.statusTick;
+		void s.liveTick;
+		return progressText(s, nodeId, status);
+	});
+	const typeChip = useRoadmapStore((s) => {
+		void s.statusTick;
+		return typeLabel(s, nodeId);
+	});
+
 	return (
 		<div
 			ref={cardRef}
@@ -260,6 +322,7 @@ export const RoadmapNodeCard = memo(function RoadmapNodeCard({
 				[NODE_CARD_ATTR]: nodeId,
 				[NODE_FOCUSED_ATTR]: dataFlag(isFocused),
 				[NODE_SURFACE_ATTR]: "node",
+				[NODE_STATUS_ATTR]: status,
 			}}
 			data-selected={dataFlag(isSelected)}
 			data-live={dataFlag(isLive)}
@@ -268,7 +331,8 @@ export const RoadmapNodeCard = memo(function RoadmapNodeCard({
 			data-search-dim={dataFlag(isSearchDimmed)}
 			style={
 				{
-					boxShadow: "var(--rv-shadow-node)",
+					// index.css sets --node-shadow on in-progress cards.
+					boxShadow: "var(--node-shadow, var(--rv-shadow-node))",
 					color: NODE_INK,
 					"--node-stripe-color": statusCard,
 					"--badge-color": statusFg,
@@ -307,14 +371,29 @@ export const RoadmapNodeCard = memo(function RoadmapNodeCard({
 				}
 			}}
 		>
-			{/* Plugin attribution glyph — top-right corner. Hidden when no plugin
-			   id is on the node and no fresh live source is in the 30s window. */}
+			{/* Status ribbon — a 45° band across the top-right corner in the
+			   stripe's ink. Clipped by its own wrapper, never by `.node`: the
+			   pulse ring (.node::after) and the search outline paint outside
+			   the card. Decorative; the badge says the status in words. Divs, not
+			   spans: the title stays the card's first span, which existing
+			   specs and the sampler read. */}
+			<div aria-hidden="true" className="node-ribbon-clip">
+				<div
+					className="node-ribbon"
+					{...{ [NODE_RIBBON_ATTR]: "" }}
+					style={{ backgroundColor: statusCard }}
+				/>
+			</div>
+
+			{/* Plugin attribution glyph — top-left, right of the stripe. Hidden
+			   when no plugin id is on the node and no fresh live source is in the
+			   30s window. */}
 			{pluginGlyph &&
 				(() => {
 					const g = pluginGlyphFor(pluginGlyph);
 					return (
 						<span
-							className="absolute top-1.5 right-1.5 inline-flex items-center justify-center w-[16px] h-[16px] rounded-full text-[9px] font-bold text-white pointer-events-none select-none shadow-sm"
+							className="absolute top-1.5 left-[10px] inline-flex items-center justify-center w-[16px] h-[16px] rounded-full text-[9px] font-bold text-white pointer-events-none select-none shadow-sm"
 							style={{ background: g.bg }}
 							data-plugin-id={pluginGlyph}
 							role="img"
@@ -329,7 +408,8 @@ export const RoadmapNodeCard = memo(function RoadmapNodeCard({
 			{/* Title — swaps to an inline input when renaming. The input borrows
 			   the span's typography + height so the card doesn't reflow; an
 			   accent bottom border is the only visible affordance. Right-pad
-			   widens when a plugin glyph is shown so the title doesn't collide. */}
+			   keeps the first line clear of the ribbon; left-pad widens when a
+			   plugin glyph is shown so the title doesn't collide. */}
 			{isRenaming ? (
 				<input
 					ref={renameInputRef}
@@ -358,23 +438,46 @@ export const RoadmapNodeCard = memo(function RoadmapNodeCard({
 					onBlur={() => onRenameCommit?.()}
 					placeholder="Enter title…"
 					aria-label="Rename node"
-					className={`block w-full text-[13px] font-semibold leading-[1.3] mb-[6px] bg-transparent border-0 border-b-2 border-[var(--rv-accent)] outline-none px-0 py-0 ${pluginGlyph ? "pr-6" : ""}`}
+					className={`block w-full text-[13px] font-semibold leading-[1.3] mb-[6px] bg-transparent border-0 border-b-2 border-[var(--rv-accent)] outline-none px-0 py-0 pr-4 ${pluginGlyph ? "pl-4" : ""}`}
 					style={{ color: NODE_INK }}
 				/>
 			) : (
 				<span
-					className={`block text-[13px] font-semibold leading-[1.3] mb-[6px] ${pluginGlyph ? "pr-6" : ""}`}
+					className={`block text-[13px] font-semibold leading-[1.3] mb-[6px] pr-4 ${pluginGlyph ? "pl-4" : ""}`}
 					style={{ color: NODE_INK }}
 				>
 					{title}
 				</span>
 			)}
 
+			{/* Type chip — card ink, smaller, on a subtle border. Card ink, not
+			   --rv-text-secondary: on the light-card themes that is chrome ink. */}
+			{typeChip && (
+				<span
+					className="inline-block align-middle max-w-[80px] truncate mr-[6px] px-[6px] py-[1px] rounded-[6px] border border-[color:var(--rv-border)] text-[10px] font-normal leading-[1.4]"
+					{...{ [NODE_TYPE_CHIP_ATTR]: "" }}
+					style={{ color: NODE_INK }}
+				>
+					{typeChip}
+				</span>
+			)}
+
 			{/* Badge pill */}
-			<span className="inline-flex items-center gap-[5px] px-2 py-[2px] rounded-[10px] text-[11px] font-semibold bg-[var(--badge-bg)] text-[var(--badge-color)]">
+			<span className="inline-flex align-middle items-center gap-[5px] px-2 py-[2px] rounded-[10px] text-[11px] font-semibold bg-[var(--badge-bg)] text-[var(--badge-color)]">
 				<span className="w-1.5 h-1.5 rounded-full bg-[var(--badge-color)]" />
 				{formatStatus(status)}
 			</span>
+
+			{/* Progress line — in-progress cards only (see progressText). */}
+			{progress && (
+				<div
+					className="mt-[4px] text-[11px] font-normal leading-[1.3]"
+					{...{ [NODE_PROGRESS_ATTR]: "" }}
+					style={{ color: NODE_INK }}
+				>
+					{progress}
+				</div>
+			)}
 
 			{/* Collapse/expand chevron */}
 			{hasChildren && (

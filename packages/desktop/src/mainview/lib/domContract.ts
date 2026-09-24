@@ -80,3 +80,17 @@ export function deleteThemeTitle(themeName: string): string {
 }
 export const DELETE_THEME_CONFIRM_LABEL = "Delete";
 export const DELETE_THEME_CANCEL_LABEL = "Cancel";
+
+// -- Node card visuals (v0.8.4 Phase 1) --------------------------------------
+// Rendered by RoadmapNode.tsx; read by index.css (the in-progress scale),
+// tests/unit/ui/RoadmapNode.visuals.test.tsx, tests/ui/canvas-comfort.spec.ts
+// and tests/a11y/contrastSampler.ts.
+
+/** On the card: value is the live node status (`in-progress`, ...). */
+export const NODE_STATUS_ATTR = "data-status";
+/** On the status ribbon across the card's top-right corner. */
+export const NODE_RIBBON_ATTR = "data-ribbon";
+/** On the in-progress progress line (`n / m done`, `last event Xs ago`). */
+export const NODE_PROGRESS_ATTR = "data-progress";
+/** On the node-type chip left of the status badge. */
+export const NODE_TYPE_CHIP_ATTR = "data-type-chip";

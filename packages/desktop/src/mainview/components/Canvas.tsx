@@ -375,7 +375,7 @@ export function Canvas() {
 								layoutOrientation === "TB" ? "vertical" : "horizontal"
 							}
 							pathFunc="step"
-							separation={{ siblings: 1, nonSiblings: 1.3 }}
+							separation={{ siblings: 1.1, nonSiblings: 1.3 }}
 							nodeSize={{ x: 240, y: 100 }}
 							renderCustomNodeElement={renderNode}
 							zoom={zoomLevel}

@@ -6,6 +6,10 @@ import {
 	CHEVRON_EXPAND_LABEL,
 	NODE_CARD_ATTR,
 	NODE_FOCUSED_ATTR,
+	NODE_PROGRESS_ATTR,
+	NODE_RIBBON_ATTR,
+	NODE_STATUS_ATTR,
+	NODE_TYPE_CHIP_ATTR,
 } from "../../src/mainview/lib/domContract";
 import { CHEVRON_SELECTOR } from "../../src/mainview/lib/nodeCollapse";
 import { seedSchema } from "./helpers/seed";
@@ -138,5 +142,121 @@ test.describe("Canvas comfort — v0.8.4 Phase 0 evidence", () => {
 
 		const order = await cardOrder(page);
 		expect(order.indexOf(TASK_A2)).toBeLessThan(order.indexOf(TASK_A1));
+	});
+});
+
+// v0.8.4 Phase 1 — card visuals in the real renderer: the ribbon paints the
+// stripe's ink, in-progress cards are scaled by CSS, the progress line counts
+// direct children, and scaled siblings keep clear of each other.
+const ROOT = "e7f4a1b0-1111-4aaa-8bbb-ccccccccccc1";
+
+const SIBLINGS_SCHEMA = {
+	version: "1.0",
+	title: "In-progress siblings",
+	typeConfig: [{ id: "task", label: "Task" }],
+	nodes: [
+		{
+			id: "p1-root",
+			title: "Root",
+			status: "not-started",
+			children: [
+				{
+					id: "p1-left",
+					title: "Left sibling with a long enough title to wrap",
+					status: "in-progress",
+					type: "task",
+				},
+				{
+					id: "p1-right",
+					title: "Right sibling with a long enough title to wrap",
+					status: "in-progress",
+					type: "unknown-kind",
+				},
+			],
+		},
+	],
+};
+
+test.describe("Canvas comfort — Phase 1 card visuals", () => {
+	test("P1-1: an in-progress parent says how many direct children are done", async ({
+		page,
+	}) => {
+		await seedRichTree(page);
+		const root = page.locator(`[${NODE_CARD_ATTR}="${ROOT}"]`);
+		await expect(root.locator(`[${NODE_PROGRESS_ATTR}]`)).toHaveText(
+			"1 / 2 done",
+		);
+		// Completed Phase A has children too, but only in-progress cards count.
+		await expect(
+			page.locator(`[${NODE_CARD_ATTR}="${PHASE_A}"] [${NODE_PROGRESS_ATTR}]`),
+		).toHaveCount(0);
+	});
+
+	test("P1-2: the ribbon is painted with the stripe's ink on every card", async ({
+		page,
+	}) => {
+		await seedRichTree(page);
+		const pairs = await page.evaluate(
+			({ card, ribbon }) =>
+				Array.from(document.querySelectorAll(`[${card}]`)).map((el) => {
+					const band = el.querySelector(`[${ribbon}]`);
+					return {
+						id: el.getAttribute(card),
+						stripe: getComputedStyle(el, "::before").backgroundColor,
+						ribbon: band ? getComputedStyle(band).backgroundColor : null,
+					};
+				}),
+			{ card: NODE_CARD_ATTR, ribbon: NODE_RIBBON_ATTR },
+		);
+		expect(pairs).toHaveLength(6);
+		for (const p of pairs) {
+			expect(p.ribbon, `ribbon on ${p.id}`).toBe(p.stripe);
+			expect(p.stripe).not.toBe("rgba(0, 0, 0, 0)");
+		}
+	});
+
+	test("P1-3: in-progress cards are scaled by CSS, others are not", async ({
+		page,
+	}) => {
+		await seedRichTree(page);
+		const transformOf = (id: string) =>
+			page
+				.locator(`[${NODE_CARD_ATTR}="${id}"]`)
+				.evaluate((el) => getComputedStyle(el).transform);
+		await expect(page.locator(`[${NODE_CARD_ATTR}="${ROOT}"]`)).toHaveAttribute(
+			NODE_STATUS_ATTR,
+			"in-progress",
+		);
+		expect(await transformOf(ROOT)).toMatch(/^matrix\(1\.06, 0, 0, 1\.06, /);
+		expect(await transformOf(PHASE_A)).toBe("none");
+	});
+
+	test("P1-4: two adjacent in-progress siblings never touch", async ({
+		page,
+	}) => {
+		await seedSchema(page, SIBLINGS_SCHEMA);
+		await expect(page.locator(`[${NODE_CARD_ATTR}]`)).toHaveCount(3);
+		const left = page.locator(`[${NODE_CARD_ATTR}="p1-left"]`);
+		const right = page.locator(`[${NODE_CARD_ATTR}="p1-right"]`);
+		await expect(left.locator(`[${NODE_TYPE_CHIP_ATTR}]`)).toHaveText("Task");
+		await expect(right.locator(`[${NODE_TYPE_CHIP_ATTR}]`)).toHaveText(
+			"unknown-kind",
+		);
+
+		const a = await left.boundingBox();
+		const b = await right.boundingBox();
+		if (!a || !b) throw new Error("sibling cards have no box");
+		const [first, second] = a.x < b.x ? [a, b] : [b, a];
+		const intersects =
+			first.x + first.width > second.x &&
+			second.x + second.width > first.x &&
+			first.y + first.height > second.y &&
+			second.y + second.height > first.y;
+		expect(intersects).toBe(false);
+		// The live pulse ring paints 3px outside each card; with siblings at
+		// 1.1 separation the scaled cards keep more than a tenth of a card
+		// width clear (at 1.0 it was ~3%, ring to ring about 1px).
+		const gap = second.x - (first.x + first.width);
+		expect(gap / first.width).toBeGreaterThan(0.1);
 	});
 });

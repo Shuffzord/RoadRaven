@@ -33,6 +33,10 @@ import {
 import {
 	NODE_CARD_ATTR,
 	NODE_FOCUSED_ATTR,
+	NODE_PROGRESS_ATTR,
+	NODE_RIBBON_ATTR,
+	NODE_STATUS_ATTR,
+	NODE_TYPE_CHIP_ATTR,
 	SAVE_STATE_ATTR,
 } from "../../src/mainview/lib/domContract";
 import { getBuiltInTheme } from "../../src/mainview/themes";
@@ -142,6 +146,49 @@ const statusSamples: SampleSpec[] = STATUS_IDS.flatMap((s) => [
 	},
 ]);
 
+// v0.8.4 Phase 1 card visuals: the card is picked by NODE_STATUS_ATTR, the
+// element by its own data-* hook (domContract.ts), no class names.
+const cardWithStatus = (status: (typeof STATUS_IDS)[number]) =>
+	`${CARD}[${NODE_STATUS_ATTR}="${status}"]`;
+
+const cardVisualSamples: SampleSpec[] = [
+	...STATUS_IDS.map(
+		(s): SampleSpec => ({
+			// The band's own background IS the ink; its clip wrapper is
+			// transparent, so the surface walk starts there and reaches the card.
+			id: `ribbon-${s}`,
+			pairId: `ribbon-${s}`,
+			stage: "page",
+			selector: `${cardWithStatus(s)} [${NODE_RIBBON_ATTR}]`,
+			property: "background-color",
+			paint: "around",
+			evidence: `${RD}:384`,
+		}),
+	),
+	{
+		// Hello World's root is in-progress with children, so it carries the
+		// `n / m done` line. Card ink (NODE_INK), hence the node-title pair.
+		id: "progress-line",
+		pairId: "node-title",
+		stage: "page",
+		selector: `${cardWithStatus("in-progress")} [${NODE_PROGRESS_ATTR}]`,
+		property: "color",
+		paint: "behind",
+		evidence: `${RD}:478`,
+	},
+	{
+		// Every Hello World node carries a type (milestone / task) and the
+		// sample has no typeConfig, so each card shows a raw-id chip.
+		id: "type-chip",
+		pairId: "node-title",
+		stage: "page",
+		selector: `${CARD} [${NODE_TYPE_CHIP_ATTR}]`,
+		property: "color",
+		paint: "behind",
+		evidence: `${RD}:461`,
+	},
+];
+
 /**
  * What is read, per theme, on the Hello World sample. The spec walks the
  * stages in order: `page` right after the theme is applied, `menu` with the
@@ -158,6 +205,7 @@ export const SAMPLES: readonly SampleSpec[] = [
 		evidence: `${RD}:360`,
 	},
 	...statusSamples,
+	...cardVisualSamples,
 	{
 		// The root of Hello World is in-progress and has children, so it is
 		// the one card with a chevron (samples/hello-world.json).

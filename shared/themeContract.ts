@@ -485,6 +485,19 @@ export const CONTRAST_PAIRS: readonly ContrastPair[] = [
 	},
 	...statusPairs,
 	...statusChromePairs,
+	// The status ribbon (v0.8.4 Phase 1): the stripe's numbers, its own id so
+	// the rendered sampler's evidence points at the ribbon element.
+	...STATUS_IDS.map(
+		(s): ContrastPair => ({
+			id: `ribbon-${s}`,
+			label: `${s} status ribbon vs card`,
+			ink: STATUS_TOKENS[s].card,
+			surface: ["--rv-bg-node"],
+			min: NON_TEXT,
+			tier: "required",
+			evidence: "packages/desktop/src/mainview/components/RoadmapNode.tsx:384",
+		}),
+	),
 
 	// --- Non-text UI (WCAG 1.4.11, 3:1) ---
 	{
