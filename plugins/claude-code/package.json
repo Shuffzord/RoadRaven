@@ -19,7 +19,7 @@
 		"dist/index.js"
 	],
 	"engines": {
-		"node": ">=22"
+		"node": ">=24"
 	},
 	"scripts": {
 		"build": "bun build src/index.ts --outdir dist --target node",
@@ -31,7 +31,7 @@
 		"zod": "^4.3.6"
 	},
 	"devDependencies": {
-		"@types/node": "^22",
+		"@types/node": "^24",
 		"typescript": "^5",
 		"vitest": "^4.1.4"
 	},
@@ -44,7 +44,7 @@
 		"url": "git+https://github.com/Shuffzord/RoadRaven.git",
 		"directory": "plugins/claude-code"
 	},
-	"license": "PolyForm-Noncommercial-1.0.0",
+	"license": "FSL-1.1-MIT",
 	"homepage": "https://shuffzord.github.io/RoadRaven/plugin-authoring.html",
 	"bugs": "https://github.com/Shuffzord/RoadRaven/issues"
 }

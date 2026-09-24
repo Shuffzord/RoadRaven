@@ -1,7 +1,6 @@
 # Contributing to RoadRaven
 
-Thank you for considering a contribution. RoadRaven is an MIT-licensed
-open-source desktop app built on Electrobun (not Electron) with Bun as the
+Thank you for considering a contribution. RoadRaven is a source-available desktop app under the [Functional Source License](./LICENSE) (FSL-1.1-MIT, MIT after two years) built on Electrobun (not Electron) with Bun as the
 runtime. This file covers the basics; for the deeper "how the codebase fits
 together" view, see [`docs/development-guide.md`](./docs/development-guide.md).
 
@@ -172,4 +171,4 @@ reports, include:
 ## License
 
 By contributing, you agree your contributions are licensed under the
-project's [MIT License](./LICENSE).
+project's [LICENSE](./LICENSE).
