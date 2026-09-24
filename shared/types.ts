@@ -70,6 +70,11 @@ export interface AppSettings {
 				TB?: Record<string, { dx: number; dy: number }>;
 				LR?: Record<string, { dx: number; dy: number }>;
 			};
+			/**
+			 * v0.8.4 Phase 4: ids of the canvas subtrees the user collapsed.
+			 * View state only — never written into the roadmap JSON.
+			 */
+			collapsed?: string[];
 		}
 	>;
 	eventApi?: {

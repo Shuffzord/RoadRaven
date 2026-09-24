@@ -101,7 +101,7 @@ describe("RoadRavenContextMenu — keyboard navigation", () => {
 
 	it("ArrowDown ArrowDown highlights the second item", async () => {
 		seedSchema();
-		render(<NodeHarness />);
+		render(<NodeHarness nodeId="child-1" />);
 		openMenu(screen.getByTestId("trigger"));
 		const menu = await screen.findByRole("menu", { name: /node actions/i });
 		pressKey(menu, "ArrowDown");

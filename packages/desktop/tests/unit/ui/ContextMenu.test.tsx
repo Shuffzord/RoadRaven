@@ -3,9 +3,17 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { RoadRavenContextMenu } from "../../../src/mainview/components/ContextMenu";
 import {
+	CHEVRON_COLLAPSE_LABEL,
+	CHEVRON_EXPAND_LABEL,
+	COLLAPSE_ALL_LABEL,
+	collapseToDepthLabel,
+	EXPAND_ALL_LABEL,
+} from "../../../src/mainview/lib/domContract";
+import {
 	FOCUS_NODE_EVENT,
 	type NodeFocusRequest,
 } from "../../../src/mainview/lib/focusRequest";
+import { useFileViewStore } from "../../../src/mainview/store/fileViewStore";
 import { useRoadmapStore } from "../../../src/mainview/store/roadmapStore";
 import { resetStore } from "../../helpers/resetStore";
 
@@ -126,7 +134,7 @@ describe("RoadRavenContextMenu — ARIA + structure", () => {
 		expect(menu).toBeTruthy();
 	});
 
-	it("node menu renders items in the expected order with 5 separators", () => {
+	it("node menu renders items in the expected order with 6 separators (root has children: the collapse item shows)", () => {
 		seedSchema();
 		render(<NodeHarness />);
 		openMenu(screen.getByTestId("trigger"));
@@ -137,6 +145,7 @@ describe("RoadRavenContextMenu — ARIA + structure", () => {
 		).map((el) => el.querySelector("span")?.textContent ?? "");
 		expect(labels).toEqual([
 			"Rename",
+			CHEVRON_COLLAPSE_LABEL,
 			"Add Child",
 			"Add Sibling Above",
 			"Add Sibling Below",
@@ -149,7 +158,7 @@ describe("RoadRavenContextMenu — ARIA + structure", () => {
 			"Delete",
 		]);
 		const seps = menu.querySelectorAll('[role="separator"]');
-		expect(seps.length).toBe(5);
+		expect(seps.length).toBe(6);
 	});
 
 	it("each action entry has role='menuitem'", () => {
@@ -157,8 +166,8 @@ describe("RoadRavenContextMenu — ARIA + structure", () => {
 		render(<NodeHarness />);
 		openMenu(screen.getByTestId("trigger"));
 		const menu = screen.getByRole("menu", { name: /node actions/i });
-		// 10 top-level menuitems + 1 submenu trigger = 11
-		expect(menu.querySelectorAll('[role="menuitem"]').length).toBe(11);
+		// 11 top-level menuitems (incl. the collapse item) + 1 submenu trigger
+		expect(menu.querySelectorAll('[role="menuitem"]').length).toBe(12);
 	});
 
 	it("Delete item is styled with --rv-status-blocked", () => {
@@ -207,7 +216,7 @@ describe("RoadRavenContextMenu — ARIA + structure", () => {
 		expect(subTrigger?.getAttribute("aria-haspopup")).toBe("menu");
 	});
 
-	it("canvas menu renders Paste + Add Root Child + Fit to View + Toggle Layout with 1 separator", () => {
+	it("canvas menu renders Paste + Add Root Child + Fit to View + Toggle Layout + the four collapse items with 2 separators", () => {
 		seedSchema();
 		render(<CanvasHarness />);
 		openMenu(screen.getByTestId("trigger"));
@@ -216,8 +225,8 @@ describe("RoadRavenContextMenu — ARIA + structure", () => {
 		expect(menu.textContent).toMatch(/Add Root Child/);
 		expect(menu.textContent).toMatch(/Fit to View/);
 		expect(menu.textContent).toMatch(/Toggle Layout/);
-		expect(menu.querySelectorAll('[role="menuitem"]').length).toBe(4);
-		expect(menu.querySelectorAll('[role="separator"]').length).toBe(1);
+		expect(menu.querySelectorAll('[role="menuitem"]').length).toBe(8);
+		expect(menu.querySelectorAll('[role="separator"]').length).toBe(2);
 	});
 
 	it("Paste item is aria-disabled when lastCopiedSubtree is null (node menu)", () => {
@@ -496,5 +505,81 @@ describe("Canvas menu — Paste inserts under root, not as a second root", () =>
 			menu.querySelectorAll<HTMLElement>('[role="menuitem"]'),
 		).find((el) => el.textContent?.includes("Paste"));
 		expect(pasteItem?.getAttribute("aria-disabled")).toBe("true");
+	});
+});
+
+// v0.8.4 Phase 4 — collapse state is read from fileViewStore (not a DOM
+// chevron snapshot), and the canvas-empty menu carries the tree-wide items.
+describe("RoadRavenContextMenu — collapse (Phase 4)", () => {
+	afterEach(() => {
+		useFileViewStore.getState().expandAll();
+	});
+
+	function menuItem(menu: HTMLElement, label: string): HTMLElement {
+		const item = Array.from(
+			menu.querySelectorAll<HTMLElement>('[role="menuitem"]'),
+		).find((el) => el.querySelector("span")?.textContent === label);
+		if (!item) throw new Error(`no menu item "${label}"`);
+		return item;
+	}
+
+	it("the node item reads the store: Expand subtree on a collapsed node, and it writes the store", () => {
+		seedSchema();
+		useFileViewStore.getState().setCollapsed("root-id", true);
+		render(<NodeHarness />);
+		openMenu(screen.getByTestId("trigger"));
+		const menu = screen.getByRole("menu", { name: /node actions/i });
+
+		fireEvent.click(menuItem(menu, CHEVRON_EXPAND_LABEL));
+
+		expect(useFileViewStore.getState().collapsedIds.has("root-id")).toBe(false);
+	});
+
+	it("a leaf gets no collapse item", () => {
+		seedSchema();
+		render(<NodeHarness nodeId="child-1" />);
+		openMenu(screen.getByTestId("trigger"));
+		const menu = screen.getByRole("menu", { name: /node actions/i });
+		expect(menu.textContent).not.toMatch(/subtree/);
+	});
+
+	it.each([
+		[EXPAND_ALL_LABEL, "expandAll", []],
+		[COLLAPSE_ALL_LABEL, "collapseAll", [["root-id"]]],
+	] as const)("canvas item %s calls the store's %s", (label, action, args) => {
+		seedSchema();
+		// Stubbed: a real write would copy the spy into the next state object,
+		// out of reach of restoreAllMocks.
+		const spy = vi
+			.spyOn(useFileViewStore.getState(), action)
+			.mockImplementation(() => undefined);
+		render(<CanvasHarness />);
+		openMenu(screen.getByTestId("trigger"));
+		const menu = screen.getByRole("menu", { name: /canvas actions/i });
+
+		fireEvent.click(menuItem(menu, label));
+
+		expect(spy).toHaveBeenCalledTimes(1);
+		expect(spy.mock.calls[0]).toEqual(args);
+	});
+
+	it.each([
+		1, 2,
+	])("canvas item Collapse to depth %i calls collapseToDepth with the file's nodes", (depth) => {
+		seedSchema();
+		const spy = vi
+			.spyOn(useFileViewStore.getState(), "collapseToDepth")
+			.mockImplementation(() => undefined);
+		render(<CanvasHarness />);
+		openMenu(screen.getByTestId("trigger"));
+		const menu = screen.getByRole("menu", { name: /canvas actions/i });
+
+		fireEvent.click(menuItem(menu, collapseToDepthLabel(depth)));
+
+		expect(spy).toHaveBeenCalledTimes(1);
+		expect(spy.mock.calls[0]).toEqual([
+			depth,
+			useRoadmapStore.getState().schema?.nodes,
+		]);
 	});
 });

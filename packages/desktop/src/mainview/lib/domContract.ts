@@ -131,3 +131,19 @@ export function linkClassFor(targetId: string): string {
 export function linkFromClassFor(sourceId: string): string {
 	return `rv-link-from-${sourceId}`;
 }
+
+// -- Store-owned collapse (v0.8.4 Phase 4) ------------------------------------
+// Rendered by ContextMenu.tsx (canvas-empty menu) and RoadmapNode.tsx (the
+// chevron); selected on by tests/unit/ui/ContextMenu.test.tsx,
+// tests/unit/ui/components.test.tsx and tests/ui/canvas-comfort.spec.ts.
+
+/** The one chevron button a node card renders, whichever label it carries. */
+export const CHEVRON_SELECTOR = 'button[aria-label$="subtree"]';
+/** Canvas-empty menu item that expands every subtree. */
+export const EXPAND_ALL_LABEL = "Expand all";
+/** Canvas-empty menu item that collapses every node that has children. */
+export const COLLAPSE_ALL_LABEL = "Collapse all";
+/** Canvas-empty menu item: collapse the nodes at `depth` (root is depth 0). */
+export function collapseToDepthLabel(depth: number): string {
+	return `Collapse to depth ${depth}`;
+}

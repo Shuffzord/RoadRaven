@@ -13,6 +13,7 @@ The full feature list and keyboard reference. For a short overview see the
 - **Tree canvas** rendered with react-d3-tree, custom node cards, TB / LR layouts, fit-view, zoom, pan.
 - **Layout knobs** — a popover next to the TB/LR toggle sets sibling gap, depth gap and card density (comfortable / compact), applied live and remembered per file alongside the layout orientation.
 - **Custom layout** — tick "Custom layout" in the same popover to drag cards anywhere on the canvas; connectors follow. Positions are remembered per file and per orientation (TB and LR each keep their own), unticking snaps cards back to the automatic layout without forgetting them, and "Reset positions" clears them. View state only: the roadmap file and agents never see positions.
+- **Collapse that sticks** — collapse a subtree with its chevron, `C`, or the right-click menu, and it stays collapsed through adds, deletes, moves and pastes. The empty-canvas menu adds Expand all, Collapse all and Collapse to depth 1 / 2. What you collapsed is remembered per file; a file you never collapsed opens fully expanded. View state only: the roadmap file never sees it.
 - **Keyboard-first editing**
   - Inline rename: `F2` or double-click a node card
   - Add child / sibling: `Enter`, `Tab`, `Shift+Enter`

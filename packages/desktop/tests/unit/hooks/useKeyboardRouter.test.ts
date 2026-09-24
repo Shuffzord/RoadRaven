@@ -7,6 +7,7 @@ import {
 	FOCUS_NODE_EVENT,
 	type NodeFocusRequest,
 } from "../../../src/mainview/lib/focusRequest";
+import { useFileViewStore } from "../../../src/mainview/store/fileViewStore";
 import { useRoadmapStore } from "../../../src/mainview/store/roadmapStore";
 import { resetStore } from "../../helpers/resetStore";
 
@@ -35,34 +36,17 @@ function childIdsOf(nodeId: string): string[] {
 }
 
 /**
- * Stand in for the canvas card react-d3-tree renders, with the chevron
- * `lib/nodeCollapse.ts` reads and clicks. The click flips the label the way
- * the real toggle does, so a second key press sees the new state.
+ * v0.8.4 Phase 4: collapse state lives in fileViewStore, not in a DOM
+ * chevron. Seeds it and returns a counter of later collapse writes.
  */
-function mountCardWithChevron(
-	nodeId: string,
-	collapsed: boolean,
-): ReturnType<typeof vi.fn> {
-	const card = document.createElement("div");
-	card.setAttribute("data-source-id", nodeId);
-	const chevron = document.createElement("button");
-	chevron.setAttribute(
-		"aria-label",
-		collapsed ? "Expand subtree" : "Collapse subtree",
-	);
-	const onClick = vi.fn(() => {
-		chevron.setAttribute(
-			"aria-label",
-			chevron.getAttribute("aria-label") === "Expand subtree"
-				? "Collapse subtree"
-				: "Expand subtree",
-		);
-	});
-	chevron.addEventListener("click", onClick);
-	card.appendChild(chevron);
-	document.body.appendChild(card);
-	return onClick;
+function trackCollapse(nodeId: string, collapsed: boolean): () => number {
+	useFileViewStore.getState().setCollapsed(nodeId, collapsed);
+	const start = useFileViewStore.getState().collapseVersion;
+	return () => useFileViewStore.getState().collapseVersion - start;
 }
+
+const isCollapsed = (nodeId: string): boolean =>
+	useFileViewStore.getState().collapsedIds.has(nodeId);
 
 const ROOT_ID = "aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee";
 const CHILD_A_ID = "11111111-2222-4333-8444-555555555555";
@@ -129,6 +113,7 @@ afterEach(() => {
 	// Cleanup any stray event listeners from renderHook
 	while (cleanups.length) cleanups.pop()?.();
 	resetStore();
+	useFileViewStore.getState().expandAll();
 	vi.restoreAllMocks();
 	document.body.innerHTML = "";
 });
@@ -192,27 +177,20 @@ describe("useKeyboardRouter", () => {
 		);
 	});
 
-	it("C toggles collapse on the focused node by clicking its chevron", () => {
+	it("C toggles collapse on the focused node in the store, both ways", () => {
 		useRoadmapStore.getState().setFocusedNode(CHILD_B_ID);
-		// Stand in for the canvas card + chevron that react-d3-tree renders.
-		const card = document.createElement("div");
-		card.setAttribute("data-source-id", CHILD_B_ID);
-		const chevron = document.createElement("button");
-		chevron.setAttribute("aria-label", "Collapse subtree");
-		const onClick = vi.fn();
-		chevron.addEventListener("click", onClick);
-		card.appendChild(chevron);
-		document.body.appendChild(card);
 
 		renderRouter();
 		fireEvent.keyDown(document, { key: "c" });
-		expect(onClick).toHaveBeenCalledTimes(1);
+		expect(isCollapsed(CHILD_B_ID)).toBe(true);
+		fireEvent.keyDown(document, { key: "C" });
+		expect(isCollapsed(CHILD_B_ID)).toBe(false);
 	});
 
-	it("plain C is a no-op when the focused node has no chevron (leaf)", () => {
+	it("plain C is a no-op when the focused node has no children (leaf)", () => {
 		useRoadmapStore.getState().setFocusedNode(CHILD_A_ID);
 		renderRouter();
-		// No card/chevron in the DOM — must not throw and must not preventDefault.
+		// Must not throw and must not preventDefault.
 		const evt = new KeyboardEvent("keydown", {
 			key: "c",
 			cancelable: true,
@@ -224,14 +202,7 @@ describe("useKeyboardRouter", () => {
 
 	it("Ctrl+C does NOT trigger collapse (defers to copy)", () => {
 		useRoadmapStore.getState().setFocusedNode(CHILD_B_ID);
-		const card = document.createElement("div");
-		card.setAttribute("data-source-id", CHILD_B_ID);
-		const chevron = document.createElement("button");
-		chevron.setAttribute("aria-label", "Collapse subtree");
-		const onClick = vi.fn();
-		chevron.addEventListener("click", onClick);
-		card.appendChild(chevron);
-		document.body.appendChild(card);
+		const writes = trackCollapse(CHILD_B_ID, false);
 		vi.spyOn(
 			useRoadmapStore.getState(),
 			"copySubtreeToClipboard",
@@ -239,7 +210,7 @@ describe("useKeyboardRouter", () => {
 
 		renderRouter();
 		fireEvent.keyDown(document, { key: "c", ctrlKey: true });
-		expect(onClick).not.toHaveBeenCalled();
+		expect(writes()).toBe(0);
 	});
 
 	it("Ctrl+D duplicates focused node", () => {
@@ -498,20 +469,21 @@ describe("useKeyboardRouter", () => {
 		] as const)("%s: child key on a collapsed node expands it and keeps focus", (_label, layout, key) => {
 			if (layout) useRoadmapStore.getState().setLayout(layout);
 			useRoadmapStore.getState().setFocusedNode(CHILD_B_ID);
-			const onClick = mountCardWithChevron(CHILD_B_ID, true);
+			const writes = trackCollapse(CHILD_B_ID, true);
 			const seen = captureRequests();
 			renderRouter();
 
 			fireEvent.keyDown(document, { key });
 
-			expect(onClick).toHaveBeenCalledTimes(1);
+			expect(writes()).toBe(1);
+			expect(isCollapsed(CHILD_B_ID)).toBe(false);
 			expect(useRoadmapStore.getState().focusedNodeId).toBe(CHILD_B_ID);
 			expect(seen).toEqual([]);
 		});
 
 		it("the next child key then enters the first child", () => {
 			useRoadmapStore.getState().setFocusedNode(CHILD_B_ID);
-			mountCardWithChevron(CHILD_B_ID, true);
+			trackCollapse(CHILD_B_ID, true);
 			renderRouter();
 
 			fireEvent.keyDown(document, { key: "ArrowDown" });
@@ -522,23 +494,23 @@ describe("useKeyboardRouter", () => {
 
 		it("child key on an expanded node enters the first child straight away", () => {
 			useRoadmapStore.getState().setFocusedNode(CHILD_B_ID);
-			const onClick = mountCardWithChevron(CHILD_B_ID, false);
+			const writes = trackCollapse(CHILD_B_ID, false);
 			renderRouter();
 
 			fireEvent.keyDown(document, { key: "ArrowDown" });
 
-			expect(onClick).not.toHaveBeenCalled();
+			expect(writes()).toBe(0);
 			expect(useRoadmapStore.getState().focusedNodeId).toBe(CHILD_B1_ID);
 		});
 
 		it("parent key never collapses the node it leaves", () => {
 			useRoadmapStore.getState().setFocusedNode(CHILD_B1_ID);
-			const onClick = mountCardWithChevron(CHILD_B_ID, false);
+			const writes = trackCollapse(CHILD_B_ID, false);
 			renderRouter();
 
 			fireEvent.keyDown(document, { key: "ArrowUp" });
 
-			expect(onClick).not.toHaveBeenCalled();
+			expect(writes()).toBe(0);
 			expect(useRoadmapStore.getState().focusedNodeId).toBe(CHILD_B_ID);
 		});
 	});

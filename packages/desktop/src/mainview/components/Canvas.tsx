@@ -11,6 +11,7 @@ import { useInlineRename } from "../hooks/useInlineRename";
 import { useKeyboardRouter } from "../hooks/useKeyboardRouter";
 import { useNodeDrag } from "../hooks/useNodeDrag";
 import { useRecentFiles } from "../hooks/useRecentFiles";
+import { pruneCollapsed, shownChildCount } from "../lib/collapseTree";
 import {
 	linkClassFor,
 	linkFromClassFor,
@@ -146,6 +147,19 @@ export function Canvas() {
 	// separation/nodeSize object and force it to remount its layout.
 	const { siblingGap, depthGap, density } = useFileViewStore(
 		(s) => s.layoutKnobs,
+	);
+
+	// v0.8.4 Phase 4 (RC1): collapse state is the file-view store's. The tree
+	// gets the store tree pruned by it — the SAME object while nothing is
+	// collapsed — and a dataKey that changes with either, because
+	// react-d3-tree re-clones (and wipes its own flags) only when both the
+	// data reference and the dataKey change.
+	const collapsedIds = useFileViewStore((s) => s.collapsedIds);
+	const collapseVersion = useFileViewStore((s) => s.collapseVersion);
+	const toggleCollapsed = useFileViewStore((s) => s.toggleCollapsed);
+	const shownTree = useMemo(
+		() => (treeData ? pruneCollapsed(treeData, collapsedIds) : null),
+		[treeData, collapsedIds],
 	);
 	const { separation, nodeSize } = useMemo(
 		() => treeLayoutFor({ siblingGap, depthGap, density }, layoutOrientation),
@@ -364,11 +378,10 @@ export function Canvas() {
 	);
 
 	const renderNode = useCallback(
-		({ nodeDatum, toggleNode }: CustomNodeElementProps) => {
+		({ nodeDatum }: CustomNodeElementProps) => {
 			const status = (nodeDatum.attributes?.status as string) ?? "not-started";
 			const nodeId = nodeDatum.attributes?.id as string;
-			const children = nodeDatum.children ?? [];
-			const hasChildren = children.length > 0;
+			const childCount = shownChildCount(nodeDatum);
 			const rd3t = nodeDatum.__rd3t;
 			const isRenaming = inlineRename.state.nodeId === nodeId;
 			const placement = placeCard(nodeId);
@@ -390,11 +403,11 @@ export function Canvas() {
 						isSearchMatch={searchMatchSet.has(nodeId)}
 						isSearchCurrent={searchCurrentId === nodeId}
 						isSearchDimmed={searchActive && !searchMatchSet.has(nodeId)}
-						hasChildren={hasChildren}
-						isCollapsed={!!rd3t?.collapsed}
-						childCount={children.length}
+						hasChildren={childCount > 0}
+						isCollapsed={collapsedIds.has(nodeId)}
+						childCount={childCount}
 						density={density}
-						onToggle={toggleNode}
+						onToggle={() => toggleCollapsed(nodeId)}
 						onSelect={() => {
 							// The click the browser fires after a real drag.
 							if (consumeDragClick()) return;
@@ -427,6 +440,8 @@ export function Canvas() {
 			placeCard,
 			cardDrag,
 			consumeDragClick,
+			collapsedIds,
+			toggleCollapsed,
 		],
 	);
 
@@ -471,7 +486,7 @@ export function Canvas() {
 					}}
 				/>
 
-				{treeData === null ? (
+				{shownTree === null ? (
 					<WelcomeScreen
 						recentFiles={recentFiles}
 						onOpenFile={openFile}
@@ -486,8 +501,8 @@ export function Canvas() {
 					// and the tree items so the ARIA hierarchy is application > tree > treeitem.
 					<div role="tree" aria-label="Roadmap tree" className="w-full h-full">
 						<Tree
-							data={treeData}
-							dataKey={dataKey}
+							data={shownTree}
+							dataKey={`${dataKey}:${collapseVersion}`}
 							orientation={
 								layoutOrientation === "TB" ? "vertical" : "horizontal"
 							}
@@ -499,7 +514,7 @@ export function Canvas() {
 							scaleExtent={SCALE_EXTENT}
 							enableLegacyTransitions={false}
 							centeringTransitionDuration={800}
-							collapsible={true}
+							collapsible={false}
 							zoomable={true}
 							draggable={true}
 							translate={translate}

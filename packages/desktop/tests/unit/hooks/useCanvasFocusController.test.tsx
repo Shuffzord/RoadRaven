@@ -28,6 +28,7 @@ vi.mock("@logtape/logtape", () => ({
 
 import { useCanvasFocusController } from "../../../src/mainview/hooks/useCanvasFocusController";
 import { requestNodeFocus } from "../../../src/mainview/lib/focusRequest";
+import { useFileViewStore } from "../../../src/mainview/store/fileViewStore";
 import { useRoadmapStore } from "../../../src/mainview/store/roadmapStore";
 
 const ROOT_ID = "aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee";
@@ -99,49 +100,17 @@ function mountCard(nodeId: string, box: DOMRect): HTMLElement {
 	return card;
 }
 
-/** A card whose chevron reads "Expand subtree" until it is clicked. */
-function mountCollapsedCard(nodeId: string, onExpand: () => void): void {
-	const card = mountCard(nodeId, rect(0, 0, 10, 10));
-	const chevron = document.createElement("button");
-	chevron.type = "button";
-	chevron.setAttribute("aria-label", "Expand subtree");
-	chevron.addEventListener("click", () => {
-		expansions.push(nodeId);
-		chevron.setAttribute("aria-label", "Collapse subtree");
-		onExpand();
-	});
-	card.appendChild(chevron);
-}
-
-/**
- * A card whose chevron reads "Collapse subtree" and, when clicked, unmounts
- * the cards of `descendants` — what react-d3-tree does on a real collapse.
- */
-function mountExpandedCard(nodeId: string, descendants: string[]): void {
-	const card = mountCard(nodeId, rect(0, 0, 10, 10));
-	const chevron = document.createElement("button");
-	chevron.type = "button";
-	chevron.setAttribute("aria-label", "Collapse subtree");
-	chevron.addEventListener("click", () => {
-		chevron.setAttribute("aria-label", "Expand subtree");
-		for (const id of descendants) findCard(id)?.remove();
-	});
-	card.appendChild(chevron);
-}
-
 function findCard(nodeId: string): HTMLElement | null {
 	return canvasEl.querySelector<HTMLElement>(`[data-source-id="${nodeId}"]`);
 }
 
-function clickChevron(nodeId: string): void {
+/** v0.8.4 Phase 4: every collapse is a fileViewStore write. */
+function setCollapsed(nodeId: string, on: boolean): void {
 	act(() => {
-		findCard(nodeId)
-			?.querySelector<HTMLButtonElement>('button[aria-label$="subtree"]')
-			?.click();
+		useFileViewStore.getState().setCollapsed(nodeId, on);
 	});
 }
 
-const expansions: string[] = [];
 const panBy = vi.fn<(dx: number, dy: number) => void>();
 const openRename = vi.fn<(nodeId: string) => void>();
 
@@ -171,7 +140,6 @@ beforeEach(() => {
 	canvasEl.tabIndex = 0;
 	canvasEl.getBoundingClientRect = () => containerRect;
 	document.body.appendChild(canvasEl);
-	expansions.length = 0;
 	panBy.mockClear();
 	openRename.mockClear();
 	logged.warn.mockClear();
@@ -183,6 +151,7 @@ afterEach(() => {
 	vi.restoreAllMocks();
 	document.body.innerHTML = "";
 	resetStore();
+	useFileViewStore.getState().expandAll();
 });
 
 describe("useCanvasFocusController — reveal", () => {
@@ -259,12 +228,21 @@ describe("useCanvasFocusController — reveal", () => {
 		expect(logged.warn).not.toHaveBeenCalled();
 	});
 
-	it("expands collapsed ancestors top-down before it measures a jump-to", () => {
-		mountCollapsedCard(ROOT_ID, () => {
-			mountCollapsedCard(CHILD_ID, () => {
+	/**
+	 * v0.8.4 Phase 4: ROOT and CHILD collapsed in the store; the grandchild's
+	 * card mounts only once both are expanded, as the pruned tree would.
+	 */
+	function collapseAboveGrandchild(): () => void {
+		useFileViewStore.getState().collapseAll([ROOT_ID, CHILD_ID]);
+		return useFileViewStore.subscribe((s) => {
+			if (s.collapsedIds.size === 0 && !findCard(GRANDCHILD_ID)) {
 				mountCard(GRANDCHILD_ID, OUTSIDE);
-			});
+			}
 		});
+	}
+
+	it("expands collapsed ancestors in one store write before it measures a jump-to", () => {
+		const unsub = collapseAboveGrandchild();
 		renderController();
 
 		act(() => {
@@ -273,28 +251,29 @@ describe("useCanvasFocusController — reveal", () => {
 		expect(panBy).not.toHaveBeenCalled();
 		frames(8);
 
-		expect(expansions).toEqual([ROOT_ID, CHILD_ID]);
+		expect(useFileViewStore.getState().collapsedIds.size).toBe(0);
 		expect(panBy).toHaveBeenCalledTimes(1);
 		expect(panBy).toHaveBeenCalledWith(-300, 0);
+		unsub();
 	});
 
 	// The camera never restructures the tree behind the user's back: whether a
 	// child-direction key should expand a collapsed node is `enterChild`'s
-	// decision (A6, Phase 4), and RC6 stays reproducible until then.
+	// decision (A6), not the camera's.
 	it("does not expand anything for an arrow-key reveal", () => {
-		mountCollapsedCard(ROOT_ID, () => {
-			mountCollapsedCard(CHILD_ID, () => {
-				mountCard(GRANDCHILD_ID, OUTSIDE);
-			});
-		});
+		const unsub = collapseAboveGrandchild();
 		renderController();
 
 		act(() => {
 			requestNodeFocus(GRANDCHILD_ID, { align: "nearest" });
 		});
 		frames(40);
+		unsub();
 
-		expect(expansions).toEqual([]);
+		expect([...useFileViewStore.getState().collapsedIds]).toEqual([
+			ROOT_ID,
+			CHILD_ID,
+		]);
 		expect(panBy).not.toHaveBeenCalled();
 		expect(logged.warn).toHaveBeenCalledTimes(1);
 	});
@@ -775,15 +754,20 @@ describe("useCanvasFocusController — create and rename (RC4)", () => {
 // Collapsing a subtree unmounts every descendant card. Phase 0 recorded what
 // that costs when focus was inside it: NO card shows focus, and the next
 // sibling key resolves inside the hidden subtree too, so the canvas stays
-// blank-focused until a mouse click. All three collapse entry points (the `C`
-// key, the context menu's "Collapse subtree" and the mouse) end in the same
-// chevron click, so one delegated listener covers them all.
+// blank-focused until a mouse click. v0.8.4 Phase 4: every collapse entry
+// point (the `C` key, the chevron, the context menu, "Collapse all") is a
+// fileViewStore write, so these cases drive the store directly.
 describe("useCanvasFocusController — focus survives a collapse (RC6)", () => {
 	function mountFamily(): void {
-		mountExpandedCard(ROOT_ID, [CHILD_ID, GRANDCHILD_ID]);
-		mountExpandedCard(CHILD_ID, [GRANDCHILD_ID]);
-		mountCard(GRANDCHILD_ID, OUTSIDE);
+		mountCard(ROOT_ID, rect(0, 0, 10, 10));
+		mountCard(CHILD_ID, rect(0, 0, 10, 10));
 		mountCard(SIBLING_ID, OUTSIDE);
+	}
+
+	function focusNode(nodeId: string): void {
+		act(() => {
+			useRoadmapStore.getState().setFocusedNode(nodeId);
+		});
 	}
 
 	// Test audit (2026-09-21): merged near-duplicate pair — both mount the
@@ -795,14 +779,25 @@ describe("useCanvasFocusController — focus survives a collapse (RC6)", () => {
 	])("moves focus to the collapsed node when it is %s", (_label, toggled) => {
 		mountFamily();
 		renderController();
-		act(() => {
-			useRoadmapStore.getState().setFocusedNode(GRANDCHILD_ID);
-		});
+		focusNode(GRANDCHILD_ID);
 
-		clickChevron(toggled);
+		setCollapsed(toggled, true);
 		frames(4);
 
 		expect(useRoadmapStore.getState().focusedNodeId).toBe(toggled);
+	});
+
+	it("lands on the topmost ancestor a Collapse all hid it under", () => {
+		mountFamily();
+		renderController();
+		focusNode(GRANDCHILD_ID);
+
+		act(() => {
+			useFileViewStore.getState().collapseAll([ROOT_ID, CHILD_ID]);
+		});
+		frames(4);
+
+		expect(useRoadmapStore.getState().focusedNodeId).toBe(ROOT_ID);
 	});
 
 	// Selection drives the SidePanel — what the user chose to INSPECT. A
@@ -818,7 +813,7 @@ describe("useCanvasFocusController — focus survives a collapse (RC6)", () => {
 			useRoadmapStore.getState().setSelectedNode(GRANDCHILD_ID);
 		});
 
-		clickChevron(CHILD_ID);
+		setCollapsed(CHILD_ID, true);
 		frames(4);
 
 		expect(useRoadmapStore.getState().selectedNodeId).toBe(GRANDCHILD_ID);
@@ -827,11 +822,9 @@ describe("useCanvasFocusController — focus survives a collapse (RC6)", () => {
 	it("leaves focus alone when the focused node is not a descendant", () => {
 		mountFamily();
 		renderController();
-		act(() => {
-			useRoadmapStore.getState().setFocusedNode(SIBLING_ID);
-		});
+		focusNode(SIBLING_ID);
 
-		clickChevron(CHILD_ID);
+		setCollapsed(CHILD_ID, true);
 		frames(4);
 
 		expect(useRoadmapStore.getState().focusedNodeId).toBe(SIBLING_ID);
@@ -840,12 +833,10 @@ describe("useCanvasFocusController — focus survives a collapse (RC6)", () => {
 	it("leaves focus alone when the collapsed node IS the focused node", () => {
 		mountFamily();
 		renderController();
-		act(() => {
-			useRoadmapStore.getState().setFocusedNode(CHILD_ID);
-		});
+		focusNode(CHILD_ID);
 		panBy.mockClear();
 
-		clickChevron(CHILD_ID);
+		setCollapsed(CHILD_ID, true);
 		frames(4);
 
 		expect(useRoadmapStore.getState().focusedNodeId).toBe(CHILD_ID);
@@ -855,29 +846,24 @@ describe("useCanvasFocusController — focus survives a collapse (RC6)", () => {
 	it("stands down when something else claimed focus before the frame landed", () => {
 		mountFamily();
 		renderController();
-		act(() => {
-			useRoadmapStore.getState().setFocusedNode(GRANDCHILD_ID);
-		});
+		focusNode(GRANDCHILD_ID);
 
-		clickChevron(CHILD_ID);
-		act(() => {
-			useRoadmapStore.getState().setFocusedNode(SIBLING_ID);
-		});
+		setCollapsed(CHILD_ID, true);
+		focusNode(SIBLING_ID);
 		frames(4);
 
 		expect(useRoadmapStore.getState().focusedNodeId).toBe(SIBLING_ID);
 	});
 
-	it("does nothing when the click left the focused card mounted", () => {
-		mountExpandedCard(CHILD_ID, []);
+	it("an expand never moves focus", () => {
+		mountFamily();
 		mountCard(GRANDCHILD_ID, OUTSIDE);
+		useFileViewStore.getState().setCollapsed(ROOT_ID, true);
 		renderController();
-		act(() => {
-			useRoadmapStore.getState().setFocusedNode(GRANDCHILD_ID);
-		});
+		focusNode(GRANDCHILD_ID);
 		panBy.mockClear();
 
-		clickChevron(CHILD_ID);
+		setCollapsed(ROOT_ID, false);
 		frames(4);
 
 		expect(useRoadmapStore.getState().focusedNodeId).toBe(GRANDCHILD_ID);

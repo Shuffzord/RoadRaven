@@ -4,7 +4,11 @@ import { expect, type Page, test } from "@playwright/test";
 import {
 	CHEVRON_COLLAPSE_LABEL,
 	CHEVRON_EXPAND_LABEL,
+	CHEVRON_SELECTOR,
+	COLLAPSE_ALL_LABEL,
 	CUSTOM_LAYOUT_LABEL,
+	collapseToDepthLabel,
+	EXPAND_ALL_LABEL,
 	KNOB_RESET_LABEL,
 	KNOB_SIBLING_GAP_LABEL,
 	LAYOUT_KNOBS_TRIGGER_LABEL,
@@ -18,8 +22,11 @@ import {
 	NODE_TYPE_CHIP_ATTR,
 	RESET_POSITIONS_LABEL,
 } from "../../src/mainview/lib/domContract";
-import { CHEVRON_SELECTOR } from "../../src/mainview/lib/nodeCollapse";
-import { CONTAINER, dragCard } from "./helpers/canvasGestures";
+import {
+	CONTAINER,
+	dragCard,
+	emptyCanvasPoint,
+} from "./helpers/canvasGestures";
 import { seedSchema } from "./helpers/seed";
 
 // v0.8.4 Phase 0 — evidence gate for RC1 (collapse state wiped by any
@@ -105,8 +112,8 @@ test.describe("Canvas comfort — v0.8.4 Phase 0 evidence", () => {
 		// RC1: react-d3-tree's assignInternalProperties rewrites
 		// __rd3t.collapsed=false for EVERY node whenever dataKey changes, and
 		// any structural edit (here: Phase B's new child) bumps dataKey — so
-		// Phase A's unrelated collapse is wiped. Fixed in Phase 4.
-		test.fail();
+		// Phase A's unrelated collapse was wiped. Fixed in Phase 4: collapse
+		// state lives in fileViewStore and the tree is handed a pruned copy.
 
 		await expect(phaseAChevron).toHaveAttribute(
 			"aria-label",
@@ -617,5 +624,174 @@ test.describe("Canvas comfort — Phase 3 custom layout", () => {
 
 		await setCustomLayout(page, false);
 		expect(await shape()).toEqual(off);
+	});
+});
+
+// v0.8.4 Phase 4 — collapse state is owned by fileViewStore (RC1): it
+// survives structural edits, and every entry point (chevron, `C`, the node
+// menu, search, the canvas-empty menu) drives the same store.
+const TASK_B1 = "e7f4a1b0-3333-4aaa-8bbb-ccccccccccc6";
+
+test.describe("Canvas comfort — Phase 4 collapse", () => {
+	const card = (page: Page, id: string) =>
+		page.locator(`[${NODE_CARD_ATTR}="${id}"]`);
+	const chevronOf = (page: Page, id: string) =>
+		card(page, id).locator(CHEVRON_SELECTOR);
+	const allCards = (page: Page) => page.locator(`[${NODE_CARD_ATTR}]`);
+
+	async function expectPhaseACollapsed(page: Page): Promise<void> {
+		await expect(chevronOf(page, PHASE_A)).toHaveAttribute(
+			"aria-label",
+			CHEVRON_EXPAND_LABEL,
+		);
+		await expect(card(page, TASK_A1)).toHaveCount(0);
+	}
+
+	async function collapsePhaseA(page: Page): Promise<void> {
+		await chevronOf(page, PHASE_A).click();
+		await expectPhaseACollapsed(page);
+	}
+
+	async function canvasMenuItem(page: Page, label: string): Promise<void> {
+		const at = await emptyCanvasPoint(page);
+		await page.mouse.click(at.x, at.y, { button: "right" });
+		const menu = page.getByRole("menu", { name: "Canvas actions" });
+		await menu.getByRole("menuitem", { name: label }).click();
+	}
+
+	test("P4-1: a collapsed subtree stays collapsed across a reorder, an add and a delete", async ({
+		page,
+	}) => {
+		await seedRichTree(page);
+		await collapsePhaseA(page);
+
+		// Reorder (Phase B above Phase A) — a dataKey bump.
+		await card(page, PHASE_B).click();
+		await expect(card(page, PHASE_B)).toHaveAttribute(
+			NODE_FOCUSED_ATTR,
+			"true",
+		);
+		await page.keyboard.press("Control+ArrowUp");
+		await expect
+			.poll(async () => {
+				const order = await cardOrder(page);
+				return order.indexOf(PHASE_B) < order.indexOf(PHASE_A);
+			})
+			.toBe(true);
+		await expectPhaseACollapsed(page);
+
+		// Add a child under Task B1, then delete it.
+		await card(page, TASK_B1).click();
+		await expect(card(page, TASK_B1)).toHaveAttribute(
+			NODE_FOCUSED_ATTR,
+			"true",
+		);
+		await page.keyboard.press("Enter");
+		await expect(page.locator('input[aria-label="Rename node"]')).toBeVisible();
+		await page.keyboard.press("Escape");
+		await expect(allCards(page)).toHaveCount(5);
+		await expectPhaseACollapsed(page);
+
+		const known = new Set([ROOT, PHASE_A, PHASE_B, TASK_B1]);
+		const added = (await cardOrder(page)).find((id) => !known.has(id));
+		if (!added) throw new Error("the new node has no card");
+		await card(page, added).click();
+		await expect(card(page, added)).toHaveAttribute(NODE_FOCUSED_ATTR, "true");
+		await page.keyboard.press("Delete");
+		await expect(allCards(page)).toHaveCount(4);
+		await expectPhaseACollapsed(page);
+	});
+
+	test("P4-2: C collapses the focused parent and C again expands it", async ({
+		page,
+	}) => {
+		await seedRichTree(page);
+		await card(page, PHASE_A).click();
+		await expect(card(page, PHASE_A)).toHaveAttribute(
+			NODE_FOCUSED_ATTR,
+			"true",
+		);
+
+		await page.keyboard.press("c");
+		await expectPhaseACollapsed(page);
+
+		await page.keyboard.press("c");
+		await expect(chevronOf(page, PHASE_A)).toHaveAttribute(
+			"aria-label",
+			CHEVRON_COLLAPSE_LABEL,
+		);
+		await expect(card(page, TASK_A1)).toHaveCount(1);
+	});
+
+	test("P4-3: search reveals and focuses a match inside a collapsed subtree", async ({
+		page,
+	}) => {
+		await seedRichTree(page);
+		await collapsePhaseA(page);
+		await card(page, PHASE_B).click();
+
+		await page.keyboard.press("Control+f");
+		await page
+			.getByRole("textbox", { name: "Search nodes" })
+			.pressSequentially("Task A1");
+
+		await expect(card(page, TASK_A1)).toHaveCount(1);
+		await expect(card(page, TASK_A1)).toHaveAttribute(
+			NODE_FOCUSED_ATTR,
+			"true",
+		);
+		await expect(chevronOf(page, PHASE_A)).toHaveAttribute(
+			"aria-label",
+			CHEVRON_COLLAPSE_LABEL,
+		);
+	});
+
+	test("P4-4: collapsing the focused card's ancestor from the menu moves focus to it (RC6)", async ({
+		page,
+	}) => {
+		await seedRichTree(page);
+		await card(page, TASK_A1).click();
+		await expect(card(page, TASK_A1)).toHaveAttribute(
+			NODE_FOCUSED_ATTR,
+			"true",
+		);
+
+		await card(page, PHASE_A).click({ button: "right" });
+		await page
+			.getByRole("menu", { name: "Node actions" })
+			.getByRole("menuitem", { name: CHEVRON_COLLAPSE_LABEL })
+			.click();
+
+		await expectPhaseACollapsed(page);
+		await expect(card(page, PHASE_A)).toHaveAttribute(
+			NODE_FOCUSED_ATTR,
+			"true",
+		);
+	});
+
+	test("P4-5: the canvas menu collapses all, expands all and collapses to depth 1", async ({
+		page,
+	}) => {
+		await seedRichTree(page);
+
+		// Collapse all = every node WITH children, Root included.
+		await canvasMenuItem(page, COLLAPSE_ALL_LABEL);
+		await expect(allCards(page)).toHaveCount(1);
+		await expect(card(page, ROOT)).toHaveCount(1);
+
+		await canvasMenuItem(page, EXPAND_ALL_LABEL);
+		await expect(allCards(page)).toHaveCount(6);
+
+		await canvasMenuItem(page, collapseToDepthLabel(1));
+		await expect(allCards(page)).toHaveCount(3);
+		await expect(chevronOf(page, ROOT)).toHaveAttribute(
+			"aria-label",
+			CHEVRON_COLLAPSE_LABEL,
+		);
+		await expectPhaseACollapsed(page);
+		await expect(chevronOf(page, PHASE_B)).toHaveAttribute(
+			"aria-label",
+			CHEVRON_EXPAND_LABEL,
+		);
 	});
 });

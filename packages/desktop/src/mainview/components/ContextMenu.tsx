@@ -1,9 +1,18 @@
 import * as ContextMenuPrimitive from "@radix-ui/react-context-menu";
 import { type ReactNode, useState } from "react";
 import { useShallow } from "zustand/react/shallow";
+import { parentIds } from "../lib/collapseTree";
+import {
+	CHEVRON_COLLAPSE_LABEL,
+	CHEVRON_EXPAND_LABEL,
+	COLLAPSE_ALL_LABEL,
+	collapseToDepthLabel,
+	EXPAND_ALL_LABEL,
+} from "../lib/domContract";
 import { trackMenuFocus } from "../lib/focusHandoff";
 import { requestNodeFocus } from "../lib/focusRequest";
 import { getNodeCollapseState, toggleNodeCollapse } from "../lib/nodeCollapse";
+import { useFileViewStore } from "../store/fileViewStore";
 import { useRoadmapStore } from "../store/roadmapStore";
 import {
 	HINT_CLASS,
@@ -19,6 +28,9 @@ const DEFAULT_STATUSES: ReadonlyArray<{ id: string; label: string }> = [
 	{ id: "completed", label: "Completed" },
 	{ id: "blocked", label: "Blocked" },
 ];
+
+/** "Collapse to depth N" items on the canvas-empty menu. */
+const COLLAPSE_DEPTHS = [1, 2] as const;
 
 interface RoadRavenContextMenuProps {
 	children: ReactNode;
@@ -107,8 +119,8 @@ function NodeMenuItems({ nodeId }: { nodeId: string }) {
 	);
 	const canPaste = useRoadmapStore((s) => s.lastCopiedSubtree !== null);
 	const schema = useRoadmapStore((s) => s.schema);
-	// Snapshot collapse state once when the menu opens — read from the live DOM
-	// chevron since react-d3-tree owns this state (see lib/nodeCollapse.ts).
+	// Snapshot collapse state once when the menu opens (fileViewStore owns it;
+	// see lib/nodeCollapse.ts).
 	const [collapse] = useState(() => getNodeCollapseState(nodeId));
 
 	// Paste enabled when the in-memory buffer has content. System clipboard
@@ -140,7 +152,9 @@ function NodeMenuItems({ nodeId }: { nodeId: string }) {
 						onSelect={() => toggleNodeCollapse(nodeId)}
 					>
 						<span>
-							{collapse.collapsed ? "Expand subtree" : "Collapse subtree"}
+							{collapse.collapsed
+								? CHEVRON_EXPAND_LABEL
+								: CHEVRON_COLLAPSE_LABEL}
 						</span>
 						<span className={HINT_CLASS}>C</span>
 					</ContextMenuPrimitive.Item>
@@ -272,6 +286,10 @@ function CanvasMenuItems() {
 	const layoutOrientation = useRoadmapStore((s) => s.layoutOrientation);
 	const canPaste = useRoadmapStore((s) => s.lastCopiedSubtree !== null);
 	const rootId = useRoadmapStore((s) => s.schema?.nodes?.[0]?.id ?? null);
+	// v0.8.4 Phase 4: tree-wide collapse. Nodes are read when the item fires,
+	// so the menu itself never re-renders on an edit.
+	const nodes = () => useRoadmapStore.getState().schema?.nodes ?? [];
+	const view = useFileViewStore.getState;
 
 	return (
 		<>
@@ -310,6 +328,31 @@ function CanvasMenuItems() {
 			>
 				<span>Toggle Layout</span>
 			</ContextMenuPrimitive.Item>
+			<ContextMenuPrimitive.Separator className={SEP_CLASS} />
+			<ContextMenuPrimitive.Item
+				className={ITEM_CLASS}
+				disabled={!rootId}
+				onSelect={() => view().expandAll()}
+			>
+				<span>{EXPAND_ALL_LABEL}</span>
+			</ContextMenuPrimitive.Item>
+			<ContextMenuPrimitive.Item
+				className={ITEM_CLASS}
+				disabled={!rootId}
+				onSelect={() => view().collapseAll(parentIds(nodes()))}
+			>
+				<span>{COLLAPSE_ALL_LABEL}</span>
+			</ContextMenuPrimitive.Item>
+			{COLLAPSE_DEPTHS.map((depth) => (
+				<ContextMenuPrimitive.Item
+					key={depth}
+					className={ITEM_CLASS}
+					disabled={!rootId}
+					onSelect={() => view().collapseToDepth(depth, nodes())}
+				>
+					<span>{collapseToDepthLabel(depth)}</span>
+				</ContextMenuPrimitive.Item>
+			))}
 		</>
 	);
 }

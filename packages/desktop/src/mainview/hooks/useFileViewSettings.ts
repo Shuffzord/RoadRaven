@@ -20,6 +20,22 @@ export function useFileViewSettings(): void {
 	const filePath = useRoadmapStore((s) => s.filePath);
 	const isUntitled = useRoadmapStore((s) => s.isUntitled);
 
+	// v0.8.4 Phase 4: a different file never inherits this one's view state.
+	// `loadSchema` (open, close, new untitled) replaces `schema` AND
+	// `filePath` in one store write; Save As and the first save of an
+	// untitled document change only `filePath` and keep what is on screen.
+	// Runs synchronously inside that write, so the defaults are in place
+	// before the effect below hydrates whatever the new path has stored.
+	useEffect(
+		() =>
+			useRoadmapStore.subscribe((state, prev) => {
+				if (state.filePath !== prev.filePath && state.schema !== prev.schema) {
+					useFileViewStore.getState().resetForNewFile();
+				}
+			}),
+		[],
+	);
+
 	useEffect(() => {
 		if (!filePath || isUntitled) return;
 		const path = filePath;
@@ -35,13 +51,23 @@ export function useFileViewSettings(): void {
 			if (saveTimer) clearTimeout(saveTimer);
 			saveTimer = setTimeout(() => {
 				const layout = useRoadmapStore.getState().layoutOrientation;
-				const { layoutKnobs, customLayout, nodeOffsets } =
+				const { layoutKnobs, customLayout, nodeOffsets, collapsedIds } =
 					useFileViewStore.getState();
+				// Ids deleted from the file since they were collapsed are
+				// dropped here, at save time — never at hydrate time.
+				const { nodeIndex } = useRoadmapStore.getState();
+				const collapsed = [...collapsedIds].filter((id) => nodeIndex.has(id));
 				electroview?.rpc?.request
 					.saveSettings({
 						settings: {
 							fileSettings: {
-								[path]: { layout, layoutKnobs, customLayout, nodeOffsets },
+								[path]: {
+									layout,
+									layoutKnobs,
+									customLayout,
+									nodeOffsets,
+									collapsed,
+								},
 							},
 						},
 					})
@@ -68,6 +94,8 @@ export function useFileViewSettings(): void {
 				// v0.8.4 Phase 3: same rule — only a stored key is applied.
 				if (forFile) {
 					useFileViewStore.getState().hydrateCustomLayout(forFile);
+					// v0.8.4 Phase 4: absent keeps the current set.
+					useFileViewStore.getState().hydrateCollapsed(forFile.collapsed);
 				}
 				hydrated = true;
 			})
@@ -84,7 +112,8 @@ export function useFileViewSettings(): void {
 			if (
 				state.layoutKnobs !== prev.layoutKnobs ||
 				state.customLayout !== prev.customLayout ||
-				state.nodeOffsets !== prev.nodeOffsets
+				state.nodeOffsets !== prev.nodeOffsets ||
+				state.collapsedIds !== prev.collapsedIds
 			) {
 				scheduleSave();
 			}
