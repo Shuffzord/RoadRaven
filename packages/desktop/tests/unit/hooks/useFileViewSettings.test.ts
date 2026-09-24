@@ -24,6 +24,7 @@ vi.mock("../../../src/mainview/rpc", () => ({
 }));
 
 import { useFileViewSettings } from "../../../src/mainview/hooks/useFileViewSettings";
+import { KNOB_DEFAULTS } from "../../../src/mainview/lib/layoutKnobs";
 import { useFileViewStore } from "../../../src/mainview/store/fileViewStore";
 import { useRoadmapStore } from "../../../src/mainview/store/roadmapStore";
 import { resetStore } from "../../helpers/resetStore";
@@ -356,7 +357,7 @@ describe("useFileViewSettings — custom layout", () => {
 			saveSettingsMock.mock.calls[0][0].settings.fileSettings[TEST_PATH];
 		expect(saved).toEqual({
 			layout: "TB",
-			layoutKnobs: { siblingGap: 1.1, depthGap: 1.0, density: "comfortable" },
+			layoutKnobs: { ...KNOB_DEFAULTS },
 			customLayout: true,
 			nodeOffsets: { TB: { root: { dx: 30, dy: 40 } }, LR: {} },
 			collapsed: [],
@@ -532,9 +533,7 @@ describe("useFileViewSettings — collapse and file change", () => {
 		// Reset happens inside that store write, before any hydrate.
 		expect(collapsed()).toEqual([]);
 		expect(useFileViewStore.getState().layoutKnobs).toEqual({
-			siblingGap: 1.1,
-			depthGap: 1.0,
-			density: "comfortable",
+			...KNOB_DEFAULTS,
 		});
 		expect(useFileViewStore.getState().customLayout).toBe(false);
 		expect(useFileViewStore.getState().nodeOffsets).toEqual({ TB: {}, LR: {} });

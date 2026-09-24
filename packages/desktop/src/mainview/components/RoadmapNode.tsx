@@ -112,11 +112,16 @@ function progressText(
 	nodeId: string | undefined,
 	status: NodeStatus,
 ): string | null {
-	if (status !== "in-progress" || !nodeId) return null;
+	if (!nodeId) return null;
 	const children = s.nodeIndex.get(nodeId)?.children ?? [];
+	// v0.8.4 Phase 7 (UAT-1): every parent with children shows the count,
+	// whatever its own status — a completed phase with 2 of 5 done is exactly
+	// the information the owner wants. Only the leaf "last event" line below
+	// stays gated to In Progress.
 	if (children.length > 0) {
 		return `${countDone(children)} / ${children.length} done`;
 	}
+	if (status !== "in-progress") return null;
 	const live = s.liveEventMeta[nodeId];
 	if (!live) return null;
 	const age = Date.now() - live.lastEventAt;

@@ -11,6 +11,7 @@ import {
 	INDENT_LABEL,
 	OUTDENT_LABEL,
 	REDO_LABEL,
+	STRUCTURE_KEY_HINTS,
 	UNDO_LABEL,
 } from "../../../src/mainview/lib/domContract";
 import {
@@ -204,8 +205,8 @@ describe("RoadRavenContextMenu — ARIA + structure", () => {
 			"Ctrl+D",
 			"Ctrl+C",
 			"Ctrl+V",
-			"Ctrl+↑",
-			"Ctrl+↓",
+			"Ctrl+←",
+			"Ctrl+→",
 			"Del",
 		]) {
 			expect(text).toContain(hint);
@@ -638,10 +639,10 @@ describe("RoadRavenContextMenu — indent/outdent (Phase 5)", () => {
 		const menu = screen.getByRole("menu", { name: /node actions/i });
 		const indentItem = Array.from(
 			menu.querySelectorAll<HTMLElement>('[role="menuitem"]'),
-		).find((el) => el.textContent === INDENT_LABEL);
+		).find((el) => el.textContent?.startsWith(INDENT_LABEL));
 		const outdentItem = Array.from(
 			menu.querySelectorAll<HTMLElement>('[role="menuitem"]'),
-		).find((el) => el.textContent === OUTDENT_LABEL);
+		).find((el) => el.textContent?.startsWith(OUTDENT_LABEL));
 		expect(indentItem?.getAttribute("aria-disabled")).toBe("true");
 		expect(outdentItem?.getAttribute("aria-disabled")).toBe("true");
 	});
@@ -654,7 +655,7 @@ describe("RoadRavenContextMenu — indent/outdent (Phase 5)", () => {
 		const menu = screen.getByRole("menu", { name: /node actions/i });
 		const indentItem = Array.from(
 			menu.querySelectorAll<HTMLElement>('[role="menuitem"]'),
-		).find((el) => el.textContent === INDENT_LABEL);
+		).find((el) => el.textContent?.startsWith(INDENT_LABEL));
 		expect(indentItem?.getAttribute("aria-disabled")).not.toBe("true");
 		fireEvent.click(indentItem as HTMLElement);
 		expect(spy).toHaveBeenCalledWith("child-2");
@@ -668,10 +669,31 @@ describe("RoadRavenContextMenu — indent/outdent (Phase 5)", () => {
 		const menu = screen.getByRole("menu", { name: /node actions/i });
 		const outdentItem = Array.from(
 			menu.querySelectorAll<HTMLElement>('[role="menuitem"]'),
-		).find((el) => el.textContent === OUTDENT_LABEL);
+		).find((el) => el.textContent?.startsWith(OUTDENT_LABEL));
 		expect(outdentItem?.getAttribute("aria-disabled")).not.toBe("true");
 		fireEvent.click(outdentItem as HTMLElement);
 		expect(spy).toHaveBeenCalledWith("grandchild-1");
+	});
+});
+
+// v0.8.4 Phase 7 (UAT-3) — Indent/Outdent/Move up/down hints match the keys
+// useKeyboardRouter.ts actually binds for the current layout orientation.
+describe("RoadRavenContextMenu — structure key hints follow layout orientation (Phase 7)", () => {
+	it.each([
+		"TB",
+		"LR",
+	] as const)("Move Up/Down and Indent/Outdent hints match STRUCTURE_KEY_HINTS.%s", (orientation) => {
+		seedSchema();
+		useRoadmapStore.setState({ layoutOrientation: orientation });
+		render(<NodeHarness />);
+		openMenu(screen.getByTestId("trigger"));
+		const menu = screen.getByRole("menu", { name: /node actions/i });
+		const text = menu.textContent ?? "";
+		const hints = STRUCTURE_KEY_HINTS[orientation];
+		expect(text).toContain(hints.moveUp);
+		expect(text).toContain(hints.moveDown);
+		expect(text).toContain(hints.indent);
+		expect(text).toContain(hints.outdent);
 	});
 });
 

@@ -68,6 +68,16 @@ function makeSchema(): RoadmapSchema {
 					},
 				],
 			},
+			{
+				id: "not-started-parent",
+				title: "Not started parent",
+				status: "not-started",
+				children: [
+					{ id: "ns1", title: "NS Child 1", status: "not-started" },
+					{ id: "ns2", title: "NS Child 2", status: "not-started" },
+					{ id: "ns3", title: "NS Child 3", status: "not-started" },
+				],
+			},
 		],
 	};
 }
@@ -149,9 +159,27 @@ describe("RoadmapNodeCard — progress line", () => {
 		);
 	});
 
-	it("is absent on a completed parent", () => {
-		const card = renderCard("done-parent", "Done parent", "completed");
-		expect(card.querySelector(`[${NODE_PROGRESS_ATTR}]`)).toBeNull();
+	// v0.8.4 Phase 7 (UAT-1): flipped — every parent with children shows the
+	// count now, whatever its own status. The live status (nodeIndex, not the
+	// `status` prop) drives progressText, same as the statusTick flip above —
+	// so this flips root's real stored status, not just the render prop.
+	it("shows n / m done on a completed parent", () => {
+		const card = renderCard("root", "Root", "in-progress");
+		act(() => useRoadmapStore.getState().updateNodeStatus("root", "completed"));
+		expect(card.querySelector(`[${NODE_PROGRESS_ATTR}]`)?.textContent).toBe(
+			"2 / 5 done",
+		);
+	});
+
+	it("shows 0 / 3 done on a not-started parent with none done", () => {
+		const card = renderCard(
+			"not-started-parent",
+			"Not started parent",
+			"not-started",
+		);
+		expect(card.querySelector(`[${NODE_PROGRESS_ATTR}]`)?.textContent).toBe(
+			"0 / 3 done",
+		);
 	});
 
 	it("is absent on an in-progress leaf without a live event", () => {

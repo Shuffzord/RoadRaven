@@ -181,3 +181,28 @@ export const STATUS_HOTKEYS: Record<"1" | "2" | "3" | "4", NodeStatus> = {
 export const UNDO_LABEL = "Undo";
 /** Canvas-empty menu item: redo the last undone edit (Ctrl+Y / Ctrl+Shift+Z). */
 export const REDO_LABEL = "Redo";
+
+// -- Structure key hints (v0.8.4 Phase 7, UAT-3) -----------------------------
+// Rendered by ContextMenu.tsx (Indent/Outdent and Move up/down hints), keyed
+// by the store's `layoutOrientation` so the hint always matches the keys
+// actually bound in useKeyboardRouter.ts (`restructureKeys`/`reorderKeys`).
+// Selected on by tests/unit/ui/ContextMenu.test.tsx.
+
+/** Menu shortcut-hint strings for indent/outdent/move, by layout orientation. */
+export const STRUCTURE_KEY_HINTS: Record<
+	"TB" | "LR",
+	{ indent: string; outdent: string; moveUp: string; moveDown: string }
+> = {
+	TB: {
+		indent: "Alt+↓",
+		outdent: "Alt+↑",
+		moveUp: "Ctrl+←",
+		moveDown: "Ctrl+→",
+	},
+	LR: {
+		indent: "Alt+→",
+		outdent: "Alt+←",
+		moveUp: "Ctrl+↑",
+		moveDown: "Ctrl+↓",
+	},
+};

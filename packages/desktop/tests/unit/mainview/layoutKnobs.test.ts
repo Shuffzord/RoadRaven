@@ -39,17 +39,17 @@ describe("clampKnobs", () => {
 });
 
 describe("treeLayoutFor", () => {
-	it("TB at defaults: nodeSize.y unscaled, nonSiblings = siblings * 1.3", () => {
+	it("TB at defaults: nodeSize.y scaled by depthGap 1.6, nonSiblings = siblings * 1.3", () => {
 		expect(treeLayoutFor(KNOB_DEFAULTS, "TB")).toEqual({
-			separation: { siblings: 1.1, nonSiblings: 1.1 * 1.3 },
-			nodeSize: { x: 240, y: 100 },
+			separation: { siblings: 1.2, nonSiblings: 1.2 * 1.3 },
+			nodeSize: { x: 240, y: 160 },
 		});
 	});
 
-	it("LR at defaults: nodeSize.x unscaled (depthGap 1.0)", () => {
+	it("LR at defaults: nodeSize.x scaled by depthGap 1.6", () => {
 		expect(treeLayoutFor(KNOB_DEFAULTS, "LR")).toEqual({
-			separation: { siblings: 1.1, nonSiblings: 1.1 * 1.3 },
-			nodeSize: { x: 240, y: 100 },
+			separation: { siblings: 1.2, nonSiblings: 1.2 * 1.3 },
+			nodeSize: { x: 384, y: 100 },
 		});
 	});
 

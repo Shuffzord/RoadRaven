@@ -11,6 +11,7 @@ import {
 	INDENT_LABEL,
 	OUTDENT_LABEL,
 	REDO_LABEL,
+	STRUCTURE_KEY_HINTS,
 	UNDO_LABEL,
 } from "../lib/domContract";
 import { trackMenuFocus } from "../lib/focusHandoff";
@@ -129,6 +130,10 @@ function NodeMenuItems({ nodeId }: { nodeId: string }) {
 	);
 	const canPaste = useRoadmapStore((s) => s.lastCopiedSubtree !== null);
 	const schema = useRoadmapStore((s) => s.schema);
+	// v0.8.4 Phase 7 (UAT-3): hint text matches the keys actually bound for
+	// the current layout (useKeyboardRouter.ts restructureKeys/reorderKeys).
+	const layoutOrientation = useRoadmapStore((s) => s.layoutOrientation);
+	const hints = STRUCTURE_KEY_HINTS[layoutOrientation];
 	// v0.8.4 Phase 5: disabled exactly when the keyboard shortcut would no-op.
 	const canIndent = schema
 		? indentTarget(schema.nodes, nodeId) !== null
@@ -232,14 +237,14 @@ function NodeMenuItems({ nodeId }: { nodeId: string }) {
 				onSelect={() => moveNodeUp(nodeId)}
 			>
 				<span>Move Up</span>
-				<span className={HINT_CLASS}>Ctrl+↑</span>
+				<span className={HINT_CLASS}>{hints.moveUp}</span>
 			</ContextMenuPrimitive.Item>
 			<ContextMenuPrimitive.Item
 				className={ITEM_CLASS}
 				onSelect={() => moveNodeDown(nodeId)}
 			>
 				<span>Move Down</span>
-				<span className={HINT_CLASS}>Ctrl+↓</span>
+				<span className={HINT_CLASS}>{hints.moveDown}</span>
 			</ContextMenuPrimitive.Item>
 			<ContextMenuPrimitive.Item
 				className={ITEM_CLASS}
@@ -247,6 +252,7 @@ function NodeMenuItems({ nodeId }: { nodeId: string }) {
 				onSelect={() => indentNode(nodeId)}
 			>
 				<span>{INDENT_LABEL}</span>
+				<span className={HINT_CLASS}>{hints.indent}</span>
 			</ContextMenuPrimitive.Item>
 			<ContextMenuPrimitive.Item
 				className={ITEM_CLASS}
@@ -254,6 +260,7 @@ function NodeMenuItems({ nodeId }: { nodeId: string }) {
 				onSelect={() => outdentNode(nodeId)}
 			>
 				<span>{OUTDENT_LABEL}</span>
+				<span className={HINT_CLASS}>{hints.outdent}</span>
 			</ContextMenuPrimitive.Item>
 			<ContextMenuPrimitive.Separator className={SEP_CLASS} />
 			<ContextMenuPrimitive.Sub>

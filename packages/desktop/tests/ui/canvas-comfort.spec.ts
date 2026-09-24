@@ -193,7 +193,7 @@ const SIBLINGS_SCHEMA = {
 };
 
 test.describe("Canvas comfort — Phase 1 card visuals", () => {
-	test("P1-1: an in-progress parent says how many direct children are done", async ({
+	test("P1-1: a parent says how many direct children are done, whatever its own status", async ({
 		page,
 	}) => {
 		await seedRichTree(page);
@@ -201,10 +201,11 @@ test.describe("Canvas comfort — Phase 1 card visuals", () => {
 		await expect(root.locator(`[${NODE_PROGRESS_ATTR}]`)).toHaveText(
 			"1 / 2 done",
 		);
-		// Completed Phase A has children too, but only in-progress cards count.
+		// v0.8.4 Phase 7 (UAT-1): every parent with children counts now — Phase
+		// A is completed with 1 of its 2 children done.
 		await expect(
 			page.locator(`[${NODE_CARD_ATTR}="${PHASE_A}"] [${NODE_PROGRESS_ATTR}]`),
-		).toHaveCount(0);
+		).toHaveText("1 / 2 done");
 	});
 
 	test("P1-2: the ribbon is painted with the stripe's ink on every card", async ({
@@ -269,7 +270,7 @@ test.describe("Canvas comfort — Phase 1 card visuals", () => {
 			second.y + second.height > first.y;
 		expect(intersects).toBe(false);
 		// The live pulse ring paints 3px outside each card; with siblings at
-		// 1.1 separation the scaled cards keep more than a tenth of a card
+		// 1.2 separation the scaled cards keep more than a tenth of a card
 		// width clear (at 1.0 it was ~3%, ring to ring about 1px).
 		const gap = second.x - (first.x + first.width);
 		expect(gap / first.width).toBeGreaterThan(0.1);
@@ -324,10 +325,10 @@ test.describe("Canvas comfort — Phase 2 layout knobs", () => {
 		await slider.dispatchEvent("input");
 
 		const grownDistance = await siblingCentreDistance(page);
-		// Default siblingGap is 1.1 (Phase 1); nodeSize.x (the TB sibling axis)
+		// Default siblingGap is 1.2 (Phase 7); nodeSize.x (the TB sibling axis)
 		// is unaffected by depthGap, so the gap scales ~linearly with
 		// separation.siblings for two leaf siblings under one root.
-		const expectedFactor = 2.0 / 1.1;
+		const expectedFactor = 2.0 / 1.2;
 		const actualFactor = grownDistance / defaultDistance;
 		expect(actualFactor).toBeGreaterThan(expectedFactor * 0.7);
 		expect(actualFactor).toBeLessThan(expectedFactor * 1.3);

@@ -10,10 +10,13 @@ export interface LayoutKnobs {
 	density: "comfortable" | "compact";
 }
 
-/** Phase 1 set `separation.siblings` to 1.1 (Canvas.tsx) — kept as the default. */
+/**
+ * Phase 1 set `separation.siblings` to 1.1 (Canvas.tsx); Phase 7 (UAT-2)
+ * widened both gaps after owner UAT found the layout too tight.
+ */
 export const KNOB_DEFAULTS: LayoutKnobs = {
-	siblingGap: 1.1,
-	depthGap: 1.0,
+	siblingGap: 1.2,
+	depthGap: 1.6,
 	density: "comfortable",
 };
 
