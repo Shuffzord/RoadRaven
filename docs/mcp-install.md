@@ -12,7 +12,7 @@ layout: default
 > over the local Event API (`127.0.0.1`); with the app closed, tools return
 > `app_not_running`.
 >
-> Every command below pins the exact version, `0.8.3`. Pin the version
+> Every command below pins the exact version, `0.8.4`. Pin the version
 > that matches your installed app: the app warns when the server's major.minor
 > differs from its own (see [Version mismatch](#version-mismatch)).
 
@@ -37,7 +37,7 @@ registering a second server.
 Wizard and the plugin do (`claude mcp add` defaults to the current project only):
 
 ```bash
-claude mcp add -s user roadraven -- npx -y @roadraven/mcp@0.8.3
+claude mcp add -s user roadraven -- npx -y @roadraven/mcp@0.8.4
 ```
 
 **Raw config.** Add this to `~/.claude.json` (or a project's `.mcp.json`) by hand:
@@ -47,7 +47,7 @@ claude mcp add -s user roadraven -- npx -y @roadraven/mcp@0.8.3
   "mcpServers": {
     "roadraven": {
       "command": "npx",
-      "args": ["-y", "@roadraven/mcp@0.8.3"]
+      "args": ["-y", "@roadraven/mcp@0.8.4"]
     }
   }
 }
@@ -61,7 +61,7 @@ claude mcp add -s user roadraven -- npx -y @roadraven/mcp@0.8.3
 opencode mcp add roadraven
 ```
 
-Follow the prompts and give it the command `npx -y @roadraven/mcp@0.8.3`.
+Follow the prompts and give it the command `npx -y @roadraven/mcp@0.8.4`.
 
 **Raw config.** OpenCode uses the `mcp` key (not `mcpServers`) and a `command`
 array (not a `command` / `args` split). Add this to
@@ -72,7 +72,7 @@ array (not a `command` / `args` split). Add this to
   "mcp": {
     "roadraven": {
       "type": "local",
-      "command": ["npx", "-y", "@roadraven/mcp@0.8.3"],
+      "command": ["npx", "-y", "@roadraven/mcp@0.8.4"],
       "enabled": true
     }
   }
@@ -87,7 +87,7 @@ command:
 ```json
 {
   "command": "npx",
-  "args": ["-y", "@roadraven/mcp@0.8.3"]
+  "args": ["-y", "@roadraven/mcp@0.8.4"]
 }
 ```
 
@@ -133,8 +133,8 @@ whether to write to the current project's `./CLAUDE.md` or to
 own marked block and leaves the rest of the file untouched.
 
 ```bash
-npx -y @roadraven/mcp@0.8.3 init
-npx -y @roadraven/mcp@0.8.3 init --level project --yes   # non-interactive
+npx -y @roadraven/mcp@0.8.4 init
+npx -y @roadraven/mcp@0.8.4 init --level project --yes   # non-interactive
 ```
 
 ## Full tool catalog

@@ -9,7 +9,7 @@
 			"description": "MCP server that lets Claude Code create, edit, and push live status updates to a running RoadRaven roadmap.",
 			"source": "./plugins/claude-code",
 			"category": "productivity",
-			"version": "0.8.3"
+			"version": "0.8.4"
 		}
 	]
 }
