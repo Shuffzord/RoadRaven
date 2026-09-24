@@ -232,19 +232,33 @@ jobs:
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
-          # Trusted publishing needs npm >= 11.5.1; Node 22 bundles npm 10.
+          # Trusted publishing needs npm >= 11.5.1 and Node >= 22.14; this is
+          # the step exactly as docs.npmjs.com/trusted-publishers shows it.
           node-version: '24'
           registry-url: 'https://registry.npmjs.org'
+          package-manager-cache: false
+      - name: Show npm version (trusted publishing needs >= 11.5.1)
+        run: npm --version
       - name: Install workspace dependencies
         run: bun install
       - name: Build @roadraven/mcp (bun build → dist/)
         run: bun run --cwd plugins/claude-code build
       # Same CLAUDE.md exception as publish-npm-core above.
       - name: Stage @roadraven/mcp on npm with provenance (OIDC)
-        run: npm stage publish --access public --provenance
+        run: npm stage publish --access public --provenance --loglevel verbose
         working-directory: plugins/claude-code
+      - name: Upload npm debug log on failure
+        # The OIDC token exchange error only appears in npm's debug log, which
+        # dies with the runner; keep it so a failed stage can be diagnosed.
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: npm-debug-log
+          path: ~/.npm/_logs/
+          if-no-files-found: warn
+          retention-days: 7
 
   deploy-docs:
     name: Deploy docs site to GitHub Pages
