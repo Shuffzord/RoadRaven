@@ -883,3 +883,88 @@ test.describe("Canvas comfort — Phase 5 structure keys", () => {
 		await expect(phaseB).toHaveAttribute(NODE_FOCUSED_ATTR, "true");
 	});
 });
+
+// v0.8.4 Phase 6 — Ctrl+Z / Ctrl+Y over the user's own edits, focus following
+// the undone node. The agent-path case (an agent edit is not undoable) has no
+// browser seam and is covered by the unit tests only.
+test.describe("Canvas comfort — Phase 6 undo/redo", () => {
+	const RENAME_INPUT = 'input[aria-label="Rename node"]';
+	const card = (page: Page, id: string) =>
+		page.locator(`[${NODE_CARD_ATTR}="${id}"]`);
+	const cards = (page: Page) => page.locator(`[${NODE_CARD_ATTR}]`);
+
+	test("P6-1: Enter creates a child of Task A1; Control+z removes it and focuses Task A1; Control+y brings it back", async ({
+		page,
+	}) => {
+		await seedRichTree(page);
+		const taskA1 = card(page, TASK_A1);
+		await taskA1.click();
+		await expect(taskA1).toHaveAttribute(NODE_FOCUSED_ATTR, "true");
+
+		await page.keyboard.press("Enter");
+		await expect(page.locator(RENAME_INPUT)).toBeVisible();
+		// Committing the default title records no rename.
+		await page.keyboard.press("Enter");
+		await expect(page.locator(RENAME_INPUT)).toHaveCount(0);
+		await expect(cards(page)).toHaveCount(7);
+
+		await page.keyboard.press("Control+z");
+		await expect(cards(page)).toHaveCount(6);
+		await expect(taskA1).toHaveAttribute(NODE_FOCUSED_ATTR, "true");
+
+		await page.keyboard.press("Control+y");
+		await expect(cards(page)).toHaveCount(7);
+	});
+
+	test("P6-2: status key 3 on Task B1, then Control+z restores Not Started", async ({
+		page,
+	}) => {
+		await seedRichTree(page);
+		const taskB1 = card(page, TASK_B1);
+		await taskB1.click();
+		await expect(taskB1).toHaveAttribute(NODE_FOCUSED_ATTR, "true");
+
+		await page.keyboard.press("3");
+		await expect(taskB1).toContainText("Completed");
+
+		await page.keyboard.press("Control+z");
+		await expect(taskB1).toContainText("Not Started");
+		await expect(taskB1).toHaveAttribute(NODE_FOCUSED_ATTR, "true");
+	});
+
+	test("P6-3: a rename committed with F2 + Enter is undone by Control+z", async ({
+		page,
+	}) => {
+		await seedRichTree(page);
+		const taskB1 = card(page, TASK_B1);
+		await taskB1.click();
+		await page.keyboard.press("F2");
+		const input = page.locator(RENAME_INPUT);
+		await input.fill("Renamed B1");
+		await page.keyboard.press("Enter");
+		await expect(input).toHaveCount(0);
+		await expect(taskB1).toContainText("Renamed B1");
+
+		await page.keyboard.press("Control+z");
+		await expect(taskB1).toContainText("Task B1");
+		await expect(taskB1).not.toContainText("Renamed B1");
+	});
+
+	test("P6-4: a deleted leaf comes back at the same position with Control+z", async ({
+		page,
+	}) => {
+		await seedRichTree(page);
+		const before = await cardOrder(page);
+		await card(page, TASK_A2).click();
+		await page.keyboard.press("Delete");
+		await expect(card(page, TASK_A2)).toHaveCount(0);
+
+		await page.keyboard.press("Control+z");
+		await expect(card(page, TASK_A2)).toHaveCount(1);
+		expect(await cardOrder(page)).toEqual(before);
+		await expect(card(page, TASK_A2)).toHaveAttribute(
+			NODE_FOCUSED_ATTR,
+			"true",
+		);
+	});
+});

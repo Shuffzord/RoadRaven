@@ -172,3 +172,12 @@ export const STATUS_HOTKEYS: Record<"1" | "2" | "3" | "4", NodeStatus> = {
 	"3": NodeStatusSchema.options[2],
 	"4": NodeStatusSchema.options[3],
 };
+
+// -- Undo / redo (v0.8.4 Phase 6) ---------------------------------------------
+// Rendered by ContextMenu.tsx (canvas-empty menu); selected on by
+// tests/unit/ui/ContextMenu.test.tsx.
+
+/** Canvas-empty menu item: undo the last edit (Ctrl+Z). */
+export const UNDO_LABEL = "Undo";
+/** Canvas-empty menu item: redo the last undone edit (Ctrl+Y / Ctrl+Shift+Z). */
+export const REDO_LABEL = "Redo";

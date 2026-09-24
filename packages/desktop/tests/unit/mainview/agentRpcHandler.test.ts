@@ -10,6 +10,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { RoadmapSchema } from "../../../../../packages/core/src/schema";
 import { handleAgentRequest } from "../../../src/mainview/rpc/agentRpcHandler";
 import { useEventLogStore } from "../../../src/mainview/store/eventLogStore";
+import {
+	isHistorySuspended,
+	useHistoryStore,
+} from "../../../src/mainview/store/historyStore";
 import { useRoadmapStore } from "../../../src/mainview/store/roadmapStore";
 
 const { loadFileMock, newFileMock } = vi.hoisted(() => ({
@@ -1070,5 +1074,88 @@ describe("agentRpcHandler — openFile dispatches with no schema loaded (v0.7 Ph
 		expect(result).toMatchObject({ ok: false, code: "file_read_error" });
 		expect(useRoadmapStore.getState().schema).toBeNull();
 		expect(useEventLogStore.getState().rows).toHaveLength(0);
+	});
+});
+
+// v0.8.4 Phase 6 (D-15): what an agent does is not the user's edit. The
+// dispatcher runs every tool inside withoutHistory, so agent mutations neither
+// enter the undo history nor clear the redo stack.
+describe("agentRpcHandler — agent mutations stay out of the undo history (Phase 6)", () => {
+	const ROOT = "00000000-0000-0000-0000-000000000001";
+	const LOGIN = "00000000-0000-0000-0000-000000000002";
+	const LOGOUT = "00000000-0000-0000-0000-000000000003";
+
+	beforeEach(() => {
+		useRoadmapStore.getState().loadSchema(makeSchema(), "/tmp/test.json");
+		useEventLogStore.setState({ rows: [] });
+		// One user edit undone and one kept: both stacks non-empty.
+		useRoadmapStore.getState().renameNode(LOGIN, "Login flow v2");
+		useRoadmapStore.getState().updateNodeStatus(LOGOUT, "blocked");
+		useRoadmapStore.getState().undo();
+	});
+	afterEach(() => {
+		useHistoryStore.getState().clear();
+		useRoadmapStore.setState({
+			schema: null,
+			filePath: null,
+			nodeIndex: new Map(),
+		});
+		useEventLogStore.setState({ rows: [] });
+	});
+
+	it.each([
+		["createNode", { parentId: ROOT, title: "Agent child" }],
+		["updateNodeStatus", { nodeId: LOGIN, status: "completed" }],
+		["moveNode", { nodeId: LOGOUT, newParentId: LOGIN }],
+		["renameNode", { nodeId: LOGIN, title: "Agent title" }],
+		["updateNodeNotes", { nodeId: LOGIN, notes: "agent notes" }],
+		["deleteNode", { nodeId: LOGOUT }],
+		["updateNodes", { updates: [{ nodeId: LOGIN, status: "blocked" }] }],
+	] as const)("%s leaves past and future unchanged", async (tool, args) => {
+		const { past, future } = useHistoryStore.getState();
+		expect(past).toHaveLength(1);
+		expect(future).toHaveLength(1);
+		const result = await handleAgentRequest(tool, { ...args });
+		expect(result.ok).toBe(true);
+		expect(useHistoryStore.getState().past).toBe(past);
+		expect(useHistoryStore.getState().future).toBe(future);
+	});
+
+	// The guarantee is per store call, not per dispatch: recording is suspended
+	// while the mutation runs and NOT around the rest of the tool (here the
+	// drawer audit that follows it), so it cannot depend on where awaits sit.
+	it("suspends recording for exactly the store mutation, not the whole dispatch", async () => {
+		const duringMutation: boolean[] = [];
+		const duringAudit: boolean[] = [];
+		const offRoadmap = useRoadmapStore.subscribe(() =>
+			duringMutation.push(isHistorySuspended()),
+		);
+		const offLog = useEventLogStore.subscribe(() =>
+			duringAudit.push(isHistorySuspended()),
+		);
+		try {
+			await handleAgentRequest("renameNode", {
+				nodeId: LOGIN,
+				title: "Agent title",
+			});
+		} finally {
+			offRoadmap();
+			offLog();
+		}
+		expect(duringMutation.length).toBeGreaterThan(0);
+		expect(duringMutation.every(Boolean)).toBe(true);
+		expect(duringAudit).toEqual([false]);
+		expect(isHistorySuspended()).toBe(false);
+	});
+
+	it("the user's next Ctrl+Z still undoes the user's last edit after an agent edit", async () => {
+		await handleAgentRequest("updateNodeStatus", {
+			nodeId: LOGIN,
+			status: "completed",
+		});
+		useRoadmapStore.getState().undo();
+		const nodeIndex = useRoadmapStore.getState().nodeIndex;
+		expect(nodeIndex.get(LOGIN)?.title).toBe("Login flow");
+		expect(nodeIndex.get(LOGIN)?.status).toBe("completed");
 	});
 });

@@ -10,12 +10,15 @@ import {
 	EXPAND_ALL_LABEL,
 	INDENT_LABEL,
 	OUTDENT_LABEL,
+	REDO_LABEL,
+	UNDO_LABEL,
 } from "../../../src/mainview/lib/domContract";
 import {
 	FOCUS_NODE_EVENT,
 	type NodeFocusRequest,
 } from "../../../src/mainview/lib/focusRequest";
 import { useFileViewStore } from "../../../src/mainview/store/fileViewStore";
+import { useHistoryStore } from "../../../src/mainview/store/historyStore";
 import { useRoadmapStore } from "../../../src/mainview/store/roadmapStore";
 import { resetStore } from "../../helpers/resetStore";
 
@@ -221,7 +224,7 @@ describe("RoadRavenContextMenu — ARIA + structure", () => {
 		expect(subTrigger?.getAttribute("aria-haspopup")).toBe("menu");
 	});
 
-	it("canvas menu renders Paste + Add Root Child + Fit to View + Toggle Layout + the four collapse items with 2 separators", () => {
+	it("canvas menu renders Undo + Redo + Paste + Add Root Child + Fit to View + Toggle Layout + the four collapse items with 3 separators", () => {
 		seedSchema();
 		render(<CanvasHarness />);
 		openMenu(screen.getByTestId("trigger"));
@@ -230,8 +233,8 @@ describe("RoadRavenContextMenu — ARIA + structure", () => {
 		expect(menu.textContent).toMatch(/Add Root Child/);
 		expect(menu.textContent).toMatch(/Fit to View/);
 		expect(menu.textContent).toMatch(/Toggle Layout/);
-		expect(menu.querySelectorAll('[role="menuitem"]').length).toBe(8);
-		expect(menu.querySelectorAll('[role="separator"]').length).toBe(2);
+		expect(menu.querySelectorAll('[role="menuitem"]').length).toBe(10);
+		expect(menu.querySelectorAll('[role="separator"]').length).toBe(3);
 	});
 
 	it("Paste item is aria-disabled when lastCopiedSubtree is null (node menu)", () => {
@@ -669,5 +672,59 @@ describe("RoadRavenContextMenu — indent/outdent (Phase 5)", () => {
 		expect(outdentItem?.getAttribute("aria-disabled")).not.toBe("true");
 		fireEvent.click(outdentItem as HTMLElement);
 		expect(spy).toHaveBeenCalledWith("grandchild-1");
+	});
+});
+
+// v0.8.4 Phase 6 — Undo/Redo on the canvas-empty menu, disabled exactly when
+// the matching stack is empty.
+describe("Canvas menu — Undo / Redo (Phase 6)", () => {
+	afterEach(() => {
+		useHistoryStore.getState().clear();
+	});
+
+	function canvasItem(label: string): HTMLElement {
+		render(<CanvasHarness />);
+		openMenu(screen.getByTestId("trigger"));
+		const menu = screen.getByRole("menu", { name: /canvas actions/i });
+		const item = Array.from(
+			menu.querySelectorAll<HTMLElement>('[role="menuitem"]'),
+		).find((el) => el.querySelector("span")?.textContent === label);
+		if (!item) throw new Error(`no menu item "${label}"`);
+		return item;
+	}
+
+	it.each([
+		UNDO_LABEL,
+		REDO_LABEL,
+	])("%s is disabled with an empty history", (label) => {
+		seedSchema();
+		expect(canvasItem(label).getAttribute("aria-disabled")).toBe("true");
+	});
+
+	it("Undo is enabled after an edit, reverts it and reveals the node", () => {
+		seedSchema();
+		useRoadmapStore.getState().renameNode("child-1", "Renamed");
+		const seen = captureRequests();
+		const item = canvasItem(UNDO_LABEL);
+		expect(item.getAttribute("aria-disabled")).not.toBe("true");
+		fireEvent.click(item);
+		expect(useRoadmapStore.getState().nodeIndex.get("child-1")?.title).toBe(
+			"Child 1",
+		);
+		expect(seen).toEqual([
+			{ nodeId: "child-1", align: "nearest", select: true, rename: false },
+		]);
+	});
+
+	it("Redo is enabled after an undo and re-applies the edit", () => {
+		seedSchema();
+		useRoadmapStore.getState().renameNode("child-1", "Renamed");
+		useRoadmapStore.getState().undo();
+		const item = canvasItem(REDO_LABEL);
+		expect(item.getAttribute("aria-disabled")).not.toBe("true");
+		fireEvent.click(item);
+		expect(useRoadmapStore.getState().nodeIndex.get("child-1")?.title).toBe(
+			"Renamed",
+		);
 	});
 });

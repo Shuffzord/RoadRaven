@@ -212,6 +212,27 @@ function renameNewNode(newId: string | null | undefined): void {
 	requestNodeFocus(newId, { align: "center", rename: true });
 }
 
+/**
+ * Ctrl/Cmd+Z undoes; Ctrl/Cmd+Y and Ctrl/Cmd+Shift+Z redo (Windows and macOS
+ * habits). Null for anything else.
+ */
+function historyKeyStep(e: KeyboardEvent): "undo" | "redo" | null {
+	if (!(e.ctrlKey || e.metaKey) || e.altKey) return null;
+	const key = e.key.toLowerCase();
+	if (key === "z") return e.shiftKey ? "redo" : "undo";
+	if (key === "y" && !e.shiftKey) return "redo";
+	return null;
+}
+
+/**
+ * Undo/redo (v0.8.4 Phase 6), then take the user back to the node it touched.
+ * The store already focused and selected it; this reveals it.
+ */
+function stepHistory(direction: "undo" | "redo"): void {
+	const target = useRoadmapStore.getState()[direction]();
+	if (target) requestNodeFocus(target, { align: "nearest", select: true });
+}
+
 export function useKeyboardRouter(deps: RouterDeps): void {
 	// Mirror the latest deps in a ref so the document listener never needs to
 	// be detached/re-attached when volatile state (inlineRename.state, etc.)
@@ -299,6 +320,16 @@ export function useKeyboardRouter(deps: RouterDeps): void {
 					void store.pasteFromClipboard(focusedId);
 					return;
 				}
+			}
+
+			// Ctrl+Z / Ctrl+Y / Ctrl+Shift+Z — undo/redo (v0.8.4 Phase 6). Native
+			// inside a text input or the notes editor, like Ctrl+C/Ctrl+V.
+			const historyStep = historyKeyStep(e);
+			if (historyStep) {
+				if (inTextInput) return;
+				e.preventDefault();
+				stepHistory(historyStep);
+				return;
 			}
 
 			if (inTextInput || isInOutline(active)) return;

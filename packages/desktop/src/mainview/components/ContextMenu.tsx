@@ -10,12 +10,15 @@ import {
 	EXPAND_ALL_LABEL,
 	INDENT_LABEL,
 	OUTDENT_LABEL,
+	REDO_LABEL,
+	UNDO_LABEL,
 } from "../lib/domContract";
 import { trackMenuFocus } from "../lib/focusHandoff";
 import { requestNodeFocus } from "../lib/focusRequest";
 import { getNodeCollapseState, toggleNodeCollapse } from "../lib/nodeCollapse";
 import { indentTarget, outdentTarget } from "../lib/treeEdits";
 import { useFileViewStore } from "../store/fileViewStore";
+import { useHistoryStore } from "../store/historyStore";
 import { useRoadmapStore } from "../store/roadmapStore";
 import {
 	HINT_CLASS,
@@ -318,9 +321,29 @@ function CanvasMenuItems() {
 	// so the menu itself never re-renders on an edit.
 	const nodes = () => useRoadmapStore.getState().schema?.nodes ?? [];
 	const view = useFileViewStore.getState;
+	// v0.8.4 Phase 6: disabled exactly when Ctrl+Z / Ctrl+Y would no-op.
+	const canUndo = useHistoryStore((s) => s.past.length > 0);
+	const canRedo = useHistoryStore((s) => s.future.length > 0);
 
 	return (
 		<>
+			<ContextMenuPrimitive.Item
+				className={ITEM_CLASS}
+				disabled={!canUndo}
+				onSelect={() => revealHistoryStep("undo")}
+			>
+				<span>{UNDO_LABEL}</span>
+				<span className={HINT_CLASS}>Ctrl+Z</span>
+			</ContextMenuPrimitive.Item>
+			<ContextMenuPrimitive.Item
+				className={ITEM_CLASS}
+				disabled={!canRedo}
+				onSelect={() => revealHistoryStep("redo")}
+			>
+				<span>{REDO_LABEL}</span>
+				<span className={HINT_CLASS}>Ctrl+Y</span>
+			</ContextMenuPrimitive.Item>
+			<ContextMenuPrimitive.Separator className={SEP_CLASS} />
 			<ContextMenuPrimitive.Item
 				className={ITEM_CLASS}
 				disabled={!canPaste || !rootId}
@@ -397,4 +420,10 @@ function CanvasMenuItems() {
 function renameNewNode(newId: string | null | undefined) {
 	if (!newId) return;
 	requestNodeFocus(newId, { align: "center", rename: true });
+}
+
+/** Undo/redo, then reveal the node it touched (the store focused it). */
+function revealHistoryStep(direction: "undo" | "redo") {
+	const target = useRoadmapStore.getState()[direction]();
+	if (target) requestNodeFocus(target, { align: "nearest", select: true });
 }

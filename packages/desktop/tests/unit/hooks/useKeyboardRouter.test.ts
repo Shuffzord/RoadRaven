@@ -640,3 +640,98 @@ describe("useKeyboardRouter", () => {
 		});
 	});
 });
+
+// v0.8.4 Phase 6: Ctrl+Z undoes, Ctrl+Y and Ctrl+Shift+Z redo — next to
+// Ctrl+C/Ctrl+V and, like them, native inside a text input or the notes editor.
+describe("undo / redo keys (Phase 6)", () => {
+	// Real history, no spies: a spied store action is copied into every later
+	// state object by zustand's set() and outlives restoreAllMocks.
+	const titleOfB = () =>
+		useRoadmapStore.getState().nodeIndex.get(CHILD_B_ID)?.title;
+
+	it.each([
+		["Ctrl+Z", { key: "z", ctrlKey: true }],
+		["Cmd+Z", { key: "z", metaKey: true }],
+	] as const)("%s undoes the last edit and reveals the node", (_name, init) => {
+		useRoadmapStore.getState().renameNode(CHILD_B_ID, "Renamed");
+		const seen = captureRequests();
+		renderRouter();
+		fireEvent.keyDown(document, init);
+		expect(titleOfB()).toBe("B");
+		expect(seen).toEqual([
+			{ nodeId: CHILD_B_ID, align: "nearest", select: true, rename: false },
+		]);
+	});
+
+	it.each([
+		["Ctrl+Y", { key: "y", ctrlKey: true }],
+		["Ctrl+Shift+Z", { key: "Z", ctrlKey: true, shiftKey: true }],
+	] as const)("%s redoes the undone edit and reveals the node", (_name, init) => {
+		useRoadmapStore.getState().renameNode(CHILD_B_ID, "Renamed");
+		useRoadmapStore.getState().undo();
+		const seen = captureRequests();
+		renderRouter();
+		fireEvent.keyDown(document, init);
+		expect(titleOfB()).toBe("Renamed");
+		expect(seen).toEqual([
+			{ nodeId: CHILD_B_ID, align: "nearest", select: true, rename: false },
+		]);
+	});
+
+	it("an empty history requests no focus", () => {
+		const seen = captureRequests();
+		renderRouter();
+		fireEvent.keyDown(document, { key: "z", ctrlKey: true });
+		fireEvent.keyDown(document, { key: "y", ctrlKey: true });
+		expect(seen).toEqual([]);
+	});
+
+	it.each([
+		["a text input", () => document.createElement("input")],
+		[
+			"the CodeMirror notes editor",
+			() => {
+				const editor = document.createElement("div");
+				editor.className = "cm-editor";
+				const content = document.createElement("div");
+				content.tabIndex = 0;
+				editor.appendChild(content);
+				document.body.appendChild(editor);
+				return content;
+			},
+		],
+	])("stays native inside %s", (_where, make) => {
+		// One undone edit and one done edit: any undo or redo would show.
+		useRoadmapStore.getState().renameNode(CHILD_A_ID, "A renamed");
+		useRoadmapStore.getState().renameNode(CHILD_B_ID, "Renamed");
+		useRoadmapStore.getState().undo();
+		renderRouter();
+		const el = make();
+		if (!el.isConnected) document.body.appendChild(el);
+		el.focus();
+		fireEvent.keyDown(el, { key: "z", ctrlKey: true });
+		fireEvent.keyDown(el, { key: "y", ctrlKey: true });
+		fireEvent.keyDown(el, { key: "Z", ctrlKey: true, shiftKey: true });
+		expect(titleOfB()).toBe("B");
+		expect(useRoadmapStore.getState().nodeIndex.get(CHILD_A_ID)?.title).toBe(
+			"A renamed",
+		);
+	});
+
+	it("a real Ctrl+Z after a status hotkey restores the status", () => {
+		useRoadmapStore.getState().setFocusedNode(CHILD_A_ID);
+		renderRouter();
+		fireEvent.keyDown(document, { key: "3" });
+		expect(useRoadmapStore.getState().nodeIndex.get(CHILD_A_ID)?.status).toBe(
+			"completed",
+		);
+		fireEvent.keyDown(document, { key: "z", ctrlKey: true });
+		expect(useRoadmapStore.getState().nodeIndex.get(CHILD_A_ID)?.status).toBe(
+			"not-started",
+		);
+		fireEvent.keyDown(document, { key: "y", ctrlKey: true });
+		expect(useRoadmapStore.getState().nodeIndex.get(CHILD_A_ID)?.status).toBe(
+			"completed",
+		);
+	});
+});

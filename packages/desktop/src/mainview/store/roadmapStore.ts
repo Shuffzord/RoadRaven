@@ -6,9 +6,17 @@ import type {
 	RoadmapSchema,
 } from "../../../../../packages/core/src/schema";
 import { NodeStatusSchema } from "../../../../../packages/core/src/schema";
+import {
+	focusTargetOf,
+	type HistoryDirection,
+	type HistoryEntry,
+	isApplicable,
+	type UnstampedEntry,
+} from "../lib/historyEntries";
 import { indentTarget, outdentTarget } from "../lib/treeEdits";
 import { findParentAndIndex } from "../lib/treeWalk";
 import { parseSubtree, refreshNodeIds, serializeSubtree } from "./clipboard";
+import { useHistoryStore } from "./historyStore";
 
 // Re-exported so existing importers (useKeyboardRouter.ts,
 // useCanvasFocusController.ts, tests) keep working unchanged — the
@@ -223,6 +231,54 @@ function immutablyReplaceArray(
 }
 
 /**
+ * Immutably insert `node` at `index` under `parentId` (root level when null).
+ * The one insertion path: the create mutations and undo/redo re-inserts
+ * (v0.8.4 Phase 6) all go through it.
+ */
+function insertAt(
+	nodes: RoadmapNode[],
+	parentId: string | null,
+	index: number,
+	node: RoadmapNode,
+): RoadmapNode[] {
+	return immutablyReplaceArray(nodes, parentId, (arr) => {
+		const copy = [...arr];
+		copy.splice(index, 0, node);
+		return copy;
+	});
+}
+
+/**
+ * Record a user edit in the undo history (v0.8.4 Phase 6). A no-op inside
+ * `withoutHistory` — the agent dispatcher and undo/redo themselves.
+ */
+function record(entry: UnstampedEntry): void {
+	useHistoryStore.getState().push({ ...entry, at: Date.now() } as HistoryEntry);
+}
+
+/**
+ * Record a move. `moveNode` cannot target the root level, so a root-level
+ * reorder has no inverse to run and is not recorded; neither is a move that
+ * lands where it started.
+ */
+function recordMove(
+	nodeId: string,
+	from: { parentId: string | null; index: number },
+	to: { parentId: string | null; index: number },
+): void {
+	if (from.parentId === null || to.parentId === null) return;
+	if (from.parentId === to.parentId && from.index === to.index) return;
+	record({
+		kind: "move",
+		nodeId,
+		fromParentId: from.parentId,
+		fromIndex: from.index,
+		toParentId: to.parentId,
+		toIndex: to.index,
+	});
+}
+
+/**
  * Immutably update a specific node in the tree via updater (for renameNode).
  */
 function immutablyUpdateNode(
@@ -381,6 +437,14 @@ interface RoadmapState {
 	/** v0.8.4 Phase 5: move nodeId out to right after its parent. No-op (see lib/treeEdits.ts) when the parent is a root. */
 	outdentNode: (nodeId: string) => void;
 	renameNode: (nodeId: string, title: string) => void;
+
+	// Actions -- undo/redo of the user's own edits (v0.8.4 Phase 6)
+	/** Undo the newest user edit (stale entries are skipped). Focuses and
+	 *  selects the affected node and returns its id for the caller to reveal
+	 *  via requestNodeFocus, or null when nothing was undone. */
+	undo: () => string | null;
+	/** Redo the newest undone edit. Same contract as `undo`. */
+	redo: () => string | null;
 
 	// Actions -- in-place (no dataKey change)
 	updateNodeStatus: (nodeId: string, status: string) => void;
@@ -625,6 +689,70 @@ export const useRoadmapStore = create<RoadmapState>((set, get) => {
 		return { searchMatchIds: matches, searchCurrentIndex: nextIndex };
 	}
 
+	/** New sibling right above (offset 0) or below (offset 1) `nodeId`. */
+	function addSibling(nodeId: string, offset: 0 | 1): string | null {
+		const schema = get().schema;
+		if (!schema) return null;
+		const nodes = schema.nodes;
+		const found = findParentAndIndex(nodes, nodeId);
+		if (!found) return null;
+		const newNode = makeNewNode();
+		const parentId = found.parent ? found.parent.id : null;
+		const index = found.index + offset;
+		bumpStructural(insertAt(nodes, parentId, index, newNode));
+		record({ kind: "create", parentId, index, subtree: newNode });
+		return newNode.id;
+	}
+
+	/** Children under `parentId` (root-level count when null). */
+	function childCount(parentId: string | null): number {
+		if (parentId === null) return get().schema?.nodes.length ?? 0;
+		return get().nodeIndex.get(parentId)?.children?.length ?? 0;
+	}
+
+	// v0.8.4 Phase 6: run one history entry through the existing mutations
+	// (historyStore.step holds the withoutHistory scope around it).
+	const runEntry: {
+		[K in HistoryEntry["kind"]]: (
+			e: Extract<HistoryEntry, { kind: K }>,
+		) => void;
+	} = {
+		create: (e) =>
+			bumpStructural(
+				insertAt(get().schema?.nodes ?? [], e.parentId, e.index, e.subtree),
+			),
+		delete: (e) => {
+			get().deleteNode(e.subtree.id);
+		},
+		move: (e) => get().moveNode(e.nodeId, e.toParentId, e.toIndex),
+		rename: (e) => get().renameNode(e.nodeId, e.after),
+		status: (e) => get().updateNodeStatus(e.nodeId, e.after),
+		// Restoring an absent field writes `undefined` back, which serializes
+		// the same as the field never having been set.
+		type: (e) => get().updateNodeType(e.nodeId, e.after as string),
+		metadata: (e) =>
+			get().updateNodeMetadata(e.nodeId, e.after as Record<string, unknown>),
+		notes: (e) => get().updateNodeNotes(e.nodeId, e.after as string),
+	};
+
+	function applyHistoryEffect(effect: HistoryEntry): boolean {
+		if (!isApplicable(effect, get().nodeIndex)) return false;
+		runEntry[effect.kind](effect as never);
+		return true;
+	}
+
+	// The logical half of requestNodeFocus happens here; lib/focusRequest.ts
+	// imports this store, so the caller dispatches the reveal.
+	function stepHistory(direction: HistoryDirection): string | null {
+		const effect = useHistoryStore
+			.getState()
+			.step(direction, applyHistoryEffect);
+		const target = effect ? focusTargetOf(effect) : null;
+		if (!target || !get().nodeIndex.has(target)) return null;
+		set({ focusedNodeId: target, selectedNodeId: target });
+		return target;
+	}
+
 	return {
 		...INITIAL_STATE,
 
@@ -666,6 +794,7 @@ export const useRoadmapStore = create<RoadmapState>((set, get) => {
 				isUntitled: false,
 				linkedFiles,
 			});
+			useHistoryStore.getState().clear();
 		},
 
 		closeSchema: () => {
@@ -697,6 +826,7 @@ export const useRoadmapStore = create<RoadmapState>((set, get) => {
 				autosavePaused: false,
 				liveEventMeta: {},
 			});
+			useHistoryStore.getState().clear();
 		},
 
 		reloadSchema: (schema) => {
@@ -731,6 +861,8 @@ export const useRoadmapStore = create<RoadmapState>((set, get) => {
 				lastSavedDataKey: nextKey,
 				lastSavedStatusTick: 0,
 			});
+			// The disk version replaced memory: the in-memory edits are gone.
+			useHistoryStore.getState().clear();
 		},
 
 		newUntitledSchema: () => {
@@ -776,52 +908,21 @@ export const useRoadmapStore = create<RoadmapState>((set, get) => {
 			// v0.7 Phase 4: caller-supplied id (uniqueness is the caller's gate —
 			// agentRpcHandler rejects collisions with duplicate_id before this).
 			const newNode = makeNewNode(title, id, options);
-			const nextNodes = immutablyReplaceArray(nodes, parentId, (children) => [
-				...children,
-				newNode,
-			]);
+			const index = childCount(parentId);
+			const nextNodes = insertAt(nodes, parentId, index, newNode);
 			bumpStructural(
 				nextNodes,
 				options?.liveEvent
 					? { liveEvent: { nodeId: newNode.id, ...options.liveEvent } }
 					: undefined,
 			);
+			record({ kind: "create", parentId, index, subtree: newNode });
 			return newNode.id;
 		},
 
-		addSiblingAbove: (nodeId) => {
-			const schema = get().schema;
-			if (!schema) return null;
-			const nodes = schema.nodes;
-			const found = findParentAndIndex(nodes, nodeId);
-			if (!found) return null;
-			const newNode = makeNewNode();
-			const parentId = found.parent ? found.parent.id : null;
-			const nextNodes = immutablyReplaceArray(nodes, parentId, (arr) => {
-				const copy = [...arr];
-				copy.splice(found.index, 0, newNode);
-				return copy;
-			});
-			bumpStructural(nextNodes);
-			return newNode.id;
-		},
+		addSiblingAbove: (nodeId) => addSibling(nodeId, 0),
 
-		addSiblingBelow: (nodeId) => {
-			const schema = get().schema;
-			if (!schema) return null;
-			const nodes = schema.nodes;
-			const found = findParentAndIndex(nodes, nodeId);
-			if (!found) return null;
-			const newNode = makeNewNode();
-			const parentId = found.parent ? found.parent.id : null;
-			const nextNodes = immutablyReplaceArray(nodes, parentId, (arr) => {
-				const copy = [...arr];
-				copy.splice(found.index + 1, 0, newNode);
-				return copy;
-			});
-			bumpStructural(nextNodes);
-			return newNode.id;
-		},
+		addSiblingBelow: (nodeId) => addSibling(nodeId, 1),
 
 		deleteNode: (nodeId) => {
 			const schema = get().schema;
@@ -857,6 +958,7 @@ export const useRoadmapStore = create<RoadmapState>((set, get) => {
 			const reassignSel = prev.selectedNodeId === nodeId;
 			const reassignFocus = prev.focusedNodeId === nodeId;
 			bumpStructural(nextNodes);
+			record({ kind: "delete", parentId, index: found.index, subtree: target });
 			if (reassignSel || reassignFocus) {
 				set({
 					selectedNodeId: reassignSel ? successorId : prev.selectedNodeId,
@@ -907,12 +1009,9 @@ export const useRoadmapStore = create<RoadmapState>((set, get) => {
 			const source = found.parentArray[found.index];
 			const clone = refreshNodeIds(source);
 			const parentId = found.parent ? found.parent.id : null;
-			const nextNodes = immutablyReplaceArray(nodes, parentId, (arr) => {
-				const copy = [...arr];
-				copy.splice(found.index + 1, 0, clone);
-				return copy;
-			});
-			bumpStructural(nextNodes);
+			const index = found.index + 1;
+			bumpStructural(insertAt(nodes, parentId, index, clone));
+			record({ kind: "create", parentId, index, subtree: clone });
 			return clone.id;
 		},
 
@@ -935,6 +1034,11 @@ export const useRoadmapStore = create<RoadmapState>((set, get) => {
 			// only their position within the children array changed, so the existing
 			// nodeIndex Map entries remain valid.
 			bumpStructural(nextNodes, { preserveNodeIndex: true });
+			recordMove(
+				nodeId,
+				{ parentId, index: idx },
+				{ parentId, index: idx - 1 },
+			);
 		},
 
 		moveNodeDown: (nodeId) => {
@@ -955,6 +1059,11 @@ export const useRoadmapStore = create<RoadmapState>((set, get) => {
 				return copy;
 			});
 			bumpStructural(nextNodes, { preserveNodeIndex: true });
+			recordMove(
+				nodeId,
+				{ parentId, index: idx },
+				{ parentId, index: idx + 1 },
+			);
 		},
 
 		// Phase 6 PLUG-AGENT-UPDATE-05: re-parent a node to a new parent at optional position.
@@ -988,6 +1097,7 @@ export const useRoadmapStore = create<RoadmapState>((set, get) => {
 					return copy;
 				},
 			);
+			let insertedAt = 0;
 			const nextNodes = immutablyReplaceArray(
 				nodesAfterRemove,
 				newParentId,
@@ -997,11 +1107,17 @@ export const useRoadmapStore = create<RoadmapState>((set, get) => {
 						position !== undefined
 							? Math.min(position, copy.length)
 							: copy.length;
+					insertedAt = pos;
 					copy.splice(pos, 0, node);
 					return copy;
 				},
 			);
 			bumpStructural(nextNodes);
+			recordMove(
+				nodeId,
+				{ parentId: currentParentId, index: found.index },
+				{ parentId: newParentId, index: insertedAt },
+			);
 		},
 
 		indentNode: (nodeId) => {
@@ -1025,6 +1141,7 @@ export const useRoadmapStore = create<RoadmapState>((set, get) => {
 			if (!trimmed) return;
 			const schema = get().schema;
 			if (!schema) return;
+			const before = get().nodeIndex.get(nodeId)?.title;
 			const now = new Date().toISOString();
 			const nextNodes = immutablyUpdateNode(schema.nodes, nodeId, (n) => ({
 				...n,
@@ -1032,7 +1149,12 @@ export const useRoadmapStore = create<RoadmapState>((set, get) => {
 				updatedAt: now,
 			}));
 			bumpStructural(nextNodes);
+			if (before !== undefined && before !== trimmed)
+				record({ kind: "rename", nodeId, before, after: trimmed });
 		},
+
+		undo: () => stepHistory("undo"),
+		redo: () => stepHistory("redo"),
 
 		// --- In-place mutations --------------------------------------------------
 
@@ -1042,6 +1164,7 @@ export const useRoadmapStore = create<RoadmapState>((set, get) => {
 			const node = get().nodeIndex.get(nodeId);
 			if (!node) return;
 			if (node.status === parsed.data) return;
+			const before = node.status;
 			// Mutate in-place -- do NOT increment dataKey or create new treeData ref.
 			// This is the critical performance path per D-02: status-only updates
 			// bypass react-d3-tree's deep-clone by keeping the same data reference.
@@ -1050,42 +1173,49 @@ export const useRoadmapStore = create<RoadmapState>((set, get) => {
 				statusTick: get().statusTick + 1,
 				...advanceRevisions(),
 			});
+			record({ kind: "status", nodeId, before, after: parsed.data });
 		},
 
 		updateNodeType: (nodeId, type) => {
 			const node = get().nodeIndex.get(nodeId);
 			if (!node) return;
 			if (node.type === type) return;
+			const before = node.type;
 			node.type = type;
 			node.updatedAt = new Date().toISOString();
 			set({
 				statusTick: get().statusTick + 1,
 				...advanceRevisions(),
 			});
+			record({ kind: "type", nodeId, before, after: type });
 		},
 
 		updateNodeMetadata: (nodeId, metadata) => {
 			const node = get().nodeIndex.get(nodeId);
 			if (!node) return;
 			if (node.metadata === metadata) return;
+			const before = node.metadata;
 			node.metadata = metadata;
 			node.updatedAt = new Date().toISOString();
 			set({
 				statusTick: get().statusTick + 1,
 				...advanceRevisions(),
 			});
+			record({ kind: "metadata", nodeId, before, after: metadata });
 		},
 
 		updateNodeNotes: (nodeId, notes) => {
 			const node = get().nodeIndex.get(nodeId);
 			if (!node) return;
 			if (node.notes === notes) return;
+			const before = node.notes;
 			node.notes = notes;
 			node.updatedAt = new Date().toISOString();
 			set({
 				statusTick: get().statusTick + 1,
 				...advanceRevisions(),
 			});
+			record({ kind: "notes", nodeId, before, after: notes });
 		},
 
 		updateNodesBatch: (updates) => {
@@ -1201,12 +1331,9 @@ export const useRoadmapStore = create<RoadmapState>((set, get) => {
 			const schema = get().schema;
 			if (!schema) return null;
 			// Insert into parent (or as root sibling if parentId null)
-			const nextNodes = immutablyReplaceArray(
-				schema.nodes,
-				parentId,
-				(children) => [...children, fresh],
-			);
-			bumpStructural(nextNodes);
+			const index = childCount(parentId);
+			bumpStructural(insertAt(schema.nodes, parentId, index, fresh));
+			record({ kind: "create", parentId, index, subtree: fresh });
 			return fresh.id;
 		},
 
