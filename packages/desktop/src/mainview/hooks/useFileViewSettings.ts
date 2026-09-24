@@ -35,10 +35,15 @@ export function useFileViewSettings(): void {
 			if (saveTimer) clearTimeout(saveTimer);
 			saveTimer = setTimeout(() => {
 				const layout = useRoadmapStore.getState().layoutOrientation;
-				const layoutKnobs = useFileViewStore.getState().layoutKnobs;
+				const { layoutKnobs, customLayout, nodeOffsets } =
+					useFileViewStore.getState();
 				electroview?.rpc?.request
 					.saveSettings({
-						settings: { fileSettings: { [path]: { layout, layoutKnobs } } },
+						settings: {
+							fileSettings: {
+								[path]: { layout, layoutKnobs, customLayout, nodeOffsets },
+							},
+						},
 					})
 					.catch(() => {
 						// Settings unavailable — the in-memory state is still correct.
@@ -60,6 +65,10 @@ export function useFileViewSettings(): void {
 				if (forFile?.layoutKnobs) {
 					useFileViewStore.getState().hydrate(forFile.layoutKnobs);
 				}
+				// v0.8.4 Phase 3: same rule — only a stored key is applied.
+				if (forFile) {
+					useFileViewStore.getState().hydrateCustomLayout(forFile);
+				}
 				hydrated = true;
 			})
 			.catch(() => {
@@ -72,7 +81,13 @@ export function useFileViewSettings(): void {
 			if (state.layoutOrientation !== prev.layoutOrientation) scheduleSave();
 		});
 		const unsubFileView = useFileViewStore.subscribe((state, prev) => {
-			if (state.layoutKnobs !== prev.layoutKnobs) scheduleSave();
+			if (
+				state.layoutKnobs !== prev.layoutKnobs ||
+				state.customLayout !== prev.customLayout ||
+				state.nodeOffsets !== prev.nodeOffsets
+			) {
+				scheduleSave();
+			}
 		});
 
 		return () => {

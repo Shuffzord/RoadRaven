@@ -4,17 +4,22 @@ import { expect, type Page, test } from "@playwright/test";
 import {
 	CHEVRON_COLLAPSE_LABEL,
 	CHEVRON_EXPAND_LABEL,
+	CUSTOM_LAYOUT_LABEL,
 	KNOB_RESET_LABEL,
 	KNOB_SIBLING_GAP_LABEL,
 	LAYOUT_KNOBS_TRIGGER_LABEL,
+	linkClassFor,
 	NODE_CARD_ATTR,
 	NODE_FOCUSED_ATTR,
+	NODE_OFFSET_ATTR,
 	NODE_PROGRESS_ATTR,
 	NODE_RIBBON_ATTR,
 	NODE_STATUS_ATTR,
 	NODE_TYPE_CHIP_ATTR,
+	RESET_POSITIONS_LABEL,
 } from "../../src/mainview/lib/domContract";
 import { CHEVRON_SELECTOR } from "../../src/mainview/lib/nodeCollapse";
+import { CONTAINER, dragCard } from "./helpers/canvasGestures";
 import { seedSchema } from "./helpers/seed";
 
 // v0.8.4 Phase 0 — evidence gate for RC1 (collapse state wiped by any
@@ -336,5 +341,281 @@ test.describe("Canvas comfort — Phase 2 layout knobs", () => {
 		await expect(page.locator(`[${NODE_CARD_ATTR}]`)).toHaveCount(3);
 		const reseededDistance = await siblingCentreDistance(page);
 		expect(reseededDistance).toBeCloseTo(defaultDistance, 0);
+	});
+});
+
+// v0.8.4 Phase 3 — custom layout: with the popover's checkbox ticked, a card
+// can be dragged; the offset is view state only. Seeded untitled (the
+// __ROADRAVEN_TEST__ seam), so nothing here persists — persistence is pinned
+// by tests/unit/hooks/useFileViewSettings.test.ts.
+
+type Box = { x: number; y: number; width: number; height: number };
+
+async function cardBox(page: Page, id: string): Promise<Box> {
+	const box = await page.locator(`[${NODE_CARD_ATTR}="${id}"]`).boundingBox();
+	if (!box) throw new Error(`card ${id} has no box`);
+	return box;
+}
+
+async function allCardBoxes(page: Page): Promise<Record<string, Box>> {
+	return page.evaluate((attr) => {
+		const out: Record<string, Box> = {};
+		for (const el of document.querySelectorAll(`[${attr}]`)) {
+			const r = el.getBoundingClientRect();
+			out[el.getAttribute(attr) ?? ""] = {
+				x: r.x,
+				y: r.y,
+				width: r.width,
+				height: r.height,
+			};
+		}
+		return out;
+	}, NODE_CARD_ATTR);
+}
+
+async function canvasTransform(page: Page): Promise<string> {
+	return page.evaluate(
+		() => document.querySelector("g.rd3t-g")?.getAttribute("transform") ?? "",
+	);
+}
+
+async function canvasScale(page: Page): Promise<number> {
+	const m = /scale\(([^)]+)\)/.exec(await canvasTransform(page));
+	return m ? Number(m[1]) : 1;
+}
+
+/** The end point of the connector into `targetId`, in SVG units. */
+async function linkEnd(
+	page: Page,
+	targetId: string,
+): Promise<{ x: number; y: number }> {
+	const d = await page.evaluate(
+		(cls) => document.getElementsByClassName(cls)[0]?.getAttribute("d") ?? "",
+		linkClassFor(targetId),
+	);
+	const n = (d.match(/-?(?:\d+\.?\d*|\.\d+)(?:e[-+]?\d+)?/gi) ?? []).map(
+		Number,
+	);
+	if (n.length !== 5) throw new Error(`unexpected connector d: ${d}`);
+	// TB step path: M sx,sy V mid H tx V ty.
+	return { x: n[3], y: n[4] };
+}
+
+/** Opens the layout popover, sets Custom layout, closes it again. */
+async function setCustomLayout(page: Page, on: boolean): Promise<void> {
+	await page.getByRole("button", { name: LAYOUT_KNOBS_TRIGGER_LABEL }).click();
+	const box = page.getByRole("checkbox", { name: CUSTOM_LAYOUT_LABEL });
+	await expect(box).toBeVisible();
+	await box.setChecked(on);
+	await page.keyboard.press("Escape");
+	await expect(page.getByRole("menu")).toHaveCount(0);
+}
+
+function expectMovedBy(after: Box, before: Box, dx: number, dy: number): void {
+	expect(Math.abs(after.x - before.x - dx)).toBeLessThanOrEqual(2);
+	expect(Math.abs(after.y - before.y - dy)).toBeLessThanOrEqual(2);
+}
+
+function expectSameBox(after: Box, before: Box): void {
+	expectMovedBy(after, before, 0, 0);
+}
+
+test.describe("Canvas comfort — Phase 3 custom layout", () => {
+	test("P3-1: dragging Task A1 moves only that card and the connector into it, by the pointer delta", async ({
+		page,
+	}) => {
+		await seedRichTree(page);
+		await setCustomLayout(page, true);
+		const before = await allCardBoxes(page);
+		const endBefore = await linkEnd(page, TASK_A1);
+		const k = await canvasScale(page);
+
+		await dragCard(page, TASK_A1, 120, 60);
+
+		const after = await allCardBoxes(page);
+		expectMovedBy(after[TASK_A1], before[TASK_A1], 120, 60);
+		for (const id of Object.keys(before)) {
+			if (id !== TASK_A1) expectSameBox(after[id], before[id]);
+		}
+		const endAfter = await linkEnd(page, TASK_A1);
+		expect(Math.abs((endAfter.x - endBefore.x) * k - 120)).toBeLessThanOrEqual(
+			2,
+		);
+		expect(Math.abs((endAfter.y - endBefore.y) * k - 60)).toBeLessThanOrEqual(
+			2,
+		);
+		// The click that follows a real drag is swallowed: no selection.
+		await expect(
+			page.locator(`[${NODE_CARD_ATTR}="${TASK_A1}"]`),
+		).not.toHaveAttribute("data-selected", "true");
+	});
+
+	test("P3-2: with Custom layout off (the default) the same drag moves nothing", async ({
+		page,
+	}) => {
+		await seedRichTree(page);
+		const before = await allCardBoxes(page);
+		const transformBefore = await canvasTransform(page);
+
+		await dragCard(page, TASK_A1, 120, 60);
+
+		const after = await allCardBoxes(page);
+		for (const id of Object.keys(before)) {
+			expectSameBox(after[id], before[id]);
+		}
+		expect(await canvasTransform(page)).toBe(transformBefore);
+		// The release lands off the card, so the browser's click targets a
+		// common ancestor, not the card: the plain-click path selects nothing.
+		await expect(
+			page.locator(`[${NODE_CARD_ATTR}="${TASK_A1}"]`),
+		).not.toHaveAttribute("data-selected", "true");
+	});
+
+	test("P3-2b: a press without movement is still a click that selects the card", async ({
+		page,
+	}) => {
+		await seedRichTree(page);
+		await setCustomLayout(page, true);
+		const before = await cardBox(page, TASK_A1);
+
+		await dragCard(page, TASK_A1, 2, 1);
+
+		expectSameBox(await cardBox(page, TASK_A1), before);
+		await expect(
+			page.locator(`[${NODE_CARD_ATTR}="${TASK_A1}"]`),
+		).toHaveAttribute("data-selected", "true");
+	});
+
+	test("P3-3: unticking Custom layout snaps the card back; ticking again restores the move", async ({
+		page,
+	}) => {
+		await seedRichTree(page);
+		await setCustomLayout(page, true);
+		const auto = await cardBox(page, TASK_A1);
+		await dragCard(page, TASK_A1, 120, 60);
+		const moved = await cardBox(page, TASK_A1);
+		expectMovedBy(moved, auto, 120, 60);
+
+		await setCustomLayout(page, false);
+		expectSameBox(await cardBox(page, TASK_A1), auto);
+
+		await setCustomLayout(page, true);
+		expectSameBox(await cardBox(page, TASK_A1), moved);
+	});
+
+	test("P3-4: Reset positions returns the card to auto and leaves Custom layout on", async ({
+		page,
+	}) => {
+		await seedRichTree(page);
+		await setCustomLayout(page, true);
+		const auto = await cardBox(page, TASK_A1);
+		await dragCard(page, TASK_A1, 120, 60);
+		expectMovedBy(await cardBox(page, TASK_A1), auto, 120, 60);
+
+		await page
+			.getByRole("button", { name: LAYOUT_KNOBS_TRIGGER_LABEL })
+			.click();
+		await page.getByRole("button", { name: RESET_POSITIONS_LABEL }).click();
+		await expect(
+			page.getByRole("checkbox", { name: CUSTOM_LAYOUT_LABEL }),
+		).toBeChecked();
+		await page.keyboard.press("Escape");
+
+		expectSameBox(await cardBox(page, TASK_A1), auto);
+	});
+
+	test("P3-5: a card drag does not pan the canvas", async ({ page }) => {
+		await seedRichTree(page);
+		await setCustomLayout(page, true);
+		const before = await canvasTransform(page);
+
+		await dragCard(page, TASK_A1, 120, 60);
+
+		expect(await canvasTransform(page)).toBe(before);
+	});
+
+	test("P3-6: Fit to view frames a card moved out of the viewport", async ({
+		page,
+	}) => {
+		await seedRichTree(page);
+		await setCustomLayout(page, true);
+		await dragCard(page, TASK_A1, 120, 60);
+
+		// Push it past the container's right edge.
+		const container = await page.locator(CONTAINER).boundingBox();
+		if (!container) throw new Error("no canvas container");
+		const box = await cardBox(page, TASK_A1);
+		const grabX = box.x + box.width * 0.3;
+		const viewport = page.viewportSize();
+		if (!viewport) throw new Error("no viewport");
+		await dragCard(page, TASK_A1, viewport.width - 2 - grabX, 0);
+		const off = await cardBox(page, TASK_A1);
+		expect(off.x + off.width).toBeGreaterThan(container.x + container.width);
+
+		await page.evaluate(() =>
+			window.dispatchEvent(new CustomEvent("roadraven:fit-view")),
+		);
+		await expect
+			.poll(async () => {
+				const b = await cardBox(page, TASK_A1);
+				return (
+					b.x >= container.x &&
+					b.y >= container.y &&
+					b.x + b.width <= container.x + container.width &&
+					b.y + b.height <= container.y + container.height
+				);
+			})
+			.toBe(true);
+	});
+
+	// Send-back guard (orchestrator A/B: an always-on wrapper <g> and function
+	// pathFunc/pathClassFunc cost 1.12-1.58x on the 1400-node perf cases).
+	// With custom layout off the tree must get exactly Phase 2's shape.
+	test("P3-7: with Custom layout off the tree renders Phase 2's plain links and bare card placement", async ({
+		page,
+	}) => {
+		const shape = () =>
+			page.evaluate(
+				(attr) => ({
+					linkClasses: Array.from(
+						document.querySelectorAll(".rd3t-link"),
+						(p) => p.getAttribute("class"),
+					),
+					offsetTagged: document.querySelectorAll(`[${attr}]`).length,
+					placements: Array.from(
+						document.querySelectorAll(".rd3t-g foreignObject"),
+						(fo) => `${fo.getAttribute("x")},${fo.getAttribute("y")}`,
+					),
+					// Cards whose foreignObject is not a direct child of
+					// react-d3-tree's own node <g> (rd3t-node / rd3t-leaf-node).
+					wrapperGroups: Array.from(
+						document.querySelectorAll(".rd3t-g foreignObject"),
+					).filter(
+						(fo) =>
+							!/rd3t-(leaf-)?node/.test(
+								fo.parentElement?.getAttribute("class") ?? "",
+							),
+					).length,
+				}),
+				NODE_OFFSET_ATTR,
+			);
+
+		await seedRichTree(page);
+		const off = await shape();
+		expect(off.linkClasses).toHaveLength(5);
+		expect(new Set(off.linkClasses)).toEqual(new Set(["rd3t-link"]));
+		expect(off.offsetTagged).toBe(0);
+		expect(off.wrapperGroups).toBe(0);
+		expect(new Set(off.placements)).toEqual(new Set(["-120,-50"]));
+
+		await setCustomLayout(page, true);
+		const on = await shape();
+		expect(on.offsetTagged).toBe(6);
+		expect(on.linkClasses.some((c) => c?.includes(linkClassFor(TASK_A1)))).toBe(
+			true,
+		);
+
+		await setCustomLayout(page, false);
+		expect(await shape()).toEqual(off);
 	});
 });

@@ -1,4 +1,5 @@
 import type { Page } from "@playwright/test";
+import { NODE_CARD_ATTR } from "../../../src/mainview/lib/domContract";
 
 /** The canvas container (Canvas.tsx `role="application"` div). */
 export const CONTAINER = '[role="application"]';
@@ -53,5 +54,28 @@ export async function dragCanvas(
 	await page.mouse.move(p.x, p.y);
 	await page.mouse.down();
 	await page.mouse.move(p.x + dx, p.y + dy, { steps: 12 });
+	await page.mouse.up();
+}
+
+/**
+ * v0.8.4 Phase 3 — press on a node card, move by (dx, dy) screen px in
+ * steps, release. The press lands in the card's upper-left area (title),
+ * clear of the chevron button, which never starts a drag.
+ */
+export async function dragCard(
+	page: Page,
+	nodeId: string,
+	dx: number,
+	dy: number,
+): Promise<void> {
+	const box = await page
+		.locator(`[${NODE_CARD_ATTR}="${nodeId}"]`)
+		.boundingBox();
+	if (!box) throw new Error(`card ${nodeId} has no box`);
+	const x = box.x + box.width * 0.3;
+	const y = box.y + box.height * 0.3;
+	await page.mouse.move(x, y);
+	await page.mouse.down();
+	await page.mouse.move(x + dx, y + dy, { steps: 12 });
 	await page.mouse.up();
 }

@@ -161,6 +161,13 @@
 		0 0 0 1px var(--node-stripe-color), 0 6px 16px -6px var(--node-stripe-color);
 }
 
+/* v0.8.4 Phase 3: a card being dragged under custom layout (useNodeDrag sets
+   the attribute). Lifted: the theme's node shadow, doubled. */
+.node[data-dragging="true"] {
+	cursor: grabbing;
+	--node-shadow: var(--rv-shadow-node), var(--rv-shadow-node);
+}
+
 /* App shell grid */
 #app {
 	display: grid;

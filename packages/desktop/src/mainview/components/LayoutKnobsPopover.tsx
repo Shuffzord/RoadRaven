@@ -1,14 +1,17 @@
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { useId } from "react";
 import {
+	CUSTOM_LAYOUT_LABEL,
 	KNOB_DENSITY_LABEL,
 	KNOB_DEPTH_GAP_LABEL,
 	KNOB_RESET_LABEL,
 	KNOB_SIBLING_GAP_LABEL,
 	LAYOUT_KNOBS_TRIGGER_LABEL,
+	RESET_POSITIONS_LABEL,
 } from "../lib/domContract";
 import { KNOB_RANGES } from "../lib/layoutKnobs";
 import { useFileViewStore } from "../store/fileViewStore";
+import { useRoadmapStore } from "../store/roadmapStore";
 import { MENU_SURFACE_CLASS } from "./menuStyles";
 
 const ROW_LABEL_CLASS = "text-[11px] text-rv-text-tertiary";
@@ -29,6 +32,9 @@ export function LayoutKnobsPopover() {
 	const layoutKnobs = useFileViewStore((s) => s.layoutKnobs);
 	const setKnob = useFileViewStore((s) => s.setKnob);
 	const resetKnobs = useFileViewStore((s) => s.resetKnobs);
+	const customLayout = useFileViewStore((s) => s.customLayout);
+	const setCustomLayout = useFileViewStore((s) => s.setCustomLayout);
+	const resetNodeOffsets = useFileViewStore((s) => s.resetNodeOffsets);
 	const densityGroupId = useId();
 
 	return (
@@ -135,6 +141,34 @@ export function LayoutKnobsPopover() {
 						>
 							{KNOB_RESET_LABEL}
 						</button>
+
+						{/* v0.8.4 Phase 3: custom layout — cards become draggable;
+						    unchecking snaps them back without forgetting offsets.
+						    Reset positions only exists while it is on: there is
+						    nothing on screen for it to reset otherwise. */}
+						<div className="flex flex-col gap-1.5 pt-2 border-t border-[color:var(--rv-border)]">
+							<label className="flex items-center gap-1.5 text-[12px] text-rv-text-primary">
+								<input
+									type="checkbox"
+									checked={customLayout}
+									onChange={(e) => setCustomLayout(e.target.checked)}
+								/>
+								{CUSTOM_LAYOUT_LABEL}
+							</label>
+							{customLayout && (
+								<button
+									type="button"
+									className="self-start px-2 h-[24px] rounded-[5px] text-[11px] font-semibold text-rv-text-secondary hover:bg-rv-bg-hover hover:text-rv-text-primary transition-all duration-150"
+									onClick={() =>
+										resetNodeOffsets(
+											useRoadmapStore.getState().layoutOrientation,
+										)
+									}
+								>
+									{RESET_POSITIONS_LABEL}
+								</button>
+							)}
+						</div>
 					</div>
 				</DropdownMenu.Content>
 			</DropdownMenu.Portal>

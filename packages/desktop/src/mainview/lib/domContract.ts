@@ -109,3 +109,25 @@ export const KNOB_DEPTH_GAP_LABEL = "Depth gap";
 export const KNOB_DENSITY_LABEL = "Card density";
 /** Label of the button that restores the three knobs to their defaults. */
 export const KNOB_RESET_LABEL = "Reset";
+
+// -- Custom layout (v0.8.4 Phase 3) -------------------------------------------
+// Rendered by LayoutKnobsPopover.tsx and Canvas.tsx; written during a drag by
+// hooks/useNodeDrag.ts; read by index.css, tests/unit/hooks/useNodeDrag.test.tsx
+// and tests/ui/canvas-comfort.spec.ts (+ helpers/canvasGestures.ts).
+
+/** Label of the popover checkbox that lets the user drag cards. */
+export const CUSTOM_LAYOUT_LABEL = "Custom layout";
+/** Label of the button that clears the current orientation's card offsets. */
+export const RESET_POSITIONS_LABEL = "Reset positions";
+/** `"true"` on the card while it is being dragged (cursor/shadow rule). */
+export const NODE_DRAGGING_ATTR = "data-dragging";
+/** On each card's foreignObject while custom layout is on: value is the node id. */
+export const NODE_OFFSET_ATTR = "data-node-offset";
+/** Class on the connector path INTO `targetId` (react-d3-tree pathClassFunc). */
+export function linkClassFor(targetId: string): string {
+	return `rv-link-to-${targetId}`;
+}
+/** Class on every connector path OUT OF `sourceId` (to its children). */
+export function linkFromClassFor(sourceId: string): string {
+	return `rv-link-from-${sourceId}`;
+}

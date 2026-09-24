@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef } from "react";
-import type { CustomNodeElementProps } from "react-d3-tree";
+import type { CustomNodeElementProps, TreeLinkDatum } from "react-d3-tree";
 import Tree from "react-d3-tree";
 import { useShallow } from "zustand/react/shallow";
 import type { NodeStatus } from "../../../../../packages/core/src/schema";
@@ -9,11 +9,19 @@ import { useCanvasViewport } from "../hooks/useCanvasViewport";
 import { useFileActions } from "../hooks/useFileActions";
 import { useInlineRename } from "../hooks/useInlineRename";
 import { useKeyboardRouter } from "../hooks/useKeyboardRouter";
+import { useNodeDrag } from "../hooks/useNodeDrag";
 import { useRecentFiles } from "../hooks/useRecentFiles";
+import {
+	linkClassFor,
+	linkFromClassFor,
+	NODE_OFFSET_ATTR,
+} from "../lib/domContract";
 import { togglePanelFocus } from "../lib/focusHandoff";
 import { requestNodeFocus } from "../lib/focusRequest";
 import { treeLayoutFor } from "../lib/layoutKnobs";
+import { offsetLink, stepPath } from "../lib/linkPath";
 import { listNodeCards } from "../lib/nodeCard";
+import { type OffsetMap, ZERO_OFFSET } from "../lib/nodeOffsets";
 import { clampZoom, computeFit, SCALE_EXTENT } from "../lib/viewportMath";
 import { useFileViewStore } from "../store/fileViewStore";
 import { useRoadmapStore } from "../store/roadmapStore";
@@ -34,6 +42,68 @@ function isTabStop(
 	depth: number | undefined,
 ): boolean {
 	return focusedNodeId ? focusedNodeId === nodeId : depth === 0;
+}
+
+/** The roadmap node id react-d3-tree carries on a link endpoint. */
+function linkNodeId(end: TreeLinkDatum["source"]): string {
+	return end.data.attributes?.id as string;
+}
+
+/**
+ * v0.8.4 Phase 3: every connector is addressable by the node it enters and
+ * the node it leaves, so useNodeDrag can redraw a dragged card's links.
+ */
+function linkClasses(link: TreeLinkDatum): string {
+	return `${linkClassFor(linkNodeId(link.target))} ${linkFromClassFor(linkNodeId(link.source))}`;
+}
+
+/**
+ * react-d3-tree's `"step"` connector, drawn from each endpoint's custom
+ * layout offset. With an empty map it is the library's own string.
+ */
+function offsetStepPathFunc(
+	offsets: OffsetMap,
+	orientation: "TB" | "LR",
+): (link: TreeLinkDatum) => string {
+	return (link) => {
+		const { source, target } = offsetLink(
+			link,
+			{
+				source: offsets[linkNodeId(link.source)] ?? ZERO_OFFSET,
+				target: offsets[linkNodeId(link.target)] ?? ZERO_OFFSET,
+			},
+			orientation,
+		);
+		return stepPath(source, target, orientation);
+	};
+}
+
+// v0.8.4 Phase 3 send-back: with custom layout OFF the canvas hands
+// react-d3-tree exactly what Phase 2 did — the library's own "step" string,
+// no pathClassFunc, and a bare foreignObject at (-120, -50) — so the
+// feature costs nothing per render while it is off (orchestrator A/B:
+// an always-on wrapper <g> + function pathFunc/pathClassFunc per link cost
+// 1.12x arrow-nav, 1.58x rename-typing, 1.57x card-click blockedMs).
+const CARD_X = -120;
+const CARD_Y = -50;
+const AUTO_LINK_PROPS = { pathFunc: "step" } as const;
+const AUTO_PLACEMENT = { x: CARD_X, y: CARD_Y };
+const autoPlacement = () => AUTO_PLACEMENT;
+
+function customLinkProps(offsets: OffsetMap, orientation: "TB" | "LR") {
+	return {
+		pathFunc: offsetStepPathFunc(offsets, orientation),
+		pathClassFunc: linkClasses,
+	};
+}
+
+/**
+ * Custom layout folds the card's offset into its foreignObject's x/y and
+ * tags it NODE_OFFSET_ATTR, which is what useNodeDrag paints during a drag.
+ */
+function customPlacement(offsets: OffsetMap, nodeId: string) {
+	const { dx, dy } = offsets[nodeId] ?? ZERO_OFFSET;
+	return { x: CARD_X + dx, y: CARD_Y + dy, [NODE_OFFSET_ATTR]: nodeId };
 }
 
 /** Stop an in-flight pan animation, if any. */
@@ -88,6 +158,31 @@ export function Canvas() {
 	// Viewport truth (RC1) — the store is the single owner; this hook keeps it
 	// honest about d3 gestures without paying a full tree re-render per frame.
 	const { getTransform, flushViewport, syncGesture } = useCanvasViewport();
+
+	// v0.8.4 Phase 3: custom layout. `activeOffsets` is the current
+	// orientation's map while it is on, and null while it is off — then the
+	// tree gets AUTO_LINK_PROPS / AUTO_PLACEMENT and no drag handlers. Its
+	// identity only changes on a toggle, a drag commit or a reset, never on a
+	// focus write or keystroke. `drag` is one stable object.
+	const activeOffsets = useFileViewStore((s) =>
+		s.customLayout ? s.nodeOffsets[layoutOrientation] : null,
+	);
+	const linkProps = useMemo(
+		() =>
+			activeOffsets
+				? customLinkProps(activeOffsets, layoutOrientation)
+				: AUTO_LINK_PROPS,
+		[activeOffsets, layoutOrientation],
+	);
+	const { drag, consumeDragClick } = useNodeDrag(() => getTransform().k);
+	const cardDrag = activeOffsets ? drag : undefined;
+	const placeCard = useMemo(
+		() =>
+			activeOffsets
+				? (nodeId: string) => customPlacement(activeOffsets, nodeId)
+				: autoPlacement,
+		[activeOffsets],
+	);
 
 	// Recent files for WelcomeScreen — shared with Sidebar via useRecentFiles
 	const recentFiles = useRecentFiles();
@@ -276,13 +371,13 @@ export function Canvas() {
 			const hasChildren = children.length > 0;
 			const rd3t = nodeDatum.__rd3t;
 			const isRenaming = inlineRename.state.nodeId === nodeId;
+			const placement = placeCard(nodeId);
 
 			return (
 				<foreignObject
 					width={240}
 					height={100}
-					x={-120}
-					y={-50}
+					{...placement}
 					overflow="visible"
 				>
 					<RoadmapNodeCard
@@ -301,6 +396,8 @@ export function Canvas() {
 						density={density}
 						onToggle={toggleNode}
 						onSelect={() => {
+							// The click the browser fires after a real drag.
+							if (consumeDragClick()) return;
 							requestNodeFocus(nodeId, { align: "nearest", select: true });
 						}}
 						onDoubleClick={() => {
@@ -314,6 +411,7 @@ export function Canvas() {
 						onRenameChange={inlineRename.setTitle}
 						onRenameCommit={inlineRename.commit}
 						onRenameCancel={inlineRename.cancel}
+						drag={cardDrag}
 					/>
 				</foreignObject>
 			);
@@ -326,6 +424,9 @@ export function Canvas() {
 			searchActive,
 			inlineRename,
 			density,
+			placeCard,
+			cardDrag,
+			consumeDragClick,
 		],
 	);
 
@@ -390,7 +491,7 @@ export function Canvas() {
 							orientation={
 								layoutOrientation === "TB" ? "vertical" : "horizontal"
 							}
-							pathFunc="step"
+							{...linkProps}
 							separation={separation}
 							nodeSize={nodeSize}
 							renderCustomNodeElement={renderNode}

@@ -9,6 +9,7 @@ import {
 	TEXT_NODE_TOKEN,
 } from "../../../../../shared/themeContract";
 import { isKeyboardNav } from "../hooks/useKeyboardRouter";
+import type { NodeDragHandlers } from "../hooks/useNodeDrag";
 import {
 	CHEVRON_COLLAPSE_LABEL,
 	CHEVRON_EXPAND_LABEL,
@@ -177,6 +178,12 @@ interface RoadmapNodeCardProps {
 	onRenameChange?: (v: string) => void;
 	onRenameCommit?: () => void;
 	onRenameCancel?: () => void;
+	/**
+	 * v0.8.4 Phase 3: pointer handlers for dragging the card under custom
+	 * layout, or undefined (no handlers attached) when it is off. One stable
+	 * object from Canvas, so propsEqual's identity check still holds.
+	 */
+	drag?: NodeDragHandlers;
 }
 
 /**
@@ -230,6 +237,7 @@ export const RoadmapNodeCard = memo(function RoadmapNodeCard({
 	onRenameChange,
 	onRenameCommit,
 	onRenameCancel,
+	drag,
 }: RoadmapNodeCardProps) {
 	const cardRef = useRef<HTMLDivElement>(null);
 	const renameInputRef = useRef<HTMLInputElement>(null);
@@ -348,6 +356,8 @@ export const RoadmapNodeCard = memo(function RoadmapNodeCard({
 			aria-label={title}
 			onClick={onSelect}
 			onDoubleClick={onDoubleClick}
+			// onPointerDown/Move/Up/Cancel, or nothing at all when undefined.
+			{...drag}
 			onFocus={(e) => {
 				// Focus that arrives natively — Tab into the tree, Shift+Tab back,
 				// a mouse-down before the click handler runs — must not leave the

@@ -60,6 +60,16 @@ export interface AppSettings {
 				depthGap?: number;
 				density?: "comfortable" | "compact";
 			};
+			/** v0.8.4 Phase 3: cards may be dragged (view-layer offsets). */
+			customLayout?: boolean;
+			/**
+			 * v0.8.4 Phase 3: per-orientation card offsets in canvas units, keyed
+			 * by node id. View state only — never written into the roadmap JSON.
+			 */
+			nodeOffsets?: {
+				TB?: Record<string, { dx: number; dy: number }>;
+				LR?: Record<string, { dx: number; dy: number }>;
+			};
 		}
 	>;
 	eventApi?: {

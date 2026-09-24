@@ -51,3 +51,89 @@ describe("fileViewStore", () => {
 		expect(useFileViewStore.getState().layoutKnobs).toEqual(KNOB_DEFAULTS);
 	});
 });
+
+// v0.8.4 Phase 3 — custom layout: the on/off switch and the per-orientation
+// node offsets live next to the knobs, owned by the same store.
+describe("fileViewStore — custom layout", () => {
+	afterEach(() => {
+		useFileViewStore.getState().setCustomLayout(false);
+		useFileViewStore.getState().resetNodeOffsets("TB");
+		useFileViewStore.getState().resetNodeOffsets("LR");
+	});
+
+	it("starts with custom layout off and no offsets", () => {
+		expect(useFileViewStore.getState().customLayout).toBe(false);
+		expect(useFileViewStore.getState().nodeOffsets).toEqual({ TB: {}, LR: {} });
+	});
+
+	it("setNodeOffset writes into the named orientation only", () => {
+		useFileViewStore.getState().setNodeOffset("TB", "a", { dx: 5, dy: 6 });
+		expect(useFileViewStore.getState().nodeOffsets).toEqual({
+			TB: { a: { dx: 5, dy: 6 } },
+			LR: {},
+		});
+	});
+
+	it("unchecking custom layout keeps the offsets; re-checking brings them back", () => {
+		const s = useFileViewStore.getState();
+		s.setCustomLayout(true);
+		s.setNodeOffset("TB", "a", { dx: 5, dy: 6 });
+		s.setCustomLayout(false);
+		expect(useFileViewStore.getState().customLayout).toBe(false);
+		expect(useFileViewStore.getState().nodeOffsets.TB.a).toEqual({
+			dx: 5,
+			dy: 6,
+		});
+		s.setCustomLayout(true);
+		expect(useFileViewStore.getState().nodeOffsets.TB.a).toEqual({
+			dx: 5,
+			dy: 6,
+		});
+	});
+
+	it("resetNodeOffsets clears only the given orientation and leaves the switch on", () => {
+		const s = useFileViewStore.getState();
+		s.setCustomLayout(true);
+		s.setNodeOffset("TB", "a", { dx: 5, dy: 6 });
+		s.setNodeOffset("LR", "a", { dx: 7, dy: 8 });
+		s.resetNodeOffsets("TB");
+		expect(useFileViewStore.getState().nodeOffsets).toEqual({
+			TB: {},
+			LR: { a: { dx: 7, dy: 8 } },
+		});
+		expect(useFileViewStore.getState().customLayout).toBe(true);
+	});
+
+	it("hydrateCustomLayout applies saved values and drops garbage offsets", () => {
+		useFileViewStore.getState().hydrateCustomLayout({
+			customLayout: true,
+			nodeOffsets: { TB: { a: { dx: 1, dy: 2 }, bad: { dx: "x" } } },
+		});
+		expect(useFileViewStore.getState().customLayout).toBe(true);
+		expect(useFileViewStore.getState().nodeOffsets).toEqual({
+			TB: { a: { dx: 1, dy: 2 } },
+			LR: {},
+		});
+	});
+
+	it("hydrateCustomLayout leaves a key alone when it was not stored", () => {
+		const s = useFileViewStore.getState();
+		s.setCustomLayout(true);
+		s.setNodeOffset("TB", "a", { dx: 5, dy: 6 });
+		s.hydrateCustomLayout({});
+		expect(useFileViewStore.getState().customLayout).toBe(true);
+		expect(useFileViewStore.getState().nodeOffsets.TB.a).toEqual({
+			dx: 5,
+			dy: 6,
+		});
+	});
+
+	it("resetKnobs does not touch custom layout state", () => {
+		const s = useFileViewStore.getState();
+		s.setCustomLayout(true);
+		s.setNodeOffset("TB", "a", { dx: 5, dy: 6 });
+		s.resetKnobs();
+		expect(useFileViewStore.getState().customLayout).toBe(true);
+		expect(useFileViewStore.getState().nodeOffsets.TB.a).toBeDefined();
+	});
+});
