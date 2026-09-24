@@ -13,9 +13,8 @@
  * chevron carries `aria-label="Collapse subtree" | "Expand subtree"`.
  */
 
+import { CHEVRON_EXPAND_LABEL } from "./domContract";
 import { findNodeCard } from "./nodeCard";
-
-const EXPAND_LABEL = "Expand subtree";
 
 /**
  * The one chevron button a node card renders, by accessible name.
@@ -45,7 +44,7 @@ export function getNodeCollapseState(nodeId: string): {
 	if (!chevron) return { hasChildren: false, collapsed: false };
 	return {
 		hasChildren: true,
-		collapsed: chevron.getAttribute("aria-label") === EXPAND_LABEL,
+		collapsed: chevron.getAttribute("aria-label") === CHEVRON_EXPAND_LABEL,
 	};
 }
 

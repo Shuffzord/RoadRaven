@@ -16,6 +16,15 @@ export const NODE_SURFACE_ATTR = "data-rv-surface";
 /** Save-state dot in the top-bar document chip (DocumentChip.tsx). */
 export const SAVE_STATE_ATTR = "data-save-state";
 
+// -- Collapse chevron (v0.8.4 Phase 0) --------------------------------------
+// Rendered by RoadmapNode.tsx; read by nodeCollapse.ts and
+// tests/ui/canvas-comfort.spec.ts.
+
+/** Chevron `aria-label` when the subtree is expanded (next click collapses it). */
+export const CHEVRON_COLLAPSE_LABEL = "Collapse subtree";
+/** Chevron `aria-label` when the subtree is collapsed (next click expands it). */
+export const CHEVRON_EXPAND_LABEL = "Expand subtree";
+
 // -- Theme editor (v0.8.3 Phase 5) ------------------------------------------
 // Rendered by PreferencesDialog.tsx and components/ThemeEditor/*; selected
 // on by tests/unit/ui/ThemeEditor.test.tsx and tests/a11y/editor.spec.ts.

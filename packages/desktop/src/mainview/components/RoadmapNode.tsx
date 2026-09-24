@@ -6,6 +6,8 @@ import {
 } from "../../../../../shared/themeContract";
 import { isKeyboardNav } from "../hooks/useKeyboardRouter";
 import {
+	CHEVRON_COLLAPSE_LABEL,
+	CHEVRON_EXPAND_LABEL,
 	NODE_CARD_ATTR,
 	NODE_FOCUSED_ATTR,
 	NODE_SURFACE_ATTR,
@@ -386,7 +388,9 @@ export const RoadmapNodeCard = memo(function RoadmapNodeCard({
 					// cycle and Shift+Tab from a child treeitem lands here instead of
 					// the parent treeitem (BUG-1, manual a11y finding 2026-05-04).
 					tabIndex={-1}
-					aria-label={isCollapsed ? "Expand subtree" : "Collapse subtree"}
+					aria-label={
+						isCollapsed ? CHEVRON_EXPAND_LABEL : CHEVRON_COLLAPSE_LABEL
+					}
 					style={{
 						backgroundColor: `var(${tokens.bg})`,
 						borderColor: statusFg,
