@@ -94,3 +94,18 @@ export const NODE_RIBBON_ATTR = "data-ribbon";
 export const NODE_PROGRESS_ATTR = "data-progress";
 /** On the node-type chip left of the status badge. */
 export const NODE_TYPE_CHIP_ATTR = "data-type-chip";
+
+// -- Layout knobs popover (v0.8.4 Phase 2) -----------------------------------
+// Rendered by LayoutKnobsPopover.tsx (trigger lives in TopBar.tsx); selected
+// on by tests/unit/ui and tests/ui/canvas-comfort.spec.ts.
+
+/** `aria-label` of the button in the top bar that opens the popover. */
+export const LAYOUT_KNOBS_TRIGGER_LABEL = "Layout options";
+/** `aria-label` of the sibling-gap range input. */
+export const KNOB_SIBLING_GAP_LABEL = "Sibling gap";
+/** `aria-label` of the depth-gap range input. */
+export const KNOB_DEPTH_GAP_LABEL = "Depth gap";
+/** Accessible name of the density radio group. */
+export const KNOB_DENSITY_LABEL = "Card density";
+/** Label of the button that restores the three knobs to their defaults. */
+export const KNOB_RESET_LABEL = "Reset";

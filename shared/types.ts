@@ -50,7 +50,18 @@ export type ThemeDeleteResult = { ok: true } | { ok: false; error: string };
 export interface AppSettings {
 	theme?: ThemePreference;
 	recentFiles?: string[];
-	fileSettings?: Record<string, { layout?: "TB" | "LR" }>;
+	fileSettings?: Record<
+		string,
+		{
+			layout?: "TB" | "LR";
+			/** v0.8.4 Phase 2: per-file layout comfort knobs (LayoutKnobsPopover). */
+			layoutKnobs?: {
+				siblingGap?: number;
+				depthGap?: number;
+				density?: "comfortable" | "compact";
+			};
+		}
+	>;
 	eventApi?: {
 		/** User-specified WebSocket port override. When set, no auto-fallback on EADDRINUSE. */
 		port?: number;

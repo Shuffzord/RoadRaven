@@ -15,6 +15,7 @@ import { ThemeEditor } from "./components/ThemeEditor/ThemeEditorDialog";
 import { TopBar } from "./components/TopBar";
 import { useAutosave } from "./hooks/useAutosave";
 import { useFileActions } from "./hooks/useFileActions";
+import { useFileViewSettings } from "./hooks/useFileViewSettings";
 import { useReopenLastFile } from "./hooks/useReopenLastFile";
 import { useUiSettingsHydration } from "./hooks/useUiSettingsHydration";
 import { useWindowTitle } from "./hooks/useWindowTitle";
@@ -38,6 +39,9 @@ export default function App() {
 	useReopenLastFile();
 	// v0.8.2: restore the sidebar width and the search notes toggle from settings.
 	useUiSettingsHydration();
+	// v0.8.4 Phase 2: restore + persist the open file's layout orientation and
+	// layout knobs (fileSettings[path]).
+	useFileViewSettings();
 
 	// Plan 04-03: 1Hz tick for live-pulse selector re-evaluation (D-14/D-15).
 	// bumpLiveTick increments liveTick in roadmapStore; useIsNodeLive selectors

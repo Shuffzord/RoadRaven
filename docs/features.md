@@ -11,6 +11,7 @@ The full feature list and keyboard reference. For a short overview see the
 
 
 - **Tree canvas** rendered with react-d3-tree, custom node cards, TB / LR layouts, fit-view, zoom, pan.
+- **Layout knobs** — a popover next to the TB/LR toggle sets sibling gap, depth gap and card density (comfortable / compact), applied live and remembered per file alongside the layout orientation.
 - **Keyboard-first editing**
   - Inline rename: `F2` or double-click a node card
   - Add child / sibling: `Enter`, `Tab`, `Shift+Enter`

@@ -54,10 +54,21 @@ export function saveSettings(
 			mkdirSync(dir, { recursive: true });
 		}
 		const existing = preloaded ?? loadSettings(basePath);
+		// Per-path deep merge: a write of one path's fields (e.g. just `layout`)
+		// must not drop that same path's other fields (e.g. `layoutKnobs`) —
+		// the shallow `{...a, ...b}` merge above replaced the whole per-path
+		// value. No deeper than one path level; each path's value is still
+		// merged shallowly.
+		const fileSettings: AppSettings["fileSettings"] = {
+			...existing.fileSettings,
+		};
+		for (const [path, value] of Object.entries(settings.fileSettings ?? {})) {
+			fileSettings[path] = { ...fileSettings[path], ...value };
+		}
 		const merged: AppSettings = {
 			...existing,
 			...settings,
-			fileSettings: { ...existing.fileSettings, ...settings.fileSettings },
+			fileSettings,
 		};
 		writeFileSync(path, JSON.stringify(merged, null, 2), "utf-8");
 	} catch (e) {

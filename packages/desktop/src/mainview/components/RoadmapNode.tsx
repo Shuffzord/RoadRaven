@@ -164,6 +164,8 @@ interface RoadmapNodeCardProps {
 	hasChildren?: boolean;
 	isCollapsed?: boolean;
 	childCount?: number;
+	/** v0.8.4 Phase 2 (LayoutKnobsPopover): card padding only, same font sizes. */
+	density?: "comfortable" | "compact";
 	onToggle?: () => void;
 	onSelect?: () => void;
 	onDoubleClick?: () => void;
@@ -219,6 +221,7 @@ export const RoadmapNodeCard = memo(function RoadmapNodeCard({
 	hasChildren,
 	isCollapsed,
 	childCount,
+	density = "comfortable",
 	onToggle,
 	onSelect,
 	onDoubleClick,
@@ -317,7 +320,7 @@ export const RoadmapNodeCard = memo(function RoadmapNodeCard({
 	return (
 		<div
 			ref={cardRef}
-			className={`node relative min-w-[180px] max-w-[220px] rounded-[var(--node-radius,8px)] border-[length:var(--rv-border-width,1px)] border-[color:var(--rv-border)] bg-[var(--rv-bg-node)] pl-4 pr-3 py-[10px] select-none transition-[box-shadow,border-color,background] duration-150 hover:bg-[var(--rv-bg-node-hover)] group ${isSelected ? "outline outline-2 -outline-offset-1 outline-[var(--rv-accent)]" : ""}`}
+			className={`node relative min-w-[180px] max-w-[220px] rounded-[var(--node-radius,8px)] border-[length:var(--rv-border-width,1px)] border-[color:var(--rv-border)] bg-[var(--rv-bg-node)] select-none transition-[box-shadow,border-color,background] duration-150 hover:bg-[var(--rv-bg-node-hover)] group ${density === "compact" ? "pl-3 pr-2 py-[6px]" : "pl-4 pr-3 py-[10px]"} ${isSelected ? "outline outline-2 -outline-offset-1 outline-[var(--rv-accent)]" : ""}`}
 			{...{
 				[NODE_CARD_ATTR]: nodeId,
 				[NODE_FOCUSED_ATTR]: dataFlag(isFocused),

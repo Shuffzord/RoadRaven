@@ -6,22 +6,13 @@ import { usePreferencesStore } from "../store/preferencesStore";
 import { useRoadmapStore } from "../store/roadmapStore";
 import { DocumentChip } from "./DocumentChip";
 import { FileMenu } from "./FileMenu";
+import { LayoutKnobsPopover } from "./LayoutKnobsPopover";
 import { ThemePicker } from "./ThemePicker";
 
 export function TopBar() {
 	const layoutOrientation = useRoadmapStore((s) => s.layoutOrientation);
 	const setLayout = useRoadmapStore((s) => s.setLayout);
-	const filePath = useRoadmapStore((s) => s.filePath);
 	const isDrawerOpen = useEventLogStore((s) => s.isOpen);
-
-	const handleLayoutChange = (value: "TB" | "LR") => {
-		setLayout(value);
-		if (filePath) {
-			electroview?.rpc?.request.saveSettings({
-				settings: { fileSettings: { [filePath]: { layout: value } } },
-			});
-		}
-	};
 
 	// v0.8.1 Phase 5 (D3): one "Fit to View". This used to call `resetView`,
 	// which set a translate from window.innerWidth and zoom 0.8 — a fixed
@@ -186,8 +177,11 @@ export function TopBar() {
 					{ value: "LR", label: "LR" },
 				]}
 				active={layoutOrientation}
-				onChange={(value) => handleLayoutChange(value as "TB" | "LR")}
+				onChange={(value) => setLayout(value as "TB" | "LR")}
 			/>
+
+			{/* Layout knobs popover (v0.8.4 Phase 2) */}
+			<LayoutKnobsPopover />
 
 			{/* Theme picker */}
 			<ThemePicker />

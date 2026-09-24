@@ -4,6 +4,9 @@ import { expect, type Page, test } from "@playwright/test";
 import {
 	CHEVRON_COLLAPSE_LABEL,
 	CHEVRON_EXPAND_LABEL,
+	KNOB_RESET_LABEL,
+	KNOB_SIBLING_GAP_LABEL,
+	LAYOUT_KNOBS_TRIGGER_LABEL,
 	NODE_CARD_ATTR,
 	NODE_FOCUSED_ATTR,
 	NODE_PROGRESS_ATTR,
@@ -258,5 +261,80 @@ test.describe("Canvas comfort — Phase 1 card visuals", () => {
 		// width clear (at 1.0 it was ~3%, ring to ring about 1px).
 		const gap = second.x - (first.x + first.width);
 		expect(gap / first.width).toBeGreaterThan(0.1);
+	});
+});
+
+// v0.8.4 Phase 2 — layout knobs popover, applied live to the canvas.
+// not-started siblings (no Phase 1 in-progress CSS scale) so the measured
+// distance is purely a function of the tree layout, not card scaling.
+const KNOBS_SIBLINGS_SCHEMA = {
+	version: "1.0",
+	title: "Layout knobs siblings",
+	nodes: [
+		{
+			id: "p2-root",
+			title: "Root",
+			status: "not-started",
+			children: [
+				{ id: "p2-left", title: "Left", status: "not-started" },
+				{ id: "p2-right", title: "Right", status: "not-started" },
+			],
+		},
+	],
+};
+
+async function siblingCentreDistance(page: Page): Promise<number> {
+	const left = await page
+		.locator(`[${NODE_CARD_ATTR}="p2-left"]`)
+		.boundingBox();
+	const right = await page
+		.locator(`[${NODE_CARD_ATTR}="p2-right"]`)
+		.boundingBox();
+	if (!left || !right) throw new Error("sibling cards have no box");
+	const centreOf = (b: NonNullable<typeof left>) => b.x + b.width / 2;
+	return Math.abs(centreOf(right) - centreOf(left));
+}
+
+test.describe("Canvas comfort — Phase 2 layout knobs", () => {
+	test("P2-1: the sibling-gap slider grows the sibling distance live, Reset restores it, and an untitled reseed does not carry it over", async ({
+		page,
+	}) => {
+		await seedSchema(page, KNOBS_SIBLINGS_SCHEMA);
+		await expect(page.locator(`[${NODE_CARD_ATTR}]`)).toHaveCount(3);
+		const defaultDistance = await siblingCentreDistance(page);
+
+		await page
+			.getByRole("button", { name: LAYOUT_KNOBS_TRIGGER_LABEL })
+			.click();
+		const slider = page.getByRole("slider", { name: KNOB_SIBLING_GAP_LABEL });
+		await expect(slider).toBeVisible();
+		await slider.fill("2");
+		await slider.dispatchEvent("input");
+
+		const grownDistance = await siblingCentreDistance(page);
+		// Default siblingGap is 1.1 (Phase 1); nodeSize.x (the TB sibling axis)
+		// is unaffected by depthGap, so the gap scales ~linearly with
+		// separation.siblings for two leaf siblings under one root.
+		const expectedFactor = 2.0 / 1.1;
+		const actualFactor = grownDistance / defaultDistance;
+		expect(actualFactor).toBeGreaterThan(expectedFactor * 0.7);
+		expect(actualFactor).toBeLessThan(expectedFactor * 1.3);
+
+		// Reset restores the default distance, in the same popover session.
+		await page.getByRole("button", { name: KNOB_RESET_LABEL }).click();
+		const resetDistance = await siblingCentreDistance(page);
+		expect(resetDistance).toBeCloseTo(defaultDistance, 0);
+
+		// Grow it again, then reseed (a fresh, untitled open — the
+		// __ROADRAVEN_TEST__ seam always loads with filePath null): the knob
+		// must not leak into the new session.
+		await slider.fill("2");
+		await slider.dispatchEvent("input");
+		expect(await siblingCentreDistance(page)).toBeGreaterThan(defaultDistance);
+
+		await seedSchema(page, KNOBS_SIBLINGS_SCHEMA);
+		await expect(page.locator(`[${NODE_CARD_ATTR}]`)).toHaveCount(3);
+		const reseededDistance = await siblingCentreDistance(page);
+		expect(reseededDistance).toBeCloseTo(defaultDistance, 0);
 	});
 });

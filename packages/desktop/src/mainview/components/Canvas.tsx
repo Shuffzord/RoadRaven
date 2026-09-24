@@ -12,8 +12,10 @@ import { useKeyboardRouter } from "../hooks/useKeyboardRouter";
 import { useRecentFiles } from "../hooks/useRecentFiles";
 import { togglePanelFocus } from "../lib/focusHandoff";
 import { requestNodeFocus } from "../lib/focusRequest";
+import { treeLayoutFor } from "../lib/layoutKnobs";
 import { listNodeCards } from "../lib/nodeCard";
 import { clampZoom, computeFit, SCALE_EXTENT } from "../lib/viewportMath";
+import { useFileViewStore } from "../store/fileViewStore";
 import { useRoadmapStore } from "../store/roadmapStore";
 import { RoadRavenContextMenu } from "./ContextMenu";
 import { RoadmapNodeCard } from "./RoadmapNode";
@@ -67,6 +69,18 @@ export function Canvas() {
 	const focusedNodeId = useRoadmapStore((s) => s.focusedNodeId);
 	const searchMatchIds = useRoadmapStore((s) => s.searchMatchIds);
 	const searchCurrentIndex = useRoadmapStore((s) => s.searchCurrentIndex);
+
+	// v0.8.4 Phase 2: per-file layout comfort knobs. Memoised on the three
+	// primitives (not the knobs object) so a re-render that leaves them
+	// unchanged (e.g. a status tick) does not hand <Tree> a new
+	// separation/nodeSize object and force it to remount its layout.
+	const { siblingGap, depthGap, density } = useFileViewStore(
+		(s) => s.layoutKnobs,
+	);
+	const { separation, nodeSize } = useMemo(
+		() => treeLayoutFor({ siblingGap, depthGap, density }, layoutOrientation),
+		[siblingGap, depthGap, density, layoutOrientation],
+	);
 
 	// The canvas container: every pan/fit measurement is taken against its rect.
 	const containerRef = useRef<HTMLDivElement>(null);
@@ -284,6 +298,7 @@ export function Canvas() {
 						hasChildren={hasChildren}
 						isCollapsed={!!rd3t?.collapsed}
 						childCount={children.length}
+						density={density}
 						onToggle={toggleNode}
 						onSelect={() => {
 							requestNodeFocus(nodeId, { align: "nearest", select: true });
@@ -310,6 +325,7 @@ export function Canvas() {
 			searchCurrentId,
 			searchActive,
 			inlineRename,
+			density,
 		],
 	);
 
@@ -375,8 +391,8 @@ export function Canvas() {
 								layoutOrientation === "TB" ? "vertical" : "horizontal"
 							}
 							pathFunc="step"
-							separation={{ siblings: 1.1, nonSiblings: 1.3 }}
-							nodeSize={{ x: 240, y: 100 }}
+							separation={separation}
+							nodeSize={nodeSize}
 							renderCustomNodeElement={renderNode}
 							zoom={zoomLevel}
 							scaleExtent={SCALE_EXTENT}
