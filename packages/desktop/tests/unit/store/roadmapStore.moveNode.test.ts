@@ -149,3 +149,79 @@ describe("roadmapStore.moveNode (Phase 6 PLUG-AGENT-UPDATE-05)", () => {
 		);
 	});
 });
+
+// v0.8.4 Phase 5 — indentNode / outdentNode. Root A has two children so
+// indenting the second under the first, and outdenting either, are both
+// real (non-no-op) moves against this fixture.
+function makeNestedSchema(): RoadmapSchema {
+	return {
+		version: "0.3",
+		title: "Test",
+		nodes: [
+			{
+				id: "root",
+				title: "Root",
+				status: "not-started",
+				children: [
+					{
+						id: "a",
+						title: "A",
+						status: "not-started",
+						children: [
+							{ id: "a1", title: "A1", status: "not-started" },
+							{ id: "a2", title: "A2", status: "not-started" },
+						],
+					},
+					{ id: "b", title: "B", status: "not-started" },
+				],
+			},
+		],
+	} as RoadmapSchema;
+}
+
+describe("roadmapStore.indentNode / outdentNode (v0.8.4 Phase 5)", () => {
+	beforeEach(() => {
+		useRoadmapStore.getState().loadSchema(makeNestedSchema(), "/tmp/test.json");
+	});
+	afterEach(() => {
+		useRoadmapStore.setState({
+			schema: null,
+			filePath: null,
+			nodeIndex: new Map(),
+		});
+	});
+
+	it("indentNode makes the node the last child of its previous sibling and bumps dataKey once", () => {
+		const before = useRoadmapStore.getState().dataKey;
+		useRoadmapStore.getState().indentNode("b");
+		const schema = useRoadmapStore.getState().schema!;
+		const root = schema.nodes[0];
+		expect(root.children!.map((n) => n.id)).toEqual(["a"]);
+		const a = root.children![0];
+		expect(a.children!.map((n) => n.id)).toEqual(["a1", "a2", "b"]);
+		expect(Number(useRoadmapStore.getState().dataKey) - Number(before)).toBe(1);
+	});
+
+	it("indentNode is a no-op (no dataKey bump) when there is no previous sibling", () => {
+		const before = useRoadmapStore.getState().dataKey;
+		useRoadmapStore.getState().indentNode("a");
+		expect(useRoadmapStore.getState().dataKey).toBe(before);
+	});
+
+	it("outdentNode moves the node to right after its parent (not one past) and bumps dataKey once", () => {
+		const before = useRoadmapStore.getState().dataKey;
+		useRoadmapStore.getState().outdentNode("a2");
+		const schema = useRoadmapStore.getState().schema!;
+		const root = schema.nodes[0];
+		expect(root.children!.map((n) => n.id)).toEqual(["a", "a2", "b"]);
+		const a = root.children![0];
+		expect(a.children!.map((n) => n.id)).toEqual(["a1"]);
+		expect(Number(useRoadmapStore.getState().dataKey) - Number(before)).toBe(1);
+	});
+
+	it("outdentNode is a no-op (no dataKey bump) when the parent is a root-level node", () => {
+		const before = useRoadmapStore.getState().dataKey;
+		useRoadmapStore.getState().outdentNode("a");
+		expect(useRoadmapStore.getState().dataKey).toBe(before);
+	});
+});

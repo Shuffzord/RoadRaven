@@ -134,12 +134,12 @@ test.describe("Canvas comfort — v0.8.4 Phase 0 evidence", () => {
 
 		await page.keyboard.press("Control+ArrowRight");
 
-		// RC2: Ctrl+ArrowUp/Down (useKeyboardRouter.ts:300-310) is the only
-		// reorder pair, fixed to the vertical axis; sibling navigation instead
-		// follows layout orientation (lines 371-378), so in TB (the default)
-		// Ctrl+Right falls into the sibling-navigation branch, not reorder.
-		// Fixed in Phase 5.
-		test.fail();
+		// RC2: Ctrl+ArrowUp/Down used to be the only reorder pair, fixed to the
+		// vertical axis, while sibling navigation followed layout orientation —
+		// so in TB (the default) Ctrl+Right fell into the sibling-navigation
+		// branch, not reorder. Fixed in Phase 5: useKeyboardRouter.ts derives an
+		// orientation-aware `reorderKeys` pair (Ctrl+Left/Right in TB) next to
+		// the legacy Ctrl+Up/Down pair, which still works in both layouts (D-8).
 
 		const order = await cardOrder(page);
 		expect(order.indexOf(TASK_A2)).toBeLessThan(order.indexOf(TASK_A1));
@@ -793,5 +793,93 @@ test.describe("Canvas comfort — Phase 4 collapse", () => {
 			"aria-label",
 			CHEVRON_EXPAND_LABEL,
 		);
+	});
+});
+
+// v0.8.4 Phase 5 — orientation-aware reorder (RC2, pinned by P0-2/P0-3
+// above — Control+ArrowRight on Task A1 reordering [Task A2, Task A1] IS
+// P0-2 going green, so it is not duplicated here), indent/outdent and the
+// 1-4 status hotkeys.
+test.describe("Canvas comfort — Phase 5 structure keys", () => {
+	const card = (page: Page, id: string) =>
+		page.locator(`[${NODE_CARD_ATTR}="${id}"]`);
+	const chevronOf = (page: Page, id: string) =>
+		card(page, id).locator(CHEVRON_SELECTOR);
+
+	test("P5-2: Alt+ArrowDown indents Task A2 under Task A1", async ({
+		page,
+	}) => {
+		await seedRichTree(page);
+		const taskA2 = card(page, TASK_A2);
+		await taskA2.click();
+		await expect(taskA2).toHaveAttribute(NODE_FOCUSED_ATTR, "true");
+
+		await page.keyboard.press("Alt+ArrowDown");
+
+		await expect(chevronOf(page, TASK_A1)).toHaveAttribute(
+			"aria-label",
+			CHEVRON_COLLAPSE_LABEL,
+		);
+		await expect(chevronOf(page, TASK_A1)).toContainText("1");
+		await expect(taskA2).toHaveCount(1);
+		await expect(taskA2).toHaveAttribute(NODE_FOCUSED_ATTR, "true");
+	});
+
+	test("P5-3: Alt+ArrowUp then outdents Task A2 back under Phase A, right after Task A1", async ({
+		page,
+	}) => {
+		await seedRichTree(page);
+		await card(page, TASK_A2).click();
+		await page.keyboard.press("Alt+ArrowDown");
+		await expect(chevronOf(page, TASK_A1)).toContainText("1");
+
+		await page.keyboard.press("Alt+ArrowUp");
+
+		await expect(card(page, TASK_A1).locator(CHEVRON_SELECTOR)).toHaveCount(0);
+		const order = await cardOrder(page);
+		expect(order.indexOf(TASK_A2)).toBe(order.indexOf(TASK_A1) + 1);
+		await expect(card(page, TASK_A2)).toHaveAttribute(
+			NODE_FOCUSED_ATTR,
+			"true",
+		);
+	});
+
+	test("P5-4: 1-4 set status on the focused node", async ({ page }) => {
+		await seedRichTree(page);
+		const taskB1 = card(page, TASK_B1);
+		await taskB1.click();
+		await expect(taskB1).toHaveAttribute(NODE_FOCUSED_ATTR, "true");
+
+		await page.keyboard.press("3");
+		await expect(taskB1).toContainText("Completed");
+
+		await page.keyboard.press("1");
+		await expect(taskB1).toContainText("Not Started");
+	});
+
+	// Same indent code path as P5-2 (indentFocused → fileViewStore.setCollapsed
+	// before moveNode); exercised here against Phase A/Phase B, whose parent
+	// (Root) already has a real collapsible previous sibling in the fixture,
+	// rather than re-deriving one from Task A1's just-created subtree.
+	test("P5-5: indenting into a collapsed previous sibling expands it and keeps the moved card mounted", async ({
+		page,
+	}) => {
+		await seedRichTree(page);
+		await chevronOf(page, PHASE_A).click();
+		await expect(chevronOf(page, PHASE_A)).toHaveAttribute(
+			"aria-label",
+			CHEVRON_EXPAND_LABEL,
+		);
+
+		const phaseB = card(page, PHASE_B);
+		await phaseB.click();
+		await page.keyboard.press("Alt+ArrowDown");
+
+		await expect(chevronOf(page, PHASE_A)).toHaveAttribute(
+			"aria-label",
+			CHEVRON_COLLAPSE_LABEL,
+		);
+		await expect(phaseB).toHaveCount(1);
+		await expect(phaseB).toHaveAttribute(NODE_FOCUSED_ATTR, "true");
 	});
 });

@@ -19,8 +19,10 @@ The full feature list and keyboard reference. For a short overview see the
   - Add child / sibling: `Enter`, `Tab`, `Shift+Enter`
   - Delete with confirmation dialog for non-leaf nodes (`Del` / `Backspace`)
   - Duplicate / copy / paste node + subtree: `Ctrl+D`, `Ctrl+C`, `Ctrl+V` (context-aware vs. text inputs)
-  - Reorder siblings: `Ctrl+↑` / `Ctrl+↓`
-  - Arrow navigation adapts to layout: in TB, `←/→` moves siblings, `↓` enters child, `↑` returns to parent; in LR, `↑/↓` moves siblings, `→` enters child, `←` returns to parent.
+  - Reorder siblings: `Ctrl+↑` / `Ctrl+↓` always; the sibling-axis pair for the current layout also works (in TB that's `Ctrl+←` / `Ctrl+→`).
+  - Indent / outdent: `Alt+` the child/parent-direction key — TB `Alt+↓` / `Alt+↑`, LR `Alt+→` / `Alt+←` — makes the node the last child of its previous sibling, or moves it out to right after its parent. Also on the context menu (Indent / Outdent).
+  - Set status by number: `1`–`4` on a focused node set Not Started / In Progress / Completed / Blocked.
+  - Arrow navigation adapts to layout: in TB, `←/→` moves siblings, `↓` enters child, `↑` returns to parent; in LR, `↑/↓` moves siblings, `→` enters child, `←` returns to parent. Holding Ctrl/Alt/Cmd with an arrow never navigates.
 - **Right-click context menu** (Radix-based, all platforms) — rename, add, duplicate, move, delete, plus canvas-empty actions.
 - **Side panel editor** — click the title, click the pencil `[E]` button, or press `e` while the panel is open to enter edit mode. Editable title, status / type dropdowns (with freeform fallback), key-value metadata table, and a CodeMirror 6 markdown notes editor with `Edit | Preview | Split` toggle. A small `✓ saved` flash appears next to each field for 2s after each commit.
 - **Autosave** — debounced flush after edits (1s for in-place changes like notes/status, 2s for structural changes like add/delete/rename), 30s periodic safety sweep, atomic temp+rename writes, and per-file `refMap` so `$ref` subtrees are written back to their source files. A `SaveIndicator` lives in the StatusBar; on the third consecutive save failure a `SaveFailureModal` opens with `Retry / Save As / Dismiss`.

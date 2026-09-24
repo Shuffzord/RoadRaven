@@ -8,10 +8,13 @@ import {
 	COLLAPSE_ALL_LABEL,
 	collapseToDepthLabel,
 	EXPAND_ALL_LABEL,
+	INDENT_LABEL,
+	OUTDENT_LABEL,
 } from "../lib/domContract";
 import { trackMenuFocus } from "../lib/focusHandoff";
 import { requestNodeFocus } from "../lib/focusRequest";
 import { getNodeCollapseState, toggleNodeCollapse } from "../lib/nodeCollapse";
+import { indentTarget, outdentTarget } from "../lib/treeEdits";
 import { useFileViewStore } from "../store/fileViewStore";
 import { useRoadmapStore } from "../store/roadmapStore";
 import {
@@ -101,6 +104,8 @@ function NodeMenuItems({ nodeId }: { nodeId: string }) {
 		pasteFromClipboard,
 		moveNodeUp,
 		moveNodeDown,
+		indentNode,
+		outdentNode,
 		requestDelete,
 		updateNodeStatus,
 	} = useRoadmapStore(
@@ -113,12 +118,21 @@ function NodeMenuItems({ nodeId }: { nodeId: string }) {
 			pasteFromClipboard: s.pasteFromClipboard,
 			moveNodeUp: s.moveNodeUp,
 			moveNodeDown: s.moveNodeDown,
+			indentNode: s.indentNode,
+			outdentNode: s.outdentNode,
 			requestDelete: s.requestDelete,
 			updateNodeStatus: s.updateNodeStatus,
 		})),
 	);
 	const canPaste = useRoadmapStore((s) => s.lastCopiedSubtree !== null);
 	const schema = useRoadmapStore((s) => s.schema);
+	// v0.8.4 Phase 5: disabled exactly when the keyboard shortcut would no-op.
+	const canIndent = schema
+		? indentTarget(schema.nodes, nodeId) !== null
+		: false;
+	const canOutdent = schema
+		? outdentTarget(schema.nodes, nodeId) !== null
+		: false;
 	// Snapshot collapse state once when the menu opens (fileViewStore owns it;
 	// see lib/nodeCollapse.ts).
 	const [collapse] = useState(() => getNodeCollapseState(nodeId));
@@ -223,6 +237,20 @@ function NodeMenuItems({ nodeId }: { nodeId: string }) {
 			>
 				<span>Move Down</span>
 				<span className={HINT_CLASS}>Ctrl+↓</span>
+			</ContextMenuPrimitive.Item>
+			<ContextMenuPrimitive.Item
+				className={ITEM_CLASS}
+				disabled={!canIndent}
+				onSelect={() => indentNode(nodeId)}
+			>
+				<span>{INDENT_LABEL}</span>
+			</ContextMenuPrimitive.Item>
+			<ContextMenuPrimitive.Item
+				className={ITEM_CLASS}
+				disabled={!canOutdent}
+				onSelect={() => outdentNode(nodeId)}
+			>
+				<span>{OUTDENT_LABEL}</span>
 			</ContextMenuPrimitive.Item>
 			<ContextMenuPrimitive.Separator className={SEP_CLASS} />
 			<ContextMenuPrimitive.Sub>

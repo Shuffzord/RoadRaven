@@ -4,8 +4,14 @@
  * them, so a rename fails to compile instead of silently matching nothing.
  *
  * Dependency-free on purpose: Playwright loads this file outside Vite, so it
- * must import nothing that reaches a store, `../rpc` or `electrobun/*`.
+ * must import nothing that reaches a store, `../rpc` or `electrobun/*`. The
+ * schema package is neither, so `NodeStatus`/`NodeStatusSchema` are fine.
  */
+
+import {
+	type NodeStatus,
+	NodeStatusSchema,
+} from "../../../../../packages/core/src/schema";
 
 /** Node card: value is the node id (RoadmapNode.tsx). */
 export const NODE_CARD_ATTR = "data-source-id";
@@ -147,3 +153,22 @@ export const COLLAPSE_ALL_LABEL = "Collapse all";
 export function collapseToDepthLabel(depth: number): string {
 	return `Collapse to depth ${depth}`;
 }
+
+// -- Structure keys (v0.8.4 Phase 5) -----------------------------------------
+// Rendered by ContextMenu.tsx (Indent/Outdent items); read by
+// useKeyboardRouter.ts (Alt+arrow indent/outdent, 1-4 status hotkeys) and
+// selected on by tests/unit/ui/ContextMenu.test.tsx,
+// tests/unit/hooks/useKeyboardRouter.test.ts and tests/ui/canvas-comfort.spec.ts.
+
+/** Context-menu item: make the focused node the last child of its previous sibling. */
+export const INDENT_LABEL = "Indent";
+/** Context-menu item: move the focused node out to right after its parent. */
+export const OUTDENT_LABEL = "Outdent";
+
+/** `1`-`4` set node status, in `NodeStatusSchema.options` order. */
+export const STATUS_HOTKEYS: Record<"1" | "2" | "3" | "4", NodeStatus> = {
+	"1": NodeStatusSchema.options[0],
+	"2": NodeStatusSchema.options[1],
+	"3": NodeStatusSchema.options[2],
+	"4": NodeStatusSchema.options[3],
+};

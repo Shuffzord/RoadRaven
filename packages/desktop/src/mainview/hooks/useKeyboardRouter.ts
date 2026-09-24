@@ -1,9 +1,12 @@
 import { useEffect, useRef } from "react";
 import type { RoadmapNode } from "../../../../../packages/core/src/schema";
+import { STATUS_HOTKEYS } from "../lib/domContract";
 import { type FileCommandId, getFileCommand } from "../lib/fileCommands";
 import { requestNodeFocus } from "../lib/focusRequest";
 import { getNodeCollapseState, toggleNodeCollapse } from "../lib/nodeCollapse";
+import { indentTarget, outdentTarget } from "../lib/treeEdits";
 import { useEventLogStore } from "../store/eventLogStore";
+import { useFileViewStore } from "../store/fileViewStore";
 import { usePreferencesStore } from "../store/preferencesStore";
 import { findParentAndIndex, useRoadmapStore } from "../store/roadmapStore";
 import { useUiStore } from "../store/uiStore";
@@ -86,8 +89,8 @@ function enterChild(nodeId: string): void {
 	// straight away would put `focusedNodeId` on a card that is not mounted,
 	// and Phase 0 showed the user is then stranded — the canvas shows no
 	// focus at all and the next sibling key resolves inside the hidden
-	// subtree too (RC6). The collapse state lives in react-d3-tree, so it is
-	// read from the rendered chevron (lib/nodeCollapse.ts).
+	// subtree too (RC6). Collapse state lives in fileViewStore (v0.8.4 Phase
+	// 4), read here via lib/nodeCollapse.ts.
 	const { hasChildren, collapsed } = getNodeCollapseState(nodeId);
 	if (hasChildren && collapsed) {
 		toggleNodeCollapse(nodeId);
@@ -110,6 +113,36 @@ function returnToParent(nodeId: string): void {
 	const found = findParentAndIndex(schema.nodes, nodeId);
 	if (!found?.parent) return;
 	requestNodeFocus(found.parent.id, { align: "nearest" });
+}
+
+/**
+ * Alt+<child-key> — indent: make the focused node the last child of its
+ * previous sibling (v0.8.4 Phase 5). Target math is pure (lib/treeEdits.ts);
+ * here we also expand a collapsed target so the moved node doesn't vanish,
+ * then reveal it (keeping its focus and selection).
+ */
+function indentFocused(nodeId: string): void {
+	const schema = useRoadmapStore.getState().schema;
+	if (!schema) return;
+	const target = indentTarget(schema.nodes, nodeId);
+	if (!target) return;
+	useFileViewStore.getState().setCollapsed(target.newParentId, false);
+	useRoadmapStore.getState().indentNode(nodeId);
+	requestNodeFocus(nodeId, { align: "nearest" });
+}
+
+/**
+ * Alt+<parent-key> — outdent: move the focused node out to right after its
+ * parent (v0.8.4 Phase 5). No-op when the parent is a root (see
+ * lib/treeEdits.ts); the target is always visible already, so no collapse
+ * check is needed here.
+ */
+function outdentFocused(nodeId: string): void {
+	const schema = useRoadmapStore.getState().schema;
+	if (!schema) return;
+	if (!outdentTarget(schema.nodes, nodeId)) return;
+	useRoadmapStore.getState().outdentNode(nodeId);
+	requestNodeFocus(nodeId, { align: "nearest" });
 }
 
 /**
@@ -271,10 +304,10 @@ export function useKeyboardRouter(deps: RouterDeps): void {
 			if (inTextInput || isInOutline(active)) return;
 
 			// C — toggle collapse/expand on the focused node's subtree. Drives the
-			// same chevron-click path the mouse uses (react-d3-tree owns the
-			// collapse state; see lib/nodeCollapse.ts). Modifier-free to match the
-			// other node shortcuts (F2/Tab/Enter/Space/Del); the Ctrl/Cmd+C copy
-			// shortcut above already returned before reaching here.
+			// same chevron-click path the mouse uses (fileViewStore owns the
+			// collapse state, v0.8.4 Phase 4; see lib/nodeCollapse.ts). Modifier-free
+			// to match the other node shortcuts (F2/Tab/Enter/Space/Del); the
+			// Ctrl/Cmd+C copy shortcut above already returned before reaching here.
 			if (
 				(e.key === "c" || e.key === "C") &&
 				!e.ctrlKey &&
@@ -283,6 +316,24 @@ export function useKeyboardRouter(deps: RouterDeps): void {
 				focusedId
 			) {
 				if (toggleNodeCollapse(focusedId)) e.preventDefault();
+				return;
+			}
+
+			// 1..4 — set status by number (v0.8.4 Phase 5), in
+			// NodeStatusSchema.options order (domContract.ts derives the map).
+			// Modifier-free, like C.
+			if (
+				!e.ctrlKey &&
+				!e.metaKey &&
+				!e.altKey &&
+				focusedId &&
+				e.key in STATUS_HOTKEYS
+			) {
+				e.preventDefault();
+				store.updateNodeStatus(
+					focusedId,
+					STATUS_HOTKEYS[e.key as keyof typeof STATUS_HOTKEYS],
+				);
 				return;
 			}
 
@@ -365,9 +416,13 @@ export function useKeyboardRouter(deps: RouterDeps): void {
 				return;
 			}
 
-			// Arrow navigation — axis depends on layout orientation.
-			// TB: children flow downward, siblings are horizontal neighbors.
-			// LR: children flow rightward, siblings are vertical neighbors.
+			// Arrow navigation, reorder and indent/outdent — axis depends on
+			// layout orientation. TB: children flow downward, siblings are
+			// horizontal neighbors. LR: children flow rightward, siblings are
+			// vertical neighbors. Four pairs read the same isLR switch: plain
+			// navigation, Ctrl/Cmd reorder (sibling axis), Alt indent/outdent
+			// (hierarchy axis). Holding a modifier with an arrow never
+			// navigates (v0.8.4 Phase 5, RC2).
 			if (focusedId && e.key.startsWith("Arrow")) {
 				const isLR = store.layoutOrientation === "LR";
 				const siblingKeys = isLR
@@ -376,25 +431,60 @@ export function useKeyboardRouter(deps: RouterDeps): void {
 				const hierarchyKeys = isLR
 					? { child: "ArrowRight", parent: "ArrowLeft" }
 					: { child: "ArrowDown", parent: "ArrowUp" };
-				if (e.key === siblingKeys.prev) {
-					e.preventDefault();
-					navigateSibling(focusedId, -1);
+				// D-8: the legacy Ctrl+Up/Down pair above always reorders in
+				// both layouts; this pair adds the sibling axis for the OTHER
+				// layout (TB gains Ctrl+Left/Right — in LR these keys equal
+				// the legacy pair, already handled and returned above).
+				const reorderKeys = isLR
+					? { prev: "ArrowUp", next: "ArrowDown" }
+					: { prev: "ArrowLeft", next: "ArrowRight" };
+				// Indent follows the child (inward) direction, outdent the
+				// parent (outward) direction.
+				const restructureKeys = isLR
+					? { indent: "ArrowRight", outdent: "ArrowLeft" }
+					: { indent: "ArrowDown", outdent: "ArrowUp" };
+
+				if ((e.ctrlKey || e.metaKey) && !e.altKey) {
+					if (e.key === reorderKeys.prev) {
+						e.preventDefault();
+						store.moveNodeUp(focusedId);
+					} else if (e.key === reorderKeys.next) {
+						e.preventDefault();
+						store.moveNodeDown(focusedId);
+					}
 					return;
 				}
-				if (e.key === siblingKeys.next) {
-					e.preventDefault();
-					navigateSibling(focusedId, 1);
+				if (e.altKey && !e.ctrlKey && !e.metaKey) {
+					if (e.key === restructureKeys.indent) {
+						e.preventDefault();
+						indentFocused(focusedId);
+					} else if (e.key === restructureKeys.outdent) {
+						e.preventDefault();
+						outdentFocused(focusedId);
+					}
 					return;
 				}
-				if (e.key === hierarchyKeys.child) {
-					e.preventDefault();
-					enterChild(focusedId);
-					return;
-				}
-				if (e.key === hierarchyKeys.parent) {
-					e.preventDefault();
-					returnToParent(focusedId);
-					return;
+				if (!e.ctrlKey && !e.metaKey && !e.altKey) {
+					if (e.key === siblingKeys.prev) {
+						e.preventDefault();
+						navigateSibling(focusedId, -1);
+						return;
+					}
+					if (e.key === siblingKeys.next) {
+						e.preventDefault();
+						navigateSibling(focusedId, 1);
+						return;
+					}
+					if (e.key === hierarchyKeys.child) {
+						e.preventDefault();
+						enterChild(focusedId);
+						return;
+					}
+					if (e.key === hierarchyKeys.parent) {
+						e.preventDefault();
+						returnToParent(focusedId);
+						return;
+					}
 				}
 			}
 

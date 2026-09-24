@@ -8,6 +8,8 @@ import {
 	COLLAPSE_ALL_LABEL,
 	collapseToDepthLabel,
 	EXPAND_ALL_LABEL,
+	INDENT_LABEL,
+	OUTDENT_LABEL,
 } from "../../../src/mainview/lib/domContract";
 import {
 	FOCUS_NODE_EVENT,
@@ -154,6 +156,8 @@ describe("RoadRavenContextMenu — ARIA + structure", () => {
 			"Paste",
 			"Move Up",
 			"Move Down",
+			INDENT_LABEL,
+			OUTDENT_LABEL,
 			"Change Status",
 			"Delete",
 		]);
@@ -166,8 +170,9 @@ describe("RoadRavenContextMenu — ARIA + structure", () => {
 		render(<NodeHarness />);
 		openMenu(screen.getByTestId("trigger"));
 		const menu = screen.getByRole("menu", { name: /node actions/i });
-		// 11 top-level menuitems (incl. the collapse item) + 1 submenu trigger
-		expect(menu.querySelectorAll('[role="menuitem"]').length).toBe(12);
+		// 13 top-level menuitems (incl. the collapse, indent and outdent items)
+		// + 1 submenu trigger
+		expect(menu.querySelectorAll('[role="menuitem"]').length).toBe(14);
 	});
 
 	it("Delete item is styled with --rv-status-blocked", () => {
@@ -581,5 +586,88 @@ describe("RoadRavenContextMenu — collapse (Phase 4)", () => {
 			depth,
 			useRoadmapStore.getState().schema?.nodes,
 		]);
+	});
+});
+
+// v0.8.4 Phase 5 — Indent/Outdent items follow the same no-op rules as the
+// Alt+arrow shortcuts (lib/treeEdits.ts).
+function seedNestedSchema() {
+	useRoadmapStore.getState().loadSchema(
+		{
+			version: "1",
+			title: "Test",
+			nodes: [
+				{
+					id: "root-id",
+					title: "Root",
+					status: "not-started" as const,
+					children: [
+						{
+							id: "child-1",
+							title: "Child 1",
+							status: "not-started" as const,
+							children: [
+								{
+									id: "grandchild-1",
+									title: "Grandchild 1",
+									status: "not-started" as const,
+								},
+							],
+						},
+						{
+							id: "child-2",
+							title: "Child 2",
+							status: "not-started" as const,
+						},
+					],
+				},
+			],
+		},
+		"/tmp/test.json",
+	);
+}
+
+describe("RoadRavenContextMenu — indent/outdent (Phase 5)", () => {
+	it("both items are disabled on a node with no previous sibling and a root-level parent", () => {
+		seedSchema();
+		render(<NodeHarness nodeId="child-1" />);
+		openMenu(screen.getByTestId("trigger"));
+		const menu = screen.getByRole("menu", { name: /node actions/i });
+		const indentItem = Array.from(
+			menu.querySelectorAll<HTMLElement>('[role="menuitem"]'),
+		).find((el) => el.textContent === INDENT_LABEL);
+		const outdentItem = Array.from(
+			menu.querySelectorAll<HTMLElement>('[role="menuitem"]'),
+		).find((el) => el.textContent === OUTDENT_LABEL);
+		expect(indentItem?.getAttribute("aria-disabled")).toBe("true");
+		expect(outdentItem?.getAttribute("aria-disabled")).toBe("true");
+	});
+
+	it("Indent is enabled and calls indentNode when a previous sibling exists", () => {
+		seedNestedSchema();
+		const spy = vi.spyOn(useRoadmapStore.getState(), "indentNode");
+		render(<NodeHarness nodeId="child-2" />);
+		openMenu(screen.getByTestId("trigger"));
+		const menu = screen.getByRole("menu", { name: /node actions/i });
+		const indentItem = Array.from(
+			menu.querySelectorAll<HTMLElement>('[role="menuitem"]'),
+		).find((el) => el.textContent === INDENT_LABEL);
+		expect(indentItem?.getAttribute("aria-disabled")).not.toBe("true");
+		fireEvent.click(indentItem as HTMLElement);
+		expect(spy).toHaveBeenCalledWith("child-2");
+	});
+
+	it("Outdent is enabled and calls outdentNode when a grandparent exists", () => {
+		seedNestedSchema();
+		const spy = vi.spyOn(useRoadmapStore.getState(), "outdentNode");
+		render(<NodeHarness nodeId="grandchild-1" />);
+		openMenu(screen.getByTestId("trigger"));
+		const menu = screen.getByRole("menu", { name: /node actions/i });
+		const outdentItem = Array.from(
+			menu.querySelectorAll<HTMLElement>('[role="menuitem"]'),
+		).find((el) => el.textContent === OUTDENT_LABEL);
+		expect(outdentItem?.getAttribute("aria-disabled")).not.toBe("true");
+		fireEvent.click(outdentItem as HTMLElement);
+		expect(spy).toHaveBeenCalledWith("grandchild-1");
 	});
 });

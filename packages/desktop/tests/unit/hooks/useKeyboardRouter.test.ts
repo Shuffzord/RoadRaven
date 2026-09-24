@@ -3,6 +3,7 @@ import { fireEvent, renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { RoadmapSchema } from "../../../../../packages/core/src/schema";
 import { useKeyboardRouter } from "../../../src/mainview/hooks/useKeyboardRouter";
+import { STATUS_HOTKEYS } from "../../../src/mainview/lib/domContract";
 import {
 	FOCUS_NODE_EVENT,
 	type NodeFocusRequest,
@@ -512,6 +513,130 @@ describe("useKeyboardRouter", () => {
 
 			expect(writes()).toBe(0);
 			expect(useRoadmapStore.getState().focusedNodeId).toBe(CHILD_B_ID);
+		});
+	});
+
+	// v0.8.4 Phase 5 (RC2): reorder follows the layout's sibling axis, indent
+	// and outdent follow the hierarchy axis, and a modifier held with an arrow
+	// never navigates. Tree: ROOT -> [CHILD_A, CHILD_B -> [CHILD_B1]].
+	describe("orientation-aware reorder + indent/outdent (Phase 5)", () => {
+		it("TB: Ctrl+ArrowRight reorders (moveNodeDown)", () => {
+			useRoadmapStore.getState().setFocusedNode(CHILD_A_ID);
+			const downSpy = vi.spyOn(useRoadmapStore.getState(), "moveNodeDown");
+			renderRouter();
+			fireEvent.keyDown(document, { key: "ArrowRight", ctrlKey: true });
+			expect(downSpy).toHaveBeenCalledWith(CHILD_A_ID);
+		});
+
+		it("TB: Ctrl+ArrowLeft reorders (moveNodeUp)", () => {
+			useRoadmapStore.getState().setFocusedNode(CHILD_B_ID);
+			const upSpy = vi.spyOn(useRoadmapStore.getState(), "moveNodeUp");
+			renderRouter();
+			fireEvent.keyDown(document, { key: "ArrowLeft", ctrlKey: true });
+			expect(upSpy).toHaveBeenCalledWith(CHILD_B_ID);
+		});
+
+		it("TB: Ctrl+ArrowDown still reorders (moveNodeDown, legacy pair, D-8)", () => {
+			useRoadmapStore.getState().setFocusedNode(CHILD_A_ID);
+			const downSpy = vi.spyOn(useRoadmapStore.getState(), "moveNodeDown");
+			renderRouter();
+			fireEvent.keyDown(document, { key: "ArrowDown", ctrlKey: true });
+			expect(downSpy).toHaveBeenCalledWith(CHILD_A_ID);
+		});
+
+		it("LR: Ctrl+ArrowDown reorders (moveNodeDown, legacy pair)", () => {
+			useRoadmapStore.getState().setLayout("LR");
+			useRoadmapStore.getState().setFocusedNode(CHILD_A_ID);
+			const downSpy = vi.spyOn(useRoadmapStore.getState(), "moveNodeDown");
+			renderRouter();
+			fireEvent.keyDown(document, { key: "ArrowDown", ctrlKey: true });
+			expect(downSpy).toHaveBeenCalledWith(CHILD_A_ID);
+		});
+
+		it("TB: Ctrl+ArrowRight does NOT navigate (modifier guard)", () => {
+			useRoadmapStore.getState().setFocusedNode(CHILD_A_ID);
+			const seen = captureRequests();
+			renderRouter();
+			fireEvent.keyDown(document, { key: "ArrowRight", ctrlKey: true });
+			expect(seen).toEqual([]);
+		});
+
+		it("TB: Alt+ArrowDown indents the focused node under its previous sibling", () => {
+			useRoadmapStore.getState().setFocusedNode(CHILD_B_ID);
+			const spy = vi.spyOn(useRoadmapStore.getState(), "indentNode");
+			renderRouter();
+			fireEvent.keyDown(document, { key: "ArrowDown", altKey: true });
+			expect(spy).toHaveBeenCalledWith(CHILD_B_ID);
+		});
+
+		it("TB: Alt+ArrowUp outdents the focused node to right after its parent", () => {
+			useRoadmapStore.getState().setFocusedNode(CHILD_B1_ID);
+			const spy = vi.spyOn(useRoadmapStore.getState(), "outdentNode");
+			renderRouter();
+			fireEvent.keyDown(document, { key: "ArrowUp", altKey: true });
+			expect(spy).toHaveBeenCalledWith(CHILD_B1_ID);
+		});
+
+		it("LR: Alt+ArrowRight indents, Alt+ArrowLeft outdents", () => {
+			useRoadmapStore.getState().setLayout("LR");
+			const indentSpy = vi.spyOn(useRoadmapStore.getState(), "indentNode");
+			const outdentSpy = vi.spyOn(useRoadmapStore.getState(), "outdentNode");
+			renderRouter();
+
+			useRoadmapStore.getState().setFocusedNode(CHILD_B_ID);
+			fireEvent.keyDown(document, { key: "ArrowRight", altKey: true });
+			expect(indentSpy).toHaveBeenCalledWith(CHILD_B_ID);
+
+			useRoadmapStore.getState().setFocusedNode(CHILD_B1_ID);
+			fireEvent.keyDown(document, { key: "ArrowLeft", altKey: true });
+			expect(outdentSpy).toHaveBeenCalledWith(CHILD_B1_ID);
+		});
+
+		it("Indent expands a collapsed previous sibling so the moved node does not vanish", () => {
+			useRoadmapStore.getState().setFocusedNode(CHILD_B_ID);
+			trackCollapse(CHILD_A_ID, true);
+			renderRouter();
+			fireEvent.keyDown(document, { key: "ArrowDown", altKey: true });
+			expect(isCollapsed(CHILD_A_ID)).toBe(false);
+		});
+
+		it.each(
+			Object.entries(STATUS_HOTKEYS) as Array<
+				[keyof typeof STATUS_HOTKEYS, string]
+			>,
+		)("%s sets status to %s via updateNodeStatus", (key, status) => {
+			useRoadmapStore.getState().setFocusedNode(CHILD_A_ID);
+			const spy = vi.spyOn(useRoadmapStore.getState(), "updateNodeStatus");
+			renderRouter();
+			fireEvent.keyDown(document, { key });
+			expect(spy).toHaveBeenCalledWith(CHILD_A_ID, status);
+		});
+
+		it("a status digit inside a text input does nothing", () => {
+			useRoadmapStore.getState().setFocusedNode(CHILD_A_ID);
+			// mockClear: a spy on a store action can carry call history forward
+			// from an earlier test (zustand's set() copies the current — possibly
+			// spied — function reference into each new state object), so a
+			// `not.toHaveBeenCalled()` assertion needs a clean slate first.
+			const spy = vi
+				.spyOn(useRoadmapStore.getState(), "updateNodeStatus")
+				.mockClear();
+			renderRouter();
+			const input = document.createElement("input");
+			document.body.appendChild(input);
+			input.focus();
+			fireEvent.keyDown(input, { key: "2" });
+			expect(spy).not.toHaveBeenCalled();
+		});
+
+		it("Ctrl+<digit> does nothing (status hotkeys are modifier-free)", () => {
+			useRoadmapStore.getState().setFocusedNode(CHILD_A_ID);
+			const spy = vi
+				.spyOn(useRoadmapStore.getState(), "updateNodeStatus")
+				.mockClear();
+			renderRouter();
+			fireEvent.keyDown(document, { key: "2", ctrlKey: true });
+			expect(spy).not.toHaveBeenCalled();
 		});
 	});
 });

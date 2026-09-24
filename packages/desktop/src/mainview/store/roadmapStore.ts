@@ -6,7 +6,16 @@ import type {
 	RoadmapSchema,
 } from "../../../../../packages/core/src/schema";
 import { NodeStatusSchema } from "../../../../../packages/core/src/schema";
+import { indentTarget, outdentTarget } from "../lib/treeEdits";
+import { findParentAndIndex } from "../lib/treeWalk";
 import { parseSubtree, refreshNodeIds, serializeSubtree } from "./clipboard";
+
+// Re-exported so existing importers (useKeyboardRouter.ts,
+// useCanvasFocusController.ts, tests) keep working unchanged — the
+// definition itself lives in lib/treeWalk.ts (v0.8.4 Phase 5), which is also
+// where lib/treeEdits.ts gets it, so the store no longer needs to be on the
+// import path for a pure tree lookup.
+export { findParentAndIndex };
 
 // D-14 / D-15: a node is "live" if it received an event within this window.
 // Used by both isNodeLive (action) and useIsNodeLive (hook) — keep in one place.
@@ -176,44 +185,6 @@ function applyNodePatchInPlace(
 		changed = true;
 	}
 	return changed;
-}
-
-type ParentLookup = {
-	parent: RoadmapNode | null;
-	parentArray: RoadmapNode[];
-	index: number;
-};
-
-/**
- * Locate a node's parent-array + index (or `null` if not found).
- * For root-level targets returns { parent: null, parentArray: nodes, index }.
- */
-export function findParentAndIndex(
-	nodes: RoadmapNode[],
-	nodeId: string,
-): ParentLookup | null {
-	// Check root level first
-	for (let i = 0; i < nodes.length; i++) {
-		if (nodes[i].id === nodeId) {
-			return { parent: null, parentArray: nodes, index: i };
-		}
-	}
-	// Recurse into children
-	function walk(list: RoadmapNode[]): ParentLookup | null {
-		for (const node of list) {
-			if (node.children) {
-				for (let i = 0; i < node.children.length; i++) {
-					if (node.children[i].id === nodeId) {
-						return { parent: node, parentArray: node.children, index: i };
-					}
-				}
-				const deeper = walk(node.children);
-				if (deeper) return deeper;
-			}
-		}
-		return null;
-	}
-	return walk(nodes);
 }
 
 function countSubtree(node: RoadmapNode): number {
@@ -405,6 +376,10 @@ interface RoadmapState {
 	moveNodeUp: (nodeId: string) => void;
 	moveNodeDown: (nodeId: string) => void;
 	moveNode: (nodeId: string, newParentId: string, position?: number) => void;
+	/** v0.8.4 Phase 5: make nodeId the last child of its previous sibling. No-op (see lib/treeEdits.ts) when there is none. */
+	indentNode: (nodeId: string) => void;
+	/** v0.8.4 Phase 5: move nodeId out to right after its parent. No-op (see lib/treeEdits.ts) when the parent is a root. */
+	outdentNode: (nodeId: string) => void;
 	renameNode: (nodeId: string, title: string) => void;
 
 	// Actions -- in-place (no dataKey change)
@@ -1027,6 +1002,22 @@ export const useRoadmapStore = create<RoadmapState>((set, get) => {
 				},
 			);
 			bumpStructural(nextNodes);
+		},
+
+		indentNode: (nodeId) => {
+			const schema = get().schema;
+			if (!schema) return;
+			const target = indentTarget(schema.nodes, nodeId);
+			if (!target) return;
+			get().moveNode(nodeId, target.newParentId, target.position);
+		},
+
+		outdentNode: (nodeId) => {
+			const schema = get().schema;
+			if (!schema) return;
+			const target = outdentTarget(schema.nodes, nodeId);
+			if (!target) return;
+			get().moveNode(nodeId, target.newParentId, target.position);
 		},
 
 		renameNode: (nodeId, title) => {
