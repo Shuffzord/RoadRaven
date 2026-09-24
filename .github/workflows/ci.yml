@@ -146,6 +146,48 @@ jobs:
             packages/desktop/test-results/
           retention-days: 7
 
+  a11y:
+    name: A11y (rendered contrast + axe)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lock') }}
+      - uses: actions/cache@v4
+        with:
+          path: ~/.hutch
+          key: ${{ runner.os }}-hutch-${{ hashFiles('**/bun.lock') }}
+      - run: bun install
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('**/bun.lock') }}
+      - name: Install Playwright browser (Chromium)
+        run: bunx playwright install --with-deps chromium
+        working-directory: packages/desktop
+      # tests/a11y runs against the production bundle under `vite preview`:
+      # the axe structure audit plus contrast.spec.ts, which reads the
+      # computed colours of real elements per theme and gates them on the
+      # shared pair registry (v0.8.3). Required-tier failures must be in
+      # tests/a11y/known-failures.json; every ratio lands in the artifact.
+      - name: Build renderer bundle
+        run: bun run --cwd packages/desktop build
+      - name: A11y specs (axe audit + rendered contrast)
+        run: bun run --cwd packages/desktop test:a11y
+      - name: Upload contrast report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: contrast-report
+          path: packages/desktop/test-results/
+          retention-days: 7
+
   # TODO(fallow): enable once the branch is stable and the post-GSD dead-code
   # cleanup has landed. Intended as a non-blocking signal initially; flip to
   # `--fail-on-regression` after `bunx fallow --save-regression-baseline` is run

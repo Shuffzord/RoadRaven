@@ -14,6 +14,11 @@ const rpc = vi.hoisted(() => ({
 	loadSettings: vi.fn(),
 	saveSettings: vi.fn(() => Promise.resolve({ success: true })),
 	openExternal: vi.fn(() => Promise.resolve({ ok: true })),
+	// v0.8.3 Phase 4 theme file RPCs
+	listThemes: vi.fn(() => Promise.resolve({ themes: [], dir: "/themes" })),
+	duplicateTheme: vi.fn(() => Promise.resolve({ ok: true, id: "dark-copy" })),
+	importTheme: vi.fn(() => Promise.resolve({ ok: true, id: "imported" })),
+	revealThemesFolder: vi.fn(() => Promise.resolve({ ok: true })),
 }));
 
 vi.mock("../../../src/mainview/rpc", () => ({
@@ -21,11 +26,22 @@ vi.mock("../../../src/mainview/rpc", () => ({
 }));
 
 import pkg from "../../../package.json" with { type: "json" };
-import { PreferencesDialog } from "../../../src/mainview/components/PreferencesDialog";
+import {
+	DUPLICATE_THEME_LABEL,
+	IMPORT_THEME_LABEL,
+	OPEN_THEMES_FOLDER_LABEL,
+	PreferencesDialog,
+	THEME_NAME_LABEL,
+} from "../../../src/mainview/components/PreferencesDialog";
+import {
+	CREATE_THEME_LABEL,
+	EDIT_THEME_LABEL,
+} from "../../../src/mainview/lib/domContract";
 import { useEventApiStore } from "../../../src/mainview/store/eventApiStore";
 import { usePreferencesStore } from "../../../src/mainview/store/preferencesStore";
 import { useSetupStore } from "../../../src/mainview/store/setupStore";
 import { useThemeStore } from "../../../src/mainview/store/themeStore";
+import { THEME_IDS, themeForId } from "../../../src/mainview/themes";
 
 async function openDialog(settings: Record<string, unknown> = {}) {
 	rpc.loadSettings.mockResolvedValue({ settings });
@@ -60,7 +76,12 @@ afterEach(() => {
 	cleanup();
 	usePreferencesStore.setState({ open: false });
 	useSetupStore.setState({ open: false });
-	useThemeStore.setState({ preference: "dark", resolvedTheme: "dark" });
+	useThemeStore.setState({
+		preference: "dark",
+		resolvedTheme: "dark",
+		userThemes: [],
+		draft: null,
+	});
 });
 
 describe("PreferencesDialog", () => {
@@ -217,6 +238,113 @@ describe("PreferencesDialog", () => {
 			[{ url: "https://github.com/Shuffzord/RoadRaven#readme" }],
 			[{ url: "https://github.com/Shuffzord/RoadRaven/releases/latest" }],
 		]);
+	});
+
+	// v0.8.3 Phase 4: the Theme row's file actions.
+	it("Open themes folder reveals the folder through its RPC", async () => {
+		await openDialog();
+		fireEvent.click(
+			screen.getByRole("button", { name: OPEN_THEMES_FOLDER_LABEL }),
+		);
+		expect(rpc.revealThemesFolder).toHaveBeenCalledWith({});
+	});
+
+	it("Import theme file… imports through its RPC and refreshes the list", async () => {
+		await openDialog();
+		fireEvent.click(screen.getByRole("button", { name: IMPORT_THEME_LABEL }));
+		expect(rpc.importTheme).toHaveBeenCalledWith({
+			reservedIds: [...THEME_IDS],
+		});
+		await screen.findByText(/Imported 'imported'/);
+		expect(rpc.listThemes).toHaveBeenCalled();
+	});
+
+	it("an import error is shown inline", async () => {
+		rpc.importTheme.mockResolvedValueOnce({
+			ok: false,
+			error: "not a valid theme file",
+		} as never);
+		await openDialog();
+		fireEvent.click(screen.getByRole("button", { name: IMPORT_THEME_LABEL }));
+		expect((await screen.findByRole("alert")).textContent).toContain(
+			"not a valid theme file",
+		);
+	});
+
+	it("Duplicate current theme… asks for a name, writes the copy and selects it", async () => {
+		useThemeStore.setState({ preference: "dark", resolvedTheme: "dark" });
+		await openDialog();
+		fireEvent.click(
+			screen.getByRole("button", { name: DUPLICATE_THEME_LABEL }),
+		);
+
+		const name = screen.getByLabelText(THEME_NAME_LABEL) as HTMLInputElement;
+		expect(name.value).toBe("Dark copy");
+		fireEvent.change(name, { target: { value: "Dark copy" } });
+		fireEvent.click(screen.getByRole("button", { name: "Create" }));
+
+		expect(rpc.duplicateTheme).toHaveBeenCalledWith({
+			source: themeForId("dark"),
+			name: "Dark copy",
+			reservedIds: [...THEME_IDS],
+		});
+		await vi.waitFor(() =>
+			expect(useThemeStore.getState().preference).toBe("dark-copy"),
+		);
+		expect(rpc.listThemes).toHaveBeenCalled();
+		expect(screen.queryByLabelText(THEME_NAME_LABEL)).toBeNull();
+	});
+
+	// v0.8.3 Phase 5: "Edit…" opens the theme editor. Preferences is modal, so
+	// it closes while the editor is open; a built-in is duplicated first.
+	it("Edit… on a user theme closes Preferences and opens the editor on that file", async () => {
+		const mine = {
+			id: "mine",
+			meta: { name: "Mine", mode: "dark" as const },
+			colors: themeForId("dark").colors,
+		};
+		useThemeStore
+			.getState()
+			.setUserThemes([{ id: "mine", file: mine, requiredFailures: 0 }]);
+		useThemeStore.setState({ preference: "mine", resolvedTheme: "mine" });
+		await openDialog();
+
+		fireEvent.click(screen.getByRole("button", { name: EDIT_THEME_LABEL }));
+
+		expect(rpc.duplicateTheme).not.toHaveBeenCalled();
+		expect(usePreferencesStore.getState().open).toBe(false);
+		expect(useThemeStore.getState().draft).toEqual(mine);
+	});
+
+	it("Edit… on a built-in asks for a name, duplicates it, selects the copy and opens the editor on it", async () => {
+		const copy = {
+			...themeForId("dark"),
+			id: "dark-copy",
+			meta: { name: "Dark copy", mode: "dark" as const },
+		};
+		rpc.listThemes.mockResolvedValue({
+			themes: [{ id: "dark-copy", file: copy, requiredFailures: 0 }],
+			dir: "/themes",
+		} as never);
+		useThemeStore.setState({ preference: "dark", resolvedTheme: "dark" });
+		await openDialog();
+
+		fireEvent.click(screen.getByRole("button", { name: EDIT_THEME_LABEL }));
+		expect(useThemeStore.getState().draft).toBeNull();
+		const name = screen.getByLabelText(THEME_NAME_LABEL) as HTMLInputElement;
+		expect(name.value).toBe("Dark copy");
+		fireEvent.click(screen.getByRole("button", { name: CREATE_THEME_LABEL }));
+
+		expect(rpc.duplicateTheme).toHaveBeenCalledWith({
+			source: themeForId("dark"),
+			name: "Dark copy",
+			reservedIds: [...THEME_IDS],
+		});
+		await vi.waitFor(() =>
+			expect(useThemeStore.getState().draft?.id).toBe("dark-copy"),
+		);
+		expect(useThemeStore.getState().preference).toBe("dark-copy");
+		expect(usePreferencesStore.getState().open).toBe(false);
 	});
 
 	it("Escape closes the dialog", async () => {

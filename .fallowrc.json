@@ -22,6 +22,7 @@
     "packages/desktop/vite.config.ts",
     "packages/desktop/vitest.config.ts",
     "packages/desktop/playwright.config.ts",
+    "packages/desktop/scripts/theme-lint.ts",
 
     // Standalone CLI / operator scripts — invoked via `bun run <script>`,
     // CI, or the Claude allowlist; not reachable from the app import graph.

@@ -11,7 +11,7 @@ import { defineConfig, devices } from "@playwright/test";
 // builds first; locally run `bun run --cwd packages/desktop build` once.
 export default defineConfig({
 	testDir: "./",
-	testMatch: "**/audit.spec.ts",
+	testMatch: "**/*.spec.ts",
 	fullyParallel: false, // single webServer; serialize for predictable axe output
 	forbidOnly: !!process.env.CI,
 	retries: process.env.CI ? 1 : 0,

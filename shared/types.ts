@@ -1,4 +1,5 @@
 import type { IntegrationEvent } from "../packages/core/src/plugin.ts";
+import type { ThemeFile } from "./themeSchema.ts";
 
 export type { IntegrationEvent };
 
@@ -11,16 +12,36 @@ type RPCSchema<T> = T;
 
 // -- Theme types -------------------------------------------------------------
 
-export type ThemePreference =
-	| "dark"
-	| "light"
-	| "high-contrast"
-	| "paper"
-	| "amber"
-	| "contrast"
-	| "slate"
-	| "moss"
-	| "system";
+/**
+ * A theme id (built-ins are registered in
+ * packages/desktop/src/mainview/themes; user themes arrive in v0.8.3 Phase 4)
+ * or `"system"`, which follows the OS colour scheme. The store maps an
+ * unknown id to the default theme.
+ */
+export type ThemePreference = string;
+
+/**
+ * One file in `<userData>/themes` (v0.8.3 Phase 4). The Bun side validates
+ * every file through ThemeFileSchema: a valid one carries `file` and its
+ * required-tier contrast failure count (advisory, never blocks selection);
+ * an invalid one carries `error` (the reason) and no `file`. The renderer
+ * keeps the last good `file` on an entry that turned invalid, so a
+ * half-saved edit never blanks the active theme.
+ */
+export interface UserThemeEntry {
+	id: string;
+	file?: ThemeFile;
+	requiredFailures?: number;
+	error?: string;
+}
+
+/** Outcome of a theme-file write (duplicate / import). */
+export type ThemeWriteResult =
+	| { ok: true; id: string }
+	| { ok: false; error: string };
+
+/** Outcome of a theme-file delete (v0.8.3 Phase 7). */
+export type ThemeDeleteResult = { ok: true } | { ok: false; error: string };
 
 /**
  * Strict settings interface — add fields here as new phases need them.
@@ -230,6 +251,51 @@ export type RoadmapRPCType = {
 				params: Record<string, never>;
 				response: { ok: true };
 			};
+			// -- User themes (v0.8.3 Phase 4) ----------------------------------
+			// The Bun process owns <userData>/themes but not the built-in
+			// registry (renderer-only), so the renderer passes the ids a user
+			// file may not take (`reservedIds`); a colliding file lists as
+			// invalid and a colliding write is refused.
+			listThemes: {
+				params: { reservedIds?: string[] };
+				response: { themes: UserThemeEntry[]; dir: string };
+			};
+			readTheme: {
+				params: { id: string; reservedIds?: string[] };
+				response: UserThemeEntry;
+			};
+			// Writes `source` under the slug of `name` (meta.name = name, author
+			// unset). `source` is whatever the renderer paints — built-in or user
+			// file — since Bun cannot resolve a built-in id itself.
+			duplicateTheme: {
+				params: { source: ThemeFile; name: string; reservedIds?: string[] };
+				response: ThemeWriteResult;
+			};
+			// Pops the native open dialog in Bun (the renderer never supplies a
+			// path) and copies the chosen file into the themes dir after
+			// validation. `error: null` means the dialog was cancelled.
+			importTheme: {
+				params: { reservedIds?: string[] };
+				response: ThemeWriteResult | { ok: false; error: null };
+			};
+			revealThemesFolder: {
+				params: Record<string, never>;
+				response: { ok: boolean };
+			};
+			// v0.8.3 Phase 5: the editor's autosave. Overwrites `<file.id>.json`
+			// after validation; refused when no user theme of that id exists yet
+			// (the editor never creates — duplicateTheme does).
+			writeTheme: {
+				params: { file: ThemeFile; reservedIds?: string[] };
+				response: ThemeWriteResult;
+			};
+			// v0.8.3 Phase 7: removes `<id>.json` from the themes dir. The id is
+			// pattern-checked before it becomes a path; a built-in (reserved) or
+			// unknown id is refused.
+			deleteTheme: {
+				params: { id: string; reservedIds?: string[] };
+				response: ThemeDeleteResult;
+			};
 		};
 		messages: {
 			nodeStatusUpdate: {
@@ -308,6 +374,10 @@ export type RoadmapRPCType = {
 				source: string;
 				detail?: string;
 			};
+			// v0.8.3 Phase 4: files in <userData>/themes changed (debounced);
+			// `ids` are the basenames. The renderer re-lists and re-applies the
+			// active theme if it is among them.
+			pushThemesChanged: { ids: string[] };
 		};
 	}>;
 };

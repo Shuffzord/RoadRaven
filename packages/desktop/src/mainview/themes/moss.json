@@ -1,0 +1,62 @@
+{
+	"id": "moss",
+	"meta": {
+		"name": "Moss",
+		"mode": "dark",
+		"description": "Muted sage canvas, cream nodes, warm-gold accent. Earthy · Grounded · Understated."
+	},
+	"colors": {
+		"bg-base": "#3b4338",
+		"bg-canvas": "#424b3e",
+		"bg-surface": "#323a30",
+		"bg-node": "#eae5d3",
+		"bg-input": "#323a30",
+		"bg-statusbar": "#2b322a",
+		"bg-elevated": "#454e42",
+		"bg-hover": "#4a5346",
+		"bg-active": "#56604f",
+		"bg-node-hover": "#dfd9c4",
+		"bg-toolbar": "#323a30",
+		"bg-panel": "#323a30",
+		"bg-config": "#3b4338",
+		"text-primary": "#eae5d3",
+		"text-secondary": "#cbc8b5",
+		"text-tertiary": "#c0bdaa",
+		"text-on-accent": "#3b2a10",
+		"text-node": "#2a241c",
+		"border": "#2e342b",
+		"border-subtle": "#353c32",
+		"border-focus": "#e0b862",
+		"accent": "#e0b862",
+		"accent-hover": "#e8c26e",
+		"accent-muted": "rgba(224, 184, 98, 0.12)",
+		"accent-border": "rgba(224, 184, 98, 0.3)",
+		"dot-grid": "rgba(234, 229, 211, 0.07)",
+		"line-connector": "rgba(234, 229, 211, 0.32)",
+		"scrollbar-track": "#323a30",
+		"scrollbar-thumb": "#56604f",
+		"status-not-started": "#8a8976",
+		"status-not-started-card": "#55543f",
+		"status-not-started-bg": "rgba(85, 84, 63, 0.16)",
+		"status-in-progress": "#d4a94e",
+		"status-in-progress-card": "#6e5210",
+		"status-in-progress-bg": "rgba(110, 82, 16, 0.16)",
+		"status-completed": "#b8c9a3",
+		"status-completed-card": "#3f5830",
+		"status-completed-bg": "rgba(63, 88, 48, 0.16)",
+		"status-blocked": "#eeb09a",
+		"status-blocked-card": "#853b20",
+		"status-blocked-bg": "rgba(133, 59, 32, 0.18)",
+		"pulse": "#e0b862",
+		"search": "#ea7658"
+	},
+	"shape": {
+		"border-width": "1px"
+	},
+	"shadows": {
+		"node": "0 1px 0 rgba(0, 0, 0, 0.15), 0 4px 12px rgba(0, 0, 0, 0.12)",
+		"node-hover": "0 2px 0 rgba(0, 0, 0, 0.2), 0 8px 20px rgba(0, 0, 0, 0.18)",
+		"panel": "-2px 0 16px rgba(0, 0, 0, 0.25)",
+		"config": "0 4px 24px rgba(0, 0, 0, 0.35)"
+	}
+}

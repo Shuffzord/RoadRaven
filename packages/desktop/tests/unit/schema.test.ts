@@ -175,14 +175,17 @@ describe("RoadmapSchemaSchema", () => {
 		}
 	});
 
-	it("validates themeConfig with optional statusColors and nodeRadius", () => {
+	// v0.8.3 Phase 4 (A3): themeConfig / THEME-04 is gone. A file written
+	// with one still parses; the value is carried through untouched.
+	it("a file carrying a legacy themeConfig still parses", () => {
+		const themeConfig = {
+			statusColors: { "in-progress": "#4a9eff" },
+			nodeRadius: 8,
+		};
 		const schema = {
 			version: "1.0",
 			title: "Themed Roadmap",
-			themeConfig: {
-				statusColors: { "in-progress": "#4a9eff" },
-				nodeRadius: 8,
-			},
+			themeConfig,
 			nodes: [
 				{
 					id: VALID_UUID,
@@ -194,10 +197,7 @@ describe("RoadmapSchemaSchema", () => {
 		const result = RoadmapSchemaSchema.safeParse(schema);
 		expect(result.success).toBe(true);
 		if (result.success) {
-			expect(result.data.themeConfig?.statusColors?.["in-progress"]).toBe(
-				"#4a9eff",
-			);
-			expect(result.data.themeConfig?.nodeRadius).toBe(8);
+			expect(result.data.themeConfig).toEqual(themeConfig);
 		}
 	});
 

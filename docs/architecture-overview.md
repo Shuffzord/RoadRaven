@@ -32,7 +32,7 @@ The main process runs on Bun; the renderer runs in the system's native webview. 
 |  - File I/O (load, watch, save)     |                 |  - React 19 application              |
 |  - Zod schema validation            |                 |  - react-d3-tree canvas renderer     |
 |  - $ref resolution                  |                 |  - Zustand stores (roadmap, theme)   |
-|  - .bak.json backup on load         |                 |  - Theme engine (CSS custom props)   |
+|  - .bak.json backup on load         |                 |  - Theme engine (JSON -> --rv-* tokens)|
 |  - File watching (debounced)        |                 |  - SidePanel + MarkdownRenderer      |
 |  - Settings + recent-file tracking  |                 |  - WelcomeScreen + recent files      |
 |  - Log file writing                 |                 |  - SchemaErrorPanel                  |
@@ -68,7 +68,9 @@ RoadRaven/
 |       |   |
 |       |   +-- mainview/     # Webview (React application)
 |       |       +-- App.tsx          # App shell layout (grid)
-|       |       +-- index.css        # Token system + theme definitions
+|       |       +-- index.css        # Tailwind @theme bridge + global rules (no theme values)
+|       |       +-- themes/          # Built-in theme JSON files + registry (themes/index.ts)
+|       |       +-- theme/           # applyTheme.ts — paints resolved --rv-* tokens onto <html>
 |       |       +-- rpc.ts           # Electroview RPC client
 |       |       +-- store/           # Zustand stores (roadmapStore, themeStore)
 |       |       +-- components/      # Canvas, SidePanel, NotesEditor, TopBar, FileMenu,
@@ -150,16 +152,14 @@ useThemeStore.setTheme(...)
        +---> rpc.saveSettings(...) -> Bun writes settings.json   (persist)
        |
        v
-ThemeProvider sets document.documentElement[data-theme]          (apply)
-       |
-       v
-CSS selectors activate: [data-theme="light"] { --rv-bg-base: #fff; ... }
-       |
+ThemeProvider: resolveTheme(file) -> applyTheme(resolved, id)     (apply)
+       |         every --rv-* token set on <html>, stale ones removed,
+       |         data-theme set to the id
        v
 All components using --rv-* tokens update instantly (no re-render)
 ```
 
-Theme switching is handled by the browser's style engine, not React re-renders: swapping the `data-theme` attribute on `<html>` activates the matching CSS `[data-theme]` selectors, and every child inherits the new token values through CSS custom-property inheritance. The parallel RPC persistence path means the preference survives an app restart. Components reference tokens like `bg-rv-bg-base` via Tailwind utilities.
+Theme switching is handled by the browser's style engine, not React re-renders: `applyTheme` writes the resolved token values as custom properties on `<html>`, and every child inherits them. Themes are JSON files (eight built-ins under `src/mainview/themes/`, user themes under `<userData>/themes/`, watched by the Bun process for hot reload); the twelve required colours are explicit, the rest are derived by `resolveTheme` (`shared/themeSchema.ts`). The parallel RPC persistence path means the preference survives an app restart. Components reference tokens like `bg-rv-bg-base` via Tailwind utilities. See the [Design System](./design-system.md) for the file format, the contrast contract and the editor.
 
 ## Zustand Store Shape (roadmapStore)
 
@@ -216,8 +216,8 @@ App (h-screen grid)
 +-- StatusBar       [grid-area: status]    -- Event API status, save indicator, node count
 ```
 
-- **ThemeProvider** wraps the app and manages the `data-theme` attribute on `<html>`.
-- **ThemeOverrideProvider** wraps the canvas area for per-schema CSS overrides.
+- **ThemeProvider** wraps the app, loads the user theme list and the saved preference, and paints the resolved theme (or the theme editor's draft) onto `<html>` through `applyTheme`.
+- **ThemeEditor** (mounted once in `App`) renders nothing until Preferences → Theme → Edit… puts a draft in the theme store; it is a non-modal dialog over the interactive canvas.
 - The **SidePanel** opens when a node is selected; the **WelcomeScreen** renders inside the Canvas when no file is loaded.
 
 ## Key Imports
@@ -256,7 +256,7 @@ export const RoadmapNodeSchema = z.object({
 export const RoadmapSchemaSchema = z.object({
   version: z.string(),
   title: z.string(),
-  themeConfig: z.object({ ... }).optional(),
+  themeConfig: z.unknown().optional(),   // deprecated, never shipped; kept opaque so old files round-trip
   statusConfig: z.array(StatusConfigSchema).optional(),
   typeConfig: z.array(TypeConfigSchema).optional(),
   nodes: z.array(RoadmapNodeSchema),

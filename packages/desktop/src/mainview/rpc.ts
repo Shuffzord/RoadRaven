@@ -3,6 +3,19 @@ import type { RoadmapNode } from "../../../../packages/core/src/schema";
 import type { RoadmapRPCType } from "../../../../shared/types";
 import { useRoadmapStore } from "./store/roadmapStore";
 
+const themesChangedListeners = new Set<() => void>();
+
+/**
+ * Subscribes to Bun's pushThemesChanged (files in <userData>/themes changed,
+ * v0.8.3 Phase 4). Returns the unsubscribe.
+ */
+export function onThemesChanged(listener: () => void): () => void {
+	themesChangedListeners.add(listener);
+	return () => {
+		themesChangedListeners.delete(listener);
+	};
+}
+
 const rpc = Electroview.defineRPC<RoadmapRPCType>({
 	maxRequestTime: 120_000, // 2 min — native file dialogs block until user picks a file
 	handlers: {
@@ -49,6 +62,12 @@ const rpc = Electroview.defineRPC<RoadmapRPCType>({
 				import("./rpcHandlers").then(({ handlePushEventApiError }) => {
 					handlePushEventApiError(msg);
 				});
+			},
+			// v0.8.3 Phase 4: ThemeProvider subscribes via onThemesChanged below.
+			// Not routed through rpcHandlers: themeStore imports this module, and
+			// a handler reaching it from here would close an import cycle.
+			pushThemesChanged: () => {
+				for (const listener of themesChangedListeners) listener();
 			},
 			pushOwnershipMap: (msg) => {
 				// Ownership map is consumed by refMap — see index.ts bun side.

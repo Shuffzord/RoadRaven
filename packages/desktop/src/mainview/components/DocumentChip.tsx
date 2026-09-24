@@ -1,4 +1,5 @@
 import { useShallow } from "zustand/react/shallow";
+import { SAVE_STATE_ATTR } from "../lib/domContract";
 import { basename } from "../lib/filePath";
 import { saveDotClass } from "../lib/saveDot";
 import { useRoadmapStore } from "../store/roadmapStore";
@@ -42,7 +43,7 @@ export function DocumentChip() {
 			>
 				<span
 					aria-hidden="true"
-					data-save-state={untitled ? "untitled" : saveState}
+					{...{ [SAVE_STATE_ATTR]: untitled ? "untitled" : saveState }}
 					className={`shrink-0 ${saveDotClass(untitled ? "untitled" : saveState)}`}
 				/>
 				<span className="truncate">{name}</span>

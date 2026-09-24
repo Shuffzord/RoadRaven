@@ -29,76 +29,31 @@ describe("index.css token system", () => {
 		expect(css()).toContain("--color-rv-bg-base: var(--rv-bg-base)");
 	});
 
-	it("dark theme [data-theme='dark'] block contains --rv-bg-base: #131313", () => {
-		const content = css();
-		const darkBlock = extractThemeBlock(content, "dark");
-		expect(darkBlock).toContain("--rv-bg-base: #131313");
+	// v0.8.3 Phase 3 (RC2): themes are data. The token values live in
+	// src/mainview/themes/*.json and are painted onto :root by applyTheme;
+	// index.css keeps the @theme bridge and the global rules only. A
+	// [data-theme] selector or a hex colour outside the bridge is a theme
+	// value that has crept back into CSS.
+	it("has no [data-theme] selector", () => {
+		expect(css().match(/\[data-theme=/g) ?? []).toEqual([]);
 	});
 
-	it("light theme [data-theme='light'] block contains --rv-bg-base: #ffffff", () => {
-		const content = css();
-		const lightBlock = extractThemeBlock(content, "light");
-		expect(lightBlock).toContain("--rv-bg-base: #ffffff");
+	it("has no colour literal outside the @theme bridge", () => {
+		const content = css().replace(/\/\*[\s\S]*?\*\//g, "");
+		const afterBridge = content.slice(
+			content.indexOf("}", content.indexOf("@theme")),
+		);
+		expect(afterBridge.match(/#[0-9a-fA-F]{3,8}\b|rgba?\(/g) ?? []).toEqual([]);
 	});
 
-	it("high contrast [data-theme='high-contrast'] block contains --rv-bg-base: #000000", () => {
+	it("reads the heading and body fonts from theme tokens", () => {
 		const content = css();
-		const hcBlock = extractThemeBlock(content, "high-contrast");
-		expect(hcBlock).toContain("--rv-bg-base: #000000");
-	});
-
-	it("all 40+ tokens present in each theme block", () => {
-		const content = css();
-		const requiredTokens = [
-			"--rv-bg-base",
-			"--rv-bg-canvas",
-			"--rv-bg-surface",
-			"--rv-bg-node",
-			"--rv-bg-input",
-			"--rv-bg-statusbar",
-			"--rv-bg-elevated",
-			"--rv-bg-hover",
-			"--rv-bg-active",
-			"--rv-bg-node-hover",
-			"--rv-bg-toolbar",
-			"--rv-bg-panel",
-			"--rv-bg-config",
-			"--rv-text-primary",
-			"--rv-text-secondary",
-			"--rv-text-tertiary",
-			"--rv-text-on-accent",
-			"--rv-border:",
-			"--rv-border-subtle",
-			"--rv-border-focus",
-			"--rv-accent:",
-			"--rv-accent-hover",
-			"--rv-accent-muted",
-			"--rv-accent-border",
-			"--rv-dot-grid",
-			"--rv-line-connector",
-			"--rv-shadow-node:",
-			"--rv-shadow-node-hover",
-			"--rv-shadow-panel",
-			"--rv-shadow-config",
-			"--rv-scrollbar-track",
-			"--rv-scrollbar-thumb",
-			"--rv-border-width",
-			"--rv-status-not-started:",
-			"--rv-status-not-started-bg",
-			"--rv-status-in-progress:",
-			"--rv-status-in-progress-bg",
-			"--rv-status-completed:",
-			"--rv-status-completed-bg",
-			"--rv-status-blocked:",
-			"--rv-status-blocked-bg",
-		];
-
-		for (const theme of ["dark", "light", "high-contrast"]) {
-			const block = extractThemeBlock(content, theme);
-			for (const token of requiredTokens) {
-				expect(block, `Missing ${token} in ${theme} theme`).toContain(token);
-			}
-		}
+		expect(content).toMatch(
+			/h1,\s*h2,\s*\.rv-heading\s*\{[^}]*font-family:\s*var\(--rv-font-heading,\s*inherit\)/,
+		);
+		expect(content).toMatch(
+			/body\s*\{[^}]*font-family:\s*var\(\s*--rv-font-sans,/,
+		);
 	});
 });
 
@@ -106,13 +61,3 @@ describe("index.css token system", () => {
 // removed. The Vite build smoke test (tests/integration/build.test.ts)
 // validates that the full build pipeline works, which subsumes checking
 // that vitest config and RPC types are structurally correct.
-
-/** Extract a [data-theme="X"] block from CSS content */
-function extractThemeBlock(css: string, theme: string): string {
-	const regex = new RegExp(
-		`\\[data-theme="${theme}"\\]\\s*\\{([^}]+(?:\\{[^}]*\\}[^}]*)*)\\}`,
-		"s",
-	);
-	const match = css.match(regex);
-	return match?.[0] ?? "";
-}

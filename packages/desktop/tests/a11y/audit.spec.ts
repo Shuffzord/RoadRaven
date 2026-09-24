@@ -2,6 +2,15 @@ import { existsSync } from "node:fs";
 import { join } from "node:path";
 import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
+import {
+	CREATE_THEME_LABEL,
+	EDIT_THEME_LABEL,
+	EDITOR_ADVANCED_LABEL,
+	EDITOR_DIALOG_LABEL,
+	NODE_CARD_ATTR,
+} from "../../src/mainview/lib/domContract";
+import { THEME_IDS } from "../../src/mainview/themes";
+import { selectTheme } from "./contrastSampler";
 
 // Pre-condition: `bun run --cwd packages/desktop build` has produced
 // packages/desktop/dist/. Vite preview serves dist/ on port 4173.
@@ -12,14 +21,17 @@ import { expect, type Page, test } from "@playwright/test";
 //
 // Selectors verified against source 2026-05-03 per checker B-4/W-1/W-2:
 //   - Canvas wrapper: [role="application"] (Canvas.tsx line 344)
-//   - Node card: [data-source-id] (RoadmapNode.tsx line 113); [role="treeitem"] (line 126)
+//   - Node card: [NODE_CARD_ATTR] (src/mainview/lib/domContract.ts, rendered by
+//     RoadmapNode.tsx); [role="treeitem"] on the same element
 //   - Sample loading: getByRole('button', { name: 'Hello World' }) (WelcomeScreen.tsx line 131-137)
-//   - Theme switching: document.documentElement.setAttribute("data-theme", t) directly
-//     (ThemeProvider.tsx line 33 — there is NO localStorage theme key; RPC saveSettings
-//     is Electrobun-only and unavailable under vite preview)
+//   - Theme switching: through the top-bar picker (selectTheme in
+//     contrastSampler.ts). Since v0.8.3 Phase 3 applyTheme paints the tokens,
+//     so setting data-theme by hand changes nothing; the saveSettings RPC the
+//     store fires is caught and warned under vite preview.
 
 const DIST_DIR = join(process.cwd(), "dist");
 const hasDist = existsSync(DIST_DIR);
+const CARD = `[${NODE_CARD_ATTR}]`;
 
 test.skip(
 	!hasDist,
@@ -76,7 +88,7 @@ async function loadHelloWorldSample(page: Page): Promise<void> {
 	// Wait for tree canvas to render — role="application" on Canvas wrapper
 	await page.waitForSelector('[role="application"]', { timeout: 5000 });
 	// Wait for at least one node card to render
-	await page.waitForSelector("[data-source-id]", { timeout: 5000 });
+	await page.waitForSelector(CARD, { timeout: 5000 });
 }
 
 test.describe("Accessibility audit (production bundle, vite preview port 4173)", () => {
@@ -98,8 +110,7 @@ test.describe("Accessibility audit (production bundle, vite preview port 4173)",
 	test("3. Side panel open on a node passes WCAG 2.1 AA", async ({ page }) => {
 		await loadHelloWorldSample(page);
 		// Click the first node card to open the side panel.
-		// Verified selector: [data-source-id] (RoadmapNode.tsx line 113)
-		await page.locator("[data-source-id]").first().click();
+		await page.locator(CARD).first().click();
 		// Wait for side panel <aside role="complementary"> to render
 		// (SidePanel.tsx line 233/243). Use a generous timeout for animation.
 		await page.waitForSelector('aside[role="complementary"]', {
@@ -115,8 +126,7 @@ test.describe("Accessibility audit (production bundle, vite preview port 4173)",
 	}) => {
 		await loadHelloWorldSample(page);
 		// Right-click on a node to open Radix ContextMenu.
-		// Verified selector: [data-source-id] (RoadmapNode.tsx line 113)
-		await page.locator("[data-source-id]").first().click({ button: "right" });
+		await page.locator(CARD).first().click({ button: "right" });
 		// Wait for Radix-rendered menu — Radix ContextMenu renders [role="menu"]
 		await page.waitForSelector('[role="menu"]', { timeout: 3000 });
 		// Exclude Radix Portal's aria-hidden=true overlay on #root (Radix v2
@@ -137,7 +147,7 @@ test.describe("Accessibility audit (production bundle, vite preview port 4173)",
 		// Select the first node card (root). The Hello World sample's root is a
 		// non-leaf (has children), so requestDelete triggers the confirmation
 		// dialog (per useKeyboardRouter.ts requestDelete contract).
-		await page.locator("[data-source-id]").first().click();
+		await page.locator(CARD).first().click();
 		// Focus the canvas (role="application" tabIndex=0 on Canvas wrapper) so
 		// keyboard events route through useKeyboardRouter.
 		await page.locator('[role="application"]').focus();
@@ -151,26 +161,18 @@ test.describe("Accessibility audit (production bundle, vite preview port 4173)",
 		});
 	});
 
-	// Themes — applied by setting the data-theme attribute on documentElement.
-	// This matches what ThemeProvider.tsx does on every preference change.
-	// We bypass the Zustand store (which would invoke RPC saveSettings — not
-	// available under vite preview) and exercise the CSS directly. The CSS is
-	// the same that ships in the installer.
+	// Themes — applied through the picker (v0.8.3 Phase 3: the tokens are
+	// painted by applyTheme from the theme's JSON, the same data that ships
+	// in the installer).
 	// "contrast" added per code-review B-01: prior --rv-text-primary: #666666
-	// on #000000 = 3.66:1 (FAIL). Now d1d1d1 = 12.0:1. The other unaudited
-	// themes (paper, amber, slate, moss) are filed as backlog known-issues
-	// in 05-REVIEW.md disposition (v1.1 will either audit them all or mark
-	// them experimental in user-visible UI).
-	for (const theme of ["dark", "light", "high-contrast", "contrast"] as const) {
+	// on #000000 = 3.66:1 (FAIL). Now d1d1d1 = 12.0:1. v0.8.3 Phase 1: every
+	// shipped theme, from the shared registry. axe cannot see node-card text
+	// (the ::before stripe makes it "incomplete", never a violation) — that
+	// is contrast.spec.ts's job; this loop keeps the ARIA/structure audit.
+	for (const theme of THEME_IDS) {
 		test(`6. Theme '${theme}' passes WCAG 2.1 AA`, async ({ page }) => {
 			await loadHelloWorldSample(page);
-			// Set the data-theme attribute directly (matches ThemeProvider.tsx
-			// line 33 behavior). No reload needed — CSS responds to the
-			// attribute change immediately because all theme tokens are scoped
-			// under [data-theme="..."] selectors in the design system.
-			await page.evaluate((t) => {
-				document.documentElement.setAttribute("data-theme", t);
-			}, theme);
+			await selectTheme(page, theme);
 			// Sanity check the theme actually applied.
 			const actualTheme = await page.evaluate(() =>
 				document.documentElement.getAttribute("data-theme"),
@@ -187,6 +189,28 @@ test.describe("Accessibility audit (production bundle, vite preview port 4173)",
 		});
 	}
 
+	// v0.8.3 Phase 5: the theme editor, a non-modal dialog over the live
+	// canvas, with every field and contrast chip on screen. "Edit…" on the
+	// painted built-in (Amber, D-8) prompts for a name and opens the editor
+	// on the copy; outside Electrobun the copy is in-memory (no RPC), which
+	// changes nothing about the dialog axe sees. editor.spec.ts covers the
+	// other seven themes and the interaction flow.
+	test("8. Theme editor open (copy of Amber, Advanced expanded) passes WCAG 2.1 AA", async ({
+		page,
+	}) => {
+		await loadHelloWorldSample(page);
+		await page.getByRole("button", { name: "Preferences" }).click();
+		await page.getByRole("button", { name: EDIT_THEME_LABEL }).click();
+		await page.getByRole("button", { name: CREATE_THEME_LABEL }).click();
+		const editor = page.getByRole("dialog", { name: EDITOR_DIALOG_LABEL });
+		await expect(editor).toBeVisible();
+		await editor.getByRole("button", { name: EDITOR_ADVANCED_LABEL }).click();
+		await page.waitForTimeout(200);
+		await auditPage(page, "theme-editor-open", {
+			exclude: ["svg .rd3t-link"],
+		});
+	});
+
 	// B-02 regression guard: the dark-theme context-menu case at test 4 only
 	// caught --rv-status-blocked: #ff5252 on #252527 = 4.74:1. The light theme
 	// uses a different blocked color (#c92020 on #ffffff = 5.59:1 post-fix —
@@ -196,11 +220,9 @@ test.describe("Accessibility audit (production bundle, vite preview port 4173)",
 		page,
 	}) => {
 		await loadHelloWorldSample(page);
-		await page.evaluate(() => {
-			document.documentElement.setAttribute("data-theme", "light");
-		});
+		await selectTheme(page, "light");
 		await page.waitForTimeout(200);
-		await page.locator("[data-source-id]").first().click({ button: "right" });
+		await page.locator(CARD).first().click({ button: "right" });
 		await page.waitForSelector('[role="menu"]', { timeout: 3000 });
 		await auditPage(page, "context-menu-open-light", {
 			exclude: ["svg .rd3t-link", "#root[aria-hidden='true']"],

@@ -95,6 +95,13 @@ the file test-reachable in a second commit. When planning refactors, use
 fallow to locate complexity hotspots and circular dependencies rather than
 acting on each unused-export finding in isolation.
 
+## Orchestrated phases
+
+Multi-commit versions are run as orchestrator + sub-agent phases. The tooling
+for it is **local and gitignored** — `rr-*` skills in `.claude/skills/` and
+gate scripts in `scripts/phase/` — so it is not shipped with this repo, and
+neither is the plan, which lives in a RoadRaven roadmap rather than markdown.
+
 ## Versioning
 
 The desktop app version has ONE source: `packages/desktop/package.json`.

@@ -67,6 +67,9 @@ packages/desktop/assets/mcp/
 Audio/
 scripts/storytelling-video/
 
+# Local orchestration tooling, see PROJECT.MD
+scripts/phase/
+
 # WebSocket event-log runtime output (not source data); *.bak.json already ignored above
 *.events.jsonl
 

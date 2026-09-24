@@ -40,20 +40,7 @@ describe("CSS @import ordering", () => {
 		}
 	});
 
-	it("all theme blocks exist (dark, light, high-contrast, paper, amber, contrast, slate, moss)", () => {
-		// Guards against accidentally deleting a theme block during refactoring
-		const css = readFileSync(
-			join(__dirname, "../../../src/mainview/index.css"),
-			"utf-8",
-		);
-
-		expect(css).toContain('[data-theme="dark"]');
-		expect(css).toContain('[data-theme="light"]');
-		expect(css).toContain('[data-theme="high-contrast"]');
-		expect(css).toContain('[data-theme="paper"]');
-		expect(css).toContain('[data-theme="amber"]');
-		expect(css).toContain('[data-theme="contrast"]');
-		expect(css).toContain('[data-theme="slate"]');
-		expect(css).toContain('[data-theme="moss"]');
-	});
+	// The "all eight theme blocks exist" guard that lived here moved with the
+	// themes: they are JSON files now (v0.8.3 Phase 3), and
+	// tests/unit/theme/themeRegistry.test.ts pins the eight registered ids.
 });
