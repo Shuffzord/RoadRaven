@@ -96,11 +96,10 @@ async function flushNowSerialized(): Promise<void> {
 	// Utils.saveFileDialog via the saveFileAs RPC. User cancels → stay
 	// "saved" in-memory; next mutation will re-prompt after the debounce.
 	if (state.isUntitled || !state.filePath) {
-		// A freshly-opened sample has no disk path but also no edits yet — opening
-		// one should NOT pop the Save As dialog. Only prompt once the user has
-		// actually changed something. File > New is isUntitled and must always
-		// prompt (it has no content to lose but needs a home), so it is exempt.
-		if (!state.isUntitled && !hasUnsavedEdits(state)) {
+		// A fresh File > New or sample has no disk path but also no edits yet —
+		// neither should pop the Save As dialog on its own (v0.8.2 F7). Only
+		// prompt once the user has actually changed something.
+		if (!hasUnsavedEdits(state)) {
 			return;
 		}
 		// WR-01 (Wave 3 review): mark saveState="saving" BEFORE the dialog opens

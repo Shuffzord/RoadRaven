@@ -71,8 +71,10 @@ RoadRaven/
 |       |       +-- index.css        # Token system + theme definitions
 |       |       +-- rpc.ts           # Electroview RPC client
 |       |       +-- store/           # Zustand stores (roadmapStore, themeStore)
-|       |       +-- components/      # Canvas, SidePanel, NotesEditor, TopBar, etc.
-|       |       +-- hooks/           # useAutosave, useKeyboardRouter, useTheme, etc.
+|       |       +-- components/      # Canvas, SidePanel, NotesEditor, TopBar, FileMenu,
+|       |       |                    # DocumentChip, Outline, PreferencesDialog, etc.
+|       |       +-- hooks/           # useAutosave, useKeyboardRouter, useFileActions, useTheme, etc.
+|       |       +-- lib/             # fileCommands (file-verb registry), saveDot, etc.
 |       |
 |       +-- tests/            # unit/ (node + jsdom) and bench/ (dataKey perf)
 |       +-- vite.config.ts / vitest.config.ts / electrobun.config
@@ -87,7 +89,10 @@ The webview never touches the disk; the Bun process mediates every read and writ
 
 ```
 LOAD
-User opens a file (TopBar / recent file / sample)
+User opens a file (File menu / Ctrl+O / recent file / sample)
+       |
+       v  ensureSafeToDiscard(): flush file-backed edits; if the current
+       |  document is untitled and edited, DiscardChangesDialog asks first
        |
        v  rpc.openFilePicker -> native dialog -> rpc.loadFile({ path })
 Bun loadFile handler:
@@ -119,6 +124,12 @@ Bun saveFile handler writes JSON atomically -> response flows back
 Validation catches malformed JSON early while still rendering partially valid data, and the `.bak.json` backup guards against corruption. The Zustand store is an in-memory cache, so the UI stays responsive while the slower disk write happens asynchronously — if a write fails, in-memory state is intact and no work is lost mid-session.
 
 **File watching.** When the loaded file (or a `$ref`-referenced file) changes externally, `fs.watch` fires in the Bun process. After a debounce window the Bun process re-reads and validates the file and pushes the result to the webview, which calls `roadmapStore.reloadSchema(data)` — preserving the file path and incrementing `dataKey`.
+
+**Untitled documents.** `File > New` and the bundled samples load with `filePath: null`. The document stays untitled until the first real edit, at which point autosave prompts Save As once; `saveFileAs` opens in the folder of the current file and reports `linkedFilesNotCopied` when `$ref` companions were merged into the standalone copy. `loadFile` returns the resolved `linkedFiles` so the document chip can list them.
+
+**Window close guard.** Electrobun emits `will-close` synchronously and reads the response right after, so the Bun handler denies the close, asks the renderer over `confirmClose` (which runs the same `ensureSafeToDiscard` as New/Open/Close File), and closes the window programmatically on allow. If the renderer does not answer within 3 s the close proceeds.
+
+**File commands.** Every file verb (New, Open, Open Recent, Save, Save As, Close File, Reveal in Folder, Copy Path) is defined once in `lib/fileCommands.ts` — label, shortcut, enablement and `run`. The File menu, the document chip (which opens the same menu), the keyboard router and the sidebar all read that table. Each `run` calls a module-level action in `hooks/useFileActions.ts` (`save`, `saveAs`, `closeFile`, `revealInFolder`, `copyPath`, …), which in turn issues the RPC. The agent-side `openFile` / `saveFileAs` tools route through the same functions, so an MCP host and a human get identical behaviour.
 
 ## Editing & Autosave
 
@@ -188,8 +199,12 @@ The webview renders these components in a CSS Grid layout:
 
 ```
 App (h-screen grid)
-+-- TopBar          [grid-area: topbar]    -- Toolbar: Open, New, Search, Fit, Zoom, Layout, Theme
-+-- Sidebar         [grid-area: sidebar]   -- Left icon rail
++-- TopBar          [grid-area: topbar]    -- File menu, document chip, search, Events, Fit, Zoom, Layout, Theme, Preferences
+|   +-- FileMenu                           -- Dropdown built from lib/fileCommands
+|   +-- DocumentChip                       -- File name + save-state dot; path / linked files tooltip
+|   +-- PreferencesDialog                  -- Theme, reopen last file, Event API port, Agent API, About
++-- Sidebar         [grid-area: sidebar]   -- Files: recent files + Outline navigator; collapsible rail
+|   +-- Outline                            -- Indented node list, arrow-key navigation, click to reveal
 +-- Canvas          [grid-area: canvas]    -- react-d3-tree renderer or WelcomeScreen
 |   +-- WelcomeScreen                      -- Shown when no file loaded (recent files, samples)
 |   +-- Tree (react-d3-tree)               -- SVG tree with foreignObject custom nodes
@@ -198,7 +213,7 @@ App (h-screen grid)
 +-- SidePanel       [grid-area: panel]     -- Node detail panel (on node selection)
 |   +-- ResizeHandle                       -- Drag to resize panel width
 |   +-- MarkdownRenderer                   -- remark/rehype pipeline for node notes
-+-- StatusBar       [grid-area: status]    -- File name, node count, connection status
++-- StatusBar       [grid-area: status]    -- Event API status, save indicator, node count
 ```
 
 - **ThemeProvider** wraps the app and manages the `data-theme` attribute on `<html>`.

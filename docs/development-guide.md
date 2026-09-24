@@ -163,7 +163,29 @@ See [Logging](./logging.md) for details.
 The canvas keyboard layer lives in
 [`hooks/useKeyboardRouter.ts`](../packages/desktop/src/mainview/hooks/useKeyboardRouter.ts).
 The router runs in capture phase and stands down when a Radix dialog or context menu is
-open, or when a text input / CodeMirror editor is focused.
+open, or when a text input / CodeMirror editor is focused. File verbs come from
+[`lib/fileCommands.ts`](../packages/desktop/src/mainview/lib/fileCommands.ts) — the single
+registry (label, shortcut, enablement, action) that the File menu, the keyboard router
+and the sidebar all read, so a verb cannot drift between surfaces. Node search matches
+titles by default; the notes toggle inside the search box widens it to notes and is
+persisted (`AppSettings.searchInNotes`).
+
+### Global / file
+
+| Shortcut | Action |
+|----------|--------|
+| `Ctrl+N` | New roadmap |
+| `Ctrl+O` | Open… |
+| `Ctrl+S` | Save (flush now) |
+| `Ctrl+Shift+S` | Save As… |
+| `Ctrl+B` | Toggle sidebar |
+| `Ctrl+,` | Preferences |
+| `Ctrl+F` | Focus node search |
+| `Ctrl+Shift+L` | Toggle event log |
+
+`Ctrl` is `⌘` on macOS. `Ctrl+S`, `Ctrl+Shift+S`, `Ctrl+,` and `Ctrl+F` also fire while
+a text input or CodeMirror editor has the caret; `Ctrl+N`, `Ctrl+O`, `Ctrl+B` and
+`Ctrl+Shift+L` respect the input-focused guard.
 
 ### Canvas (focused node)
 
@@ -205,6 +227,20 @@ the panel header. Node cards are keyboard-accessible (`role="button"`, `tabIndex
 Enter / Space handlers); the dashed focus ring uses a `keyboard-nav-active` class on
 `<body>` so it shows only during keyboard navigation, not after a mouse click.
 
+### Outline (sidebar)
+
+| Shortcut | Action |
+|----------|--------|
+| `Arrow ↑` / `Arrow ↓` | Move between rows |
+| `Arrow →` | Expand the row, or move to its first child if already expanded |
+| `Arrow ←` | Collapse the row, or move to its parent if already collapsed |
+| `Home` / `End` | First / last row |
+| `Enter` / `Space` | Select the node and reveal it on the canvas |
+
+While an outline row holds DOM focus (`[data-outline-tree]`) the canvas router stands
+down for node-navigation keys, so the arrows above act on the outline rather than the
+canvas; the `Ctrl` shortcuts in the Global / file table keep working from there.
+
 ## Project Conventions
 
 | Convention | Rule | Why |
@@ -216,6 +252,7 @@ Enter / Space handlers); the dashed focus ring uses a `keyboard-nav-active` clas
 | Test location | `tests/unit/` for unit tests, `tests/unit/ui/` for component tests | Environment matching: node for logic, jsdom for components |
 | Formatter | Biome (not Prettier) | Faster; linting + formatting in one tool |
 | Package scope | `@roadraven/` | Consistent npm namespace for publishable packages |
+| App version | Single source is `packages/desktop/package.json` (read by `electrobun.config.ts`, `src/bun/appVersion.ts` and the renderer's `__APP_VERSION__` define); `bun scripts/bump-version.ts X.Y.Z` propagates it to the other package.json files and the plugin/marketplace pins | One literal to bump; footer, About and the Setup Wizard mismatch check cannot drift |
 
 ## Related Documentation
 

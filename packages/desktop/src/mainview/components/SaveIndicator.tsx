@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { saveDotClass } from "../lib/saveDot";
 import { useRoadmapStore } from "../store/roadmapStore";
 
 // On fast disks the autosave write completes in <50ms, so the saveState
@@ -74,10 +75,7 @@ export function SaveIndicator() {
 	if (!filePath) {
 		return (
 			<div className="flex items-center gap-1.5 text-[11px] text-rv-text-tertiary">
-				<span
-					aria-hidden="true"
-					className="w-[7px] h-[7px] rounded-full border border-rv-text-tertiary"
-				/>
+				<span aria-hidden="true" className={saveDotClass("untitled")} />
 				<span>Untitled — Save As to enable autosave</span>
 			</div>
 		);
@@ -86,10 +84,7 @@ export function SaveIndicator() {
 	if (displayState === "saved") {
 		return (
 			<div className="flex items-center gap-1.5 text-[11px] text-rv-text-tertiary">
-				<span
-					aria-hidden="true"
-					className="w-[7px] h-[7px] rounded-full bg-rv-status-completed"
-				/>
+				<span aria-hidden="true" className={saveDotClass("saved")} />
 				<span>Saved</span>
 			</div>
 		);
@@ -97,10 +92,7 @@ export function SaveIndicator() {
 	if (displayState === "saving") {
 		return (
 			<div className="flex items-center gap-1.5 text-[11px] text-rv-text-secondary">
-				<span
-					aria-hidden="true"
-					className="w-[7px] h-[7px] rounded-full bg-rv-text-secondary motion-safe:animate-pulse"
-				/>
+				<span aria-hidden="true" className={saveDotClass("saving")} />
 				<span>Saving…</span>
 			</div>
 		);

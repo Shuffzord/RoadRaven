@@ -1,17 +1,17 @@
 import { useEffect, useRef } from "react";
 import ravenLogo from "../assets/raven-logo.svg";
-import { useFileActions } from "../hooks/useFileActions";
 import { electroview } from "../rpc";
 import { useEventLogStore } from "../store/eventLogStore";
+import { usePreferencesStore } from "../store/preferencesStore";
 import { useRoadmapStore } from "../store/roadmapStore";
-import { useSetupStore } from "../store/setupStore";
+import { DocumentChip } from "./DocumentChip";
+import { FileMenu } from "./FileMenu";
 import { ThemePicker } from "./ThemePicker";
 
 export function TopBar() {
 	const layoutOrientation = useRoadmapStore((s) => s.layoutOrientation);
 	const setLayout = useRoadmapStore((s) => s.setLayout);
 	const filePath = useRoadmapStore((s) => s.filePath);
-	const { openFile, newRoadmap } = useFileActions();
 	const isDrawerOpen = useEventLogStore((s) => s.isOpen);
 
 	const handleLayoutChange = (value: "TB" | "LR") => {
@@ -61,58 +61,37 @@ export function TopBar() {
 			{/* Separator */}
 			<div className="w-px h-6 bg-rv-border mx-1.5 shrink-0" />
 
-			{/* Action buttons */}
-			<button
-				className="flex items-center gap-1.5 px-2.5 py-[5px] rounded-[6px] text-[12px] font-semibold text-rv-text-secondary hover:bg-rv-bg-hover hover:text-rv-text-primary transition-all duration-150"
-				type="button"
-				onClick={() => {
-					void newRoadmap();
-				}}
-			>
-				<svg
-					aria-hidden="true"
-					width="15"
-					height="15"
-					viewBox="0 0 24 24"
-					fill="none"
-					stroke="currentColor"
-					strokeWidth="2"
-					strokeLinecap="round"
-					strokeLinejoin="round"
+			{/* File menu (v0.8.2 D2-A): every file verb, from the fileCommands registry */}
+			<FileMenu>
+				<button
+					className="flex items-center gap-1.5 px-2.5 py-[5px] rounded-[6px] text-[12px] font-semibold text-rv-text-secondary hover:bg-rv-bg-hover hover:text-rv-text-primary transition-all duration-150"
+					type="button"
 				>
-					<path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
-					<polyline points="14 2 14 8 20 8" />
-					<line x1="12" y1="18" x2="12" y2="12" />
-					<line x1="9" y1="15" x2="15" y2="15" />
-				</svg>
-				New
-			</button>
-			<button
-				className="flex items-center gap-1.5 px-2.5 py-[5px] rounded-[6px] text-[12px] font-semibold text-rv-text-secondary hover:bg-rv-bg-hover hover:text-rv-text-primary transition-all duration-150"
-				type="button"
-				onClick={openFile}
-			>
-				<svg
-					aria-hidden="true"
-					width="15"
-					height="15"
-					viewBox="0 0 24 24"
-					fill="none"
-					stroke="currentColor"
-					strokeWidth="2"
-					strokeLinecap="round"
-					strokeLinejoin="round"
-				>
-					<path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
-				</svg>
-				Open
-			</button>
+					File
+					<svg
+						aria-hidden="true"
+						width="10"
+						height="10"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						strokeWidth="2.5"
+						strokeLinecap="round"
+						strokeLinejoin="round"
+					>
+						<polyline points="6 9 12 15 18 9" />
+					</svg>
+				</button>
+			</FileMenu>
 
 			{/* Spacer */}
 			<div className="flex-1" />
 
-			{/* Search */}
-			<SearchBox />
+			{/* Document identity (D3) + search */}
+			<div className="flex items-center gap-2 min-w-0">
+				<DocumentChip />
+				<SearchBox />
+			</div>
 
 			{/* Spacer */}
 			<div className="flex-1" />
@@ -156,11 +135,12 @@ export function TopBar() {
 				Fit
 			</button>
 
-			{/* Zoom buttons */}
+			{/* Zoom buttons (F6): one step about the container centre, via the store */}
 			<button
 				className="flex items-center justify-center w-[26px] h-[26px] rounded-[5px] text-rv-text-secondary hover:bg-rv-bg-hover transition-all duration-150"
 				type="button"
 				aria-label="Zoom out"
+				onClick={() => useRoadmapStore.getState().requestZoom("out")}
 			>
 				<svg
 					aria-hidden="true"
@@ -180,6 +160,7 @@ export function TopBar() {
 				className="flex items-center justify-center w-[26px] h-[26px] rounded-[5px] text-rv-text-secondary hover:bg-rv-bg-hover transition-all duration-150"
 				type="button"
 				aria-label="Zoom in"
+				onClick={() => useRoadmapStore.getState().requestZoom("in")}
 			>
 				<svg
 					aria-hidden="true"
@@ -211,13 +192,13 @@ export function TopBar() {
 			{/* Theme picker */}
 			<ThemePicker />
 
-			{/* Settings */}
+			{/* Preferences (v0.8.2 D5-A); the setup wizard lives under Integrations */}
 			<button
 				className="flex items-center justify-center w-[30px] h-[30px] rounded-[6px] text-rv-text-tertiary hover:bg-rv-bg-hover hover:text-rv-text-primary transition-all duration-150"
 				type="button"
-				aria-label="Setup and integrations"
-				title="Setup & integrations"
-				onClick={() => useSetupStore.getState().openWizard()}
+				aria-label="Preferences"
+				title="Preferences (Ctrl+,)"
+				onClick={() => usePreferencesStore.getState().openPreferences()}
 			>
 				<svg
 					aria-hidden="true"
@@ -268,7 +249,22 @@ function SearchBox() {
 	const setSearchQuery = useRoadmapStore((s) => s.setSearchQuery);
 	const stepSearchMatch = useRoadmapStore((s) => s.stepSearchMatch);
 	const clearSearch = useRoadmapStore((s) => s.clearSearch);
+	const searchInNotes = useRoadmapStore((s) => s.searchInNotes);
+	const setSearchInNotes = useRoadmapStore((s) => s.setSearchInNotes);
 	const inputRef = useRef<HTMLInputElement>(null);
+
+	// Persisted preference (AppSettings.searchInNotes); the click must not leave
+	// the caret on the button, so hand focus back to the input.
+	const toggleNotes = () => {
+		const next = !searchInNotes;
+		setSearchInNotes(next);
+		electroview?.rpc?.request
+			.saveSettings({ settings: { searchInNotes: next } })
+			.catch(() => {
+				// HMR: no rpc
+			});
+		inputRef.current?.focus();
+	};
 
 	useEffect(() => {
 		const focusSearch = () => {
@@ -290,14 +286,45 @@ function SearchBox() {
 		<search className="relative flex items-center">
 			<input
 				ref={inputRef}
-				className="w-[220px] h-[30px] bg-rv-bg-input border border-rv-border rounded-lg px-3 pr-14 text-[12px] text-rv-text-primary placeholder:text-rv-text-tertiary outline-none focus:border-rv-border-focus"
+				className="w-[220px] h-[30px] bg-rv-bg-input border border-rv-border rounded-lg px-3 pr-[80px] text-[12px] text-rv-text-primary placeholder:text-rv-text-tertiary outline-none focus:border-rv-border-focus"
 				type="text"
-				placeholder="Search nodes..."
+				placeholder={
+					searchInNotes ? "Search titles and notes..." : "Search titles..."
+				}
 				aria-label="Search nodes"
 				value={searchQuery}
 				onChange={(e) => setSearchQuery(e.target.value)}
 				onKeyDown={(e) => handleSearchKeyDown(e, stepSearchMatch, clearSearch)}
 			/>
+			<button
+				type="button"
+				aria-pressed={searchInNotes}
+				aria-label="Include notes in search"
+				title="Include notes in search"
+				onClick={toggleNotes}
+				className={`absolute right-[54px] top-1/2 -translate-y-1/2 flex items-center justify-center w-[20px] h-[20px] rounded-[4px] transition-all duration-150 ${
+					searchInNotes
+						? "text-rv-accent bg-rv-bg-hover"
+						: "text-rv-text-tertiary hover:bg-rv-bg-hover"
+				}`}
+			>
+				<svg
+					aria-hidden="true"
+					width="14"
+					height="14"
+					viewBox="0 0 24 24"
+					fill="none"
+					stroke="currentColor"
+					strokeWidth="2"
+					strokeLinecap="round"
+					strokeLinejoin="round"
+				>
+					<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+					<polyline points="14 2 14 8 20 8" />
+					<line x1="16" y1="13" x2="8" y2="13" />
+					<line x1="16" y1="17" x2="8" y2="17" />
+				</svg>
+			</button>
 			{searchQuery ? (
 				<span
 					className="absolute right-2 top-1/2 -translate-y-1/2 text-[11px] tabular-nums text-rv-text-tertiary pointer-events-none"

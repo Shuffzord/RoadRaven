@@ -13,7 +13,7 @@ import { useRecentFiles } from "../hooks/useRecentFiles";
 import { togglePanelFocus } from "../lib/focusHandoff";
 import { requestNodeFocus } from "../lib/focusRequest";
 import { listNodeCards } from "../lib/nodeCard";
-import { computeFit, SCALE_EXTENT } from "../lib/viewportMath";
+import { clampZoom, computeFit, SCALE_EXTENT } from "../lib/viewportMath";
 import { useRoadmapStore } from "../store/roadmapStore";
 import { RoadRavenContextMenu } from "./ContextMenu";
 import { RoadmapNodeCard } from "./RoadmapNode";
@@ -169,6 +169,32 @@ export function Canvas() {
 		window.addEventListener("roadraven:fit-view", handler);
 		return () => window.removeEventListener("roadraven:fit-view", handler);
 	}, [animatePanTo, setZoomLevel, getTransform, flushViewport]);
+
+	// v0.8.2 F6: one zoom step (×1.2 / ÷1.2) about the container centre, from
+	// store.requestZoom() via `roadraven:zoom`. Translate and zoom land in one
+	// write so the camera stays anchored on what the user is looking at.
+	const setViewport = useRoadmapStore((s) => s.setViewport);
+	useEffect(() => {
+		const handler = (e: Event) => {
+			flushViewport();
+			const container = containerRef.current;
+			if (!container) return;
+			const t = getTransform();
+			const direction = (e as CustomEvent<"in" | "out">).detail;
+			const k = clampZoom(direction === "in" ? t.k * 1.2 : t.k / 1.2);
+			if (k === t.k) return;
+			const rect = container.getBoundingClientRect();
+			const cx = rect.width / 2;
+			const cy = rect.height / 2;
+			const ratio = k / t.k;
+			setViewport(
+				{ x: cx - (cx - t.x) * ratio, y: cy - (cy - t.y) * ratio },
+				k,
+			);
+		};
+		window.addEventListener("roadraven:zoom", handler);
+		return () => window.removeEventListener("roadraven:zoom", handler);
+	}, [setViewport, getTransform, flushViewport]);
 
 	// Reveal side of every focus request: expand, wait for mount, measure, pan.
 	const panBy = useCallback(

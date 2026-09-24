@@ -2,8 +2,13 @@
 // Usage: bun scripts/bump-version.ts 1.0.0
 //
 // Lockstep version bump (D-04): writes the same `version` field to every
-// publishable workspace package.json + the electrobun.config.ts app.version
-// field. Run from the repo root.
+// publishable workspace package.json + the Claude Code plugin/marketplace
+// files that pin the version as a literal. Run from the repo root.
+//
+// The desktop app itself has a single source: packages/desktop/package.json.
+// electrobun.config.ts, src/bun/appVersion.ts and the renderer's
+// `__APP_VERSION__` define (vite.config.ts) all read it at build/run time,
+// so they hold no literal and are not targets here.
 //
 // Validate-then-write pattern (B-04 fix): all targets are parsed and their
 // replacements verified BEFORE any file is written. If any target fails to
@@ -32,19 +37,6 @@ const pkgTargets = [
 // must match) before any file is written, so a renamed literal aborts the
 // whole bump instead of leaving a partial state.
 const textTargets = [
-	{
-		path: "packages/desktop/electrobun.config.ts",
-		regex: /version:\s*"[^"]+"/,
-		replacement: `version: "${newVersion}"`,
-		label: 'version: "..."',
-	},
-	{
-		// Setup Wizard app version (H1 — keep in lockstep, not hand-edited).
-		path: "packages/desktop/src/bun/index.ts",
-		regex: /const APP_VERSION = "[^"]+"/,
-		replacement: `const APP_VERSION = "${newVersion}"`,
-		label: 'const APP_VERSION = "..."',
-	},
 	{
 		// Claude Code plugin manifest (W5 — plugin marketplace install path).
 		path: "plugins/claude-code/.claude-plugin/plugin.json",

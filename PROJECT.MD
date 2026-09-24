@@ -95,6 +95,31 @@ the file test-reachable in a second commit. When planning refactors, use
 fallow to locate complexity hotspots and circular dependencies rather than
 acting on each unused-export finding in isolation.
 
+## Versioning
+
+The desktop app version has ONE source: `packages/desktop/package.json`.
+`electrobun.config.ts`, `src/bun/appVersion.ts` (main process) and the
+renderer's `__APP_VERSION__` Vite define (`src/mainview/lib/appVersion.ts`)
+all read it at build/run time — never add a version literal to source.
+
+To release a new version:
+
+```bash
+bun scripts/bump-version.ts X.Y.Z   # from the repo root; validate-then-write,
+                                     # aborts without touching anything on a mismatch
+```
+
+It rewrites the three publishable package.json files (desktop, core,
+plugins/claude-code) and the literal pins in
+`plugins/claude-code/.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`
+and `plugins/claude-code/.mcp.json` (`@roadraven/mcp@X.Y.Z`).
+
+It does NOT touch prose: grep `README.md` and `docs/` for the previous
+version (`vX.Y.Z`, `@roadraven/mcp@X.Y.Z`) and update those pins by hand,
+add the `## [X.Y.Z] - date` entry to `CHANGELOG.md`, then commit as
+`chore(release): bump version to X.Y.Z`. Running the script with the current
+version is a safe no-op and doubles as a consistency check.
+
 ## Electrobun-specific patterns
 
 - Load bundled views with `views://mainview/index.html`

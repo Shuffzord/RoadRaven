@@ -3,7 +3,7 @@
 		"roadraven": {
 			"type": "stdio",
 			"command": "npx",
-			"args": ["-y", "@roadraven/mcp@0.8.1"],
+			"args": ["-y", "@roadraven/mcp@0.8.2"],
 			"env": { "ROADRAVEN_MCP_INSTALL": "plugin" }
 		}
 	}

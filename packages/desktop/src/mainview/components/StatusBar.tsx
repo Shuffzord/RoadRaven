@@ -1,12 +1,12 @@
+import { APP_VERSION } from "../lib/appVersion";
 import { useRoadmapStore } from "../store/roadmapStore";
 import { EventApiPill } from "./EventApiPill";
 import { SaveIndicator } from "./SaveIndicator";
 
+// v0.8.2 D3: the filename moved to the top-bar DocumentChip; the footer keeps
+// the Event API pill, the save indicator, the node count and the app version.
 export function StatusBar() {
-	const filePath = useRoadmapStore((s) => s.filePath);
 	const nodeCount = useRoadmapStore((s) => s.getNodeCount());
-
-	const fileName = filePath ? filePath.split(/[\\/]/).pop() : "No file loaded";
 
 	return (
 		<footer className="[grid-area:status] flex items-center h-[32px] bg-rv-bg-statusbar border-t border-rv-border px-3.5 text-[11px] text-rv-text-tertiary z-[100] select-none">
@@ -15,21 +15,20 @@ export function StatusBar() {
 				<EventApiPill />
 			</div>
 
-			{/* Spacer */}
+			{/* Spacers */}
 			<div className="flex-1" />
-
-			{/* Center section */}
-			<div className="flex items-center gap-2.5">
-				<span>{fileName}</span>
-			</div>
-
-			{/* Spacer */}
 			<div className="flex-1" />
 
 			{/* Right section */}
 			<div className="flex items-center gap-2.5">
 				<SaveIndicator />
 				<span>{nodeCount} nodes</span>
+				<span
+					className="text-[11px] text-rv-text-tertiary"
+					title={`RoadRaven ${APP_VERSION}`}
+				>
+					v{APP_VERSION}
+				</span>
 				<svg
 					aria-hidden="true"
 					width="12"

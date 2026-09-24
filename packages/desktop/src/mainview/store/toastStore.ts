@@ -5,7 +5,11 @@ export type ToastType =
 	| "unknown_node"
 	| "invalid_status"
 	| "disconnect"
-	| "version_mismatch";
+	| "version_mismatch"
+	// v0.8.2 file UX: `detail` carries the whole message (info stripe / error
+	// stripe); `source` is the file verb so repeats merge.
+	| "file_info"
+	| "file_error";
 
 export interface ActiveToast {
 	id: string;

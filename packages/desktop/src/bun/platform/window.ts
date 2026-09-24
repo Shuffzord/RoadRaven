@@ -38,3 +38,46 @@ export function createMainWindow<Rpc extends RpcInstance>(
 ) {
 	return new BrowserWindow<Rpc>(opts);
 }
+
+// The window returned by createMainWindow, without callers naming BrowserWindow.
+type MainWindowLike = Pick<
+	BrowserWindow<RpcInstance>,
+	"setTitle" | "close" | "on"
+>;
+
+/** Wraps BrowserWindow#setTitle (devkit sdks/main/core/BrowserWindow.ts:277). */
+export function setMainWindowTitle(win: MainWindowLike, title: string): void {
+	win.setTitle(title);
+}
+
+/**
+ * The `will-close` event as seen by a handler: only the `response` setter is
+ * exposed (devkit sdks/main/events/event.ts:19-22 marks responseWasSet;
+ * sdks/main/events/windowEvents.ts:16-17 types the response as {allow}).
+ */
+export interface WillCloseEvent {
+	response: { allow: boolean };
+}
+
+/**
+ * Wraps BrowserWindow#on("will-close", ...) (devkit BrowserWindow.ts:439-441).
+ * The native should-close callback (devkit sdks/main/proc/native.ts:2634-2645)
+ * emits this SYNCHRONOUSLY and reads `event.response.allow` right after
+ * emit — the handler is not awaited, so it must set the response before
+ * returning.
+ */
+export function onWillClose(
+	win: MainWindowLike,
+	handler: (event: WillCloseEvent) => void,
+): void {
+	win.on("will-close", handler as (event: unknown) => void);
+}
+
+/**
+ * Wraps BrowserWindow#close (devkit BrowserWindow.ts:291) — closes the window
+ * programmatically via ffi closeWindow (native.ts:1534), which does NOT
+ * re-enter the will-close callback.
+ */
+export function closeMainWindow(win: MainWindowLike): void {
+	win.close();
+}

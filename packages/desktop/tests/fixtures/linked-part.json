@@ -1,0 +1,18 @@
+{
+	"version": "1.0",
+	"title": "Linked Part",
+	"nodes": [
+		{
+			"id": "dddddddd-eeee-4fff-8000-000000000001",
+			"title": "Linked Topic",
+			"status": "not-started",
+			"children": [
+				{
+					"id": "dddddddd-eeee-4fff-8000-000000000002",
+					"title": "Linked Child",
+					"status": "not-started"
+				}
+			]
+		}
+	]
+}

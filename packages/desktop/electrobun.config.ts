@@ -1,4 +1,5 @@
 import type { ElectrobunConfig } from "electrobun";
+import pkg from "./package.json" with { type: "json" };
 
 // Linux/macOS default: bundled CEF (Chromium) — WebKitGTK renders the app incorrectly.
 // Windows default: the system WebView2 (itself Chromium), so no CEF bundle and a
@@ -13,7 +14,9 @@ export default {
 	app: {
 		name: "RoadRaven",
 		identifier: "io.github.shuffzord.roadraven",
-		version: "0.8.1",
+		// Single source of the desktop app version (also read by src/bun/appVersion.ts
+		// and the `__APP_VERSION__` Vite define). Bump it in package.json.
+		version: pkg.version,
 	},
 	build: {
 		// Cottontail is Electrobun 2.x's default main-process runtime and ships a

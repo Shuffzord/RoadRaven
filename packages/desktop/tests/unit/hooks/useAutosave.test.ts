@@ -17,12 +17,17 @@ type SaveFileFn = (args: {
 }) => Promise<{ ok: true } | { ok: false; error: string }>;
 
 const saveFileMock = vi.fn<SaveFileFn>();
+const saveFileAsMock =
+	vi.fn<
+		(args: { schema: RoadmapSchema }) => Promise<{ filePath: string | null }>
+	>();
 
 vi.mock("../../../src/mainview/rpc", () => ({
 	electroview: {
 		rpc: {
 			request: {
 				saveFile: (args: Parameters<SaveFileFn>[0]) => saveFileMock(args),
+				saveFileAs: (args: { schema: RoadmapSchema }) => saveFileAsMock(args),
 			},
 		},
 	},
@@ -48,6 +53,8 @@ beforeEach(() => {
 	vi.restoreAllMocks();
 	saveFileMock.mockReset();
 	saveFileMock.mockResolvedValue({ ok: true });
+	saveFileAsMock.mockReset();
+	saveFileAsMock.mockResolvedValue({ filePath: null });
 	vi.useFakeTimers();
 	resetStore();
 	loadSchema();
@@ -229,5 +236,74 @@ describe("useAutosave — success and failure transitions", () => {
 
 		useRoadmapStore.getState().addChild(NODE_ID);
 		expect(hasUnsavedEdits(useRoadmapStore.getState())).toBe(true);
+	});
+});
+
+// v0.8.2 F7: an untitled document (File > New, or a sample) asks for a home
+// only on its first real edit — never on the periodic sweep, never on a bare
+// trigger-save right after New.
+describe("useAutosave — untitled documents (v0.8.2 F7)", () => {
+	function untitledRootId(): string {
+		useRoadmapStore.getState().newUntitledSchema();
+		return useRoadmapStore.getState().schema?.nodes[0].id ?? "";
+	}
+
+	it("12. File > New without edits: periodic sweep does NOT pop Save As", async () => {
+		untitledRootId();
+		renderHook(() => useAutosave());
+
+		await vi.advanceTimersByTimeAsync(30_000);
+		await flushMicrotasks();
+
+		expect(saveFileAsMock).not.toHaveBeenCalled();
+		expect(saveFileMock).not.toHaveBeenCalled();
+	});
+
+	it("13. trigger-save right after New does NOT pop Save As", async () => {
+		untitledRootId();
+		renderHook(() => useAutosave());
+
+		useRoadmapStore.getState().triggerSave();
+		await flushMicrotasks();
+
+		expect(saveFileAsMock).not.toHaveBeenCalled();
+		expect(useRoadmapStore.getState().saveState).toBe("saved");
+	});
+
+	it("14. first edit on an untitled doc pops Save As after the structural debounce", async () => {
+		const rootId = untitledRootId();
+		saveFileAsMock.mockResolvedValue({ filePath: "/tmp/new.json" });
+		renderHook(() => useAutosave());
+		useRoadmapStore.getState().addChild(rootId);
+
+		await vi.advanceTimersByTimeAsync(1999);
+		expect(saveFileAsMock).not.toHaveBeenCalled();
+		await vi.advanceTimersByTimeAsync(1);
+		await flushMicrotasks();
+
+		expect(saveFileAsMock).toHaveBeenCalledTimes(1);
+		expect(saveFileMock).not.toHaveBeenCalled();
+		const state = useRoadmapStore.getState();
+		expect(state.filePath).toBe("/tmp/new.json");
+		expect(state.isUntitled).toBe(false);
+		expect(hasUnsavedEdits(state)).toBe(false);
+	});
+
+	it("15. a sample loaded as untitled without edits stays quiet", async () => {
+		useRoadmapStore.getState().loadSchema(
+			{
+				version: "1.0",
+				title: "Sample",
+				nodes: [{ id: NODE_ID, title: "Root", status: "not-started" }],
+			},
+			null,
+		);
+		useRoadmapStore.setState({ isUntitled: true });
+		renderHook(() => useAutosave());
+
+		await vi.advanceTimersByTimeAsync(30_000);
+		await flushMicrotasks();
+
+		expect(saveFileAsMock).not.toHaveBeenCalled();
 	});
 });

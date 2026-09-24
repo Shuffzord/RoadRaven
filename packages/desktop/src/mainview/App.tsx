@@ -1,9 +1,11 @@
 import { useEffect } from "react";
 import { Canvas } from "./components/Canvas";
 import { ConfirmationDialog } from "./components/ConfirmationDialog";
+import { DiscardChangesDialog } from "./components/DiscardChangesDialog";
 import { EventLogDrawer } from "./components/EventLogDrawer";
 import { EventToastStack } from "./components/EventToastStack";
 import { ExternalEditToast } from "./components/ExternalEditToast";
+import { PreferencesDialog } from "./components/PreferencesDialog";
 import { SaveFailureModal } from "./components/SaveFailureModal";
 import { SetupWizard } from "./components/SetupWizard";
 import { Sidebar } from "./components/Sidebar";
@@ -12,6 +14,9 @@ import { StatusBar } from "./components/StatusBar";
 import { TopBar } from "./components/TopBar";
 import { useAutosave } from "./hooks/useAutosave";
 import { useFileActions } from "./hooks/useFileActions";
+import { useReopenLastFile } from "./hooks/useReopenLastFile";
+import { useUiSettingsHydration } from "./hooks/useUiSettingsHydration";
+import { useWindowTitle } from "./hooks/useWindowTitle";
 import { pullEventApiStateOnMount, pushAllowlistFromStore } from "./rpc";
 import { useRoadmapStore } from "./store/roadmapStore";
 
@@ -26,6 +31,12 @@ export default function App() {
 	// useFileActions but its lifecycle is tied to the WelcomeScreen vs Tree
 	// branch; mounting at App scope ensures the listeners survive every state.
 	useFileActions();
+	// v0.8.2 D3: OS window title follows the open document.
+	useWindowTitle();
+	// v0.8.2 A8: reopen the most recent roadmap on launch (Preferences → Startup).
+	useReopenLastFile();
+	// v0.8.2: restore the sidebar width and the search notes toggle from settings.
+	useUiSettingsHydration();
 
 	// Plan 04-03: 1Hz tick for live-pulse selector re-evaluation (D-14/D-15).
 	// bumpLiveTick increments liveTick in roadmapStore; useIsNodeLive selectors
@@ -94,11 +105,13 @@ export default function App() {
 			<SidePanel isOpen={isOpen} onClose={() => setSelectedNode(null)} />
 			<StatusBar />
 			<ConfirmationDialog />
+			<DiscardChangesDialog />
 			<SaveFailureModal />
 			<ExternalEditToast />
 			<EventToastStack />
 			<EventLogDrawer />
 			<SetupWizard />
+			<PreferencesDialog />
 		</div>
 	);
 }
