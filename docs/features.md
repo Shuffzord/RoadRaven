@@ -11,13 +11,19 @@ The full feature list and keyboard reference. For a short overview see the
 
 
 - **Tree canvas** rendered with react-d3-tree, custom node cards, TB / LR layouts, fit-view, zoom, pan.
+- **Layout knobs** — a popover next to the TB/LR toggle sets sibling gap, depth gap and card density (comfortable / compact), applied live and remembered per file alongside the layout orientation.
+- **Custom layout** — tick "Custom layout" in the same popover to drag cards anywhere on the canvas; connectors follow. Positions are remembered per file and per orientation (TB and LR each keep their own), unticking snaps cards back to the automatic layout without forgetting them, and "Reset positions" clears them. View state only: the roadmap file and agents never see positions.
+- **Collapse that sticks** — collapse a subtree with its chevron, `C`, or the right-click menu, and it stays collapsed through adds, deletes, moves and pastes. The empty-canvas menu adds Expand all, Collapse all and Collapse to depth 1 / 2. What you collapsed is remembered per file; a file you never collapsed opens fully expanded. View state only: the roadmap file never sees it.
 - **Keyboard-first editing**
   - Inline rename: `F2` or double-click a node card
   - Add child / sibling: `Enter`, `Tab`, `Shift+Enter`
   - Delete with confirmation dialog for non-leaf nodes (`Del` / `Backspace`)
   - Duplicate / copy / paste node + subtree: `Ctrl+D`, `Ctrl+C`, `Ctrl+V` (context-aware vs. text inputs)
-  - Reorder siblings: `Ctrl+↑` / `Ctrl+↓`
-  - Arrow navigation adapts to layout: in TB, `←/→` moves siblings, `↓` enters child, `↑` returns to parent; in LR, `↑/↓` moves siblings, `→` enters child, `←` returns to parent.
+  - Reorder siblings: `Ctrl+↑` / `Ctrl+↓` always; the sibling-axis pair for the current layout also works (in TB that's `Ctrl+←` / `Ctrl+→`).
+  - Indent / outdent: `Alt+` the child/parent-direction key — TB `Alt+↓` / `Alt+↑`, LR `Alt+→` / `Alt+←` — makes the node the last child of its previous sibling, or moves it out to right after its parent. Also on the context menu (Indent / Outdent).
+  - Set status by number: `1`–`4` on a focused node set Not Started / In Progress / Completed / Blocked.
+  - Undo / redo: `Ctrl+Z` undoes your last edit (add, delete, duplicate, paste, move, indent/outdent, rename, status, type, metadata, notes), `Ctrl+Y` or `Ctrl+Shift+Z` redoes it — up to 50 steps, focus returns to the node, and a burst of notes typing is one step. Also on the empty-canvas menu. Only your own edits: what agents and live events change is not undoable and never erases your redo, and view state (collapse, layout knobs, card positions, camera) is not history. Inside a text field or the notes editor the keys stay the field's own.
+  - Arrow navigation adapts to layout: in TB, `←/→` moves siblings, `↓` enters child, `↑` returns to parent; in LR, `↑/↓` moves siblings, `→` enters child, `←` returns to parent. Holding Ctrl/Alt/Cmd with an arrow never navigates.
 - **Right-click context menu** (Radix-based, all platforms) — rename, add, duplicate, move, delete, plus canvas-empty actions.
 - **Side panel editor** — click the title, click the pencil `[E]` button, or press `e` while the panel is open to enter edit mode. Editable title, status / type dropdowns (with freeform fallback), key-value metadata table, and a CodeMirror 6 markdown notes editor with `Edit | Preview | Split` toggle. A small `✓ saved` flash appears next to each field for 2s after each commit.
 - **Autosave** — debounced flush after edits (1s for in-place changes like notes/status, 2s for structural changes like add/delete/rename), 30s periodic safety sweep, atomic temp+rename writes, and per-file `refMap` so `$ref` subtrees are written back to their source files. A `SaveIndicator` lives in the StatusBar; on the third consecutive save failure a `SaveFailureModal` opens with `Retry / Save As / Dismiss`.

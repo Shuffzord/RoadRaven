@@ -219,18 +219,11 @@ describe("TopBar — layout toggle", () => {
 		expect(lr.ariaPressed).toBe("true");
 	});
 
-	it("persists the orientation per file through the settings rpc", () => {
-		seed("/tmp/topbar.json");
-		render(<TopBar />);
-
-		fireEvent.click(screen.getByRole("button", { name: "LR" }));
-
-		expect(saveSettingsMock()).toHaveBeenCalledWith({
-			settings: { fileSettings: { "/tmp/topbar.json": { layout: "LR" } } },
-		});
-	});
-
-	it("does not persist anything for an unsaved roadmap", () => {
+	// v0.8.4 Phase 2: persistence moved off TopBar's click handler entirely —
+	// useFileViewSettings is now the only reader/writer of fileSettings[path]
+	// (see tests/unit/hooks/useFileViewSettings.test.ts, "write-back" describe,
+	// which covers the debounced persist-per-file behaviour this test used to).
+	it("does not persist anything itself; the click only updates the store", () => {
 		seed(null);
 		render(<TopBar />);
 

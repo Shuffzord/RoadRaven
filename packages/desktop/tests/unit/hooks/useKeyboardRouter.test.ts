@@ -4,9 +4,14 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { RoadmapSchema } from "../../../../../packages/core/src/schema";
 import { useKeyboardRouter } from "../../../src/mainview/hooks/useKeyboardRouter";
 import {
+	STATUS_HOTKEYS,
+	STRUCTURE_KEYS,
+} from "../../../src/mainview/lib/domContract";
+import {
 	FOCUS_NODE_EVENT,
 	type NodeFocusRequest,
 } from "../../../src/mainview/lib/focusRequest";
+import { useFileViewStore } from "../../../src/mainview/store/fileViewStore";
 import { useRoadmapStore } from "../../../src/mainview/store/roadmapStore";
 import { resetStore } from "../../helpers/resetStore";
 
@@ -35,34 +40,17 @@ function childIdsOf(nodeId: string): string[] {
 }
 
 /**
- * Stand in for the canvas card react-d3-tree renders, with the chevron
- * `lib/nodeCollapse.ts` reads and clicks. The click flips the label the way
- * the real toggle does, so a second key press sees the new state.
+ * v0.8.4 Phase 4: collapse state lives in fileViewStore, not in a DOM
+ * chevron. Seeds it and returns a counter of later collapse writes.
  */
-function mountCardWithChevron(
-	nodeId: string,
-	collapsed: boolean,
-): ReturnType<typeof vi.fn> {
-	const card = document.createElement("div");
-	card.setAttribute("data-source-id", nodeId);
-	const chevron = document.createElement("button");
-	chevron.setAttribute(
-		"aria-label",
-		collapsed ? "Expand subtree" : "Collapse subtree",
-	);
-	const onClick = vi.fn(() => {
-		chevron.setAttribute(
-			"aria-label",
-			chevron.getAttribute("aria-label") === "Expand subtree"
-				? "Collapse subtree"
-				: "Expand subtree",
-		);
-	});
-	chevron.addEventListener("click", onClick);
-	card.appendChild(chevron);
-	document.body.appendChild(card);
-	return onClick;
+function trackCollapse(nodeId: string, collapsed: boolean): () => number {
+	useFileViewStore.getState().setCollapsed(nodeId, collapsed);
+	const start = useFileViewStore.getState().collapseVersion;
+	return () => useFileViewStore.getState().collapseVersion - start;
 }
+
+const isCollapsed = (nodeId: string): boolean =>
+	useFileViewStore.getState().collapsedIds.has(nodeId);
 
 const ROOT_ID = "aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee";
 const CHILD_A_ID = "11111111-2222-4333-8444-555555555555";
@@ -129,6 +117,7 @@ afterEach(() => {
 	// Cleanup any stray event listeners from renderHook
 	while (cleanups.length) cleanups.pop()?.();
 	resetStore();
+	useFileViewStore.getState().expandAll();
 	vi.restoreAllMocks();
 	document.body.innerHTML = "";
 });
@@ -192,27 +181,20 @@ describe("useKeyboardRouter", () => {
 		);
 	});
 
-	it("C toggles collapse on the focused node by clicking its chevron", () => {
+	it("C toggles collapse on the focused node in the store, both ways", () => {
 		useRoadmapStore.getState().setFocusedNode(CHILD_B_ID);
-		// Stand in for the canvas card + chevron that react-d3-tree renders.
-		const card = document.createElement("div");
-		card.setAttribute("data-source-id", CHILD_B_ID);
-		const chevron = document.createElement("button");
-		chevron.setAttribute("aria-label", "Collapse subtree");
-		const onClick = vi.fn();
-		chevron.addEventListener("click", onClick);
-		card.appendChild(chevron);
-		document.body.appendChild(card);
 
 		renderRouter();
 		fireEvent.keyDown(document, { key: "c" });
-		expect(onClick).toHaveBeenCalledTimes(1);
+		expect(isCollapsed(CHILD_B_ID)).toBe(true);
+		fireEvent.keyDown(document, { key: "C" });
+		expect(isCollapsed(CHILD_B_ID)).toBe(false);
 	});
 
-	it("plain C is a no-op when the focused node has no chevron (leaf)", () => {
+	it("plain C is a no-op when the focused node has no children (leaf)", () => {
 		useRoadmapStore.getState().setFocusedNode(CHILD_A_ID);
 		renderRouter();
-		// No card/chevron in the DOM — must not throw and must not preventDefault.
+		// Must not throw and must not preventDefault.
 		const evt = new KeyboardEvent("keydown", {
 			key: "c",
 			cancelable: true,
@@ -224,14 +206,7 @@ describe("useKeyboardRouter", () => {
 
 	it("Ctrl+C does NOT trigger collapse (defers to copy)", () => {
 		useRoadmapStore.getState().setFocusedNode(CHILD_B_ID);
-		const card = document.createElement("div");
-		card.setAttribute("data-source-id", CHILD_B_ID);
-		const chevron = document.createElement("button");
-		chevron.setAttribute("aria-label", "Collapse subtree");
-		const onClick = vi.fn();
-		chevron.addEventListener("click", onClick);
-		card.appendChild(chevron);
-		document.body.appendChild(card);
+		const writes = trackCollapse(CHILD_B_ID, false);
 		vi.spyOn(
 			useRoadmapStore.getState(),
 			"copySubtreeToClipboard",
@@ -239,7 +214,7 @@ describe("useKeyboardRouter", () => {
 
 		renderRouter();
 		fireEvent.keyDown(document, { key: "c", ctrlKey: true });
-		expect(onClick).not.toHaveBeenCalled();
+		expect(writes()).toBe(0);
 	});
 
 	it("Ctrl+D duplicates focused node", () => {
@@ -498,20 +473,21 @@ describe("useKeyboardRouter", () => {
 		] as const)("%s: child key on a collapsed node expands it and keeps focus", (_label, layout, key) => {
 			if (layout) useRoadmapStore.getState().setLayout(layout);
 			useRoadmapStore.getState().setFocusedNode(CHILD_B_ID);
-			const onClick = mountCardWithChevron(CHILD_B_ID, true);
+			const writes = trackCollapse(CHILD_B_ID, true);
 			const seen = captureRequests();
 			renderRouter();
 
 			fireEvent.keyDown(document, { key });
 
-			expect(onClick).toHaveBeenCalledTimes(1);
+			expect(writes()).toBe(1);
+			expect(isCollapsed(CHILD_B_ID)).toBe(false);
 			expect(useRoadmapStore.getState().focusedNodeId).toBe(CHILD_B_ID);
 			expect(seen).toEqual([]);
 		});
 
 		it("the next child key then enters the first child", () => {
 			useRoadmapStore.getState().setFocusedNode(CHILD_B_ID);
-			mountCardWithChevron(CHILD_B_ID, true);
+			trackCollapse(CHILD_B_ID, true);
 			renderRouter();
 
 			fireEvent.keyDown(document, { key: "ArrowDown" });
@@ -522,24 +498,279 @@ describe("useKeyboardRouter", () => {
 
 		it("child key on an expanded node enters the first child straight away", () => {
 			useRoadmapStore.getState().setFocusedNode(CHILD_B_ID);
-			const onClick = mountCardWithChevron(CHILD_B_ID, false);
+			const writes = trackCollapse(CHILD_B_ID, false);
 			renderRouter();
 
 			fireEvent.keyDown(document, { key: "ArrowDown" });
 
-			expect(onClick).not.toHaveBeenCalled();
+			expect(writes()).toBe(0);
 			expect(useRoadmapStore.getState().focusedNodeId).toBe(CHILD_B1_ID);
 		});
 
 		it("parent key never collapses the node it leaves", () => {
 			useRoadmapStore.getState().setFocusedNode(CHILD_B1_ID);
-			const onClick = mountCardWithChevron(CHILD_B_ID, false);
+			const writes = trackCollapse(CHILD_B_ID, false);
 			renderRouter();
 
 			fireEvent.keyDown(document, { key: "ArrowUp" });
 
-			expect(onClick).not.toHaveBeenCalled();
+			expect(writes()).toBe(0);
 			expect(useRoadmapStore.getState().focusedNodeId).toBe(CHILD_B_ID);
 		});
+	});
+
+	// v0.8.4 Phase 5 (RC2): reorder follows the layout's sibling axis, indent
+	// and outdent follow the hierarchy axis, and a modifier held with an arrow
+	// never navigates. Tree: ROOT -> [CHILD_A, CHILD_B -> [CHILD_B1]].
+	describe("orientation-aware reorder + indent/outdent (Phase 5)", () => {
+		it("TB: Ctrl+ArrowRight reorders (moveNodeDown)", () => {
+			useRoadmapStore.getState().setFocusedNode(CHILD_A_ID);
+			const downSpy = vi.spyOn(useRoadmapStore.getState(), "moveNodeDown");
+			renderRouter();
+			fireEvent.keyDown(document, { key: "ArrowRight", ctrlKey: true });
+			expect(downSpy).toHaveBeenCalledWith(CHILD_A_ID);
+		});
+
+		it("TB: Ctrl+ArrowLeft reorders (moveNodeUp)", () => {
+			useRoadmapStore.getState().setFocusedNode(CHILD_B_ID);
+			const upSpy = vi.spyOn(useRoadmapStore.getState(), "moveNodeUp");
+			renderRouter();
+			fireEvent.keyDown(document, { key: "ArrowLeft", ctrlKey: true });
+			expect(upSpy).toHaveBeenCalledWith(CHILD_B_ID);
+		});
+
+		it("TB: Ctrl+ArrowDown still reorders (moveNodeDown, legacy pair, D-8)", () => {
+			useRoadmapStore.getState().setFocusedNode(CHILD_A_ID);
+			const downSpy = vi.spyOn(useRoadmapStore.getState(), "moveNodeDown");
+			renderRouter();
+			fireEvent.keyDown(document, { key: "ArrowDown", ctrlKey: true });
+			expect(downSpy).toHaveBeenCalledWith(CHILD_A_ID);
+		});
+
+		it("LR: Ctrl+ArrowDown reorders (moveNodeDown, legacy pair)", () => {
+			useRoadmapStore.getState().setLayout("LR");
+			useRoadmapStore.getState().setFocusedNode(CHILD_A_ID);
+			const downSpy = vi.spyOn(useRoadmapStore.getState(), "moveNodeDown");
+			renderRouter();
+			fireEvent.keyDown(document, { key: "ArrowDown", ctrlKey: true });
+			expect(downSpy).toHaveBeenCalledWith(CHILD_A_ID);
+		});
+
+		it("TB: Ctrl+ArrowRight does NOT navigate (modifier guard)", () => {
+			useRoadmapStore.getState().setFocusedNode(CHILD_A_ID);
+			const seen = captureRequests();
+			renderRouter();
+			fireEvent.keyDown(document, { key: "ArrowRight", ctrlKey: true });
+			expect(seen).toEqual([]);
+		});
+
+		it("TB: Alt+ArrowDown indents the focused node under its previous sibling", () => {
+			useRoadmapStore.getState().setFocusedNode(CHILD_B_ID);
+			const spy = vi.spyOn(useRoadmapStore.getState(), "indentNode");
+			renderRouter();
+			fireEvent.keyDown(document, { key: "ArrowDown", altKey: true });
+			expect(spy).toHaveBeenCalledWith(CHILD_B_ID);
+		});
+
+		it("TB: Alt+ArrowUp outdents the focused node to right after its parent", () => {
+			useRoadmapStore.getState().setFocusedNode(CHILD_B1_ID);
+			const spy = vi.spyOn(useRoadmapStore.getState(), "outdentNode");
+			renderRouter();
+			fireEvent.keyDown(document, { key: "ArrowUp", altKey: true });
+			expect(spy).toHaveBeenCalledWith(CHILD_B1_ID);
+		});
+
+		it("LR: Alt+ArrowRight indents, Alt+ArrowLeft outdents", () => {
+			useRoadmapStore.getState().setLayout("LR");
+			const indentSpy = vi.spyOn(useRoadmapStore.getState(), "indentNode");
+			const outdentSpy = vi.spyOn(useRoadmapStore.getState(), "outdentNode");
+			renderRouter();
+
+			useRoadmapStore.getState().setFocusedNode(CHILD_B_ID);
+			fireEvent.keyDown(document, { key: "ArrowRight", altKey: true });
+			expect(indentSpy).toHaveBeenCalledWith(CHILD_B_ID);
+
+			useRoadmapStore.getState().setFocusedNode(CHILD_B1_ID);
+			fireEvent.keyDown(document, { key: "ArrowLeft", altKey: true });
+			expect(outdentSpy).toHaveBeenCalledWith(CHILD_B1_ID);
+		});
+
+		// v0.8.4 Phase 8: the router binds what STRUCTURE_KEYS says (the table
+		// the context menu's hints come from), so a rebind there is caught.
+		it("STRUCTURE_KEYS.TB.indent.key with Alt calls indentNode", () => {
+			useRoadmapStore.getState().setFocusedNode(CHILD_B_ID);
+			const spy = vi.spyOn(useRoadmapStore.getState(), "indentNode");
+			renderRouter();
+			fireEvent.keyDown(document, {
+				key: STRUCTURE_KEYS.TB.indent.key,
+				altKey: true,
+			});
+			expect(spy).toHaveBeenCalledWith(CHILD_B_ID);
+		});
+
+		// Indent needs a previous sibling (CHILD_B); outdent a non-root
+		// parent (CHILD_B1); move is called whatever the position.
+		it.each([
+			["TB", "outdent", "outdentNode", "altKey", CHILD_B1_ID],
+			["TB", "moveUp", "moveNodeUp", "ctrlKey", CHILD_B1_ID],
+			["TB", "moveDown", "moveNodeDown", "ctrlKey", CHILD_B1_ID],
+			["LR", "indent", "indentNode", "altKey", CHILD_B_ID],
+			["LR", "outdent", "outdentNode", "altKey", CHILD_B1_ID],
+			["LR", "moveUp", "moveNodeUp", "ctrlKey", CHILD_B1_ID],
+			["LR", "moveDown", "moveNodeDown", "ctrlKey", CHILD_B1_ID],
+		] as const)("STRUCTURE_KEYS.%s.%s drives %s", (layout, action, method, modifier, nodeId) => {
+			useRoadmapStore.getState().setLayout(layout);
+			useRoadmapStore.getState().setFocusedNode(nodeId);
+			const spy = vi.spyOn(useRoadmapStore.getState(), method);
+			spy.mockClear();
+			renderRouter();
+			fireEvent.keyDown(document, {
+				key: STRUCTURE_KEYS[layout][action].key,
+				[modifier]: true,
+			});
+			expect(spy).toHaveBeenCalledWith(nodeId);
+		});
+
+		it("Indent expands a collapsed previous sibling so the moved node does not vanish", () => {
+			useRoadmapStore.getState().setFocusedNode(CHILD_B_ID);
+			trackCollapse(CHILD_A_ID, true);
+			renderRouter();
+			fireEvent.keyDown(document, { key: "ArrowDown", altKey: true });
+			expect(isCollapsed(CHILD_A_ID)).toBe(false);
+		});
+
+		it.each(
+			Object.entries(STATUS_HOTKEYS) as Array<
+				[keyof typeof STATUS_HOTKEYS, string]
+			>,
+		)("%s sets status to %s via updateNodeStatus", (key, status) => {
+			useRoadmapStore.getState().setFocusedNode(CHILD_A_ID);
+			const spy = vi.spyOn(useRoadmapStore.getState(), "updateNodeStatus");
+			renderRouter();
+			fireEvent.keyDown(document, { key });
+			expect(spy).toHaveBeenCalledWith(CHILD_A_ID, status);
+		});
+
+		it("a status digit inside a text input does nothing", () => {
+			useRoadmapStore.getState().setFocusedNode(CHILD_A_ID);
+			// mockClear: a spy on a store action can carry call history forward
+			// from an earlier test (zustand's set() copies the current — possibly
+			// spied — function reference into each new state object), so a
+			// `not.toHaveBeenCalled()` assertion needs a clean slate first.
+			const spy = vi
+				.spyOn(useRoadmapStore.getState(), "updateNodeStatus")
+				.mockClear();
+			renderRouter();
+			const input = document.createElement("input");
+			document.body.appendChild(input);
+			input.focus();
+			fireEvent.keyDown(input, { key: "2" });
+			expect(spy).not.toHaveBeenCalled();
+		});
+
+		it("Ctrl+<digit> does nothing (status hotkeys are modifier-free)", () => {
+			useRoadmapStore.getState().setFocusedNode(CHILD_A_ID);
+			const spy = vi
+				.spyOn(useRoadmapStore.getState(), "updateNodeStatus")
+				.mockClear();
+			renderRouter();
+			fireEvent.keyDown(document, { key: "2", ctrlKey: true });
+			expect(spy).not.toHaveBeenCalled();
+		});
+	});
+});
+
+// v0.8.4 Phase 6: Ctrl+Z undoes, Ctrl+Y and Ctrl+Shift+Z redo — next to
+// Ctrl+C/Ctrl+V and, like them, native inside a text input or the notes editor.
+describe("undo / redo keys (Phase 6)", () => {
+	// Real history, no spies: a spied store action is copied into every later
+	// state object by zustand's set() and outlives restoreAllMocks.
+	const titleOfB = () =>
+		useRoadmapStore.getState().nodeIndex.get(CHILD_B_ID)?.title;
+
+	it.each([
+		["Ctrl+Z", { key: "z", ctrlKey: true }],
+		["Cmd+Z", { key: "z", metaKey: true }],
+	] as const)("%s undoes the last edit and reveals the node", (_name, init) => {
+		useRoadmapStore.getState().renameNode(CHILD_B_ID, "Renamed");
+		const seen = captureRequests();
+		renderRouter();
+		fireEvent.keyDown(document, init);
+		expect(titleOfB()).toBe("B");
+		expect(seen).toEqual([
+			{ nodeId: CHILD_B_ID, align: "nearest", select: true, rename: false },
+		]);
+	});
+
+	it.each([
+		["Ctrl+Y", { key: "y", ctrlKey: true }],
+		["Ctrl+Shift+Z", { key: "Z", ctrlKey: true, shiftKey: true }],
+	] as const)("%s redoes the undone edit and reveals the node", (_name, init) => {
+		useRoadmapStore.getState().renameNode(CHILD_B_ID, "Renamed");
+		useRoadmapStore.getState().undo();
+		const seen = captureRequests();
+		renderRouter();
+		fireEvent.keyDown(document, init);
+		expect(titleOfB()).toBe("Renamed");
+		expect(seen).toEqual([
+			{ nodeId: CHILD_B_ID, align: "nearest", select: true, rename: false },
+		]);
+	});
+
+	it("an empty history requests no focus", () => {
+		const seen = captureRequests();
+		renderRouter();
+		fireEvent.keyDown(document, { key: "z", ctrlKey: true });
+		fireEvent.keyDown(document, { key: "y", ctrlKey: true });
+		expect(seen).toEqual([]);
+	});
+
+	it.each([
+		["a text input", () => document.createElement("input")],
+		[
+			"the CodeMirror notes editor",
+			() => {
+				const editor = document.createElement("div");
+				editor.className = "cm-editor";
+				const content = document.createElement("div");
+				content.tabIndex = 0;
+				editor.appendChild(content);
+				document.body.appendChild(editor);
+				return content;
+			},
+		],
+	])("stays native inside %s", (_where, make) => {
+		// One undone edit and one done edit: any undo or redo would show.
+		useRoadmapStore.getState().renameNode(CHILD_A_ID, "A renamed");
+		useRoadmapStore.getState().renameNode(CHILD_B_ID, "Renamed");
+		useRoadmapStore.getState().undo();
+		renderRouter();
+		const el = make();
+		if (!el.isConnected) document.body.appendChild(el);
+		el.focus();
+		fireEvent.keyDown(el, { key: "z", ctrlKey: true });
+		fireEvent.keyDown(el, { key: "y", ctrlKey: true });
+		fireEvent.keyDown(el, { key: "Z", ctrlKey: true, shiftKey: true });
+		expect(titleOfB()).toBe("B");
+		expect(useRoadmapStore.getState().nodeIndex.get(CHILD_A_ID)?.title).toBe(
+			"A renamed",
+		);
+	});
+
+	it("a real Ctrl+Z after a status hotkey restores the status", () => {
+		useRoadmapStore.getState().setFocusedNode(CHILD_A_ID);
+		renderRouter();
+		fireEvent.keyDown(document, { key: "3" });
+		expect(useRoadmapStore.getState().nodeIndex.get(CHILD_A_ID)?.status).toBe(
+			"completed",
+		);
+		fireEvent.keyDown(document, { key: "z", ctrlKey: true });
+		expect(useRoadmapStore.getState().nodeIndex.get(CHILD_A_ID)?.status).toBe(
+			"not-started",
+		);
+		fireEvent.keyDown(document, { key: "y", ctrlKey: true });
+		expect(useRoadmapStore.getState().nodeIndex.get(CHILD_A_ID)?.status).toBe(
+			"completed",
+		);
 	});
 });

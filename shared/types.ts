@@ -50,7 +50,33 @@ export type ThemeDeleteResult = { ok: true } | { ok: false; error: string };
 export interface AppSettings {
 	theme?: ThemePreference;
 	recentFiles?: string[];
-	fileSettings?: Record<string, { layout?: "TB" | "LR" }>;
+	fileSettings?: Record<
+		string,
+		{
+			layout?: "TB" | "LR";
+			/** v0.8.4 Phase 2: per-file layout comfort knobs (LayoutKnobsPopover). */
+			layoutKnobs?: {
+				siblingGap?: number;
+				depthGap?: number;
+				density?: "comfortable" | "compact";
+			};
+			/** v0.8.4 Phase 3: cards may be dragged (view-layer offsets). */
+			customLayout?: boolean;
+			/**
+			 * v0.8.4 Phase 3: per-orientation card offsets in canvas units, keyed
+			 * by node id. View state only — never written into the roadmap JSON.
+			 */
+			nodeOffsets?: {
+				TB?: Record<string, { dx: number; dy: number }>;
+				LR?: Record<string, { dx: number; dy: number }>;
+			};
+			/**
+			 * v0.8.4 Phase 4: ids of the canvas subtrees the user collapsed.
+			 * View state only — never written into the roadmap JSON.
+			 */
+			collapsed?: string[];
+		}
+	>;
 	eventApi?: {
 		/** User-specified WebSocket port override. When set, no auto-fallback on EADDRINUSE. */
 		port?: number;

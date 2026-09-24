@@ -3,9 +3,23 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { RoadRavenContextMenu } from "../../../src/mainview/components/ContextMenu";
 import {
+	CHEVRON_COLLAPSE_LABEL,
+	CHEVRON_EXPAND_LABEL,
+	COLLAPSE_ALL_LABEL,
+	collapseToDepthLabel,
+	EXPAND_ALL_LABEL,
+	INDENT_LABEL,
+	OUTDENT_LABEL,
+	REDO_LABEL,
+	STRUCTURE_KEYS,
+	UNDO_LABEL,
+} from "../../../src/mainview/lib/domContract";
+import {
 	FOCUS_NODE_EVENT,
 	type NodeFocusRequest,
 } from "../../../src/mainview/lib/focusRequest";
+import { useFileViewStore } from "../../../src/mainview/store/fileViewStore";
+import { useHistoryStore } from "../../../src/mainview/store/historyStore";
 import { useRoadmapStore } from "../../../src/mainview/store/roadmapStore";
 import { resetStore } from "../../helpers/resetStore";
 
@@ -126,7 +140,7 @@ describe("RoadRavenContextMenu — ARIA + structure", () => {
 		expect(menu).toBeTruthy();
 	});
 
-	it("node menu renders items in the expected order with 5 separators", () => {
+	it("node menu renders items in the expected order with 6 separators (root has children: the collapse item shows)", () => {
 		seedSchema();
 		render(<NodeHarness />);
 		openMenu(screen.getByTestId("trigger"));
@@ -137,6 +151,7 @@ describe("RoadRavenContextMenu — ARIA + structure", () => {
 		).map((el) => el.querySelector("span")?.textContent ?? "");
 		expect(labels).toEqual([
 			"Rename",
+			CHEVRON_COLLAPSE_LABEL,
 			"Add Child",
 			"Add Sibling Above",
 			"Add Sibling Below",
@@ -145,11 +160,13 @@ describe("RoadRavenContextMenu — ARIA + structure", () => {
 			"Paste",
 			"Move Up",
 			"Move Down",
+			INDENT_LABEL,
+			OUTDENT_LABEL,
 			"Change Status",
 			"Delete",
 		]);
 		const seps = menu.querySelectorAll('[role="separator"]');
-		expect(seps.length).toBe(5);
+		expect(seps.length).toBe(6);
 	});
 
 	it("each action entry has role='menuitem'", () => {
@@ -157,8 +174,9 @@ describe("RoadRavenContextMenu — ARIA + structure", () => {
 		render(<NodeHarness />);
 		openMenu(screen.getByTestId("trigger"));
 		const menu = screen.getByRole("menu", { name: /node actions/i });
-		// 10 top-level menuitems + 1 submenu trigger = 11
-		expect(menu.querySelectorAll('[role="menuitem"]').length).toBe(11);
+		// 13 top-level menuitems (incl. the collapse, indent and outdent items)
+		// + 1 submenu trigger
+		expect(menu.querySelectorAll('[role="menuitem"]').length).toBe(14);
 	});
 
 	it("Delete item is styled with --rv-status-blocked", () => {
@@ -187,8 +205,8 @@ describe("RoadRavenContextMenu — ARIA + structure", () => {
 			"Ctrl+D",
 			"Ctrl+C",
 			"Ctrl+V",
-			"Ctrl+↑",
-			"Ctrl+↓",
+			"Ctrl+←",
+			"Ctrl+→",
 			"Del",
 		]) {
 			expect(text).toContain(hint);
@@ -207,7 +225,7 @@ describe("RoadRavenContextMenu — ARIA + structure", () => {
 		expect(subTrigger?.getAttribute("aria-haspopup")).toBe("menu");
 	});
 
-	it("canvas menu renders Paste + Add Root Child + Fit to View + Toggle Layout with 1 separator", () => {
+	it("canvas menu renders Undo + Redo + Paste + Add Root Child + Fit to View + Toggle Layout + the four collapse items with 3 separators", () => {
 		seedSchema();
 		render(<CanvasHarness />);
 		openMenu(screen.getByTestId("trigger"));
@@ -216,8 +234,8 @@ describe("RoadRavenContextMenu — ARIA + structure", () => {
 		expect(menu.textContent).toMatch(/Add Root Child/);
 		expect(menu.textContent).toMatch(/Fit to View/);
 		expect(menu.textContent).toMatch(/Toggle Layout/);
-		expect(menu.querySelectorAll('[role="menuitem"]').length).toBe(4);
-		expect(menu.querySelectorAll('[role="separator"]').length).toBe(1);
+		expect(menu.querySelectorAll('[role="menuitem"]').length).toBe(10);
+		expect(menu.querySelectorAll('[role="separator"]').length).toBe(3);
 	});
 
 	it("Paste item is aria-disabled when lastCopiedSubtree is null (node menu)", () => {
@@ -496,5 +514,261 @@ describe("Canvas menu — Paste inserts under root, not as a second root", () =>
 			menu.querySelectorAll<HTMLElement>('[role="menuitem"]'),
 		).find((el) => el.textContent?.includes("Paste"));
 		expect(pasteItem?.getAttribute("aria-disabled")).toBe("true");
+	});
+});
+
+// v0.8.4 Phase 4 — collapse state is read from fileViewStore (not a DOM
+// chevron snapshot), and the canvas-empty menu carries the tree-wide items.
+describe("RoadRavenContextMenu — collapse (Phase 4)", () => {
+	afterEach(() => {
+		useFileViewStore.getState().expandAll();
+	});
+
+	function menuItem(menu: HTMLElement, label: string): HTMLElement {
+		const item = Array.from(
+			menu.querySelectorAll<HTMLElement>('[role="menuitem"]'),
+		).find((el) => el.querySelector("span")?.textContent === label);
+		if (!item) throw new Error(`no menu item "${label}"`);
+		return item;
+	}
+
+	it("the node item reads the store: Expand subtree on a collapsed node, and it writes the store", () => {
+		seedSchema();
+		useFileViewStore.getState().setCollapsed("root-id", true);
+		render(<NodeHarness />);
+		openMenu(screen.getByTestId("trigger"));
+		const menu = screen.getByRole("menu", { name: /node actions/i });
+
+		fireEvent.click(menuItem(menu, CHEVRON_EXPAND_LABEL));
+
+		expect(useFileViewStore.getState().collapsedIds.has("root-id")).toBe(false);
+	});
+
+	it("a leaf gets no collapse item", () => {
+		seedSchema();
+		render(<NodeHarness nodeId="child-1" />);
+		openMenu(screen.getByTestId("trigger"));
+		const menu = screen.getByRole("menu", { name: /node actions/i });
+		expect(menu.textContent).not.toMatch(/subtree/);
+	});
+
+	it.each([
+		[EXPAND_ALL_LABEL, "expandAll", []],
+		[COLLAPSE_ALL_LABEL, "collapseAll", [["root-id"]]],
+	] as const)("canvas item %s calls the store's %s", (label, action, args) => {
+		seedSchema();
+		// Stubbed: a real write would copy the spy into the next state object,
+		// out of reach of restoreAllMocks.
+		const spy = vi
+			.spyOn(useFileViewStore.getState(), action)
+			.mockImplementation(() => undefined);
+		render(<CanvasHarness />);
+		openMenu(screen.getByTestId("trigger"));
+		const menu = screen.getByRole("menu", { name: /canvas actions/i });
+
+		fireEvent.click(menuItem(menu, label));
+
+		expect(spy).toHaveBeenCalledTimes(1);
+		expect(spy.mock.calls[0]).toEqual(args);
+	});
+
+	it.each([
+		1, 2,
+	])("canvas item Collapse to depth %i calls collapseToDepth with the file's nodes", (depth) => {
+		seedSchema();
+		const spy = vi
+			.spyOn(useFileViewStore.getState(), "collapseToDepth")
+			.mockImplementation(() => undefined);
+		render(<CanvasHarness />);
+		openMenu(screen.getByTestId("trigger"));
+		const menu = screen.getByRole("menu", { name: /canvas actions/i });
+
+		fireEvent.click(menuItem(menu, collapseToDepthLabel(depth)));
+
+		expect(spy).toHaveBeenCalledTimes(1);
+		expect(spy.mock.calls[0]).toEqual([
+			depth,
+			useRoadmapStore.getState().schema?.nodes,
+		]);
+	});
+});
+
+// v0.8.4 Phase 5 — Indent/Outdent items follow the same no-op rules as the
+// Alt+arrow shortcuts (lib/treeEdits.ts).
+function seedNestedSchema() {
+	useRoadmapStore.getState().loadSchema(
+		{
+			version: "1",
+			title: "Test",
+			nodes: [
+				{
+					id: "root-id",
+					title: "Root",
+					status: "not-started" as const,
+					children: [
+						{
+							id: "child-1",
+							title: "Child 1",
+							status: "not-started" as const,
+							children: [
+								{
+									id: "grandchild-1",
+									title: "Grandchild 1",
+									status: "not-started" as const,
+								},
+							],
+						},
+						{
+							id: "child-2",
+							title: "Child 2",
+							status: "not-started" as const,
+						},
+					],
+				},
+			],
+		},
+		"/tmp/test.json",
+	);
+}
+
+describe("RoadRavenContextMenu — indent/outdent (Phase 5)", () => {
+	it("both items are disabled on a node with no previous sibling and a root-level parent", () => {
+		seedSchema();
+		render(<NodeHarness nodeId="child-1" />);
+		openMenu(screen.getByTestId("trigger"));
+		const menu = screen.getByRole("menu", { name: /node actions/i });
+		const indentItem = Array.from(
+			menu.querySelectorAll<HTMLElement>('[role="menuitem"]'),
+		).find((el) => el.textContent?.startsWith(INDENT_LABEL));
+		const outdentItem = Array.from(
+			menu.querySelectorAll<HTMLElement>('[role="menuitem"]'),
+		).find((el) => el.textContent?.startsWith(OUTDENT_LABEL));
+		expect(indentItem?.getAttribute("aria-disabled")).toBe("true");
+		expect(outdentItem?.getAttribute("aria-disabled")).toBe("true");
+	});
+
+	it("Indent is enabled and calls indentNode when a previous sibling exists", () => {
+		seedNestedSchema();
+		const spy = vi.spyOn(useRoadmapStore.getState(), "indentNode");
+		render(<NodeHarness nodeId="child-2" />);
+		openMenu(screen.getByTestId("trigger"));
+		const menu = screen.getByRole("menu", { name: /node actions/i });
+		const indentItem = Array.from(
+			menu.querySelectorAll<HTMLElement>('[role="menuitem"]'),
+		).find((el) => el.textContent?.startsWith(INDENT_LABEL));
+		expect(indentItem?.getAttribute("aria-disabled")).not.toBe("true");
+		fireEvent.click(indentItem as HTMLElement);
+		expect(spy).toHaveBeenCalledWith("child-2");
+	});
+
+	// v0.8.4 Phase 8 follow-up: the menu goes through the keyboard's glue
+	// (lib/structureActions.ts), so a collapsed target is expanded first and
+	// the moved node does not vanish.
+	it("Indent expands a collapsed previous sibling, like Alt+arrow", () => {
+		seedNestedSchema();
+		useFileViewStore.getState().setCollapsed("child-1", true);
+		render(<NodeHarness nodeId="child-2" />);
+		openMenu(screen.getByTestId("trigger"));
+		const menu = screen.getByRole("menu", { name: /node actions/i });
+		const indentItem = Array.from(
+			menu.querySelectorAll<HTMLElement>('[role="menuitem"]'),
+		).find((el) => el.textContent?.startsWith(INDENT_LABEL));
+		fireEvent.click(indentItem as HTMLElement);
+		expect(useFileViewStore.getState().collapsedIds.has("child-1")).toBe(false);
+		expect(
+			useRoadmapStore
+				.getState()
+				.nodeIndex.get("child-1")
+				?.children?.map((c) => c.id),
+		).toContain("child-2");
+	});
+
+	it("Outdent is enabled and calls outdentNode when a grandparent exists", () => {
+		seedNestedSchema();
+		const spy = vi.spyOn(useRoadmapStore.getState(), "outdentNode");
+		render(<NodeHarness nodeId="grandchild-1" />);
+		openMenu(screen.getByTestId("trigger"));
+		const menu = screen.getByRole("menu", { name: /node actions/i });
+		const outdentItem = Array.from(
+			menu.querySelectorAll<HTMLElement>('[role="menuitem"]'),
+		).find((el) => el.textContent?.startsWith(OUTDENT_LABEL));
+		expect(outdentItem?.getAttribute("aria-disabled")).not.toBe("true");
+		fireEvent.click(outdentItem as HTMLElement);
+		expect(spy).toHaveBeenCalledWith("grandchild-1");
+	});
+});
+
+// v0.8.4 Phase 7 (UAT-3) — Indent/Outdent/Move up/down hints come from
+// STRUCTURE_KEYS, the table useKeyboardRouter.ts binds its keys from (Phase 8).
+describe("RoadRavenContextMenu — structure key hints follow layout orientation (Phase 7)", () => {
+	it.each([
+		"TB",
+		"LR",
+	] as const)("Move Up/Down and Indent/Outdent hints match STRUCTURE_KEYS.%s", (orientation) => {
+		seedSchema();
+		useRoadmapStore.setState({ layoutOrientation: orientation });
+		render(<NodeHarness />);
+		openMenu(screen.getByTestId("trigger"));
+		const menu = screen.getByRole("menu", { name: /node actions/i });
+		const text = menu.textContent ?? "";
+		const keys = STRUCTURE_KEYS[orientation];
+		expect(text).toContain(keys.moveUp.hint);
+		expect(text).toContain(keys.moveDown.hint);
+		expect(text).toContain(keys.indent.hint);
+		expect(text).toContain(keys.outdent.hint);
+	});
+});
+
+// v0.8.4 Phase 6 — Undo/Redo on the canvas-empty menu, disabled exactly when
+// the matching stack is empty.
+describe("Canvas menu — Undo / Redo (Phase 6)", () => {
+	afterEach(() => {
+		useHistoryStore.getState().clear();
+	});
+
+	function canvasItem(label: string): HTMLElement {
+		render(<CanvasHarness />);
+		openMenu(screen.getByTestId("trigger"));
+		const menu = screen.getByRole("menu", { name: /canvas actions/i });
+		const item = Array.from(
+			menu.querySelectorAll<HTMLElement>('[role="menuitem"]'),
+		).find((el) => el.querySelector("span")?.textContent === label);
+		if (!item) throw new Error(`no menu item "${label}"`);
+		return item;
+	}
+
+	it.each([
+		UNDO_LABEL,
+		REDO_LABEL,
+	])("%s is disabled with an empty history", (label) => {
+		seedSchema();
+		expect(canvasItem(label).getAttribute("aria-disabled")).toBe("true");
+	});
+
+	it("Undo is enabled after an edit, reverts it and reveals the node", () => {
+		seedSchema();
+		useRoadmapStore.getState().renameNode("child-1", "Renamed");
+		const seen = captureRequests();
+		const item = canvasItem(UNDO_LABEL);
+		expect(item.getAttribute("aria-disabled")).not.toBe("true");
+		fireEvent.click(item);
+		expect(useRoadmapStore.getState().nodeIndex.get("child-1")?.title).toBe(
+			"Child 1",
+		);
+		expect(seen).toEqual([
+			{ nodeId: "child-1", align: "nearest", select: true, rename: false },
+		]);
+	});
+
+	it("Redo is enabled after an undo and re-applies the edit", () => {
+		seedSchema();
+		useRoadmapStore.getState().renameNode("child-1", "Renamed");
+		useRoadmapStore.getState().undo();
+		const item = canvasItem(REDO_LABEL);
+		expect(item.getAttribute("aria-disabled")).not.toBe("true");
+		fireEvent.click(item);
+		expect(useRoadmapStore.getState().nodeIndex.get("child-1")?.title).toBe(
+			"Renamed",
+		);
 	});
 });

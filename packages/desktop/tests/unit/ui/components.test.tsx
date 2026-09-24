@@ -22,8 +22,8 @@ vi.mock("../../../src/mainview/rpc", () => ({
 import { RoadmapNodeCard } from "../../../src/mainview/components/RoadmapNode";
 import { SidePanel } from "../../../src/mainview/components/SidePanel";
 import { KEYBOARD_NAV_CLASS } from "../../../src/mainview/hooks/useKeyboardRouter";
+import { CHEVRON_SELECTOR } from "../../../src/mainview/lib/domContract";
 import { FOCUS_NODE_EVENT } from "../../../src/mainview/lib/focusRequest";
-import { CHEVRON_SELECTOR } from "../../../src/mainview/lib/nodeCollapse";
 import { useRoadmapStore } from "../../../src/mainview/store/roadmapStore";
 
 describe("RoadmapNodeCard", () => {
@@ -364,7 +364,7 @@ describe("RoadmapNodeCard — roving tabindex and DOM focus (RC8)", () => {
 // contract (`aria-label="Expand subtree" | "Collapse subtree"`) as plain DOM
 // they build by hand (e.g. useKeyboardRouter.test.ts's mountCardWithChevron).
 // This pins it against the REAL rendered card, matched by the exact selector
-// lib/nodeCollapse.ts drives every programmatic collapse through, so a
+// the real card renders and the e2e specs select on (lib/domContract.ts), so a
 // selector or label drift here would be caught here rather than silently
 // making those fabricated-DOM unit tests lie.
 describe("RoadmapNodeCard — chevron contract (nodeCollapse.ts)", () => {

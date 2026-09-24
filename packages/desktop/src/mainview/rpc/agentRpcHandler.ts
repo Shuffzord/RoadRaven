@@ -18,36 +18,12 @@ import {
 } from "../../../../../packages/core/src/schema";
 import type { IntegrationEvent } from "../../../../../shared/types";
 import { serializeFileOperation } from "../fileOperationQueue";
+import { isDescendantOf } from "../lib/treeWalk";
+import { withoutHistory } from "../store/historyStore";
 
 export type AgentResult =
 	| { ok: true; data: unknown }
 	| { ok: false; error: string; code: string; hint?: string; data?: unknown };
-
-/**
- * Returns true when `candidateId` is in the subtree rooted at `rootNodeId`,
- * INCLUDING the root itself (a node is in its own subtree). This is the
- * reflexive form — see CR-02 in 06-REVIEW.md: the previous form excluded the
- * root and silently allowed `moveNode(X, X)` past the cycle gate, which then
- * deleted X via the store action (CR-01). Reflexive coverage closes both
- * defects in one helper.
- */
-function isDescendantOf(
-	rootNodeId: string,
-	candidateId: string,
-	nodeIndex: Map<string, RoadmapNode>,
-): boolean {
-	if (rootNodeId === candidateId) return true; // a node is in its own subtree
-	const root = nodeIndex.get(rootNodeId);
-	if (!root) return false;
-	const stack: RoadmapNode[] = [...(root.children ?? [])];
-	while (stack.length) {
-		// biome-ignore lint/style/noNonNullAssertion: stack.length checked above
-		const n = stack.pop()!;
-		if (n.id === candidateId) return true;
-		if (n.children) stack.push(...n.children);
-	}
-	return false;
-}
 
 type LogStoreState = ReturnType<
 	typeof import("../store/eventLogStore").useEventLogStore.getState
@@ -55,6 +31,17 @@ type LogStoreState = ReturnType<
 type RoadmapStoreState = ReturnType<
 	typeof import("../store/roadmapStore").useRoadmapStore.getState
 >;
+
+/**
+ * v0.8.4 Phase 6 (D-15): what an agent does is not the user's edit. Every
+ * store mutation this dispatcher makes goes through `quiet`, which suspends
+ * undo recording for exactly that call — so an agent mutation never enters
+ * the undo history and never clears its redo stack, wherever the `await`s in
+ * the dispatch happen to sit.
+ */
+function quiet<T>(fn: () => T): T {
+	return withoutHistory(fn);
+}
 
 // WR-05 (06-REVIEW): cap drawer-audit `meta.args` to 2KB. Without this, an
 // agent (or malicious WS client) can pin ~1000 megabytes of metadata in the
@@ -125,7 +112,7 @@ function recordAgentLive(
 ): void {
 	const meta = (args.meta ?? {}) as Record<string, unknown>;
 	const source = typeof meta.source === "string" ? meta.source : "claude-code";
-	store.recordLiveSource(nodeId, source, meta);
+	quiet(() => store.recordLiveSource(nodeId, source, meta));
 }
 
 function appendAgentDrawerEvent(
@@ -323,7 +310,7 @@ function handleUpdateNodesBatch(
 			data: { failures },
 		};
 	}
-	store.updateNodesBatch(resolved);
+	quiet(() => store.updateNodesBatch(resolved));
 	// Live pulse for every touched node in ONE setState — recordAgentLive/
 	// recordLiveSource bumps statusTick per call, which would break the
 	// "statusTick bumps once per batch" contract (updateNodesBatch already
@@ -381,6 +368,9 @@ function mergeMetadataPatch(
  * Cross-ref-boundary, kill-switch, path-allowlist live in Bun (Plan 06-03).
  *
  * Drawer audit (D-09) emits IntegrationEvent for every mutating tool.
+ *
+ * Store mutations go through `quiet` (v0.8.4 Phase 6, D-15): agent edits are
+ * not undoable.
  */
 export async function handleAgentRequest(
 	tool: string,
@@ -563,16 +553,18 @@ export async function handleAgentRequest(
 			const meta = (args.meta ?? {}) as Record<string, unknown>;
 			const source =
 				typeof meta.source === "string" ? meta.source : "claude-code";
-			const newId = store.addChild(parentId, title, requestedId, {
-				status: parsedStatus?.data,
-				type: typeof args.type === "string" ? args.type : undefined,
-				notes: typeof args.notes === "string" ? args.notes : undefined,
-				metadata:
-					args.metadata && typeof args.metadata === "object"
-						? (args.metadata as Record<string, unknown>)
-						: undefined,
-				liveEvent: { lastEventAt: Date.now(), source, meta },
-			});
+			const newId = quiet(() =>
+				store.addChild(parentId, title, requestedId, {
+					status: parsedStatus?.data,
+					type: typeof args.type === "string" ? args.type : undefined,
+					notes: typeof args.notes === "string" ? args.notes : undefined,
+					metadata:
+						args.metadata && typeof args.metadata === "object"
+							? (args.metadata as Record<string, unknown>)
+							: undefined,
+					liveEvent: { lastEventAt: Date.now(), source, meta },
+				}),
+			);
 			if (!newId) {
 				return {
 					ok: false,
@@ -667,7 +659,7 @@ export async function handleAgentRequest(
 					code: "node_not_found",
 				};
 			}
-			store.renameNode(nodeId, args.title as string);
+			quiet(() => store.renameNode(nodeId, args.title as string));
 			recordAgentLive(nodeId, args, store);
 			appendAgentDrawerEvent("renameNode", nodeId, args, store, eventLog);
 			return { ok: true, data: { ok: true } };
@@ -691,7 +683,7 @@ export async function handleAgentRequest(
 					code: "node_not_found",
 				};
 			}
-			store.updateNodeStatus(nodeId, parsedStatus.data);
+			quiet(() => store.updateNodeStatus(nodeId, parsedStatus.data));
 			recordAgentLive(nodeId, args, store);
 			appendAgentDrawerEvent("updateNodeStatus", nodeId, args, store, eventLog);
 			return { ok: true, data: { ok: true } };
@@ -706,7 +698,7 @@ export async function handleAgentRequest(
 					code: "node_not_found",
 				};
 			}
-			store.updateNodeType(nodeId, args.type as string);
+			quiet(() => store.updateNodeType(nodeId, args.type as string));
 			recordAgentLive(nodeId, args, store);
 			appendAgentDrawerEvent("updateNodeType", nodeId, args, store, eventLog);
 			return { ok: true, data: { ok: true } };
@@ -727,7 +719,7 @@ export async function handleAgentRequest(
 			const existing = store.nodeIndex.get(nodeId)?.notes;
 			const next =
 				args.mode === "append" && existing ? `${existing}\n\n${notes}` : notes;
-			store.updateNodeNotes(nodeId, next);
+			quiet(() => store.updateNodeNotes(nodeId, next));
 			recordAgentLive(nodeId, args, store);
 			appendAgentDrawerEvent("updateNodeNotes", nodeId, args, store, eventLog);
 			return { ok: true, data: { ok: true } };
@@ -751,7 +743,7 @@ export async function handleAgentRequest(
 				if (v === null) delete next[k];
 				else next[k] = v;
 			}
-			store.updateNodeMetadata(nodeId, next);
+			quiet(() => store.updateNodeMetadata(nodeId, next));
 			recordAgentLive(nodeId, args, store);
 			appendAgentDrawerEvent(
 				"updateNodeMetadata",
@@ -798,14 +790,20 @@ export async function handleAgentRequest(
 					code: "node_not_found",
 				};
 			}
-			if (isDescendantOf(nodeId, newParentId, store.nodeIndex)) {
+			if (isDescendantOf(store.nodeIndex, nodeId, newParentId)) {
 				return {
 					ok: false,
 					error: "Cannot move a node into its own subtree.",
 					code: "move_would_create_cycle",
 				};
 			}
-			store.moveNode(nodeId, newParentId, args.position as number | undefined);
+			quiet(() =>
+				store.moveNode(
+					nodeId,
+					newParentId,
+					args.position as number | undefined,
+				),
+			);
 			recordAgentLive(nodeId, args, store);
 			appendAgentDrawerEvent("moveNode", nodeId, args, store, eventLog);
 			return { ok: true, data: { ok: true } };
@@ -844,7 +842,7 @@ export async function handleAgentRequest(
 					data: { childCount },
 				};
 			}
-			const result = store.deleteNode(nodeId);
+			const result = quiet(() => store.deleteNode(nodeId));
 			appendAgentDrawerEvent("deleteNode", nodeId, args, store, eventLog);
 			return { ok: true, data: { deletedCount: result.deletedCount } };
 		}

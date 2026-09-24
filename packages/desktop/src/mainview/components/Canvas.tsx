@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef } from "react";
-import type { CustomNodeElementProps } from "react-d3-tree";
+import type { CustomNodeElementProps, TreeLinkDatum } from "react-d3-tree";
 import Tree from "react-d3-tree";
 import { useShallow } from "zustand/react/shallow";
 import type { NodeStatus } from "../../../../../packages/core/src/schema";
@@ -9,11 +9,22 @@ import { useCanvasViewport } from "../hooks/useCanvasViewport";
 import { useFileActions } from "../hooks/useFileActions";
 import { useInlineRename } from "../hooks/useInlineRename";
 import { useKeyboardRouter } from "../hooks/useKeyboardRouter";
+import { useNodeDrag } from "../hooks/useNodeDrag";
 import { useRecentFiles } from "../hooks/useRecentFiles";
+import { pruneCollapsed, shownChildCount } from "../lib/collapseTree";
+import {
+	linkClassFor,
+	linkFromClassFor,
+	NODE_OFFSET_ATTR,
+} from "../lib/domContract";
 import { togglePanelFocus } from "../lib/focusHandoff";
 import { requestNodeFocus } from "../lib/focusRequest";
+import { treeLayoutFor } from "../lib/layoutKnobs";
+import { offsetLink, stepPath } from "../lib/linkPath";
 import { listNodeCards } from "../lib/nodeCard";
+import { type OffsetMap, ZERO_OFFSET } from "../lib/nodeOffsets";
 import { clampZoom, computeFit, SCALE_EXTENT } from "../lib/viewportMath";
+import { useFileViewStore } from "../store/fileViewStore";
 import { useRoadmapStore } from "../store/roadmapStore";
 import { RoadRavenContextMenu } from "./ContextMenu";
 import { RoadmapNodeCard } from "./RoadmapNode";
@@ -32,6 +43,68 @@ function isTabStop(
 	depth: number | undefined,
 ): boolean {
 	return focusedNodeId ? focusedNodeId === nodeId : depth === 0;
+}
+
+/** The roadmap node id react-d3-tree carries on a link endpoint. */
+function linkNodeId(end: TreeLinkDatum["source"]): string {
+	return end.data.attributes?.id as string;
+}
+
+/**
+ * v0.8.4 Phase 3: every connector is addressable by the node it enters and
+ * the node it leaves, so useNodeDrag can redraw a dragged card's links.
+ */
+function linkClasses(link: TreeLinkDatum): string {
+	return `${linkClassFor(linkNodeId(link.target))} ${linkFromClassFor(linkNodeId(link.source))}`;
+}
+
+/**
+ * react-d3-tree's `"step"` connector, drawn from each endpoint's custom
+ * layout offset. With an empty map it is the library's own string.
+ */
+function offsetStepPathFunc(
+	offsets: OffsetMap,
+	orientation: "TB" | "LR",
+): (link: TreeLinkDatum) => string {
+	return (link) => {
+		const { source, target } = offsetLink(
+			link,
+			{
+				source: offsets[linkNodeId(link.source)] ?? ZERO_OFFSET,
+				target: offsets[linkNodeId(link.target)] ?? ZERO_OFFSET,
+			},
+			orientation,
+		);
+		return stepPath(source, target, orientation);
+	};
+}
+
+// v0.8.4 Phase 3 send-back: with custom layout OFF the canvas hands
+// react-d3-tree exactly what Phase 2 did — the library's own "step" string,
+// no pathClassFunc, and a bare foreignObject at (-120, -50) — so the
+// feature costs nothing per render while it is off (orchestrator A/B:
+// an always-on wrapper <g> + function pathFunc/pathClassFunc per link cost
+// 1.12x arrow-nav, 1.58x rename-typing, 1.57x card-click blockedMs).
+const CARD_X = -120;
+const CARD_Y = -50;
+const AUTO_LINK_PROPS = { pathFunc: "step" } as const;
+const AUTO_PLACEMENT = { x: CARD_X, y: CARD_Y };
+const autoPlacement = () => AUTO_PLACEMENT;
+
+function customLinkProps(offsets: OffsetMap, orientation: "TB" | "LR") {
+	return {
+		pathFunc: offsetStepPathFunc(offsets, orientation),
+		pathClassFunc: linkClasses,
+	};
+}
+
+/**
+ * Custom layout folds the card's offset into its foreignObject's x/y and
+ * tags it NODE_OFFSET_ATTR, which is what useNodeDrag paints during a drag.
+ */
+function customPlacement(offsets: OffsetMap, nodeId: string) {
+	const { dx, dy } = offsets[nodeId] ?? ZERO_OFFSET;
+	return { x: CARD_X + dx, y: CARD_Y + dy, [NODE_OFFSET_ATTR]: nodeId };
 }
 
 /** Stop an in-flight pan animation, if any. */
@@ -68,12 +141,62 @@ export function Canvas() {
 	const searchMatchIds = useRoadmapStore((s) => s.searchMatchIds);
 	const searchCurrentIndex = useRoadmapStore((s) => s.searchCurrentIndex);
 
+	// v0.8.4 Phase 2: per-file layout comfort knobs. Memoised on the three
+	// primitives (not the knobs object) so a re-render that leaves them
+	// unchanged (e.g. a status tick) does not hand <Tree> a new
+	// separation/nodeSize object and force it to remount its layout.
+	const { siblingGap, depthGap, density } = useFileViewStore(
+		(s) => s.layoutKnobs,
+	);
+
+	// v0.8.4 Phase 4 (RC1): collapse state is the file-view store's. The tree
+	// gets the store tree pruned by it — the SAME object while nothing is
+	// collapsed — and a dataKey that changes with either, because
+	// react-d3-tree re-clones (and wipes its own flags) only when both the
+	// data reference and the dataKey change.
+	const collapsedIds = useFileViewStore((s) => s.collapsedIds);
+	const collapseVersion = useFileViewStore((s) => s.collapseVersion);
+	const toggleCollapsed = useFileViewStore((s) => s.toggleCollapsed);
+	const shownTree = useMemo(
+		() => (treeData ? pruneCollapsed(treeData, collapsedIds) : null),
+		[treeData, collapsedIds],
+	);
+	const { separation, nodeSize } = useMemo(
+		() => treeLayoutFor({ siblingGap, depthGap, density }, layoutOrientation),
+		[siblingGap, depthGap, density, layoutOrientation],
+	);
+
 	// The canvas container: every pan/fit measurement is taken against its rect.
 	const containerRef = useRef<HTMLDivElement>(null);
 
 	// Viewport truth (RC1) — the store is the single owner; this hook keeps it
 	// honest about d3 gestures without paying a full tree re-render per frame.
 	const { getTransform, flushViewport, syncGesture } = useCanvasViewport();
+
+	// v0.8.4 Phase 3: custom layout. `activeOffsets` is the current
+	// orientation's map while it is on, and null while it is off — then the
+	// tree gets AUTO_LINK_PROPS / AUTO_PLACEMENT and no drag handlers. Its
+	// identity only changes on a toggle, a drag commit or a reset, never on a
+	// focus write or keystroke. `drag` is one stable object.
+	const activeOffsets = useFileViewStore((s) =>
+		s.customLayout ? s.nodeOffsets[layoutOrientation] : null,
+	);
+	const linkProps = useMemo(
+		() =>
+			activeOffsets
+				? customLinkProps(activeOffsets, layoutOrientation)
+				: AUTO_LINK_PROPS,
+		[activeOffsets, layoutOrientation],
+	);
+	const { drag, consumeDragClick } = useNodeDrag(() => getTransform().k);
+	const cardDrag = activeOffsets ? drag : undefined;
+	const placeCard = useMemo(
+		() =>
+			activeOffsets
+				? (nodeId: string) => customPlacement(activeOffsets, nodeId)
+				: autoPlacement,
+		[activeOffsets],
+	);
 
 	// Recent files for WelcomeScreen — shared with Sidebar via useRecentFiles
 	const recentFiles = useRecentFiles();
@@ -255,20 +378,19 @@ export function Canvas() {
 	);
 
 	const renderNode = useCallback(
-		({ nodeDatum, toggleNode }: CustomNodeElementProps) => {
+		({ nodeDatum }: CustomNodeElementProps) => {
 			const status = (nodeDatum.attributes?.status as string) ?? "not-started";
 			const nodeId = nodeDatum.attributes?.id as string;
-			const children = nodeDatum.children ?? [];
-			const hasChildren = children.length > 0;
+			const childCount = shownChildCount(nodeDatum);
 			const rd3t = nodeDatum.__rd3t;
 			const isRenaming = inlineRename.state.nodeId === nodeId;
+			const placement = placeCard(nodeId);
 
 			return (
 				<foreignObject
 					width={240}
 					height={100}
-					x={-120}
-					y={-50}
+					{...placement}
 					overflow="visible"
 				>
 					<RoadmapNodeCard
@@ -281,11 +403,14 @@ export function Canvas() {
 						isSearchMatch={searchMatchSet.has(nodeId)}
 						isSearchCurrent={searchCurrentId === nodeId}
 						isSearchDimmed={searchActive && !searchMatchSet.has(nodeId)}
-						hasChildren={hasChildren}
-						isCollapsed={!!rd3t?.collapsed}
-						childCount={children.length}
-						onToggle={toggleNode}
+						hasChildren={childCount > 0}
+						isCollapsed={collapsedIds.has(nodeId)}
+						childCount={childCount}
+						density={density}
+						onToggle={() => toggleCollapsed(nodeId)}
 						onSelect={() => {
+							// The click the browser fires after a real drag.
+							if (consumeDragClick()) return;
 							requestNodeFocus(nodeId, { align: "nearest", select: true });
 						}}
 						onDoubleClick={() => {
@@ -299,6 +424,7 @@ export function Canvas() {
 						onRenameChange={inlineRename.setTitle}
 						onRenameCommit={inlineRename.commit}
 						onRenameCancel={inlineRename.cancel}
+						drag={cardDrag}
 					/>
 				</foreignObject>
 			);
@@ -310,6 +436,12 @@ export function Canvas() {
 			searchCurrentId,
 			searchActive,
 			inlineRename,
+			density,
+			placeCard,
+			cardDrag,
+			consumeDragClick,
+			collapsedIds,
+			toggleCollapsed,
 		],
 	);
 
@@ -354,7 +486,7 @@ export function Canvas() {
 					}}
 				/>
 
-				{treeData === null ? (
+				{shownTree === null ? (
 					<WelcomeScreen
 						recentFiles={recentFiles}
 						onOpenFile={openFile}
@@ -369,20 +501,20 @@ export function Canvas() {
 					// and the tree items so the ARIA hierarchy is application > tree > treeitem.
 					<div role="tree" aria-label="Roadmap tree" className="w-full h-full">
 						<Tree
-							data={treeData}
-							dataKey={dataKey}
+							data={shownTree}
+							dataKey={`${dataKey}:${collapseVersion}`}
 							orientation={
 								layoutOrientation === "TB" ? "vertical" : "horizontal"
 							}
-							pathFunc="step"
-							separation={{ siblings: 1, nonSiblings: 1.3 }}
-							nodeSize={{ x: 240, y: 100 }}
+							{...linkProps}
+							separation={separation}
+							nodeSize={nodeSize}
 							renderCustomNodeElement={renderNode}
 							zoom={zoomLevel}
 							scaleExtent={SCALE_EXTENT}
 							enableLegacyTransitions={false}
 							centeringTransitionDuration={800}
-							collapsible={true}
+							collapsible={false}
 							zoomable={true}
 							draggable={true}
 							translate={translate}

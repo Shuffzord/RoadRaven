@@ -208,7 +208,7 @@ App (h-screen grid)
 +-- Canvas          [grid-area: canvas]    -- react-d3-tree renderer or WelcomeScreen
 |   +-- WelcomeScreen                      -- Shown when no file loaded (recent files, samples)
 |   +-- Tree (react-d3-tree)               -- SVG tree with foreignObject custom nodes
-|   |   +-- RoadmapNodeCard                -- Status badge, collapse/expand chevron
+|   |   +-- RoadmapNodeCard                -- Status badge, collapse/expand chevron (state in fileViewStore)
 |   +-- SchemaErrorPanel                   -- Inline Zod validation error display
 +-- SidePanel       [grid-area: panel]     -- Node detail panel (on node selection)
 |   +-- ResizeHandle                       -- Drag to resize panel width

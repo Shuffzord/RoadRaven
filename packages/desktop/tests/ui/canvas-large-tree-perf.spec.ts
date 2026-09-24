@@ -356,6 +356,13 @@ const ARROW_WORST_CEILING_MS = 2000;
 const MENU_OPEN_CEILING_MS = 900;
 const GESTURE_P95_CEILING_MS = 34;
 const CLICK_BLOCKED_CEILING_MS = 1000;
+/**
+ * v0.8.4 Phase 4: 2x the median of the first measured three toggles
+ * (samples 395.4, 346.5, 392.9 ms; median 392.9 x 2 = 785.8), rounded up.
+ * A store-owned collapse re-clones the tree; this catches that cost
+ * doubling. 2x, not the 3x above: it is measured on the same dev setup.
+ */
+const CHEVRON_TOGGLE_CEILING_MS = 786;
 
 test.describe(`Large-tree interaction budget (${TOTAL_NODES} nodes)`, () => {
 	// Wall-clock budgets: never share the CPU with a sibling worker.
@@ -597,5 +604,62 @@ test.describe(`Large-tree interaction budget (${TOTAL_NODES} nodes)`, () => {
 		});
 
 		expect(r.blockedMs).toBeLessThan(CLICK_BLOCKED_CEILING_MS);
+	});
+
+	// v0.8.4 Phase 4: a collapse toggle is a store write that hands the tree a
+	// new pruned object and a new dataKey, so react-d3-tree re-clones the whole
+	// dataset where it used to flip one internal flag. Collapse, expand,
+	// collapse — each timed from the click to its next painted frame.
+	test("(g) chevron click to next paint, three toggles", async ({ page }) => {
+		await seedLargeTree(page);
+		await startRecording(page);
+
+		const samples: number[] = [];
+		for (let i = 0; i < 3; i++) {
+			const label = await page.evaluate((nodeId) => {
+				const chevron = document.querySelector<HTMLButtonElement>(
+					`[data-source-id="${nodeId}"] button[aria-label$="subtree"]`,
+				);
+				if (!chevron) throw new Error("no chevron to click");
+				return chevron.getAttribute("aria-label");
+			}, TARGET_ID);
+			const ms = await page.evaluate(
+				(nodeId) =>
+					new Promise<number>((resolve) => {
+						const start = performance.now();
+						document
+							.querySelector<HTMLButtonElement>(
+								`[data-source-id="${nodeId}"] button[aria-label$="subtree"]`,
+							)
+							?.click();
+						requestAnimationFrame(() => {
+							setTimeout(() => resolve(performance.now() - start), 0);
+						});
+					}),
+				TARGET_ID,
+			);
+			await page.waitForFunction(
+				([nodeId, before]) =>
+					document
+						.querySelector(
+							`[data-source-id="${nodeId}"] button[aria-label$="subtree"]`,
+						)
+						?.getAttribute("aria-label") !== before,
+				[TARGET_ID, label] as const,
+			);
+			samples.push(Math.round(ms * 10) / 10);
+			await settle(page);
+		}
+		const r = await stopRecording(page);
+
+		log("chevron-toggle", {
+			samples,
+			median: percentile(samples, 0.5),
+			blockedMs: r.blockedMs,
+			longestTaskMs: r.longestTaskMs,
+			framesOver50: r.framesOver50,
+		});
+
+		expect(percentile(samples, 0.5)).toBeLessThan(CHEVRON_TOGGLE_CEILING_MS);
 	});
 });

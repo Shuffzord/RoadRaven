@@ -3,6 +3,60 @@
 All notable changes to RoadRaven are documented in this file. The format
 follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.8.4] - 2026-09-24
+
+### Added
+
+- **Status at a glance.** Every node card carries a small diagonal ribbon
+  across its top-right corner in its status colour, next to the stripe it
+  already had. **In Progress** cards are a little larger, with a coloured
+  border and ring. Every node with children says how far along it is
+  (`2 / 5 done`), and an In Progress leaf that Claude Code just touched
+  says `last event 12s ago`. A node's **type** now shows as a small chip beside the status
+  badge.
+- **Layout knobs.** A new button next to the TB / LR toggle opens three
+  per-file controls: sibling gap, depth gap and card density (comfortable
+  or compact). They apply as you drag the slider and are remembered for
+  that file.
+- **Custom layout.** Tick **Custom layout** in the same popover and cards
+  become draggable: move a card, its connectors follow, and the position is
+  remembered for that file and that orientation. Untick to snap back to
+  the automatic layout without losing the positions; **Reset positions**
+  clears them. None of this is written into the roadmap file, so agents
+  and the MCP tools keep working with the plain tree.
+- **Collapse that stays collapsed.** Collapsing a subtree now survives
+  adding, deleting, moving and pasting nodes, and reopening the file. The
+  empty-canvas right-click menu gains **Expand all**, **Collapse all**,
+  **Collapse to depth 1** and **Collapse to depth 2**.
+- **More keyboard editing.** `Alt+↓` (TB) / `Alt+→` (LR) indents the
+  focused node under its previous sibling; `Alt+↑` / `Alt+←` outdents it
+  to sit after its parent. Both are in the node's right-click menu too,
+  with their shortcuts shown for the current layout.
+  Keys `1` `2` `3` `4` set Not Started, In Progress, Completed, Blocked.
+- **Undo and redo.** `Ctrl+Z` undoes your last edit, `Ctrl+Y` or
+  `Ctrl+Shift+Z` redoes it, up to 50 steps. Typing in the notes editor
+  counts as one step. Edits made by an agent over MCP are not undone —
+  only yours.
+
+### Changed
+
+- **Reorder follows the layout.** In TB, `Ctrl+←` / `Ctrl+→` move a node
+  before or after its neighbour, matching how `←` / `→` navigate. The old
+  `Ctrl+↑` / `Ctrl+↓` pair still works in both layouts.
+- The layout orientation you pick for a file is restored when that file
+  opens again. It was saved before but never read back.
+- Opening a different file no longer carries over the previous file's view
+  settings.
+- The default layout is roomier: sibling cards sit a little further apart
+  and levels are further apart, so the tree reads more clearly. Files that
+  already saved their own layout knobs keep them.
+- react-d3-tree 3.6.6 → 3.6.7 (maintenance release).
+
+### Fixed
+
+- A file's per-file settings could be partly overwritten when one setting
+  was saved (a layout toggle dropped the file's other stored settings).
+
 ## [0.8.3] - 2026-09-23
 
 ### Added

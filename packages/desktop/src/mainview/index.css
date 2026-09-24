@@ -128,6 +128,46 @@
 	border-radius: var(--node-radius, 8px) 0 0 var(--node-radius, 8px);
 }
 
+/* Status ribbon (v0.8.4 Phase 1): a 45° band across the card's top-right
+   corner, filled inline with the stripe's ink. The clip wrapper, not `.node`,
+   hides the band's overhang: `.node::after` (the pulse ring, inset -3px) and
+   the search outline paint outside the card and must never be clipped. */
+.node-ribbon-clip {
+	position: absolute;
+	inset: 0;
+	overflow: hidden;
+	border-radius: inherit;
+	pointer-events: none;
+}
+.node-ribbon {
+	position: absolute;
+	top: 7px;
+	right: -14px;
+	width: 48px;
+	height: 7px;
+	transform: rotate(45deg);
+}
+
+/* In Progress cards carry visual weight: 6% larger around their centre, a
+   border and ring in the status ink, and a soft status-tinted drop shadow.
+   The shadow goes through --node-shadow because the card's inline style owns
+   box-shadow (RoadmapNode.tsx). Canvas widens sibling separation to 1.1 so
+   scaled siblings never touch; the 100px depth slot has room for the growth. */
+.node[data-status="in-progress"] {
+	transform: scale(1.06);
+	transform-origin: center;
+	border-color: var(--node-stripe-color);
+	--node-shadow:
+		0 0 0 1px var(--node-stripe-color), 0 6px 16px -6px var(--node-stripe-color);
+}
+
+/* v0.8.4 Phase 3: a card being dragged under custom layout (useNodeDrag sets
+   the attribute). Lifted: the theme's node shadow, doubled. */
+.node[data-dragging="true"] {
+	cursor: grabbing;
+	--node-shadow: var(--rv-shadow-node), var(--rv-shadow-node);
+}
+
 /* App shell grid */
 #app {
 	display: grid;

@@ -6,8 +6,9 @@ import {
 	requestNodeFocus,
 } from "../lib/focusRequest";
 import { findNodeCard } from "../lib/nodeCard";
-import { CHEVRON_SELECTOR, expandAncestors } from "../lib/nodeCollapse";
+import { expandAncestors } from "../lib/nodeCollapse";
 import { computePanDelta } from "../lib/viewportMath";
+import { type FileViewState, useFileViewStore } from "../store/fileViewStore";
 import { getAncestorPath, useRoadmapStore } from "../store/roadmapStore";
 
 /**
@@ -117,10 +118,10 @@ function focusCard(card: HTMLElement, container: HTMLElement): void {
  * Collapsing a subtree unmounts every descendant card. Phase 0 recorded what
  * that costs when focus was inside it: NO card shows focus, and the next
  * sibling key resolves inside the hidden subtree too, so the canvas stays
- * blank-focused until a mouse click. All three collapse entry points — the
- * `C` key, the context menu's "Collapse subtree" and the mouse — end in a
- * click on the card's chevron (lib/nodeCollapse.ts drives the real button),
- * so one delegated listener covers all of them.
+ * blank-focused until a mouse click. Every collapse — the `C` key, the
+ * chevron, the context menu, "Collapse all" / "to depth" — is a write to
+ * `fileViewStore.collapsedIds` (v0.8.4 Phase 4), so one store subscription
+ * covers all of them.
  *
  * Only FOCUS is corrected. Selection drives the SidePanel — what the user
  * chose to inspect — and a collapse is a structural action, not a change of
@@ -128,40 +129,29 @@ function focusCard(card: HTMLElement, container: HTMLElement): void {
  * again when its ancestor re-expands. Invisible focus is what strands the
  * keyboard.
  *
- * Collapse and expand share the one chevron, and its `aria-label` may or may
- * not already have flipped by the time a handler runs, so the two are told
- * apart by what they do to the DOM rather than by state: the listener runs in
- * CAPTURE phase, before the toggle renders, and only arms itself while the
- * focused card is still on screen — an expand can never take it off. The
- * verdict is then read one frame later, which also makes it independent of
- * whether React flushed the toggle inside the click or batched it.
+ * Only an ADDED id can hide anything, so an expand never moves focus. Focus
+ * goes to the topmost collapsed ancestor — the card that is still mounted —
+ * one frame later, once the collapse has rendered and the card sits in its
+ * new place for the reveal to measure.
  */
-function keepFocusMounted(e: Event): void {
-	const toggledId = chevronNodeId(e);
-	if (!toggledId) return;
+function focusOutOfCollapsed(
+	state: Pick<FileViewState, "collapsedIds">,
+	prev: Pick<FileViewState, "collapsedIds">,
+): void {
+	const { collapsedIds } = state;
+	if (collapsedIds === prev.collapsedIds) return;
+	if (![...collapsedIds].some((id) => !prev.collapsedIds.has(id))) return;
 	const { focusedNodeId, schema } = useRoadmapStore.getState();
-	if (!focusedNodeId || focusedNodeId === toggledId) return;
-	if (!findNodeCard(focusedNodeId)) return;
-	if (!getAncestorPath(schema?.nodes ?? [], focusedNodeId).includes(toggledId))
-		return;
-	requestAnimationFrame(() => rescueFocus(focusedNodeId, toggledId));
-}
-
-/** The node whose chevron this click landed on, or null for any other click. */
-function chevronNodeId(e: Event): string | null {
-	const chevron = (e.target as Element | null)?.closest?.(CHEVRON_SELECTOR);
-	return (
-		chevron?.closest<HTMLElement>("[data-source-id]")?.dataset.sourceId ?? null
+	if (!focusedNodeId) return;
+	const target = getAncestorPath(schema?.nodes ?? [], focusedNodeId).find(
+		(id) => collapsedIds.has(id),
 	);
-}
-
-/** One frame after a toggle: did it take the focused card off screen? */
-function rescueFocus(focusedNodeId: string, toggledId: string): void {
-	// Still mounted: nothing was hidden, so nobody was stranded.
-	if (findNodeCard(focusedNodeId)) return;
-	// Something else claimed focus in the meantime; leave it alone.
-	if (useRoadmapStore.getState().focusedNodeId !== focusedNodeId) return;
-	requestNodeFocus(toggledId, { align: "nearest" });
+	if (!target) return;
+	requestAnimationFrame(() => {
+		// Something else claimed focus in the meantime; leave it alone.
+		if (useRoadmapStore.getState().focusedNodeId !== focusedNodeId) return;
+		requestNodeFocus(target, { align: "nearest" });
+	});
 }
 
 export interface CanvasFocusControllerDeps {
@@ -293,14 +283,13 @@ export function useCanvasFocusController({
 		// commits a rename inside the same focusout dispatch.
 		window.addEventListener("focusout", trackFocusTransfer, true);
 		window.addEventListener("focusin", trackFocusTransfer, true);
-		// Capture, so the chevron's own handler has not rendered yet and the
-		// focused card can still be seen on screen (RC6).
-		window.addEventListener("click", keepFocusMounted, true);
+		// RC6: every collapse is a store write.
+		const unsubCollapse = useFileViewStore.subscribe(focusOutOfCollapsed);
 		return () => {
 			window.removeEventListener(FOCUS_NODE_EVENT, handler);
 			window.removeEventListener("focusout", trackFocusTransfer, true);
 			window.removeEventListener("focusin", trackFocusTransfer, true);
-			window.removeEventListener("click", keepFocusMounted, true);
+			unsubCollapse();
 			focusIsMoving = false;
 			cancelRef.current?.();
 		};
