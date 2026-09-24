@@ -9,6 +9,17 @@ on:
       # gating. Without this anchor a v*-canary.0 push would npm publish
       # --provenance and create a public Release with prerelease: false.
       - 'v[0-9]+.[0-9]+.[0-9]+'
+  # Manual re-stage of an existing release tag's npm package only (no
+  # installers, no GitHub release): used when the npm step of a tag's run
+  # failed or was never run. Write access is required to dispatch, and the
+  # result is a *staged* version that still needs `npm stage approve`, so a
+  # dispatch cannot ship anything on its own.
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: 'Existing release tag to stage-publish @roadraven/mcp from (e.g. v0.8.3)'
+        required: true
+        type: string
 
 # All jobs that publish or upload need explicit permissions (least-privilege).
 # id-token: write — required for npm provenance OIDC token mint (R-03)
@@ -23,6 +34,7 @@ permissions:
 jobs:
   build-windows:
     name: Build Windows installer
+    if: github.event_name == 'push'
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
@@ -80,6 +92,7 @@ jobs:
 
   build-linux:
     name: Build Linux installer
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -135,6 +148,7 @@ jobs:
 
   github-release:
     name: Create GitHub Release with installers
+    if: github.event_name == 'push'
     needs: [build-windows, build-linux]
     runs-on: ubuntu-latest
     steps:
@@ -197,10 +211,24 @@ jobs:
     # → Settings → Trusted Publisher trusts this repo + workflow file, so no
     # token is stored anywhere. Configured 2026-09-23 after the manual 0.8.0
     # publish (the settings page only exists once the package does).
+    #
+    # The trusted publisher is deliberately stage-only (npm "Allowed actions":
+    # `npm stage publish` allowed, `npm publish` not). CI stages the version;
+    # a human promotes it with `npm stage approve <stage-id>` (2FA) or on
+    # npmjs.com. A plain `npm publish` from this job answers E404 on the PUT
+    # (v0.8.1–v0.8.3 runs, 2026-09-23/24) — that is the permission, not a bug.
+    #
+    # Runs on a tag push after both installers built, or on workflow_dispatch
+    # for an existing tag (the build jobs are skipped then, so `needs` results
+    # are "skipped" and the condition has to look at the event, not at them).
     needs: [build-windows, build-linux]
+    if: ${{ !cancelled() && (github.event_name == 'workflow_dispatch' || (needs.build-windows.result == 'success' && needs.build-linux.result == 'success')) }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          # On dispatch, the tag to stage from; on a tag push this is the tag.
+          ref: ${{ inputs.ref || github.ref }}
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
@@ -214,8 +242,8 @@ jobs:
       - name: Build @roadraven/mcp (bun build → dist/)
         run: bun run --cwd plugins/claude-code build
       # Same CLAUDE.md exception as publish-npm-core above.
-      - name: Publish @roadraven/mcp to npm with provenance (OIDC)
-        run: npm publish --access public --provenance
+      - name: Stage @roadraven/mcp on npm with provenance (OIDC)
+        run: npm stage publish --access public --provenance
         working-directory: plugins/claude-code
 
   deploy-docs:
