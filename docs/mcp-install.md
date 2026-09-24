@@ -6,7 +6,7 @@ layout: default
 
 # Connect an MCP host to RoadRaven
 
-> **Requires Node.js >= 22** for every install path below that runs `npx -y
+> **Requires Node.js >= 24** for every install path below that runs `npx -y
 > @roadraven/mcp` (the package ships as a published npm binary, `roadraven-mcp`).
 > The RoadRaven desktop app must also be running — every tool call talks to it
 > over the local Event API (`127.0.0.1`); with the app closed, tools return
@@ -123,6 +123,19 @@ server was installed (the server reports this itself since v0.8):
 
 If the server is *newer* than the app, update RoadRaven instead — the toast
 shows the installer one-liner for your platform.
+
+## Tell Claude to use the roadmap
+
+Registering the server gives Claude the tools but no reason to call them.
+`init` adds a short RoadRaven planning section to a `CLAUDE.md`. It asks
+whether to write to the current project's `./CLAUDE.md` or to
+`~/.claude/CLAUDE.md` (every project), and is safe to re-run: it replaces its
+own marked block and leaves the rest of the file untouched.
+
+```bash
+npx -y @roadraven/mcp@0.8.3 init
+npx -y @roadraven/mcp@0.8.3 init --level project --yes   # non-interactive
+```
 
 ## Full tool catalog
 

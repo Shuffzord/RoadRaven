@@ -23,7 +23,7 @@ aux_links:
 aux_links_new_tab: true
 
 # Footer
-footer_content: 'RoadRaven is MIT-licensed. <a href="https://github.com/Shuffzord/RoadRaven/blob/master/LICENSE">License</a>.'
+footer_content: 'RoadRaven is source-available under FSL-1.1-MIT. <a href="https://github.com/Shuffzord/RoadRaven/blob/master/LICENSE">License</a>.'
 
 # Exclude
 exclude:

@@ -7,7 +7,7 @@
 		"url": "https://github.com/Shuffzord"
 	},
 	"repository": "https://github.com/Shuffzord/RoadRaven",
-	"license": "PolyForm-Noncommercial-1.0.0",
+	"license": "FSL-1.1-MIT",
 	"homepage": "https://shuffzord.github.io/RoadRaven/plugin-authoring.html",
 	"keywords": ["mcp", "claude-code", "roadraven", "roadmap", "event-api"],
 	"mcpServers": "./.mcp.json"

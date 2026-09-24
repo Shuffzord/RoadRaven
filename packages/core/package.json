@@ -34,7 +34,7 @@
 		"url": "git+https://github.com/Shuffzord/RoadRaven.git",
 		"directory": "packages/core"
 	},
-	"license": "PolyForm-Noncommercial-1.0.0",
+	"license": "FSL-1.1-MIT",
 	"homepage": "https://shuffzord.github.io/RoadRaven/",
 	"bugs": "https://github.com/Shuffzord/RoadRaven/issues",
 	"description": "Type and Zod-schema package for RoadRaven roadmaps. Framework-agnostic; pair with @roadraven/mcp or your own producer for live integration.",
