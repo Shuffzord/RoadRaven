@@ -6,15 +6,16 @@ import {
 	NODE_STATUS_ATTR,
 } from "../../src/mainview/lib/domContract";
 import type { BuiltFixture } from "./fixtures/index";
+import { qualityFromEnv } from "./quality";
 import type { ScenePreset } from "./scenes";
 
-/** Capture quality segment of the output path; Phase 2 parameterises it. */
-export const QUALITY_DIR = "preview";
+/** The requested quality, read once; also the output path's quality segment. */
+export const CAPTURE_QUALITY = qualityFromEnv();
 export const SHOWCASE_DIR = resolve(
 	__dirname,
 	"../../../../artifacts/showcase",
 );
-export const CAPTURE_DIR = resolve(SHOWCASE_DIR, "captures", QUALITY_DIR);
+export const CAPTURE_DIR = resolve(SHOWCASE_DIR, "captures", CAPTURE_QUALITY);
 
 export function capturePath(sceneId: string, themeId: string): string {
 	return resolve(CAPTURE_DIR, sceneId, `${themeId}.png`);

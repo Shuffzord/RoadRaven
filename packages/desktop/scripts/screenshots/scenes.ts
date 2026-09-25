@@ -61,7 +61,7 @@ export const SCENES: readonly ScenePreset[] = [
 		title: "Ship v1.0 — top-down",
 		fixture: "project",
 		layout: "TB",
-		viewport: VIEWPORT,
+		viewport: { width: 2400, height: 1200 },
 		expectedCards: 15,
 		attribution: "none",
 	},

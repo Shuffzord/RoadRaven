@@ -12,6 +12,7 @@ describe("parseCaptureArgs", () => {
 			scenes: ["cfa-overview"],
 			themes: ["dark"],
 			collage: false,
+			quality: "preview",
 		});
 	});
 
@@ -25,6 +26,7 @@ describe("parseCaptureArgs", () => {
 			scenes: ["agent-workflow", "cfa-detail"],
 			themes: ["moss", "light"],
 			collage: false,
+			quality: "preview",
 		});
 	});
 
@@ -56,6 +58,7 @@ describe("parseCaptureArgs", () => {
 			scenes: ["cfa-overview"],
 			themes: ["dark", "light", "amber", "moss"],
 			collage: true,
+			quality: "preview",
 		});
 	});
 
@@ -85,9 +88,21 @@ describe("parseCaptureArgs", () => {
 		expect(() => parseCaptureArgs(["dark"], opts)).toThrow();
 	});
 
-	// RC2 (v0.8.6 Phase 2 flips this): quality presets are not implemented yet.
-	it.fails("accepts --quality standard", () => {
-		parseCaptureArgs(["--quality", "standard"], opts);
+	// RC2 (v0.8.6 Phase 2 flips this): quality presets are now implemented.
+	it("accepts --quality standard", () => {
+		expect(parseCaptureArgs(["--quality", "standard"], opts).quality).toBe(
+			"standard",
+		);
+	});
+
+	it("defaults to preview quality when --quality is omitted", () => {
+		expect(parseCaptureArgs([], opts).quality).toBe("preview");
+	});
+
+	it("throws on an unknown quality", () => {
+		expect(() => parseCaptureArgs(["--quality", "nope"], opts)).toThrow(
+			/Unknown quality 'nope'/,
+		);
 	});
 });
 
@@ -95,6 +110,13 @@ describe("formatHelp", () => {
 	it("lists every scene and theme id", () => {
 		const help = formatHelp(opts);
 		for (const id of [...opts.sceneIds, ...opts.themeIds]) {
+			expect(help).toContain(id);
+		}
+	});
+
+	it("lists all three quality ids", () => {
+		const help = formatHelp(opts);
+		for (const id of ["preview", "standard", "ultra"]) {
 			expect(help).toContain(id);
 		}
 	});

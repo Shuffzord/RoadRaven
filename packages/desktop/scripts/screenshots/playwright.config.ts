@@ -1,5 +1,6 @@
 import { resolve } from "node:path";
 import { defineConfig } from "@playwright/test";
+import { QUALITY_PROFILES, qualityFromEnv } from "./quality";
 
 export default defineConfig({
 	testDir: __dirname,
@@ -13,7 +14,7 @@ export default defineConfig({
 		browserName: "chromium",
 		baseURL: "http://127.0.0.1:5175",
 		viewport: { width: 1600, height: 1200 },
-		deviceScaleFactor: 1,
+		deviceScaleFactor: QUALITY_PROFILES[qualityFromEnv()],
 		colorScheme: "dark",
 		locale: "en-US",
 		timezoneId: "UTC",

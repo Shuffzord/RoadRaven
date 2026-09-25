@@ -27,6 +27,7 @@ const child = Bun.spawn(
 			ROADRAVEN_CAPTURE_SCENES: request.scenes.join(","),
 			ROADRAVEN_CAPTURE_THEMES: request.themes.join(","),
 			ROADRAVEN_CAPTURE_COLLAGE: request.collage ? "1" : "0",
+			ROADRAVEN_CAPTURE_QUALITY: request.quality,
 		},
 		stdout: "inherit",
 		stderr: "inherit",

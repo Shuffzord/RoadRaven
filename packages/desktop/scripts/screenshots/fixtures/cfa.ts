@@ -1,4 +1,4 @@
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import {
 	type NodeStatus,
@@ -6,7 +6,6 @@ import {
 	RoadmapSchemaSchema,
 } from "../../../../core/src/schema";
 import { resolveRefsWithOwnership } from "../../../src/bun/resolveRefs";
-import { CAPTURE_DIR } from "../sceneLoader";
 import type { BuiltFixture } from "./index";
 
 const root = resolve(__dirname, "../../../../..");
@@ -75,11 +74,5 @@ export async function buildCfaFixture(): Promise<BuiltFixture> {
 	schema.nodes.forEach(assertResolved);
 	const activeModule = stageStudy(schema.nodes[0]);
 	RoadmapSchemaSchema.parse(schema);
-	// The full demo is portable: written next to the captures, never into samples/.
-	await mkdir(CAPTURE_DIR, { recursive: true });
-	await writeFile(
-		resolve(CAPTURE_DIR, "cfa-l1-demo.json"),
-		`${JSON.stringify(schema, null, 2)}\n`,
-	);
 	return { schema, anchors: { activeModule: activeModule.id }, sources };
 }

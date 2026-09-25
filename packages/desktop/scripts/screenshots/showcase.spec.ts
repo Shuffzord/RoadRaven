@@ -1,4 +1,4 @@
-import { mkdir, readFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { expect, type Page, test } from "@playwright/test";
 import type { RoadmapNode } from "../../../core/src/schema";
@@ -10,8 +10,10 @@ import {
 	buildFixture,
 	type FixtureId,
 } from "./fixtures/index";
+import { pngDimensions, QUALITY_PROFILES } from "./quality";
 import {
 	CAPTURE_DIR,
+	CAPTURE_QUALITY,
 	capturePath,
 	captureScene,
 	cardGeometry,
@@ -86,6 +88,18 @@ async function buildFixtures(
 	return built;
 }
 
+/** The CFA demo is portable: written next to the captures, never into samples/. */
+async function writeCfaDemo(
+	fixtures: Map<FixtureId, BuiltFixture>,
+): Promise<void> {
+	const cfa = fixtures.get("cfa");
+	if (!cfa) return;
+	await writeFile(
+		resolve(CAPTURE_DIR, "cfa-l1-demo.json"),
+		`${JSON.stringify(cfa.schema, null, 2)}\n`,
+	);
+}
+
 function fixtureFor(
 	fixtures: Map<FixtureId, BuiltFixture>,
 	preset: ScenePreset,
@@ -115,6 +129,11 @@ async function captureAll(
 			const path = capturePath(preset.id, themeId);
 			await mkdir(dirname(path), { recursive: true });
 			const image = await captureScene(page, path);
+			const scale = QUALITY_PROFILES[CAPTURE_QUALITY];
+			expect(pngDimensions(image)).toEqual({
+				width: preset.viewport.width * scale,
+				height: preset.viewport.height * scale,
+			});
 			if (preset !== scenes[0]) continue;
 			shots.push({
 				name,
@@ -127,7 +146,12 @@ async function captureAll(
 
 async function writeCollage(page: Page, shots: ThemeShot[]): Promise<void> {
 	const lead = scenes[0];
-	const path = resolve(SHOWCASE_DIR, "collage", `${lead.id}.png`);
+	const path = resolve(
+		SHOWCASE_DIR,
+		"collage",
+		CAPTURE_QUALITY,
+		`${lead.id}.png`,
+	);
 	await mkdir(dirname(path), { recursive: true });
 	await captureCollage(page, shots, path, {
 		heading: "One roadmap. Different perspectives.",
@@ -153,6 +177,7 @@ test("capture showcase scenes", async ({ page }) => {
 	test.setTimeout(60_000 + 20_000 * scenes.length * themes.length);
 	const fixtures = await buildFixtures(scenes.map((scene) => scene.fixture));
 	await mkdir(CAPTURE_DIR, { recursive: true });
+	await writeCfaDemo(fixtures);
 	const pageErrors = await bootApp(page);
 	const shots = await captureAll(page, fixtures);
 	if (collage) await writeCollage(page, shots);
