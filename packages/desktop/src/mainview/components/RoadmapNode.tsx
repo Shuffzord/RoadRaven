@@ -16,6 +16,7 @@ import {
 	CHEVRON_EXPAND_LABEL,
 	NODE_CARD_ATTR,
 	NODE_FOCUSED_ATTR,
+	NODE_PLUGIN_ATTR,
 	NODE_PROGRESS_ATTR,
 	NODE_RIBBON_ATTR,
 	NODE_STATUS_ATTR,
@@ -423,7 +424,7 @@ export const RoadmapNodeCard = memo(function RoadmapNodeCard({
 						<span
 							className="absolute top-1.5 left-[10px] inline-flex items-center justify-center w-[16px] h-[16px] rounded-full text-[9px] font-bold text-white pointer-events-none select-none shadow-sm"
 							style={{ background: g.bg }}
-							data-plugin-id={pluginGlyph}
+							{...{ [NODE_PLUGIN_ATTR]: pluginGlyph }}
 							role="img"
 							aria-label={`Plugin: ${g.label}`}
 							title={`Connected via ${g.label}`}
