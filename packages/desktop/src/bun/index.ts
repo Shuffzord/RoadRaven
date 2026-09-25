@@ -42,10 +42,12 @@ import {
 	type MainWindow,
 } from "./rpc/fileRpc";
 import { createSetupRpcHandlers, createThemeRpcHandlers } from "./rpc/setupRpc";
+import { createUpdateRpcHandlers } from "./rpc/updateRpc";
 import { createWindowRpcHandlers } from "./rpc/windowRpc";
 import { deleteSentinel, writeSentinel } from "./sentinel";
 import { loadSettings, saveSettings } from "./settings";
 import { startThemeWatcher } from "./themeWatcher";
+import { createUpdateService } from "./updater/updateService";
 
 // Re-export the RPC type so downstream modules can import from the app entry
 export type { RoadmapRPCType };
@@ -257,6 +259,11 @@ process.on("exit", (code) => {
 	bunLogger.info`process.exit(${code}) — flush must have run via before-quit or SIG* path`;
 });
 
+// v0.8.5: self-update service. Created before the RPC table because its
+// handlers close over it; the push subscription and launch check are wired
+// after the window exists (below).
+const updateService = createUpdateService({ flushPending });
+
 // Define RPC handlers before creating the window (Electrobun pattern)
 const rpc = defineMainRpc<RoadmapRPCType>({
 	maxRequestTime: 120_000, // 2 min — native file dialogs block until user picks a file
@@ -302,6 +309,8 @@ const rpc = defineMainRpc<RoadmapRPCType>({
 			...createSetupRpcHandlers(APP_VERSION),
 
 			...createThemeRpcHandlers(),
+
+			...createUpdateRpcHandlers({ service: updateService }),
 		},
 		messages: {},
 	},
@@ -357,6 +366,16 @@ mainWindow.webview.rpc?.send.pushEventApiState({
 	port: currentPort,
 	connectedCount: 0,
 	errorMessage: currentErrorMessage,
+});
+
+// v0.8.5: every update-state change goes to the renderer; it also pulls
+// getUpdateState on mount, so a push that races bundle load is harmless.
+updateService.onStateChange((state) => {
+	mainWindow?.webview.rpc?.send.pushUpdateState(state);
+});
+updateService.scheduleLaunchCheck({
+	enabled: loadSettings().updates?.autoCheck !== false,
+	delayMs: 10_000,
 });
 
 bunLogger.info("RoadRaven main process initialized");

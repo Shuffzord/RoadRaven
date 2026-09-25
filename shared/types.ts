@@ -44,6 +44,22 @@ export type ThemeWriteResult =
 export type ThemeDeleteResult = { ok: true } | { ok: false; error: string };
 
 /**
+ * v0.8.5: self-update state, owned by the main-process update service
+ * (src/bun/updater/updateService.ts) and pushed to the renderer.
+ */
+export type UpdateState =
+	| { status: "idle" }
+	| { status: "disabled"; reason: "dev" }
+	| { status: "checking" }
+	/** `version` is the current version. */
+	| { status: "up-to-date"; version: string }
+	/** `version` is the new version. */
+	| { status: "available"; version: string }
+	| { status: "downloading"; version: string; progress: number }
+	| { status: "ready"; version: string }
+	| { status: "error"; message: string };
+
+/**
  * Strict settings interface — add fields here as new phases need them.
  * Each field is optional so partial updates work via saveSettings RPC.
  */
@@ -95,6 +111,11 @@ export interface AppSettings {
 	setup?: {
 		/** True once the user has finished or dismissed the first-run wizard. */
 		completed?: boolean;
+	};
+	/** v0.8.5: self-update preferences. */
+	updates?: {
+		/** Check for an update once, shortly after launch. Absent = true. */
+		autoCheck?: boolean;
 	};
 }
 
@@ -236,6 +257,27 @@ export type RoadmapRPCType = {
 					connectedCount: number;
 					errorMessage: string | null;
 				};
+			};
+			// -- Self-update (v0.8.5) -----------------------------------------
+			// getUpdateState: renderer pulls on mount (the startup push can race
+			// bundle load, same as getEventApiState).
+			getUpdateState: {
+				params: Record<string, never>;
+				response: UpdateState;
+			};
+			checkForUpdate: {
+				params: Record<string, never>;
+				response: UpdateState;
+			};
+			downloadUpdate: {
+				params: Record<string, never>;
+				response: UpdateState;
+			};
+			// Flushes pending saves, then hands off to the updater (which quits
+			// the app). Resolves only when the restart did not happen.
+			applyUpdate: {
+				params: Record<string, never>;
+				response: { ok: boolean; error?: string };
 			};
 			// -- Setup Wizard (v0.6) ------------------------------------------
 			// getSetupStatus: pulled on mount to decide whether to auto-open the
@@ -404,6 +446,8 @@ export type RoadmapRPCType = {
 			// `ids` are the basenames. The renderer re-lists and re-applies the
 			// active theme if it is among them.
 			pushThemesChanged: { ids: string[] };
+			// v0.8.5: every update-service state change.
+			pushUpdateState: UpdateState;
 		};
 	}>;
 };
