@@ -1,41 +1,17 @@
 import { resolve } from "node:path";
-import { parseArgs } from "node:util";
 import { THEME_IDS } from "../../src/mainview/themes";
+import { formatHelp, parseCaptureArgs } from "./cli";
+import { SCENE_IDS } from "./scenes";
 
-const { values } = parseArgs({
-	args: Bun.argv.slice(2),
-	options: {
-		theme: { type: "string" },
-		collage: { type: "boolean", default: false },
-		help: { type: "boolean", default: false },
-	},
-});
+const argv = Bun.argv.slice(2);
+const catalog = { themeIds: THEME_IDS, sceneIds: SCENE_IDS };
 
-if (values.help) {
-	process.stdout.write(
-		`Usage: bun run screenshots:cfa [--theme ID[,ID...]] [--collage]\n` +
-			`Themes: ${THEME_IDS.join(", ")}, all\n` +
-			`Default: dark; --collage defaults to dark,light,amber,moss.\n`,
-	);
+if (argv.includes("--help")) {
+	process.stdout.write(formatHelp(catalog));
 	process.exit(0);
 }
 
-const requested =
-	values.theme ?? (values.collage ? "dark,light,amber,moss" : "dark");
-const themes =
-	requested === "all"
-		? [...THEME_IDS]
-		: [...new Set(requested.split(",").map((id) => id.trim()))];
-for (const id of themes) {
-	if (!THEME_IDS.includes(id)) {
-		throw new Error(`Unknown theme '${id}'. Choose: ${THEME_IDS.join(", ")}`);
-	}
-}
-if (values.collage && themes.length < 2) {
-	throw new Error(
-		"A collage needs at least two themes; pass a comma-separated --theme list.",
-	);
-}
+const request = parseCaptureArgs(argv, catalog);
 
 const child = Bun.spawn(
 	[
@@ -48,8 +24,9 @@ const child = Bun.spawn(
 		cwd: resolve(import.meta.dir, "../.."),
 		env: {
 			...process.env,
-			ROADRAVEN_CAPTURE_THEMES: themes.join(","),
-			ROADRAVEN_CAPTURE_COLLAGE: values.collage ? "1" : "0",
+			ROADRAVEN_CAPTURE_SCENES: request.scenes.join(","),
+			ROADRAVEN_CAPTURE_THEMES: request.themes.join(","),
+			ROADRAVEN_CAPTURE_COLLAGE: request.collage ? "1" : "0",
 		},
 		stdout: "inherit",
 		stderr: "inherit",

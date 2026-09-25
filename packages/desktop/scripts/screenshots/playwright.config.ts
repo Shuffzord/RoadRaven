@@ -3,7 +3,7 @@ import { defineConfig } from "@playwright/test";
 
 export default defineConfig({
 	testDir: __dirname,
-	testMatch: "cfa.spec.ts",
+	testMatch: "showcase.spec.ts",
 	workers: 1,
 	retries: 0,
 	timeout: 60_000,
