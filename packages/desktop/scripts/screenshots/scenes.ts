@@ -15,7 +15,7 @@ export interface ScenePreset {
 	/** Selecting a node opens the detail panel; omitted = panel closed. */
 	selectedNode?: string;
 	viewport: { width: number; height: number };
-	/** Stored for Phase 4 promo cropping; unused by the capture. */
+	/** The card promo crops keep in frame (`object-position`); unused by the capture. */
 	focal?: string;
 	expectedCards: number;
 	/** `"none"` = zero plugin badges; a list = each plugin id has >= 1 badge. */
@@ -31,6 +31,7 @@ export const SCENES: readonly ScenePreset[] = [
 		fixture: "cfa",
 		layout: "LR",
 		collapseDepth: 1,
+		focal: "10000000-0000-4000-8000-000000000000",
 		viewport: VIEWPORT,
 		expectedCards: 11,
 		attribution: "none",
@@ -43,6 +44,7 @@ export const SCENES: readonly ScenePreset[] = [
 		layout: "LR",
 		collapseDepth: 1,
 		selectedNode: "activeModule",
+		focal: "activeModule",
 		viewport: VIEWPORT,
 		expectedCards: 11,
 		attribution: "none",
@@ -52,6 +54,7 @@ export const SCENES: readonly ScenePreset[] = [
 		title: "Ship v1.0",
 		fixture: "project",
 		layout: "LR",
+		focal: "ship-v1",
 		viewport: VIEWPORT,
 		expectedCards: 15,
 		attribution: "none",
@@ -61,6 +64,7 @@ export const SCENES: readonly ScenePreset[] = [
 		title: "Ship v1.0 — top-down",
 		fixture: "project",
 		layout: "TB",
+		focal: "sync-service",
 		viewport: { width: 2400, height: 1200 },
 		expectedCards: 15,
 		attribution: "none",
@@ -70,6 +74,7 @@ export const SCENES: readonly ScenePreset[] = [
 		title: "Ship v1.0 — agents at work",
 		fixture: "project-agents",
 		layout: "LR",
+		focal: "sync-service",
 		viewport: VIEWPORT,
 		expectedCards: 15,
 		attribution: ["claude-code", "github-actions"],

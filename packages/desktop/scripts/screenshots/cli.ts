@@ -1,4 +1,5 @@
 import { parseArgs } from "node:util";
+import { FORMAT_IDS } from "./promo";
 import {
 	DEFAULT_QUALITY,
 	QUALITY_IDS,
@@ -12,6 +13,8 @@ export interface CaptureRequest {
 	collage: boolean;
 	quality: QualityId;
 	galleryOnly: boolean;
+	/** Promo format ids to compose from each capture; empty = none. */
+	formats: string[];
 }
 
 export interface CaptureCatalog {
@@ -63,6 +66,7 @@ export function parseCaptureArgs(
 			collage: { type: "boolean", default: false },
 			quality: { type: "string" },
 			"gallery-only": { type: "boolean", default: false },
+			format: { type: "string" },
 		},
 	});
 	const collage = values.collage === true;
@@ -83,7 +87,11 @@ export function parseCaptureArgs(
 		opts.sceneIds,
 		"scene",
 	);
-	return { scenes, themes, collage, quality, galleryOnly };
+	const formats =
+		values.format === undefined
+			? []
+			: pickIds(values.format, FORMAT_IDS, "format");
+	return { scenes, themes, collage, quality, galleryOnly, formats };
 }
 
 export function formatHelp(opts: CaptureCatalog): string {
@@ -97,6 +105,7 @@ export function formatHelp(opts: CaptureCatalog): string {
 		`Quality: ${qualities}\n` +
 		`Default: ${opts.sceneIds[0]} in dark; --collage defaults to ${COLLAGE_THEMES}\n` +
 		"and composes the first requested scene across the requested themes.\n" +
+		`--format composes promo images (${FORMAT_IDS.join(", ")}, all) from each capture into artifacts/showcase/promo/.\n` +
 		"--gallery-only rebuilds artifacts/showcase/index.html from disk, skipping capture.\n"
 	);
 }

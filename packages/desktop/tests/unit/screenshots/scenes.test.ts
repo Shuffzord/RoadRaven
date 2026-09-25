@@ -34,6 +34,12 @@ describe("SCENES", () => {
 		expect(scene.viewport.width).toBeGreaterThanOrEqual(800);
 		expect(scene.viewport.height).toBeGreaterThanOrEqual(600);
 	});
+
+	it.each(
+		SCENES.map((scene) => [scene.id, scene] as const),
+	)("%s names a focal node for promo crops", (_id, scene) => {
+		expect(scene.focal).toBeTruthy();
+	});
 });
 
 describe("project fixtures", () => {

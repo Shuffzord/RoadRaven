@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { formatHelp, parseCaptureArgs } from "../../../scripts/screenshots/cli";
+import { FORMAT_IDS } from "../../../scripts/screenshots/promo";
 
 const opts = {
 	themeIds: ["dark", "light", "amber", "moss"],
@@ -14,6 +15,7 @@ describe("parseCaptureArgs", () => {
 			collage: false,
 			quality: "preview",
 			galleryOnly: false,
+			formats: [],
 		});
 	});
 
@@ -29,6 +31,7 @@ describe("parseCaptureArgs", () => {
 			collage: false,
 			quality: "preview",
 			galleryOnly: false,
+			formats: [],
 		});
 	});
 
@@ -62,6 +65,7 @@ describe("parseCaptureArgs", () => {
 			collage: true,
 			quality: "preview",
 			galleryOnly: false,
+			formats: [],
 		});
 	});
 
@@ -111,6 +115,21 @@ describe("parseCaptureArgs", () => {
 	it("--gallery-only parses, defaults false", () => {
 		expect(parseCaptureArgs([], opts).galleryOnly).toBe(false);
 		expect(parseCaptureArgs(["--gallery-only"], opts).galleryOnly).toBe(true);
+	});
+
+	it("--format parses a comma list and expands `all`", () => {
+		expect(
+			parseCaptureArgs(["--format", "social-card,readme-hero"], opts).formats,
+		).toEqual(["social-card", "readme-hero"]);
+		expect(parseCaptureArgs(["--format", "all"], opts).formats).toEqual([
+			...FORMAT_IDS,
+		]);
+	});
+
+	it("throws on an unknown format", () => {
+		expect(() => parseCaptureArgs(["--format", "poster"], opts)).toThrow(
+			/Unknown format 'poster'/,
+		);
 	});
 });
 

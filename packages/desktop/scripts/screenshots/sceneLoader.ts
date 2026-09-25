@@ -6,6 +6,7 @@ import {
 	NODE_STATUS_ATTR,
 } from "../../src/mainview/lib/domContract";
 import type { BuiltFixture } from "./fixtures/index";
+import { focalPosition } from "./focal";
 import { qualityFromEnv } from "./quality";
 import type { ScenePreset } from "./scenes";
 
@@ -84,6 +85,18 @@ export function cardGeometry(page: Page): Promise<string> {
 			}),
 		),
 	);
+}
+
+/** A node card's centre as viewport percentages; null when the card is not mounted. */
+export async function focalPoint(
+	page: Page,
+	nodeId: string,
+): Promise<{ x: number; y: number } | null> {
+	const card = page.locator(`[${NODE_CARD_ATTR}="${nodeId}"]`).first();
+	if ((await card.count()) === 0) return null;
+	const rect = await card.boundingBox();
+	const viewport = page.viewportSize();
+	return rect && viewport ? focalPosition(rect, viewport) : null;
 }
 
 /** The preset's attribution contract, checked against the rendered badges. */

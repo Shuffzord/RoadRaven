@@ -44,6 +44,7 @@ async function captureWithPlaywright(): Promise<number> {
 				ROADRAVEN_CAPTURE_THEMES: request.themes.join(","),
 				ROADRAVEN_CAPTURE_COLLAGE: request.collage ? "1" : "0",
 				ROADRAVEN_CAPTURE_QUALITY: request.quality,
+				ROADRAVEN_CAPTURE_FORMATS: request.formats.join(","),
 			},
 			stdout: "inherit",
 			stderr: "inherit",
