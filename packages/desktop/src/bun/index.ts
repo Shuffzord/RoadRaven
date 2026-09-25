@@ -210,12 +210,18 @@ async function getMainViewUrl(): Promise<string> {
 // EDIT-13 quit-flush + EDIT-18 Linux SIGTERM-flush wiring.
 //
 // PATH 1 — Electrobun before-quit: covers macOS Cmd+Q, Windows Alt+F4,
-// Dock → Quit, Linux window-close (all routed through Utils.quit which emits
-// the before-quit event). Verified API:
-//   electrobun@1.16.0/dist/api/bun/events/ApplicationEvents.ts:20-21 — beforeQuit factory
-//   electrobun@1.16.0/dist/api/bun/events/eventEmitter.ts:43         — singleton emitter
-//   electrobun@1.16.0/dist/api/bun/core/Utils.ts:122-148              — Utils.quit() emits + stopEventLoop
-//   electrobun@1.16.0/dist/api/bun/index.ts:114                       — Electrobun.events singleton
+// Dock → Quit, Linux window-close, and (v0.8.5) Updater.applyUpdate's own
+// quit path — all routed through requestQuitApproval/quitAfterApproval,
+// which emit the before-quit event before native shutdown. Verified API
+// (2.x devkit):
+//   .hutch/devkit/api/sdks/main/core/Utils.ts:134-190 — requestQuitApproval /
+//     quitAfterApproval / quit
+//
+// Phase 0 R3: the emit is synchronous and is not awaited, so this handler
+// gets essentially no event-loop time before native shutdown proceeds under
+// applyUpdate — this is why updateService.ts's apply() awaits flushPending()
+// itself before calling the platform seam's applyUpdate, instead of relying
+// on this handler alone.
 //
 // CR-01 (Wave 3 review): both before-quit and the SIG* signal handlers below
 // must AWAIT flushPending. Because flushPending now coalesces concurrent

@@ -90,6 +90,26 @@ bunx fallow                                # full repo scan
 Fallow output is currently signal, not a gate. Treat findings as a planning
 input for refactor PRs rather than a blocking failure on each individual change.
 
+### Testing the in-app updater locally
+
+The packaged app checks GitHub Releases for updates, so exercising that
+flow from a dev checkout needs a stand-in server. Set
+`ROADRAVEN_UPDATE_BASE_URL=http://127.0.0.1:8765` before `bun run
+build:canary`: the canary build then points its updater at that URL instead
+of GitHub, and skips delta-patch generation, so each local build is a full
+bundle.
+
+Build and install an older version, bump the version, build again with the
+same env var set, and serve the newer build's `packages/desktop/artifacts/`
+directory from that URL with any static file server. The installed canary
+reads `canary-win-x64-update.json` from there on its launch check and
+downloads `canary-win-x64-RoadRaven-canary.tar.zst` if it is newer.
+
+Run the installed canary (not a dev/HMR session, which never checks for
+updates) and watch it through Preferences › About or the status-bar pill.
+See [`docs/development-guide.md`](./docs/development-guide.md#testing-the-in-app-updater-locally)
+for the fuller walkthrough.
+
 ## Documentation
 
 Documentation lives in the [`docs/`](./docs/) directory as Markdown. For now,

@@ -65,6 +65,32 @@ jobs:
         # bundle by electrobun.config.ts so the Setup Wizard can install the
         # Claude Code MCP integration (v0.6).
         run: bun run --cwd packages/desktop build:mcp
+      - name: Verify previous release is complete (delta-patch base)
+        # R2: the v0.8.4 release was published by hand before this workflow's
+        # build jobs ran, so /releases/latest already pointed at an empty
+        # v0.8.4 release when this job fetched its update manifest — 404 —
+        # and Hutch silently skipped the delta patch ("no previous release
+        # found"). HEAD the manifest before the build starts so a stale/empty
+        # `latest` fails the job loudly instead of shipping a full-bundle-only
+        # update. A 404 on a product's very first release is legitimate; set
+        # the repo Actions variable ALLOW_MISSING_PREVIOUS_RELEASE=1 to bypass
+        # (no silent skip otherwise).
+        shell: pwsh
+        env:
+          ALLOW_MISSING_PREVIOUS_RELEASE: ${{ vars.ALLOW_MISSING_PREVIOUS_RELEASE }}
+        run: |
+          if ($env:ALLOW_MISSING_PREVIOUS_RELEASE -eq '1') {
+            Write-Host "ALLOW_MISSING_PREVIOUS_RELEASE=1 set - skipping delta-patch base check (use only for a product's first release)."
+            exit 0
+          }
+          $url = 'https://github.com/Shuffzord/RoadRaven/releases/latest/download/stable-win-x64-update.json'
+          try {
+            Invoke-WebRequest -Uri $url -Method Head -MaximumRedirection 5 -UseBasicParsing | Out-Null
+            Write-Host "Previous release manifest found at $url"
+          } catch {
+            Write-Host "::error::latest release has no win update manifest - was the GitHub Release created by hand before this run? Delete the empty release and re-push the tag."
+            exit 1
+          }
       - name: Build Windows installer (stable channel)
         # Produces: packages/desktop/artifacts/win-x64-RoadRaven-Setup.zip
         #           packages/desktop/artifacts/stable-win-x64-update.json
@@ -121,6 +147,30 @@ jobs:
         # bundle by electrobun.config.ts so the Setup Wizard can install the
         # Claude Code MCP integration (v0.6).
         run: bun run --cwd packages/desktop build:mcp
+      - name: Verify previous release is complete (delta-patch base)
+        # R2: the v0.8.4 release was published by hand before this workflow's
+        # build jobs ran, so /releases/latest already pointed at an empty
+        # v0.8.4 release when this job fetched its update manifest — 404 —
+        # and Hutch silently skipped the delta patch ("no previous release
+        # found"). HEAD the manifest before the build starts so a stale/empty
+        # `latest` fails the job loudly instead of shipping a full-bundle-only
+        # update. A 404 on a product's very first release is legitimate; set
+        # the repo Actions variable ALLOW_MISSING_PREVIOUS_RELEASE=1 to bypass
+        # (no silent skip otherwise).
+        shell: bash
+        env:
+          ALLOW_MISSING_PREVIOUS_RELEASE: ${{ vars.ALLOW_MISSING_PREVIOUS_RELEASE }}
+        run: |
+          if [ "$ALLOW_MISSING_PREVIOUS_RELEASE" = "1" ]; then
+            echo "ALLOW_MISSING_PREVIOUS_RELEASE=1 set - skipping delta-patch base check (use only for a product's first release)."
+            exit 0
+          fi
+          url="https://github.com/Shuffzord/RoadRaven/releases/latest/download/stable-linux-x64-update.json"
+          if ! curl -fsSLI "$url" > /dev/null; then
+            echo "::error::latest release has no linux update manifest - was the GitHub Release created by hand before this run? Delete the empty release and re-push the tag."
+            exit 1
+          fi
+          echo "Previous release manifest found at $url"
       - name: Build Linux installer (stable channel)
         # Produces: packages/desktop/artifacts/linux-x64-RoadRaven-Setup.tar.gz
         #           packages/desktop/artifacts/stable-linux-x64-update.json

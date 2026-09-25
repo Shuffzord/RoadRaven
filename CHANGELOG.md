@@ -3,6 +3,36 @@
 All notable changes to RoadRaven are documented in this file. The format
 follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.8.5] - Unreleased
+
+### Added
+
+- **In-app updates.** Installed stable and canary builds check for a newer
+  version about 10 seconds after launch and ask before downloading it.
+  Once it is downloaded, Preferences › About shows the update and a
+  **Restart to update** button, and a status-bar pill says "Update ready".
+  Restarting flushes unsaved work first and prompts to save an untitled
+  roadmap, same as closing the app. A **Check for updates when RoadRaven
+  starts** preference turns off the launch check; dev builds never update.
+- Themed screenshot tooling for the docs (`bun run screenshots:cfa`):
+  captures the CFA sample roadmap in every built-in theme and generates a
+  collage from the set.
+
+### Changed
+
+- The log file is rotated, not truncated, on launch: an existing
+  `roadraven.log` is renamed to `roadraven.log.1` (overwriting an older
+  `.1`) before the new session's writer opens, so a relaunch — including an
+  in-app update's restart — no longer erases the log of the session that
+  just ran.
+
+### Fixed
+
+- The release pipeline now verifies the previous GitHub Release has its
+  update manifest before building, so delta patches are generated reliably
+  instead of silently falling back to a full-bundle-only update when the
+  release was published ahead of the build jobs.
+
 ## [0.8.4] - 2026-09-24
 
 ### Added

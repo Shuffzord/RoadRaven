@@ -93,6 +93,28 @@ try {
 
 Follow this pattern whenever new code uses `electroview`.
 
+## Testing the In-App Updater Locally
+
+Set `ROADRAVEN_UPDATE_BASE_URL=http://127.0.0.1:8765` (or any local server
+URL) before running `bun run build:canary`. `electrobun.config.ts` reads it:
+when set, the canary channel's release config points its `baseUrl` at that
+URL instead of GitHub Releases, and turns off delta-patch generation, so
+every local build is a full bundle rather than a diff against a previous
+one.
+
+Build and install a "previous" version, then bump the version and build
+again with the same env var set, and serve the second build's
+`packages/desktop/artifacts/` directory from that URL with any static file
+server. The installed canary fetches `canary-win-x64-update.json` from
+there on its launch check and, if it points at a newer version, downloads
+`canary-win-x64-RoadRaven-canary.tar.zst`.
+
+Run the installed canary itself -- not `bun run dev` / `dev:hmr`, which
+never check for updates -- and watch the flow through Preferences › About
+or the status-bar pill: the launch check, the download, and Restart to
+update. See [Logging](./logging.md) for where the session's log ends up
+across the restart.
+
 ## How to Add a New Component
 
 1. **Create the component file** in `packages/desktop/src/mainview/components/`.

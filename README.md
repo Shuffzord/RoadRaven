@@ -144,6 +144,9 @@ The installer puts the app under `~/.local/share/` and creates a desktop
 shortcut. Chromium (CEF) ships bundled, so no system browser dependency. Pin
 a version with `ROADRAVEN_VERSION=v0.8.4` in front of `sh`.
 
+Once installed, RoadRaven checks GitHub Releases for updates and asks before
+downloading one.
+
 ## Status
 
 | Shipped as of v0.8.4 | Next |
