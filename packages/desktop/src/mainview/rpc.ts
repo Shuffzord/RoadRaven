@@ -63,6 +63,11 @@ const rpc = Electroview.defineRPC<RoadmapRPCType>({
 					handlePushEventApiError(msg);
 				});
 			},
+			pushUpdateState: (msg) => {
+				import("./rpcHandlers").then(({ handlePushUpdateState }) => {
+					handlePushUpdateState(msg);
+				});
+			},
 			// v0.8.3 Phase 4: ThemeProvider subscribes via onThemesChanged below.
 			// Not routed through rpcHandlers: themeStore imports this module, and
 			// a handler reaching it from here would close an import cycle.

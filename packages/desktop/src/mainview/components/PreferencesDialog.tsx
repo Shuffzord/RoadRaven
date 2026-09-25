@@ -1,19 +1,31 @@
 import * as Dialog from "@radix-ui/react-dialog";
 import { useEffect, useId, useRef, useState } from "react";
 import type { ThemeFile } from "../../../../../shared/themeSchema";
-import type { AppSettings } from "../../../../../shared/types";
+import type { AppSettings, UpdateState } from "../../../../../shared/types";
 import { APP_VERSION } from "../lib/appVersion";
 import {
 	CREATE_THEME_LABEL,
 	EDIT_THEME_LABEL,
 	THEME_NAME_LABEL,
+	UPDATE_AUTOCHECK_LABEL,
+	UPDATE_CHECK_LABEL,
+	UPDATE_DOWNLOAD_LABEL,
+	UPDATE_RESTART_LABEL,
+	UPDATE_STATUS_TESTID,
 } from "../lib/domContract";
 import { slugify } from "../lib/themeEditor";
+import {
+	checkForUpdates,
+	describeUpdateState,
+	downloadUpdate,
+	restartToUpdate,
+} from "../lib/updateActions";
 import { electroview } from "../rpc";
 import { useEventApiStore } from "../store/eventApiStore";
 import { usePreferencesStore } from "../store/preferencesStore";
 import { useSetupStore } from "../store/setupStore";
 import { userThemeFiles, useThemeStore } from "../store/themeStore";
+import { useUpdateStore } from "../store/updateStore";
 import { getBuiltInTheme, resolveThemeFile, THEME_IDS } from "../themes";
 import {
 	dialogActionRowStyle,
@@ -257,6 +269,63 @@ function parsePort(
 		};
 	}
 	return { port };
+}
+
+/** The one About action for an update state (none while busy or disabled). */
+function updateAction(
+	status: UpdateState["status"],
+): { label: string; run: () => Promise<unknown> } | null {
+	if (status === "available")
+		return { label: UPDATE_DOWNLOAD_LABEL, run: downloadUpdate };
+	if (status === "ready")
+		return { label: UPDATE_RESTART_LABEL, run: restartToUpdate };
+	if (status === "idle" || status === "up-to-date" || status === "error")
+		return { label: UPDATE_CHECK_LABEL, run: checkForUpdates };
+	return null;
+}
+
+/** About › updates (v0.8.5): status line, one action, launch auto-check. */
+function UpdateSection({
+	id,
+	autoCheck,
+	onAutoCheckChange,
+}: {
+	id: string;
+	autoCheck: boolean;
+	onAutoCheckChange: (checked: boolean) => void;
+}) {
+	const state = useUpdateStore((s) => s.state);
+	const action = updateAction(state.status);
+
+	return (
+		<>
+			<p data-testid={UPDATE_STATUS_TESTID} style={dialogHelperTextStyle}>
+				{describeUpdateState(state)}
+			</p>
+			{action && (
+				<div style={dialogActionRowStyle}>
+					<button
+						type="button"
+						onClick={() => void action.run()}
+						style={dialogSecondaryButtonStyle}
+					>
+						{action.label}
+					</button>
+				</div>
+			)}
+			<div style={dialogFieldRowStyle}>
+				<label htmlFor={`${id}-autocheck`} style={dialogFieldLabelStyle}>
+					{UPDATE_AUTOCHECK_LABEL}
+				</label>
+				<input
+					id={`${id}-autocheck`}
+					type="checkbox"
+					checked={autoCheck}
+					onChange={(e) => onAutoCheckChange(e.target.checked)}
+				/>
+			</div>
+		</>
+	);
 }
 
 function describeEventApi(
@@ -519,6 +588,13 @@ export function PreferencesDialog() {
 										Releases
 									</button>
 								</div>
+								<UpdateSection
+									id={id}
+									autoCheck={settings.updates?.autoCheck !== false}
+									onAutoCheckChange={(checked) =>
+										update({ updates: { autoCheck: checked } })
+									}
+								/>
 							</section>
 						</>
 					)}

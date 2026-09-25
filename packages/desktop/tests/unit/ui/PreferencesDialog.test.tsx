@@ -19,12 +19,19 @@ const rpc = vi.hoisted(() => ({
 	duplicateTheme: vi.fn(() => Promise.resolve({ ok: true, id: "dark-copy" })),
 	importTheme: vi.fn(() => Promise.resolve({ ok: true, id: "imported" })),
 	revealThemesFolder: vi.fn(() => Promise.resolve({ ok: true })),
+	// v0.8.5 Phase 2 update RPCs (via lib/updateActions)
+	checkForUpdate: vi.fn(() => Promise.resolve({ status: "checking" })),
+	downloadUpdate: vi.fn(() =>
+		Promise.resolve({ status: "downloading", version: "0.8.6", progress: 0 }),
+	),
+	applyUpdate: vi.fn(() => Promise.resolve({ ok: true })),
 }));
 
 vi.mock("../../../src/mainview/rpc", () => ({
 	electroview: { rpc: { request: rpc } },
 }));
 
+import type { UpdateState } from "../../../../../shared/types";
 import pkg from "../../../package.json" with { type: "json" };
 import {
 	DUPLICATE_THEME_LABEL,
@@ -36,11 +43,18 @@ import {
 import {
 	CREATE_THEME_LABEL,
 	EDIT_THEME_LABEL,
+	UPDATE_AUTOCHECK_LABEL,
+	UPDATE_CHECK_LABEL,
+	UPDATE_DOWNLOAD_LABEL,
+	UPDATE_RESTART_LABEL,
+	UPDATE_STATUS_TESTID,
 } from "../../../src/mainview/lib/domContract";
+import { describeUpdateState } from "../../../src/mainview/lib/updateActions";
 import { useEventApiStore } from "../../../src/mainview/store/eventApiStore";
 import { usePreferencesStore } from "../../../src/mainview/store/preferencesStore";
 import { useSetupStore } from "../../../src/mainview/store/setupStore";
 import { useThemeStore } from "../../../src/mainview/store/themeStore";
+import { useUpdateStore } from "../../../src/mainview/store/updateStore";
 import { THEME_IDS, themeForId } from "../../../src/mainview/themes";
 
 async function openDialog(settings: Record<string, unknown> = {}) {
@@ -81,6 +95,10 @@ afterEach(() => {
 		resolvedTheme: "dark",
 		userThemes: [],
 		draft: null,
+	});
+	useUpdateStore.setState({
+		state: { status: "idle" },
+		dismissedVersion: null,
 	});
 });
 
@@ -356,5 +374,117 @@ describe("PreferencesDialog", () => {
 
 		expect(usePreferencesStore.getState().open).toBe(false);
 		expect(screen.queryByRole("dialog")).toBeNull();
+	});
+
+	// v0.8.5 Phase 2: About › update status line, action button, auto-check.
+	const UPDATE_BUTTONS = [
+		UPDATE_CHECK_LABEL,
+		UPDATE_DOWNLOAD_LABEL,
+		UPDATE_RESTART_LABEL,
+	];
+	it.each<[UpdateState, string | null]>([
+		[{ status: "idle" }, UPDATE_CHECK_LABEL],
+		[{ status: "up-to-date", version: "0.8.5" }, UPDATE_CHECK_LABEL],
+		[
+			{
+				status: "error",
+				message: "Failed to check for updates: fetch failed",
+			},
+			UPDATE_CHECK_LABEL,
+		],
+		[{ status: "available", version: "0.8.6" }, UPDATE_DOWNLOAD_LABEL],
+		[{ status: "ready", version: "0.8.6" }, UPDATE_RESTART_LABEL],
+		[{ status: "checking" }, null],
+		[{ status: "downloading", version: "0.8.6", progress: 30 }, null],
+		[{ status: "disabled", reason: "dev" }, null],
+	])("About while %o shows its status line and button %s", async (state, button) => {
+		useUpdateStore.getState().setState(state);
+		await openDialog();
+
+		expect(screen.getByTestId(UPDATE_STATUS_TESTID).textContent).toBe(
+			describeUpdateState(state),
+		);
+		for (const label of UPDATE_BUTTONS) {
+			const found = screen.queryByRole("button", { name: label });
+			expect(found !== null, label).toBe(label === button);
+		}
+	});
+
+	it("an update error shows the service's message verbatim, no prefix", async () => {
+		useUpdateStore.getState().setState({
+			status: "error",
+			message: "Failed to check for updates: fetch failed",
+		});
+		await openDialog();
+
+		expect(screen.getByTestId(UPDATE_STATUS_TESTID).textContent).toBe(
+			"Failed to check for updates: fetch failed",
+		);
+	});
+
+	it("the status line follows a pushed state change", async () => {
+		await openDialog();
+		act(() => {
+			useUpdateStore.getState().setState({ status: "ready", version: "0.8.6" });
+		});
+		expect(screen.getByTestId(UPDATE_STATUS_TESTID).textContent).toBe(
+			describeUpdateState({ status: "ready", version: "0.8.6" }),
+		);
+	});
+
+	it("Check for updates / Download / Restart go through their RPCs", async () => {
+		await openDialog();
+
+		fireEvent.click(screen.getByRole("button", { name: UPDATE_CHECK_LABEL }));
+		expect(rpc.checkForUpdate).toHaveBeenCalledWith({});
+
+		act(() => {
+			useUpdateStore
+				.getState()
+				.setState({ status: "available", version: "0.8.6" });
+		});
+		fireEvent.click(
+			screen.getByRole("button", { name: UPDATE_DOWNLOAD_LABEL }),
+		);
+		expect(rpc.downloadUpdate).toHaveBeenCalledWith({});
+
+		act(() => {
+			useUpdateStore.getState().setState({ status: "ready", version: "0.8.6" });
+		});
+		await act(async () => {
+			fireEvent.click(
+				screen.getByRole("button", { name: UPDATE_RESTART_LABEL }),
+			);
+		});
+		expect(rpc.applyUpdate).toHaveBeenCalledWith({});
+	});
+
+	it("the auto-check box defaults on and saves updates.autoCheck", async () => {
+		await openDialog();
+		const box = screen.getByLabelText(
+			UPDATE_AUTOCHECK_LABEL,
+		) as HTMLInputElement;
+		expect(box.checked).toBe(true);
+
+		fireEvent.click(box);
+
+		expect(box.checked).toBe(false);
+		expect(rpc.saveSettings).toHaveBeenCalledWith({
+			settings: { updates: { autoCheck: false } },
+		});
+	});
+
+	it("the auto-check box shows a saved false and turns it back on", async () => {
+		await openDialog({ updates: { autoCheck: false } });
+		const box = screen.getByLabelText(
+			UPDATE_AUTOCHECK_LABEL,
+		) as HTMLInputElement;
+		expect(box.checked).toBe(false);
+
+		fireEvent.click(box);
+
+		expect(rpc.saveSettings).toHaveBeenCalledWith({
+			settings: { updates: { autoCheck: true } },
+		});
 	});
 });

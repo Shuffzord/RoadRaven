@@ -221,3 +221,19 @@ export const STRUCTURE_KEYS: Record<
 		moveDown: bind("Ctrl", "ArrowDown"),
 	},
 };
+
+// -- Self-update (v0.8.5 Phase 2) ---------------------------------------------
+// Rendered by UpdateAvailableDialog.tsx, UpdatePill.tsx and the About section
+// of PreferencesDialog.tsx; selected on by their unit tests.
+
+/** Prompt title is `${UPDATE_DIALOG_TITLE_PREFIX} <version> is available`. */
+export const UPDATE_DIALOG_TITLE_PREFIX = "RoadRaven";
+export const UPDATE_LATER_LABEL = "Later";
+export const UPDATE_DOWNLOAD_LABEL = "Download";
+export const UPDATE_CHECK_LABEL = "Check for updates";
+export const UPDATE_RESTART_LABEL = "Restart to update";
+export const UPDATE_AUTOCHECK_LABEL = "Check for updates when RoadRaven starts";
+/** Status-bar pill, rendered only when an update is ready. */
+export const UPDATE_PILL_TESTID = "update-pill";
+/** Preferences › About status line. */
+export const UPDATE_STATUS_TESTID = "update-status";
