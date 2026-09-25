@@ -46,8 +46,15 @@ export function downloadUpdate(): Promise<UpdateActionResult> {
  * Restart into the downloaded update. Updater.applyUpdate consults only
  * `before-quit`, not the window will-close guard (Phase 0 R3), so the unsaved
  * work guard runs here first — an untitled roadmap with edits is never lost.
+ *
+ * The pill stays rendered while ensureSafeToDiscard() awaits the user's
+ * answer, so a double-click can fire this twice; restartInFlight (same
+ * pattern as checkInFlight in src/bun/updater/updateService.ts) makes a
+ * second call while one is pending return the same promise.
  */
-export async function restartToUpdate(): Promise<RestartResult> {
+let restartInFlight: Promise<RestartResult> | null = null;
+
+async function runRestartToUpdate(): Promise<RestartResult> {
 	const rpc = electroview?.rpc;
 	if (!rpc) return "unavailable";
 	const ok = await ensureSafeToDiscard();
@@ -62,6 +69,13 @@ export async function restartToUpdate(): Promise<RestartResult> {
 	}
 	// The process is about to quit — nothing else to do.
 	return "restarting";
+}
+
+export function restartToUpdate(): Promise<RestartResult> {
+	restartInFlight ??= runRestartToUpdate().finally(() => {
+		restartInFlight = null;
+	});
+	return restartInFlight;
 }
 
 /** The Preferences › About status line for a state. */

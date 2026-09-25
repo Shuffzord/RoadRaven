@@ -380,7 +380,7 @@ updateService.onStateChange((state) => {
 	mainWindow?.webview.rpc?.send.pushUpdateState(state);
 });
 updateService.scheduleLaunchCheck({
-	enabled: loadSettings().updates?.autoCheck !== false,
+	enabled: initialSettings.updates?.autoCheck !== false,
 	delayMs: 10_000,
 });
 

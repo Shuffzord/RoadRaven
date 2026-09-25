@@ -94,6 +94,32 @@ describe("restartToUpdate", () => {
 			version: "0.8.6",
 		});
 	});
+
+	it("ignores a second call while the guard is pending", async () => {
+		let resolveGuard: (ok: boolean) => void = () => {
+			// Reassigned by mockImplementation below before any call resolves.
+		};
+		mocks.ensureSafeToDiscard.mockImplementation(
+			() =>
+				new Promise<boolean>((resolve) => {
+					resolveGuard = resolve;
+				}),
+		);
+
+		const first = restartToUpdate();
+		const second = restartToUpdate();
+		expect(mocks.ensureSafeToDiscard).toHaveBeenCalledTimes(1);
+
+		resolveGuard(true);
+		const [firstResult, secondResult] = await Promise.all([first, second]);
+		expect(firstResult).toBe("restarting");
+		expect(secondResult).toBe(firstResult);
+
+		// Guard resolved — a third call is a fresh invocation.
+		mocks.ensureSafeToDiscard.mockResolvedValue(true);
+		await restartToUpdate();
+		expect(mocks.ensureSafeToDiscard).toHaveBeenCalledTimes(2);
+	});
 });
 
 describe("check / download / pull", () => {
