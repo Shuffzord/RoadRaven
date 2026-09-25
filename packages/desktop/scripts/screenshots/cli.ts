@@ -11,6 +11,7 @@ export interface CaptureRequest {
 	themes: string[];
 	collage: boolean;
 	quality: QualityId;
+	galleryOnly: boolean;
 }
 
 export interface CaptureCatalog {
@@ -61,9 +62,11 @@ export function parseCaptureArgs(
 			theme: { type: "string" },
 			collage: { type: "boolean", default: false },
 			quality: { type: "string" },
+			"gallery-only": { type: "boolean", default: false },
 		},
 	});
 	const collage = values.collage === true;
+	const galleryOnly = values["gallery-only"] === true;
 	const quality = pickQuality(values.quality);
 	const themes = pickIds(
 		values.theme ?? (collage ? COLLAGE_THEMES : "dark"),
@@ -80,7 +83,7 @@ export function parseCaptureArgs(
 		opts.sceneIds,
 		"scene",
 	);
-	return { scenes, themes, collage, quality };
+	return { scenes, themes, collage, quality, galleryOnly };
 }
 
 export function formatHelp(opts: CaptureCatalog): string {
@@ -88,11 +91,12 @@ export function formatHelp(opts: CaptureCatalog): string {
 		(id) => `${id} (${QUALITY_PROFILES[id]}x)`,
 	).join(", ");
 	return (
-		"Usage: bun run screenshots [--scene ID[,ID...]] [--theme ID[,ID...]] [--collage] [--quality ID]\n" +
+		"Usage: bun run screenshots [--scene ID[,ID...]] [--theme ID[,ID...]] [--collage] [--quality ID] [--gallery-only]\n" +
 		`Scenes: ${opts.sceneIds.join(", ")}, all\n` +
 		`Themes: ${opts.themeIds.join(", ")}, all\n` +
 		`Quality: ${qualities}\n` +
 		`Default: ${opts.sceneIds[0]} in dark; --collage defaults to ${COLLAGE_THEMES}\n` +
-		"and composes the first requested scene across the requested themes.\n"
+		"and composes the first requested scene across the requested themes.\n" +
+		"--gallery-only rebuilds artifacts/showcase/index.html from disk, skipping capture.\n"
 	);
 }

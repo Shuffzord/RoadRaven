@@ -13,6 +13,7 @@ describe("parseCaptureArgs", () => {
 			themes: ["dark"],
 			collage: false,
 			quality: "preview",
+			galleryOnly: false,
 		});
 	});
 
@@ -27,6 +28,7 @@ describe("parseCaptureArgs", () => {
 			themes: ["moss", "light"],
 			collage: false,
 			quality: "preview",
+			galleryOnly: false,
 		});
 	});
 
@@ -59,6 +61,7 @@ describe("parseCaptureArgs", () => {
 			themes: ["dark", "light", "amber", "moss"],
 			collage: true,
 			quality: "preview",
+			galleryOnly: false,
 		});
 	});
 
@@ -103,6 +106,11 @@ describe("parseCaptureArgs", () => {
 		expect(() => parseCaptureArgs(["--quality", "nope"], opts)).toThrow(
 			/Unknown quality 'nope'/,
 		);
+	});
+
+	it("--gallery-only parses, defaults false", () => {
+		expect(parseCaptureArgs([], opts).galleryOnly).toBe(false);
+		expect(parseCaptureArgs(["--gallery-only"], opts).galleryOnly).toBe(true);
 	});
 });
 

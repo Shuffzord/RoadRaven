@@ -1,3 +1,4 @@
+import { execFileSync } from "node:child_process";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { expect, type Page, test } from "@playwright/test";
@@ -10,6 +11,7 @@ import {
 	buildFixture,
 	type FixtureId,
 } from "./fixtures/index";
+import type { RunInfo } from "./gallery";
 import { pngDimensions, QUALITY_PROFILES } from "./quality";
 import {
 	CAPTURE_DIR,
@@ -144,6 +146,25 @@ async function captureAll(
 	return shots;
 }
 
+/** `captures/<quality>/run.json`: the sha, browser and scenes/themes just captured. */
+async function writeRunInfo(page: Page): Promise<void> {
+	const sha = execFileSync("git", ["rev-parse", "--short", "HEAD"], {
+		encoding: "utf8",
+	}).trim();
+	const browser = (await page.context().browser()?.version()) ?? "unknown";
+	const info: RunInfo = {
+		sha,
+		browser,
+		capturedAt: new Date().toISOString(),
+		scenes: scenes.map((scene) => scene.id),
+		themes,
+	};
+	await writeFile(
+		resolve(CAPTURE_DIR, "run.json"),
+		`${JSON.stringify(info, null, 2)}\n`,
+	);
+}
+
 async function writeCollage(page: Page, shots: ThemeShot[]): Promise<void> {
 	const lead = scenes[0];
 	const path = resolve(
@@ -180,6 +201,7 @@ test("capture showcase scenes", async ({ page }) => {
 	await writeCfaDemo(fixtures);
 	const pageErrors = await bootApp(page);
 	const shots = await captureAll(page, fixtures);
+	await writeRunInfo(page);
 	if (collage) await writeCollage(page, shots);
 	expect(pageErrors).toEqual([]);
 	await expectSourcesUnchanged(fixtures);
