@@ -1,15 +1,7 @@
 {
   "version": "1.0",
+  "revision": 14,
   "title": "CFA Level I 2026 — Roadmapa Egzaminacyjna",
-  "themeConfig": {
-    "statusColors": {
-      "not-started": "#6b7280",
-      "in-progress": "#3b82f6",
-      "completed": "#22c55e",
-      "blocked": "#ef4444"
-    },
-    "nodeRadius": 8
-  },
   "statusConfig": [
     {
       "id": "not-started",
@@ -60,9 +52,9 @@
       "title": "CFA Level I 2026",
       "status": "not-started",
       "type": "project",
-      "notes": "# CFA Level I 2026\n\nKompletna roadmapa nauki do egzaminu CFA Level I 2026. 10 obszarów tematycznych, 93 Learning Modules, 365 Learning Outcome Statements. Łączny czas nauki: 300-400h.",
       "createdAt": "2026-05-06T00:00:00Z",
       "updatedAt": "2026-05-07T08:39:14.810Z",
+      "notes": "# CFA Level I 2026\n\nKompletna roadmapa nauki do egzaminu CFA Level I 2026. 10 obszarów tematycznych, 93 Learning Modules, 365 Learning Outcome Statements. Łączny czas nauki: 300-400h.",
       "children": [
         {
           "id": "10000000-0000-4000-8000-000000000001",
@@ -136,5 +128,14 @@
         }
       ]
     }
-  ]
+  ],
+  "themeConfig": {
+    "statusColors": {
+      "not-started": "#6b7280",
+      "in-progress": "#3b82f6",
+      "completed": "#22c55e",
+      "blocked": "#ef4444"
+    },
+    "nodeRadius": 8
+  }
 }

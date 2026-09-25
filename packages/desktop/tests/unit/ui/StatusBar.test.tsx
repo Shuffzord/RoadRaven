@@ -6,7 +6,9 @@ import { afterEach, describe, expect, it } from "vitest";
 import type { RoadmapSchema } from "../../../../../packages/core/src/schema";
 import pkg from "../../../package.json" with { type: "json" };
 import { StatusBar } from "../../../src/mainview/components/StatusBar";
+import { UPDATE_PILL_TESTID } from "../../../src/mainview/lib/domContract";
 import { useRoadmapStore } from "../../../src/mainview/store/roadmapStore";
+import { useUpdateStore } from "../../../src/mainview/store/updateStore";
 import { resetStore } from "../../helpers/resetStore";
 
 const ROOT_ID = "aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee";
@@ -26,6 +28,10 @@ const SCHEMA: RoadmapSchema = {
 
 afterEach(() => {
 	resetStore();
+	useUpdateStore.setState({
+		state: { status: "idle" },
+		dismissedVersion: null,
+	});
 });
 
 describe("StatusBar", () => {
@@ -55,5 +61,17 @@ describe("StatusBar", () => {
 
 		const label = screen.getByText(`v${pkg.version}`);
 		expect(label.getAttribute("title")).toBe(`RoadRaven ${pkg.version}`);
+	});
+
+	// v0.8.5 Phase 2: the update pill sits before the version, only when ready.
+	it("has no update pill while the update state is idle", () => {
+		render(<StatusBar />);
+		expect(screen.queryByTestId(UPDATE_PILL_TESTID)).toBeNull();
+	});
+
+	it("shows the update pill when an update is ready", () => {
+		useUpdateStore.getState().setState({ status: "ready", version: "0.8.6" });
+		render(<StatusBar />);
+		expect(screen.getByTestId(UPDATE_PILL_TESTID)).toBeTruthy();
 	});
 });

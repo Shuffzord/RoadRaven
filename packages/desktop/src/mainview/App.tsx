@@ -13,6 +13,7 @@ import { SidePanel } from "./components/SidePanel";
 import { StatusBar } from "./components/StatusBar";
 import { ThemeEditor } from "./components/ThemeEditor/ThemeEditorDialog";
 import { TopBar } from "./components/TopBar";
+import { UpdateAvailableDialog } from "./components/UpdateAvailableDialog";
 import { useAutosave } from "./hooks/useAutosave";
 import { useFileActions } from "./hooks/useFileActions";
 import { useFileViewSettings } from "./hooks/useFileViewSettings";
@@ -111,6 +112,7 @@ export default function App() {
 			<StatusBar />
 			<ConfirmationDialog />
 			<DiscardChangesDialog />
+			<UpdateAvailableDialog />
 			<SaveFailureModal />
 			<ExternalEditToast />
 			<EventToastStack />

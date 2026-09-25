@@ -36,3 +36,14 @@ The full feature list and keyboard reference. For a short overview see the
 - **Themes** — eight built-in (Amber is the default; Dark, Light, High Contrast, Paper, Contrast, Slate, Moss), every one gated on WCAG 2.x contrast in CI. Your own themes are JSON files in the app's `themes` folder: Preferences → Duplicate current theme… / Import theme file… / Open themes folder, hot-reloaded on save, and an in-app **theme editor** (Preferences → Theme → Edit…) that paints the canvas live with a pass / warn / fail contrast chip per colour and a one-click Suggest fix. See [`docs/design-system.md`](docs/design-system.md).
 - **Live integration ready** — RPC contract has `nodeStatusUpdate`, `integrationEvent`, and `pushFileChanged` messages; plugin host comes in a later phase.
 
+## Keeping RoadRaven up to date
+
+Installed stable and canary builds check for a newer version about 10
+seconds after launch (dev builds never check) and ask before downloading
+anything. Once a download finishes, Preferences › About shows the update's
+progress and a **Restart to update** button, and an "Update ready" pill
+appears in the status bar. Either one restarts the app: unsaved work is
+flushed first, and an untitled roadmap with edits gets the same
+Discard-changes prompt as closing the app. Turn the launch check off with
+**Check for updates when RoadRaven starts** in Preferences.
+

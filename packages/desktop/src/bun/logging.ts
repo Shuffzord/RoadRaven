@@ -7,6 +7,9 @@ import {
 	getStreamSink,
 } from "@logtape/logtape";
 import type { FileSink } from "bun";
+// Rename is isolated in its own module so unit tests can spy on the call site
+// (ESM namespace from `node:fs` is not configurable for mocking).
+import * as renameModule from "./renameSync";
 
 export function getLogDirectory(): string {
 	// Platform-specific log directory per D-23
@@ -30,6 +33,23 @@ export function getLogDirectory(): string {
 	);
 }
 
+/**
+ * Rotate the previous session's log to `<path>.1` before a fresh writer
+ * truncates it, so a relaunch (including an auto-update restart) does not
+ * erase the log of the session that just ran (Phase 0 finding: the canary
+ * launch overwrote the running session's log). One generation is enough:
+ * an older `.1` is overwritten. Best-effort — a failure (e.g. a read-only
+ * log directory) is swallowed so logging still starts.
+ */
+export function rotateLogFile(logFilePath: string): void {
+	if (!existsSync(logFilePath)) return;
+	try {
+		renameModule.renameWithRetry(logFilePath, `${logFilePath}.1`);
+	} catch {
+		// Best-effort rotation; logging still proceeds without it.
+	}
+}
+
 export async function setupBunLogging(): Promise<void> {
 	const logDir = getLogDirectory();
 	if (!existsSync(logDir)) {
@@ -37,6 +57,7 @@ export async function setupBunLogging(): Promise<void> {
 	}
 
 	const logFilePath = join(logDir, "roadraven.log");
+	rotateLogFile(logFilePath);
 
 	// getStreamSink requires a Web WritableStream (not Node.js stream).
 	// For Bun: use Bun.file().writer() wrapped in a WritableStream.

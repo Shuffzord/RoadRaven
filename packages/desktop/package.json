@@ -1,6 +1,6 @@
 {
 	"name": "@roadraven/desktop",
-	"version": "0.8.4",
+	"version": "0.8.5",
 	"private": true,
 	"scripts": {
 		"prepare:electrobun": "bunx electrobun prepare",

@@ -121,6 +121,19 @@ The directory is created automatically if it does not exist.
 
 Source: [`packages/desktop/src/bun/logging.ts` -- `getLogDirectory()`](../packages/desktop/src/bun/logging.ts)
 
+### Log Rotation
+
+`roadraven.log` is truncated by a fresh writer on every launch, so before
+that writer opens, `setupBunLogging()` calls `rotateLogFile()` to rename any
+existing `roadraven.log` to `roadraven.log.1`, overwriting an older `.1` if
+one is already there -- one generation is kept. This means a relaunch,
+including the restart at the end of an in-app update, does not erase the
+log of the session that just ran; its lines are one file back, in
+`roadraven.log.1`. Rotation is best-effort: if the rename fails (for
+example a read-only log directory), logging still starts without it.
+
+Source: [`packages/desktop/src/bun/logging.ts` -- `rotateLogFile()`](../packages/desktop/src/bun/logging.ts)
+
 ## Buffer and Retry Mechanism
 
 The webview's RPC sink buffers messages to survive forwarding failures -- the Bun process may not be ready immediately, or RPC transport may be briefly interrupted.

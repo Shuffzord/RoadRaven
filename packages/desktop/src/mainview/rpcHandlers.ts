@@ -12,7 +12,7 @@
  * Plan 04-03: Added pushStatusUpdate, pushEventApiState, pushEventApiError,
  * and pushEventLog (no-op stub until Plan 04-04).
  */
-import type { IntegrationEvent } from "../../../../shared/types";
+import type { IntegrationEvent, UpdateState } from "../../../../shared/types";
 
 export async function handlePushFileChanged(msg: {
 	path: string;
@@ -53,6 +53,15 @@ export async function handlePushEventApiState(msg: {
 }): Promise<void> {
 	const { useEventApiStore } = await import("./store/eventApiStore");
 	useEventApiStore.getState().setState(msg);
+}
+
+/**
+ * pushUpdateState (v0.8.5) — forwards every update-service state change to
+ * updateStore (prompt, Preferences › About, status-bar pill).
+ */
+export async function handlePushUpdateState(msg: UpdateState): Promise<void> {
+	const { useUpdateStore } = await import("./store/updateStore");
+	useUpdateStore.getState().setState(msg);
 }
 
 /**

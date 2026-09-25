@@ -10,6 +10,11 @@ const renderer = process.env.ROADRAVEN_RENDERER;
 const bundleCEF = renderer !== "webkit";
 const bundleCEFWin = renderer === "cef";
 
+// Local update UAT builds: ROADRAVEN_UPDATE_BASE_URL points the packaged app's
+// updater at a local static server (e.g. http://127.0.0.1:8765) and skips the
+// delta-patch fetch against the real previous release. Unset for real releases.
+const updateBaseUrl = process.env.ROADRAVEN_UPDATE_BASE_URL;
+
 export default {
 	app: {
 		name: "RoadRaven",
@@ -41,10 +46,13 @@ export default {
 		linux: { bundleCEF, icon: "assets/icon.png" },
 		win: { bundleCEF: bundleCEFWin, icon: "assets/icon.ico" },
 	},
-	release: {
-		// Strategy A from RESEARCH.md Pattern 5 — GitHub Releases /latest/download
-		// always resolves to the most recent non-prerelease Release (D-10: stable only).
-		// v1.1 canary work will switch to a gh-pages-hosted manifest folder.
-		baseUrl: "https://github.com/Shuffzord/RoadRaven/releases/latest/download",
-	},
+	release: updateBaseUrl
+		? { baseUrl: updateBaseUrl, generatePatch: false }
+		: {
+				// Strategy A from RESEARCH.md Pattern 5 — GitHub Releases /latest/download
+				// always resolves to the most recent non-prerelease Release (D-10: stable only).
+				// v1.1 canary work will switch to a gh-pages-hosted manifest folder.
+				baseUrl:
+					"https://github.com/Shuffzord/RoadRaven/releases/latest/download",
+			},
 } satisfies ElectrobunConfig;
