@@ -24,12 +24,6 @@ export const PROMO_FORMATS = [
 		height: 1080,
 		purpose: "Square feed post",
 	},
-	{
-		id: "release-card",
-		width: 1200,
-		height: 630,
-		purpose: "Release announcement card",
-	},
 ] as const;
 
 export type PromoFormat = (typeof PROMO_FORMATS)[number];
@@ -105,17 +99,15 @@ body { display: grid; overflow: hidden; background: #0b0e13; color: #eef2f7;
 [data-format="square-feature"] .${C.subline} { font-size: 26px; }
 [data-format="square-feature"] .shot { border-bottom: 0; border-radius: 16px 16px 0 0; }
 
-[data-format="social-card"], [data-format="release-card"] {
+[data-format="social-card"] {
   grid-template-columns: 420px 1fr; gap: 48px; padding: 48px 0 48px 56px; }
 [data-format="social-card"] .${C.headline} { font-size: 44px; }
 [data-format="social-card"] .${C.subline} { font-size: 21px; }
-[data-format="release-card"] .${C.headline} { font-size: 30px; }
-[data-format="release-card"] .${C.subline} { font-size: 19px; }
-[data-format="social-card"] .brand, [data-format="release-card"] .brand { margin-bottom: auto; }
-[data-format="social-card"] .${C.copy} > :last-child,
-[data-format="release-card"] .${C.copy} > :last-child { margin-bottom: auto; }
-[data-format="social-card"] .shot, [data-format="release-card"] .shot {
-  border-right: 0; border-radius: 16px 0 0 16px; }
+[data-format="social-card"] .${C.version} ~ .${C.headline} { font-size: 30px; }
+[data-format="social-card"] .${C.version} ~ .${C.subline} { font-size: 19px; }
+[data-format="social-card"] .brand { margin-bottom: auto; }
+[data-format="social-card"] .${C.copy} > :last-child { margin-bottom: auto; }
+[data-format="social-card"] .shot { border-right: 0; border-radius: 16px 0 0 16px; }
 `;
 
 const dataUri = (mime: string, bytes: Buffer | string) =>
@@ -132,10 +124,9 @@ function highlightsHtml(highlights: readonly string[] | undefined): string {
 function promoHtml(input: PromoInput): string {
 	const { format, copy, focal } = input;
 	const position = focal ? `${focal.x}% ${focal.y}%` : "50% 50%";
-	const version =
-		format.id === "release-card"
-			? `<div class="${C.version}">v${escapeHtml(input.version)}</div>`
-			: "";
+	const version = copy.showVersion
+		? `<div class="${C.version}">v${escapeHtml(input.version)}</div>`
+		: "";
 	return `<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><style>${STYLE}</style></head>
 <body data-format="${format.id}">

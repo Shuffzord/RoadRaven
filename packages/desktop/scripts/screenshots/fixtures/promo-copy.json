@@ -1,0 +1,48 @@
+{
+	"_comment": "TODO owner pick",
+	"readme-hero": {
+		"picked": 0,
+		"options": [
+			{
+				"headline": "Your roadmap as a tree you can see",
+				"subline": "Plain-JSON roadmaps with status on every node, edited from the keyboard."
+			},
+			{
+				"headline": "Plan the work. See where it stands.",
+				"subline": "A desktop roadmap tree with per-node status, markdown notes and progress counts."
+			}
+		]
+	},
+	"social-card": {
+		"picked": 0,
+		"options": [
+			{
+				"headline": "A roadmap tree your agents can update",
+				"subline": "RoadRaven keeps plans in plain JSON; Claude Code can report status back to the nodes."
+			},
+			{
+				"headline": "RoadRaven release",
+				"subline": "Desktop roadmap trees with live status.",
+				"showVersion": true,
+				"highlights": [
+					"Status ribbons and progress counts on every card",
+					"Eight built-in themes",
+					"In-app updates"
+				]
+			}
+		]
+	},
+	"square-feature": {
+		"picked": 0,
+		"options": [
+			{
+				"headline": "Every task in one tree",
+				"subline": "Status on every node, from milestone down to leaf."
+			},
+			{
+				"headline": "What is done, what is next",
+				"subline": "Completed, in progress and not started, readable at a glance."
+			}
+		]
+	}
+}

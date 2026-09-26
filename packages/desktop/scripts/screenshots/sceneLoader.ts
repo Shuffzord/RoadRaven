@@ -1,5 +1,6 @@
 import { resolve } from "node:path";
 import { expect, type Page } from "@playwright/test";
+import { idsAtDepth } from "../../src/mainview/lib/collapseTree";
 import {
 	NODE_CARD_ATTR,
 	NODE_PLUGIN_ATTR,
@@ -9,6 +10,7 @@ import type { BuiltFixture } from "./fixtures/index";
 import { focalPosition } from "./focal";
 import { qualityFromEnv } from "./quality";
 import type { ScenePreset } from "./scenes";
+import { visibleCardCount } from "./visible";
 
 /** The requested quality, read once; also the output path's quality segment. */
 export const CAPTURE_QUALITY = qualityFromEnv();
@@ -30,6 +32,17 @@ export function resolveNodeRef(
 	return ref === undefined ? undefined : (fixture.anchors[ref] ?? ref);
 }
 
+/** The preset's collapse policy as the ids it folds: explicit refs, or a depth. */
+function collapsedIdsOf(preset: ScenePreset, fixture: BuiltFixture): string[] {
+	if (preset.collapsed) {
+		return preset.collapsed.flatMap(
+			(ref) => resolveNodeRef(ref, fixture) ?? [],
+		);
+	}
+	const depth = preset.collapseDepth;
+	return depth === undefined ? [] : idsAtDepth(fixture.schema.nodes, depth);
+}
+
 /**
  * Load a scene with an explicit reset of everything a previous scene can leave
  * behind: per-file view state, document, layout, collapse set, selection, theme.
@@ -41,9 +54,19 @@ export async function loadScene(
 	themeId: string,
 ): Promise<void> {
 	await page.setViewportSize(preset.viewport);
+	const collapsedIds = collapsedIdsOf(preset, fixture);
 	// These imports execute inside Chromium, where Vite serves the live UI modules.
 	await page.evaluate(
-		async ({ schema, fileName, layout, depth, selected, theme }) => {
+		async ({
+			schema,
+			fileName,
+			layout,
+			knobs,
+			collapsed,
+			depth,
+			selected,
+			theme,
+		}) => {
 			const storePath = "/store/roadmapStore.ts";
 			const viewPath = "/store/fileViewStore.ts";
 			const themePath = "/store/themeStore.ts";
@@ -55,7 +78,12 @@ export async function loadScene(
 			view.resetForNewFile();
 			roadmap.loadSchema(schema, fileName);
 			roadmap.setLayout(layout);
-			if (depth === null) view.expandAll();
+			// After loadSchema: a new file path resets view state inside that write.
+			for (const [name, value] of Object.entries(knobs)) {
+				view.setKnob(name, value);
+			}
+			if (collapsed) view.hydrateCollapsed(collapsed);
+			else if (depth === null) view.expandAll();
 			else view.collapseToDepth(depth, schema.nodes);
 			roadmap.setSelectedNode(selected);
 			useThemeStore.getState().setTheme(theme);
@@ -64,6 +92,8 @@ export async function loadScene(
 			schema: fixture.schema,
 			fileName: `${preset.id}.json`,
 			layout: preset.layout,
+			knobs: preset.knobs ?? {},
+			collapsed: preset.collapsed ? collapsedIds : null,
 			depth: preset.collapseDepth ?? null,
 			selected: resolveNodeRef(preset.selectedNode, fixture) ?? null,
 			theme: themeId,
@@ -71,7 +101,7 @@ export async function loadScene(
 	);
 	await expect(page.locator("html")).toHaveAttribute("data-theme", themeId);
 	await expect(page.locator(`[${NODE_CARD_ATTR}]`)).toHaveCount(
-		preset.expectedCards,
+		visibleCardCount(fixture.schema.nodes, new Set(collapsedIds)),
 	);
 }
 

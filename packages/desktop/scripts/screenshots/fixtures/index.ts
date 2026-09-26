@@ -1,8 +1,9 @@
+import { resolve } from "node:path";
 import type { RoadmapSchema } from "../../../../core/src/schema";
 import { buildCfaFixture } from "./cfa";
-import { loadProjectFixture, withAttribution } from "./project";
+import { loadJsonFixture } from "./json";
 
-export const FIXTURE_IDS = ["cfa", "project", "project-agents"] as const;
+export const FIXTURE_IDS = ["cfa", "roadraven"] as const;
 export type FixtureId = (typeof FIXTURE_IDS)[number];
 
 export interface BuiltFixture {
@@ -15,7 +16,8 @@ export interface BuiltFixture {
 
 export async function buildFixture(id: FixtureId): Promise<BuiltFixture> {
 	if (id === "cfa") return buildCfaFixture();
-	const project = await loadProjectFixture();
-	if (id === "project") return project;
-	return { ...project, schema: withAttribution(project.schema) };
+	return loadJsonFixture(resolve(__dirname, "roadraven-08.json"), {
+		current: "v0-8-6",
+		currentPhase: "curate",
+	});
 }

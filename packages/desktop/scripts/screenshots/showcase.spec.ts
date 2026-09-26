@@ -8,7 +8,7 @@ import pkg from "../../package.json" with { type: "json" };
 import { NODE_PLUGIN_ATTR } from "../../src/mainview/lib/domContract";
 import { getBuiltInTheme } from "../../src/mainview/themes";
 import { captureCollage, type ThemeShot } from "./collage";
-import { PROMO_COPY } from "./copy";
+import { PROMO_COPY, type PromoCopy } from "./copy";
 import {
 	type BuiltFixture,
 	buildFixture,
@@ -195,28 +195,21 @@ function focalInImage(page: Page, focal: { x: number; y: number }) {
 	}, focal);
 }
 
-/** Render one format with the picked copy, then check P1-P4 on it. */
+/** Render one format with `copy`, then check P1-P4 on it. */
 async function renderChecked(
 	browser: Browser,
 	format: PromoFormat,
+	copy: PromoCopy,
 	source: { image: Buffer; focal: Focal },
 	out: { delivery: string; master: string },
 ): Promise<void> {
-	const { options, picked } = PROMO_COPY[format.id];
-	const input = {
-		...source,
-		format,
-		copy: options[picked],
-		version: releaseVersion(),
-		logoSvg,
-	};
+	const input = { ...source, format, copy, version: releaseVersion(), logoSvg };
 	await renderPromo(browser, input, out, async (page) => {
 		await expectNoClipping(page);
 		if (source.focal) expect(await focalInImage(page, source.focal)).toBe(true);
-		if (format.id !== "release-card") return;
-		await expect(page.locator(`.${PROMO_CLASS.version}`)).toHaveText(
-			`v${pkg.version}`,
-		);
+		const version = page.locator(`.${PROMO_CLASS.version}`);
+		if (copy.showVersion) await expect(version).toHaveText(`v${pkg.version}`);
+		else await expect(version).toHaveCount(0);
 	});
 	const { width, height } = format;
 	expect(pngDimensions(await readFile(out.delivery))).toEqual({
@@ -237,7 +230,8 @@ async function writePromos(
 ): Promise<void> {
 	for (const format of formats) {
 		const dir = resolve(SHOWCASE_DIR, "promo", format.id);
-		await renderChecked(browser, format, source, {
+		const { options, picked } = PROMO_COPY[format.id];
+		await renderChecked(browser, format, options[picked], source, {
 			delivery: resolve(dir, `${name}.png`),
 			master: resolve(dir, `${name}@2x.png`),
 		});
@@ -345,7 +339,7 @@ async function sceneSnapshot(
 	preset: ScenePreset,
 	fixture: BuiltFixture,
 	themeId: string,
-): Promise<Record<string, unknown>> {
+): Promise<{ geometry: number[] } & Record<string, unknown>> {
 	const scene = sceneFixture(preset, fixture);
 	await loadScene(page, preset, scene, themeId);
 	const shot = `${preset.id}-${themeId}-${Date.now()}.png`;
@@ -361,7 +355,7 @@ async function sceneSnapshot(
 		};
 	});
 	return {
-		geometry: await cardGeometry(page),
+		geometry: (JSON.parse(await cardGeometry(page)) as number[][]).flat(),
 		theme: await page.locator("html").getAttribute("data-theme"),
 		...state,
 	};
@@ -369,12 +363,15 @@ async function sceneSnapshot(
 
 test("scene reset: A → B → A", async ({ page }) => {
 	const pageErrors = await bootApp(page);
-	const cfa = await buildFixture("cfa");
-	const overview = getScene("cfa-overview");
-	const first = await sceneSnapshot(page, overview, cfa, "dark");
-	await sceneSnapshot(page, getScene("cfa-detail"), cfa, "light");
-	const again = await sceneSnapshot(page, overview, cfa, "dark");
-	expect(again).toEqual(first);
+	const roadraven = await buildFixture("roadraven");
+	const timeline = getScene("rr-timeline");
+	const first = await sceneSnapshot(page, timeline, roadraven, "dark");
+	await sceneSnapshot(page, getScene("rr-detail"), roadraven, "light");
+	const again = await sceneSnapshot(page, timeline, roadraven, "dark");
+	// Fit-view's zoom differs in the ~7th digit between loads of the SAME scene
+	// (a card moves ~1e-4 px), so geometry is compared to 0.005 px.
+	const geometry = first.geometry.map((value) => expect.closeTo(value, 2));
+	expect(again).toEqual({ ...first, geometry });
 	expect(pageErrors).toEqual([]);
 });
 
@@ -382,36 +379,43 @@ test("attribution comes from the plugin slot, not live events", async ({
 	page,
 }) => {
 	const pageErrors = await bootApp(page);
-	const agents = await buildFixture("project-agents");
-	await loadScene(page, getScene("agent-workflow"), agents, "dark");
+	const roadraven = await buildFixture("roadraven");
+	await loadScene(page, getScene("rr-timeline"), roadraven, "dark");
 	const badge = (id: string) => page.locator(`[${NODE_PLUGIN_ATTR}="${id}"]`);
 	expect(await badge("claude-code").count()).toBeGreaterThan(0);
 	expect(await badge("github-actions").count()).toBeGreaterThan(0);
-	const project = await buildFixture("project");
-	await loadScene(page, getScene("project-overview"), project, "dark");
+	const cfa = await buildFixture("cfa");
+	await loadScene(page, getScene("cfa-overview"), cfa, "dark");
 	await expect(page.locator(`[${NODE_PLUGIN_ATTR}]`)).toHaveCount(0);
 	expect(pageErrors).toEqual([]);
 });
 
 test("promo formats", async ({ page, browser }) => {
-	test.setTimeout(120_000);
+	test.setTimeout(180_000);
 	const pageErrors = await bootApp(page);
-	const preset = getScene("agent-workflow");
+	const preset = getScene("rr-timeline");
 	const fixture = await buildFixture(preset.fixture);
 	await loadScene(page, preset, fixture, "dark");
 	const image = await captureScene(page, test.info().outputPath("source.png"));
 	const focal = await sceneFocal(page, preset, fixture);
 	expect(focal).not.toBeNull();
+	// Every drafted option renders unclipped; social-card covers both version rules.
+	const versions = new Set<boolean>();
 	for (const format of PROMO_FORMATS) {
-		await renderChecked(
-			browser,
-			format,
-			{ image, focal },
-			{
-				delivery: test.info().outputPath(`${format.id}.png`),
-				master: test.info().outputPath(`${format.id}@2x.png`),
-			},
-		);
+		for (const [i, copy] of PROMO_COPY[format.id].options.entries()) {
+			versions.add(copy.showVersion === true);
+			await renderChecked(
+				browser,
+				format,
+				copy,
+				{ image, focal },
+				{
+					delivery: test.info().outputPath(`${format.id}-${i}.png`),
+					master: test.info().outputPath(`${format.id}-${i}@2x.png`),
+				},
+			);
+		}
 	}
+	expect([...versions].sort()).toEqual([false, true]);
 	expect(pageErrors).toEqual([]);
 });

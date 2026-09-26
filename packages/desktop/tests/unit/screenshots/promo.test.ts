@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import pkg from "../../../package.json" with { type: "json" };
-import { PROMO_COPY } from "../../../scripts/screenshots/copy";
+import { loadPromoCopy, PROMO_COPY } from "../../../scripts/screenshots/copy";
+import shipped from "../../../scripts/screenshots/fixtures/promo-copy.json" with {
+	type: "json",
+};
 import { focalPosition } from "../../../scripts/screenshots/focal";
 import {
 	FORMAT_IDS,
@@ -9,14 +12,13 @@ import {
 } from "../../../scripts/screenshots/promo";
 
 describe("PROMO_FORMATS", () => {
-	it("has the four documented formats and sizes", () => {
+	it("has the three documented formats and sizes", () => {
 		expect(
 			PROMO_FORMATS.map(({ id, width, height }) => [id, width, height]),
 		).toEqual([
 			["readme-hero", 1600, 900],
 			["social-card", 1200, 630],
 			["square-feature", 1080, 1080],
-			["release-card", 1200, 630],
 		]);
 		expect(FORMAT_IDS).toEqual(PROMO_FORMATS.map((format) => format.id));
 	});
@@ -51,11 +53,49 @@ describe("PROMO_COPY", () => {
 		expect(entry.options[0].headline).not.toBe(entry.options[1].headline);
 	});
 
-	it("release-card options carry one to three highlights", () => {
-		for (const option of PROMO_COPY["release-card"].options) {
-			expect(option.highlights?.length ?? 0).toBeGreaterThanOrEqual(1);
-			expect(option.highlights?.length ?? 0).toBeLessThanOrEqual(3);
-		}
+	it("social-card offers one option with the version and highlights", () => {
+		const [plain, release] = PROMO_COPY["social-card"].options;
+		expect(plain.showVersion).toBeFalsy();
+		expect(release.showVersion).toBe(true);
+		expect(release.highlights?.length ?? 0).toBeGreaterThanOrEqual(1);
+		expect(release.highlights?.length ?? 0).toBeLessThanOrEqual(3);
+	});
+});
+
+describe("loadPromoCopy", () => {
+	const valid = () => structuredClone(shipped) as Record<string, unknown>;
+	const entry = (json: Record<string, unknown>, id: string) =>
+		json[id] as { picked: number; options: unknown[] };
+
+	it("the shipped promo-copy.json validates with every format present", () => {
+		const copy = loadPromoCopy(shipped);
+		expect(Object.keys(copy).sort()).toEqual([...FORMAT_IDS].sort());
+	});
+
+	it("names the file and the field path when options[1] is missing", () => {
+		const json = valid();
+		entry(json, "readme-hero").options.pop();
+		expect(() => loadPromoCopy(json)).toThrow(/promo-copy\.json/);
+		expect(() => loadPromoCopy(json)).toThrow(
+			/readme-hero\.options: .*2 items/,
+		);
+	});
+
+	it("rejects picked: 2 with its path", () => {
+		const json = valid();
+		entry(json, "square-feature").picked = 2;
+		expect(() => loadPromoCopy(json)).toThrow(/square-feature\.picked/);
+	});
+
+	it("rejects an unknown format key", () => {
+		const json = { ...valid(), "release-card": entry(valid(), "social-card") };
+		expect(() => loadPromoCopy(json)).toThrow(/release-card/);
+	});
+
+	it("rejects a missing format", () => {
+		const json = valid();
+		delete json["social-card"];
+		expect(() => loadPromoCopy(json)).toThrow(/social-card/);
 	});
 });
 
