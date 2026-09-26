@@ -1,5 +1,6 @@
 import { parseArgs } from "node:util";
 import { FORMAT_IDS } from "./promo";
+import { parsePick } from "./publish";
 import {
 	DEFAULT_QUALITY,
 	QUALITY_IDS,
@@ -15,6 +16,10 @@ export interface CaptureRequest {
 	galleryOnly: boolean;
 	/** Promo format ids to compose from each capture; empty = none. */
 	formats: string[];
+	/** `--publish` picks, parsed and validated; empty = no publish step. */
+	publish: string[];
+	/** `--publish` with no explicit `--scene`: skip capture, publish only. */
+	publishOnly: boolean;
 }
 
 export interface CaptureCatalog {
@@ -42,6 +47,14 @@ function pickIds(
 	return ids;
 }
 
+/** A comma list of `--publish` picks; each is validated by `parsePick`, which throws on bad grammar. */
+function pickPicks(value: string | undefined): string[] {
+	if (value === undefined) return [];
+	const picks = value.split(",").map((pick) => pick.trim());
+	for (const pick of picks) parsePick(pick);
+	return picks;
+}
+
 /** A single id checked against `QUALITY_IDS`; `undefined` -> `DEFAULT_QUALITY`. */
 function pickQuality(value: string | undefined): QualityId {
 	const id = value ?? DEFAULT_QUALITY;
@@ -67,11 +80,14 @@ export function parseCaptureArgs(
 			quality: { type: "string" },
 			"gallery-only": { type: "boolean", default: false },
 			format: { type: "string" },
+			publish: { type: "string" },
 		},
 	});
 	const collage = values.collage === true;
 	const galleryOnly = values["gallery-only"] === true;
 	const quality = pickQuality(values.quality);
+	const publish = pickPicks(values.publish);
+	const publishOnly = publish.length > 0 && values.scene === undefined;
 	const themes = pickIds(
 		values.theme ?? (collage ? COLLAGE_THEMES : "dark"),
 		opts.themeIds,
@@ -91,7 +107,16 @@ export function parseCaptureArgs(
 		values.format === undefined
 			? []
 			: pickIds(values.format, FORMAT_IDS, "format");
-	return { scenes, themes, collage, quality, galleryOnly, formats };
+	return {
+		scenes,
+		themes,
+		collage,
+		quality,
+		galleryOnly,
+		formats,
+		publish,
+		publishOnly,
+	};
 }
 
 export function formatHelp(opts: CaptureCatalog): string {
@@ -106,6 +131,12 @@ export function formatHelp(opts: CaptureCatalog): string {
 		`Default: ${opts.sceneIds[0]} in dark; --collage defaults to ${COLLAGE_THEMES}\n` +
 		"and composes the first requested scene across the requested themes.\n" +
 		`--format composes promo images (${FORMAT_IDS.join(", ")}, all) from each capture into artifacts/showcase/promo/.\n` +
-		"--gallery-only rebuilds artifacts/showcase/index.html from disk, skipping capture.\n"
+		"--gallery-only rebuilds artifacts/showcase/index.html from disk, skipping capture.\n" +
+		"--publish PICK[,PICK...] copies named outputs from artifacts/showcase/ into\n" +
+		"screenshots/; a default run never touches screenshots/. Pick grammar:\n" +
+		"  capture:<scene>:<theme>[:<quality>]   -> screenshots/<scene>-<theme>.png\n" +
+		"  promo:<format>:<scene>:<theme>        -> screenshots/promo/<format>-<scene>-<theme>.png\n" +
+		"  collage:<scene>[:<quality>]           -> screenshots/collage-<scene>.png\n" +
+		"(quality defaults to standard in a pick). --publish with no --scene skips capture.\n"
 	);
 }

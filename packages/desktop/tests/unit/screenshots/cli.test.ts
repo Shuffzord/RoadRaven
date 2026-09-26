@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { formatHelp, parseCaptureArgs } from "../../../scripts/screenshots/cli";
 import { FORMAT_IDS } from "../../../scripts/screenshots/promo";
+import { SCENE_IDS } from "../../../scripts/screenshots/scenes";
+import { THEME_IDS } from "../../../src/mainview/themes";
+
+// Pick strings are validated against the real scene/theme catalogs (parsePick
+// owns that grammar), not the local `opts` fixture used for the scene/theme axes below.
+const realScene = SCENE_IDS[0];
+const realTheme = THEME_IDS[0];
 
 const opts = {
 	themeIds: ["dark", "light", "amber", "moss"],
@@ -16,6 +23,8 @@ describe("parseCaptureArgs", () => {
 			quality: "preview",
 			galleryOnly: false,
 			formats: [],
+			publish: [],
+			publishOnly: false,
 		});
 	});
 
@@ -32,6 +41,8 @@ describe("parseCaptureArgs", () => {
 			quality: "preview",
 			galleryOnly: false,
 			formats: [],
+			publish: [],
+			publishOnly: false,
 		});
 	});
 
@@ -66,6 +77,8 @@ describe("parseCaptureArgs", () => {
 			quality: "preview",
 			galleryOnly: false,
 			formats: [],
+			publish: [],
+			publishOnly: false,
 		});
 	});
 
@@ -130,6 +143,28 @@ describe("parseCaptureArgs", () => {
 		expect(() => parseCaptureArgs(["--format", "poster"], opts)).toThrow(
 			/Unknown format 'poster'/,
 		);
+	});
+
+	it("--publish parses a comma list of picks; empty when omitted", () => {
+		expect(parseCaptureArgs([], opts).publish).toEqual([]);
+		const picks = `capture:${realScene}:${realTheme},collage:${realScene}`;
+		expect(parseCaptureArgs(["--publish", picks], opts).publish).toEqual([
+			`capture:${realScene}:${realTheme}`,
+			`collage:${realScene}`,
+		]);
+	});
+
+	it("publish-only: --publish without --scene skips capture; with --scene it does not", () => {
+		const pick = `capture:${realScene}:${realTheme}`;
+		expect(parseCaptureArgs(["--publish", pick], opts).publishOnly).toBe(true);
+		expect(
+			parseCaptureArgs(["--scene", opts.sceneIds[0], "--publish", pick], opts)
+				.publishOnly,
+		).toBe(false);
+	});
+
+	it("throws on a malformed pick", () => {
+		expect(() => parseCaptureArgs(["--publish", "bogus:x"], opts)).toThrow();
 	});
 });
 
