@@ -3,6 +3,30 @@
 All notable changes to RoadRaven are documented in this file. The format
 follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.8.6] - 2026-09-26
+
+### Added
+
+- **Screenshot showcase tooling** (`bun run screenshots`). Captures real
+  scenes of the app in every built-in theme at 1×, 2× or 3× device scale,
+  builds a local gallery (`artifacts/showcase/index.html`) of every
+  scene × theme, and composes promo images (README hero, social card,
+  square feature) from the captures with the app version read from
+  `package.json`. What the tree shows and what the cards say are two
+  tracked JSON files under `packages/desktop/scripts/screenshots/fixtures/`
+  that can be edited in RoadRaven itself. Publishing into `screenshots/`
+  is an explicit `--publish` step; a default run never writes there.
+- The demo roadmap in the README is RoadRaven's own 0.8 release line.
+
+### Changed
+
+- The plugin badge's DOM attribute (`data-plugin-id`) is part of the
+  exported DOM contract (`NODE_PLUGIN_ATTR`), and `packages/desktop/scripts`
+  is typechecked by `typecheck:tests`.
+- `screenshots/` holds a curated set of nine images instead of the 0.8.5
+  CFA proof-of-concept set; `screenshots:cfa` now captures the CFA overview
+  only.
+
 ## [0.8.5] - 2026-09-25
 
 ### Added

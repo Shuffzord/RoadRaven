@@ -27,6 +27,7 @@ vi.mock("../../../src/mainview/rpc", () => ({
 import { RoadmapNodeCard } from "../../../src/mainview/components/RoadmapNode";
 import {
 	NODE_CARD_ATTR,
+	NODE_PLUGIN_ATTR,
 	NODE_PROGRESS_ATTR,
 	NODE_RIBBON_ATTR,
 	NODE_STATUS_ATTR,
@@ -237,7 +238,7 @@ describe("RoadmapNodeCard — plugin glyph", () => {
 	it("still renders with its aria-label, id and title, now top-left", () => {
 		renderCard("live-leaf", "Live leaf", "in-progress");
 		const glyph = screen.getByRole("img", { name: "Plugin: Claude Code" });
-		expect(glyph.getAttribute("data-plugin-id")).toBe("claude-code");
+		expect(glyph.getAttribute(NODE_PLUGIN_ATTR)).toBe("claude-code");
 		expect(glyph.getAttribute("title")).toBe("Connected via Claude Code");
 		expect(glyph.className).toMatch(/\bleft-/);
 		expect(glyph.className).not.toMatch(/\bright-/);

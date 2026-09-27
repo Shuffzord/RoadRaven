@@ -1,0 +1,236 @@
+{
+	"version": "1.0",
+	"title": "RoadRaven 0.8",
+	"statusConfig": [
+		{ "id": "not-started", "label": "Not Started" },
+		{ "id": "in-progress", "label": "In Progress" },
+		{ "id": "completed", "label": "Completed" },
+		{ "id": "blocked", "label": "Blocked" }
+	],
+	"typeConfig": [
+		{ "id": "release", "label": "Release" },
+		{ "id": "feature", "label": "Feature" },
+		{ "id": "phase", "label": "Phase" },
+		{ "id": "decision", "label": "Decision" }
+	],
+	"nodes": [
+		{
+			"id": "rr-0-8",
+			"title": "RoadRaven 0.8",
+			"status": "in-progress",
+			"type": "release",
+			"notes": "The 0.8 line: from first public installers to a self-updating desktop app. Each version was planned as a roadmap in RoadRaven and built by Claude Code agents in gated phases.",
+			"children": [
+				{
+					"id": "v0-8-0",
+					"title": "0.8.0 Distribution",
+					"status": "completed",
+					"type": "release",
+					"children": [
+						{
+							"id": "installers",
+							"title": "One-line installers",
+							"status": "completed",
+							"type": "feature",
+							"plugin": { "id": "claude-code" }
+						},
+						{
+							"id": "npm-mcp",
+							"title": "@roadraven/mcp on npm",
+							"status": "completed",
+							"type": "feature",
+							"plugin": { "id": "github-actions" }
+						}
+					]
+				},
+				{
+					"id": "v0-8-1",
+					"title": "0.8.1 Canvas focus",
+					"status": "completed",
+					"type": "release",
+					"children": [
+						{
+							"id": "dom-focus",
+							"title": "Real DOM focus on canvas",
+							"status": "completed",
+							"type": "feature",
+							"plugin": { "id": "claude-code" }
+						},
+						{
+							"id": "fit-view",
+							"title": "One Fit to View",
+							"status": "completed",
+							"type": "feature",
+							"plugin": { "id": "claude-code" }
+						}
+					]
+				},
+				{
+					"id": "v0-8-2",
+					"title": "0.8.2 File UX",
+					"status": "completed",
+					"type": "release",
+					"children": [
+						{
+							"id": "file-menu",
+							"title": "File menu + recents",
+							"status": "completed",
+							"type": "feature",
+							"plugin": { "id": "claude-code" }
+						},
+						{
+							"id": "outline",
+							"title": "Outline sidebar",
+							"status": "completed",
+							"type": "feature",
+							"plugin": { "id": "claude-code" }
+						}
+					]
+				},
+				{
+					"id": "v0-8-3",
+					"title": "0.8.3 Themes",
+					"status": "completed",
+					"type": "release",
+					"children": [
+						{
+							"id": "theme-files",
+							"title": "Themes as JSON files",
+							"status": "completed",
+							"type": "feature",
+							"plugin": { "id": "claude-code" }
+						},
+						{
+							"id": "theme-editor",
+							"title": "Theme editor",
+							"status": "completed",
+							"type": "feature",
+							"plugin": { "id": "claude-code" }
+						},
+						{
+							"id": "contrast-gate",
+							"title": "Contrast checked in CI",
+							"status": "completed",
+							"type": "feature",
+							"plugin": { "id": "github-actions" }
+						}
+					]
+				},
+				{
+					"id": "v0-8-4",
+					"title": "0.8.4 Canvas comfort",
+					"status": "completed",
+					"type": "release",
+					"children": [
+						{
+							"id": "ribbons",
+							"title": "Status ribbons",
+							"status": "completed",
+							"type": "feature",
+							"plugin": { "id": "claude-code" }
+						},
+						{
+							"id": "layout-knobs",
+							"title": "Layout knobs + drag",
+							"status": "completed",
+							"type": "feature",
+							"plugin": { "id": "claude-code" }
+						},
+						{
+							"id": "undo-redo",
+							"title": "Undo / redo",
+							"status": "completed",
+							"type": "feature",
+							"plugin": { "id": "claude-code" }
+						}
+					]
+				},
+				{
+					"id": "v0-8-5",
+					"title": "0.8.5 Auto-update",
+					"status": "completed",
+					"type": "release",
+					"children": [
+						{
+							"id": "update-service",
+							"title": "Update service + RPC",
+							"status": "completed",
+							"type": "feature",
+							"plugin": { "id": "claude-code" }
+						},
+						{
+							"id": "update-prompt",
+							"title": "Update prompt + About",
+							"status": "completed",
+							"type": "feature",
+							"plugin": { "id": "claude-code" }
+						},
+						{
+							"id": "delta-guard",
+							"title": "Delta-patch base guard",
+							"status": "completed",
+							"type": "feature",
+							"plugin": { "id": "github-actions" }
+						},
+						{
+							"id": "owner-uat",
+							"title": "Owner UAT on Windows",
+							"status": "completed",
+							"type": "decision"
+						}
+					]
+				},
+				{
+					"id": "v0-8-6",
+					"title": "0.8.6 Showcase",
+					"status": "in-progress",
+					"type": "release",
+					"notes": "# 0.8.6 — screenshot showcase\n\nScene × theme × quality generator, gallery, promo cards.",
+					"children": [
+						{
+							"id": "scene-runner",
+							"title": "Scene runner + presets",
+							"status": "completed",
+							"type": "phase",
+							"plugin": { "id": "claude-code" }
+						},
+						{
+							"id": "quality",
+							"title": "1×/2×/3× capture",
+							"status": "completed",
+							"type": "phase",
+							"plugin": { "id": "claude-code" }
+						},
+						{
+							"id": "gallery",
+							"title": "Gallery + manifest",
+							"status": "completed",
+							"type": "phase",
+							"plugin": { "id": "claude-code" }
+						},
+						{
+							"id": "promo",
+							"title": "Promo templates",
+							"status": "completed",
+							"type": "phase",
+							"plugin": { "id": "claude-code" }
+						},
+						{
+							"id": "curate",
+							"title": "Curate + publish",
+							"status": "in-progress",
+							"type": "phase"
+						},
+						{
+							"id": "release-0-8-6",
+							"title": "Tag + release",
+							"status": "not-started",
+							"type": "phase",
+							"plugin": { "id": "github-actions" }
+						}
+					]
+				}
+			]
+		}
+	]
+}

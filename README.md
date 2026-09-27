@@ -20,7 +20,7 @@ no sprints, no story points. Just a file you own.
 The headline use case: give Claude Code (or any MCP host) the roadmap, and
 watch it plan, work, and tick nodes green while you supervise.
 
-> **Alpha (v0.8.5).** Core editing and the live Event API work today. The data
+> **Alpha (v0.8.6).** Core editing and the live Event API work today. The data
 > format, APIs, and packaging may still change before v1.0. Bug reports and
 > feature requests are very welcome via [Issues](https://github.com/Shuffzord/RoadRaven/issues).
 
@@ -61,7 +61,9 @@ Nodes change colour on the canvas as the agent works. That is the whole idea.
 
 https://user-images.githubusercontent.com/4171628/607591096-bc94a8c8-36c9-44dc-8cdb-6417437949b9.mp4
 
-![The tree: phases, plans, and tasks expand left-to-right with live status at every node](screenshots/tree.png)
+![RoadRaven's own 0.8 release line: six versions shipped, the seventh in flight, each phase attributed to the agent that did it](screenshots/promo/readme-hero-rr-timeline-amber.png)
+
+![The 0.8.6 subtree with the node panel open: status, type, notes and the agent badge on every card](screenshots/rr-detail-paper.png)
 
 ![Live event log: every MCP tool call streams into a filterable feed over WebSocket](screenshots/events.png)
 
@@ -96,7 +98,7 @@ Code plugin below is already installed, the wizard defers to it.
 matches your installed app (the app warns on a major.minor mismatch):
 
 ```bash
-claude mcp add -s user roadraven -- npx -y @roadraven/mcp@0.8.5
+claude mcp add -s user roadraven -- npx -y @roadraven/mcp@0.8.6
 ```
 
 **Tell Claude to use it.** Tools alone give Claude no reason to plan in the
@@ -105,7 +107,7 @@ whether to put it in the current project or in `~/.claude/CLAUDE.md` for every
 project. Safe to re-run; it updates its own block and touches nothing else:
 
 ```bash
-npx -y @roadraven/mcp@0.8.5 init
+npx -y @roadraven/mcp@0.8.6 init
 ```
 
 Cursor, Codex, Copilot, Gemini, OpenCode, version-mismatch handling, and a
@@ -129,7 +131,7 @@ Every release since v0.8.0 ships a `SHA256SUMS` file.
 
 RoadRaven renders through the system WebView2 runtime on Windows, so the
 download carries no bundled browser engine. Pin a version with
-`$env:ROADRAVEN_VERSION = 'v0.8.5'` before the one-liner.
+`$env:ROADRAVEN_VERSION = 'v0.8.6'` before the one-liner.
 
 **Linux x86_64.** The one-liner above, or by hand:
 
@@ -142,14 +144,14 @@ chmod +x ./installer
 
 The installer puts the app under `~/.local/share/` and creates a desktop
 shortcut. Chromium (CEF) ships bundled, so no system browser dependency. Pin
-a version with `ROADRAVEN_VERSION=v0.8.5` in front of `sh`.
+a version with `ROADRAVEN_VERSION=v0.8.6` in front of `sh`.
 
 Once installed, RoadRaven checks GitHub Releases for updates and asks before
 downloading one.
 
 ## Status
 
-| Shipped as of v0.8.5 | Next |
+| Shipped as of v0.8.6 | Next |
 |---|---|
 | Tree canvas, keyboard editor, side-panel markdown notes and metadata | macOS installer |
 | Atomic autosave, `$ref` split files, File menu, Outline navigator | Code signing |

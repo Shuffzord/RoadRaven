@@ -1,58 +1,72 @@
 import { resolve } from "node:path";
-import { parseArgs } from "node:util";
-import { THEME_IDS } from "../../src/mainview/themes";
+import { BUILT_IN_THEMES, THEME_IDS } from "../../src/mainview/themes";
+import { formatHelp, parseCaptureArgs } from "./cli";
+import { buildGallery, type GalleryCatalog } from "./gallery";
+import { publishOutputs } from "./publish";
+import { QUALITY_IDS } from "./quality";
+import { SCENE_IDS, SCENES } from "./scenes";
 
-const { values } = parseArgs({
-	args: Bun.argv.slice(2),
-	options: {
-		theme: { type: "string" },
-		collage: { type: "boolean", default: false },
-		help: { type: "boolean", default: false },
-	},
-});
+const argv = Bun.argv.slice(2);
+const catalog = { themeIds: THEME_IDS, sceneIds: SCENE_IDS };
 
-if (values.help) {
-	process.stdout.write(
-		`Usage: bun run screenshots:cfa [--theme ID[,ID...]] [--collage]\n` +
-			`Themes: ${THEME_IDS.join(", ")}, all\n` +
-			`Default: dark; --collage defaults to dark,light,amber,moss.\n`,
-	);
+if (argv.includes("--help")) {
+	process.stdout.write(formatHelp(catalog));
 	process.exit(0);
 }
 
-const requested =
-	values.theme ?? (values.collage ? "dark,light,amber,moss" : "dark");
-const themes =
-	requested === "all"
-		? [...THEME_IDS]
-		: [...new Set(requested.split(",").map((id) => id.trim()))];
-for (const id of themes) {
-	if (!THEME_IDS.includes(id)) {
-		throw new Error(`Unknown theme '${id}'. Choose: ${THEME_IDS.join(", ")}`);
-	}
-}
-if (values.collage && themes.length < 2) {
-	throw new Error(
-		"A collage needs at least two themes; pass a comma-separated --theme list.",
+const request = parseCaptureArgs(argv, catalog);
+
+const SHOWCASE_DIR = resolve(import.meta.dir, "../../../../artifacts/showcase");
+const SCREENSHOTS_DIR = resolve(import.meta.dir, "../../../../screenshots");
+const galleryCatalog: GalleryCatalog = {
+	qualityIds: QUALITY_IDS,
+	sceneIds: SCENE_IDS,
+	themeIds: THEME_IDS,
+	sceneTitles: Object.fromEntries(
+		SCENES.map((scene) => [scene.id, scene.title]),
+	),
+	themeNames: Object.fromEntries(
+		BUILT_IN_THEMES.map((theme) => [theme.id, theme.meta.name]),
+	),
+};
+
+async function captureWithPlaywright(): Promise<number> {
+	const child = Bun.spawn(
+		[
+			process.execPath,
+			"run",
+			"test:e2e",
+			"--config=scripts/screenshots/playwright.config.ts",
+		],
+		{
+			cwd: resolve(import.meta.dir, "../.."),
+			env: {
+				...process.env,
+				ROADRAVEN_CAPTURE_SCENES: request.scenes.join(","),
+				ROADRAVEN_CAPTURE_THEMES: request.themes.join(","),
+				ROADRAVEN_CAPTURE_COLLAGE: request.collage ? "1" : "0",
+				ROADRAVEN_CAPTURE_QUALITY: request.quality,
+				ROADRAVEN_CAPTURE_FORMATS: request.formats.join(","),
+			},
+			stdout: "inherit",
+			stderr: "inherit",
+		},
 	);
+	return await child.exited;
 }
 
-const child = Bun.spawn(
-	[
-		process.execPath,
-		"run",
-		"test:e2e",
-		"--config=scripts/screenshots/playwright.config.ts",
-	],
-	{
-		cwd: resolve(import.meta.dir, "../.."),
-		env: {
-			...process.env,
-			ROADRAVEN_CAPTURE_THEMES: themes.join(","),
-			ROADRAVEN_CAPTURE_COLLAGE: values.collage ? "1" : "0",
-		},
-		stdout: "inherit",
-		stderr: "inherit",
-	},
-);
-process.exit(await child.exited);
+const skipCapture = request.galleryOnly || request.publishOnly;
+const exitCode = skipCapture ? 0 : await captureWithPlaywright();
+await buildGallery(SHOWCASE_DIR, galleryCatalog);
+process.stdout.write(`Gallery: ${resolve(SHOWCASE_DIR, "index.html")}\n`);
+if (request.publish.length > 0) {
+	const published = await publishOutputs(
+		SHOWCASE_DIR,
+		SCREENSHOTS_DIR,
+		request.publish,
+	);
+	for (const { from, to } of published) {
+		process.stdout.write(`Published: ${from} -> ${to}\n`);
+	}
+}
+process.exit(exitCode);

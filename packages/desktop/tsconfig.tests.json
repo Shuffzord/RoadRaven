@@ -9,6 +9,6 @@
 	"compilerOptions": {
 		"types": ["vitest/globals", "node"]
 	},
-	"include": ["src", "../../shared", "tests"],
+	"include": ["src", "../../shared", "tests", "scripts"],
 	"exclude": ["node_modules", "dist", "build"]
 }

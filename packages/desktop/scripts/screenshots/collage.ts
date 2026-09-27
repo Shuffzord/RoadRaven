@@ -5,11 +5,22 @@ export interface ThemeShot {
 	image: string;
 }
 
+export interface CollageText {
+	heading: string;
+	subheading: string;
+	/** Alt text is `${altPrefix} in ${theme name}`. */
+	altPrefix: string;
+}
+
+const escapeHtml = (text: string) =>
+	text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
 /** Compose the real captures in a separate document, without image dependencies. */
 export async function captureCollage(
 	page: Page,
 	shots: ThemeShot[],
 	path: string,
+	text: CollageText,
 ): Promise<void> {
 	await page.goto("about:blank");
 	await page.setViewportSize({ width: 2400, height: 1200 });
@@ -28,27 +39,30 @@ export async function captureCollage(
   figcaption { padding: 18px 24px; font-size: 26px; font-weight: bold; }
   img { display: block; width: 100%; height: auto; }
 </style></head><body>
-  <header><div class="brand">RoadRaven</div><h1>One roadmap. Different perspectives.</h1>
-  <p>CFA Level I · The same study progress across built-in themes</p></header>
+  <header><div class="brand">RoadRaven</div><h1>${escapeHtml(text.heading)}</h1>
+  <p>${escapeHtml(text.subheading)}</p></header>
   <main></main>
 </body></html>`);
-	await page.evaluate(async (tiles) => {
-		const grid = document.querySelector("main");
-		if (!grid) throw new Error("Collage grid missing");
-		await Promise.all(
-			tiles.map(async ({ name, image }) => {
-				const figure = document.createElement("figure");
-				const caption = document.createElement("figcaption");
-				caption.textContent = name;
-				const img = document.createElement("img");
-				img.alt = `CFA roadmap in ${name}`;
-				img.src = image;
-				figure.append(caption, img);
-				grid.append(figure);
-				await img.decode();
-			}),
-		);
-		await document.fonts.ready;
-	}, shots);
+	await page.evaluate(
+		async ({ tiles, altPrefix }) => {
+			const grid = document.querySelector("main");
+			if (!grid) throw new Error("Collage grid missing");
+			await Promise.all(
+				tiles.map(async ({ name, image }) => {
+					const figure = document.createElement("figure");
+					const caption = document.createElement("figcaption");
+					caption.textContent = name;
+					const img = document.createElement("img");
+					img.alt = `${altPrefix} in ${name}`;
+					img.src = image;
+					figure.append(caption, img);
+					grid.append(figure);
+					await img.decode();
+				}),
+			);
+			await document.fonts.ready;
+		},
+		{ tiles: shots, altPrefix: text.altPrefix },
+	);
 	await page.screenshot({ path, fullPage: true, animations: "disabled" });
 }
