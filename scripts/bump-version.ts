@@ -66,6 +66,15 @@ const textTargets = [
 		replacement: `"version": "${newVersion}"`,
 		label: '"version": "..." (server + package)',
 	},
+	{
+		// Plugin README pins the npx install (and init) command twice, hence the
+		// global flag. Matches a version only, so a trailing backtick, quote or
+		// word after the pin is left untouched.
+		path: "plugins/claude-code/README.md",
+		regex: /@roadraven\/mcp@\d+\.\d+\.\d+(?:-[0-9A-Za-z]+(?:\.[0-9A-Za-z]+)*)?/g,
+		replacement: `@roadraven/mcp@${newVersion}`,
+		label: "@roadraven/mcp@... (plugin README)",
+	},
 ];
 
 type ParsedPkg = { path: string; pkg: { version?: string } };

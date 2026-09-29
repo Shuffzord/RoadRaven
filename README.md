@@ -117,6 +117,18 @@ Writing your own producer (a CI job, a script, a bot)? The Event API contract
 is in the [plugin authoring guide](docs/plugin-authoring.md).
 `@roadraven/core` (Zod schemas and types) is not on npm yet; build it from source.
 
+## Skills for Claude Code
+
+The Claude Code plugin install also brings two skills (the Setup Wizard and
+`npx` paths give the tools only). `roadraven:orchestrate` plans a piece of
+work as a roadmap tree and runs it phase by phase with sub-agents;
+`roadraven:work-node` is how each task claims a node, checkpoints into it and
+reports. Details in the [plugin README](plugins/claude-code/README.md). Try:
+
+```
+Plan the CSV export feature as a roadmap in RoadRaven and run it phase by phase.
+```
+
 ## Install
 
 Download from [GitHub Releases](https://github.com/Shuffzord/RoadRaven/releases/latest).
