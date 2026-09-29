@@ -1,7 +1,8 @@
 # Working without the app
 
 Use this only after the human has been asked once and the app is still not
-available. The plan keeps the same tree, in one markdown file, so it can be
+available, or straight away when nobody can be asked (a non-interactive run,
+or a sub-agent with no channel to the human); then say so in the report. The plan keeps the same tree, in one markdown file, so it can be
 moved into RoadRaven later without rethinking it.
 
 ## Tell the human once

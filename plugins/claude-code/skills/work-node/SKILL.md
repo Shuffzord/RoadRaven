@@ -11,10 +11,11 @@ you found. Keep both honest and current.
 
 ## 1. Check the app
 
-Call `getOpenFile()` first. A failed call returns text that begins
-`Error (<code>):`; the code in brackets is what the table below means. If
-`getOpenFile()` reports no file path and no nodes, or a call returns one of
-these codes, stop and ask the human once:
+Call `getOpenFile()` first. If it returns `filePath` null and `nodeCount` 0,
+nothing is loaded; an untitled roadmap (`isUntitled` true, `nodeCount` above
+0) is loaded and fine to work in. A failed call returns text that begins
+`Error (<code>):`; the code in brackets is what the table below means. In
+either case, stop and ask the human once:
 
 | Code | Meaning | Ask for |
 |---|---|---|
@@ -29,7 +30,11 @@ orchestrate skill's
 [worklog-fallback.md](../orchestrate/references/worklog-fallback.md)). If you
 are working directly for the human, tell them once, plainly, that without
 the app there is no live tree to watch, only a markdown file; either way,
-say in your report that the roadmap was not updated and why. The worklog is
+say in your report that the roadmap was not updated and why. When the
+session cannot ask anyone (a non-interactive run, or you are a sub-agent
+without a channel to the human), skip the question, go straight to the
+worklog, and say in your report that the app was unavailable and nobody
+could be asked. The worklog is
 the sanctioned fallback. A workaround is trying other paths, editing the
 roadmap file on disk (the app's next save wins), or changing the app's
 settings to get past a refusal; never do those.

@@ -1075,6 +1075,26 @@ describe("agentRpcHandler — openFile dispatches with no schema loaded (v0.7 Ph
 		expect(useRoadmapStore.getState().schema).toBeNull();
 		expect(useEventLogStore.getState().rows).toHaveLength(0);
 	});
+
+	// Characterization: the plugin skills detect "app open, nothing loaded"
+	// from this exact shape, because getOpenFile never returns no_file_loaded.
+	it("getOpenFile with no schema loaded returns ok with null filePath and title and nodeCount 0", async () => {
+		const result = await handleAgentRequest("getOpenFile", {});
+
+		expect(result.ok).toBe(true);
+		expect(
+			(
+				result as {
+					ok: true;
+					data: {
+						filePath: string | null;
+						title: string | null;
+						nodeCount: number;
+					};
+				}
+			).data,
+		).toMatchObject({ filePath: null, title: null, nodeCount: 0 });
+	});
 });
 
 // v0.8.4 Phase 6 (D-15): what an agent does is not the user's edit. The

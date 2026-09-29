@@ -84,6 +84,10 @@ function toolCalls(text: string): string[] {
 	return [...text.matchAll(/`([A-Za-z_][A-Za-z0-9_]*)\(/g)].map((m) => m[1]);
 }
 
+function backtickedTokens(text: string): string[] {
+	return [...text.matchAll(/`([^`\n]+)`/g)].map((m) => m[1].trim());
+}
+
 function relativeLinks(text: string): string[] {
 	return [...text.matchAll(/\]\(([^)\s]+)\)/g)]
 		.map((m) => m[1].split("#")[0])
@@ -144,6 +148,18 @@ describe.each(listSkillDirs())("skill %s", (skill) => {
 		const called = skillFiles(skill).flatMap((file) => toolCalls(read(file)));
 		expect(called.length).toBeGreaterThan(0);
 		expect(called.filter((name) => !registered.includes(name))).toEqual([]);
+	});
+
+	it("writes every backticked tool name in call form", () => {
+		// toolCalls() only sees `name(`; a bare `name` would escape the check
+		// above, so any backticked token equal to a registered tool fails here.
+		const registered = registeredToolNames();
+		for (const file of skillFiles(skill)) {
+			const bare = backtickedTokens(read(file)).filter((token) =>
+				registered.includes(token),
+			);
+			expect(bare, file).toEqual([]);
+		}
 	});
 
 	it("never writes a tool name with an mcp__ prefix", () => {

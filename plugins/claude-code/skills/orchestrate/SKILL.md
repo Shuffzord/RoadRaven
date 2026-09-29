@@ -14,10 +14,11 @@ see what is planned, what is running and what is stuck.
 ## First, check the app
 
 Every RoadRaven tool talks to the desktop app on this machine. Call
-`getOpenFile()` before planning anything. A failed call returns text that
-begins `Error (<code>):`; the code in brackets is what the table below
-means. If `getOpenFile()` reports no file path and no nodes, or a call
-returns one of these codes, stop and ask the human once:
+`getOpenFile()` before planning anything. If it returns `filePath` null and
+`nodeCount` 0, nothing is loaded; an untitled roadmap (`isUntitled` true,
+`nodeCount` above 0) is loaded and fine to work in. A failed call returns
+text that begins `Error (<code>):`, the code the table below means. In
+either case, stop and ask the human once:
 
 | Code | Meaning | Ask for |
 |---|---|---|
@@ -29,10 +30,12 @@ returns one of these codes, stop and ask the human once:
 If the human declines, or it still fails, keep the plan in markdown as
 [references/worklog-fallback.md](references/worklog-fallback.md) describes,
 and tell the human once, plainly, that without the app there is no live tree
-to watch, only a markdown file. That worklog is the sanctioned fallback. A
-workaround is something else, and you never do it: trying other paths,
-editing the roadmap file on disk (the app holds it in memory and its next
-save wins), or changing the app's settings to get past a refusal.
+to watch, only a markdown file. When the session cannot ask anyone (a
+non-interactive run, or no channel to the human), go straight to that
+fallback and say in your final message that the app was unavailable and
+nobody could be asked. The worklog is the sanctioned fallback. A workaround
+is never allowed: trying other paths, editing the roadmap file on disk (the
+app holds it in memory; its next save wins), or changing app settings.
 
 ## The loop
 
