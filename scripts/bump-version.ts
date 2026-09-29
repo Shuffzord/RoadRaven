@@ -58,6 +58,23 @@ const textTargets = [
 		replacement: `@roadraven/mcp@${newVersion}`,
 		label: '"@roadraven/mcp@..."',
 	},
+	{
+		// MCP Registry metadata: the server version and the npm package
+		// version it points at are both literals, hence the global flag.
+		path: "plugins/claude-code/server.json",
+		regex: /"version":\s*"[^"]+"/g,
+		replacement: `"version": "${newVersion}"`,
+		label: '"version": "..." (server + package)',
+	},
+	{
+		// Plugin README pins the npx install (and init) command twice, hence the
+		// global flag. Matches a version only, so a trailing backtick, quote or
+		// word after the pin is left untouched.
+		path: "plugins/claude-code/README.md",
+		regex: /@roadraven\/mcp@\d+\.\d+\.\d+(?:-[0-9A-Za-z]+(?:\.[0-9A-Za-z]+)*)?/g,
+		replacement: `@roadraven/mcp@${newVersion}`,
+		label: "@roadraven/mcp@... (plugin README)",
+	},
 ];
 
 type ParsedPkg = { path: string; pkg: { version?: string } };

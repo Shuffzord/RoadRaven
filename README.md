@@ -20,7 +20,7 @@ no sprints, no story points. Just a file you own.
 The headline use case: give Claude Code (or any MCP host) the roadmap, and
 watch it plan, work, and tick nodes green while you supervise.
 
-> **Alpha (v0.8.6).** Core editing and the live Event API work today. The data
+> **Alpha (v0.8.7).** Core editing and the live Event API work today. The data
 > format, APIs, and packaging may still change before v1.0. Bug reports and
 > feature requests are very welcome via [Issues](https://github.com/Shuffzord/RoadRaven/issues).
 
@@ -59,7 +59,7 @@ Nodes change colour on the canvas as the agent works. That is the whole idea.
 
 ## Demo
 
-https://user-images.githubusercontent.com/4171628/607591096-bc94a8c8-36c9-44dc-8cdb-6417437949b9.mp4
+https://github.com/user-attachments/assets/404a1f7d-094d-42a4-b930-6e8f31a17b6a
 
 ![RoadRaven's own 0.8 release line: six versions shipped, the seventh in flight, each phase attributed to the agent that did it](screenshots/promo/readme-hero-rr-timeline-amber.png)
 
@@ -98,7 +98,7 @@ Code plugin below is already installed, the wizard defers to it.
 matches your installed app (the app warns on a major.minor mismatch):
 
 ```bash
-claude mcp add -s user roadraven -- npx -y @roadraven/mcp@0.8.6
+claude mcp add -s user roadraven -- npx -y @roadraven/mcp@0.8.7
 ```
 
 **Tell Claude to use it.** Tools alone give Claude no reason to plan in the
@@ -107,7 +107,7 @@ whether to put it in the current project or in `~/.claude/CLAUDE.md` for every
 project. Safe to re-run; it updates its own block and touches nothing else:
 
 ```bash
-npx -y @roadraven/mcp@0.8.6 init
+npx -y @roadraven/mcp@0.8.7 init
 ```
 
 Cursor, Codex, Copilot, Gemini, OpenCode, version-mismatch handling, and a
@@ -116,6 +116,18 @@ build-from-source path: [MCP install guide](docs/mcp-install.md).
 Writing your own producer (a CI job, a script, a bot)? The Event API contract
 is in the [plugin authoring guide](docs/plugin-authoring.md).
 `@roadraven/core` (Zod schemas and types) is not on npm yet; build it from source.
+
+## Skills for Claude Code
+
+The Claude Code plugin install also brings two skills (the Setup Wizard and
+`npx` paths give the tools only). `roadraven:orchestrate` plans a piece of
+work as a roadmap tree and runs it phase by phase with sub-agents;
+`roadraven:work-node` is how each task claims a node, checkpoints into it and
+reports. Details in the [plugin README](plugins/claude-code/README.md). Try:
+
+```
+Plan the CSV export feature as a roadmap in RoadRaven and run it phase by phase.
+```
 
 ## Install
 
@@ -131,7 +143,7 @@ Every release since v0.8.0 ships a `SHA256SUMS` file.
 
 RoadRaven renders through the system WebView2 runtime on Windows, so the
 download carries no bundled browser engine. Pin a version with
-`$env:ROADRAVEN_VERSION = 'v0.8.6'` before the one-liner.
+`$env:ROADRAVEN_VERSION = 'v0.8.7'` before the one-liner.
 
 **Linux x86_64.** The one-liner above, or by hand:
 
@@ -144,14 +156,14 @@ chmod +x ./installer
 
 The installer puts the app under `~/.local/share/` and creates a desktop
 shortcut. Chromium (CEF) ships bundled, so no system browser dependency. Pin
-a version with `ROADRAVEN_VERSION=v0.8.6` in front of `sh`.
+a version with `ROADRAVEN_VERSION=v0.8.7` in front of `sh`.
 
 Once installed, RoadRaven checks GitHub Releases for updates and asks before
 downloading one.
 
 ## Status
 
-| Shipped as of v0.8.6 | Next |
+| Shipped as of v0.8.7 | Next |
 |---|---|
 | Tree canvas, keyboard editor, side-panel markdown notes and metadata | macOS installer |
 | Atomic autosave, `$ref` split files, File menu, Outline navigator | Code signing |

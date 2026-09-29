@@ -1,0 +1,23 @@
+{
+	"$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+	"name": "io.github.Shuffzord/roadraven",
+	"title": "RoadRaven",
+	"description": "Create and update roadmap tree nodes and statuses in the RoadRaven desktop app (must be running).",
+	"websiteUrl": "https://shuffzord.github.io/RoadRaven/",
+	"repository": {
+		"url": "https://github.com/Shuffzord/RoadRaven",
+		"source": "github",
+		"subfolder": "plugins/claude-code"
+	},
+	"version": "0.8.7",
+	"packages": [
+		{
+			"registryType": "npm",
+			"identifier": "@roadraven/mcp",
+			"version": "0.8.7",
+			"transport": {
+				"type": "stdio"
+			}
+		}
+	]
+}

@@ -1,7 +1,7 @@
 {
 	"name": "roadraven",
-	"version": "0.8.6",
-	"description": "MCP wrapper that lets Claude Code push live node status updates to a running RoadRaven desktop app via its WebSocket Event API.",
+	"version": "0.8.7",
+	"description": "RoadRaven MCP server plus two skills (orchestrate, work-node) for planning and running work as a live roadmap in the RoadRaven desktop app, which must be running.",
 	"author": {
 		"name": "Shuffzord",
 		"url": "https://github.com/Shuffzord"
