@@ -9,7 +9,11 @@ vi.mock("../src/userData", () => ({
 }));
 
 import { readFile } from "node:fs/promises";
-import { isPidAlive, readSentinel } from "../src/sentinel";
+import {
+	APP_NOT_RUNNING_MESSAGE,
+	isPidAlive,
+	readSentinel,
+} from "../src/sentinel";
 
 describe("Sentinel reader (MCP wrapper side)", () => {
 	beforeEach(() => {
@@ -48,7 +52,7 @@ describe("Sentinel reader (MCP wrapper side)", () => {
 
 		expect(result).toEqual({
 			ok: false,
-			error: "Roadmap Viewer is not running. Start the app and retry.",
+			error: APP_NOT_RUNNING_MESSAGE,
 		});
 		expect(readMock).toHaveBeenCalledTimes(6);
 		vi.useRealTimers();
@@ -59,7 +63,7 @@ describe("Sentinel reader (MCP wrapper side)", () => {
 		const result = await readSentinel({ retryMs: 1, maxAttempts: 3 });
 		expect(result).toEqual({
 			ok: false,
-			error: "Roadmap Viewer is not running. Start the app and retry.",
+			error: APP_NOT_RUNNING_MESSAGE,
 		});
 	});
 
@@ -83,7 +87,7 @@ describe("Sentinel reader (MCP wrapper side)", () => {
 		const result = await readSentinel({ retryMs: 1, maxAttempts: 1 });
 		expect(result).toEqual({
 			ok: false,
-			error: "Roadmap Viewer is not running. Start the app and retry.",
+			error: APP_NOT_RUNNING_MESSAGE,
 		});
 		vi.restoreAllMocks();
 	});

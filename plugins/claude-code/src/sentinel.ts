@@ -11,8 +11,10 @@ export interface SentinelData {
 const DEFAULT_RETRY_MS = 500;
 const DEFAULT_MAX_ATTEMPTS = 6; // 3s total per RESEARCH §6.4
 
-const ERROR_NOT_RUNNING =
-	"Roadmap Viewer is not running. Start the app and retry.";
+// Single source for the not-running message: readSentinel returns it, and
+// agentToolCallback wraps it as `Error (app_not_running): <message>`.
+export const APP_NOT_RUNNING_MESSAGE =
+	"RoadRaven is not running. Start the app and retry.";
 
 /**
  * Check if a process is alive using signal 0 (POSIX + Windows Node docs confirm).
@@ -49,7 +51,7 @@ export async function readSentinel(opts?: {
 			const parsed = JSON.parse(raw) as SentinelData;
 			if (!isPidAlive(parsed.pid)) {
 				// PID dead → orphaned sentinel; treat as not running
-				return { ok: false, error: ERROR_NOT_RUNNING };
+				return { ok: false, error: APP_NOT_RUNNING_MESSAGE };
 			}
 			return { ok: true, ...parsed };
 		} catch {
@@ -59,5 +61,5 @@ export async function readSentinel(opts?: {
 			}
 		}
 	}
-	return { ok: false, error: ERROR_NOT_RUNNING };
+	return { ok: false, error: APP_NOT_RUNNING_MESSAGE };
 }

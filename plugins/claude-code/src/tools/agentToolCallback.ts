@@ -7,14 +7,18 @@
 //   success                                    → { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] }
 //   error WITH structured code+message (+hint) → { content: [Error (<code>): <msg> <hint>], isError: true }
 //   error WITHOUT a code (transport failure)   → consult sentinel:
-//                                                  app down → "Roadmap Viewer is not running…"
+//                                                  app down → "Error (app_not_running): RoadRaven is not running…"
 //                                                  app up   → falls through to internal_error formatting
 //
 // The sentinel branch only fires when the error has NO code field, i.e., the WS transport
 // itself failed (disconnect, timeout) before reaching the structured Bun handler. Errors
 // rejected through wsClient.request's `pending` map carry the structured code/hint already
 // (see plugins/claude-code/src/wsClient.ts Plan 06-02), so they take the formatting path.
-import { readSentinel } from "../sentinel";
+import { APP_NOT_RUNNING_MESSAGE, readSentinel } from "../sentinel";
+import type { AgentErrorCode } from "./errors";
+
+// Typed against AGENT_ERROR_CODES, so a renamed or removed code fails tsc.
+const APP_NOT_RUNNING: AgentErrorCode = "app_not_running";
 
 // Non-generic on purpose — agentToolCallback never narrows the result type
 // (it serializes whatever comes back through JSON.stringify), and the looser
@@ -90,15 +94,10 @@ export function agentToolCallback(
 			// app-up-but-WS-blip via the sentinel.
 			const sentinel = await readSentinel();
 			if (!sentinel.ok) {
-				return {
-					content: [
-						{
-							type: "text",
-							text: "Roadmap Viewer is not running. Start the app and retry.",
-						},
-					],
-					isError: true,
-				};
+				return formatStructuredError({
+					code: APP_NOT_RUNNING,
+					message: APP_NOT_RUNNING_MESSAGE,
+				});
 			}
 			const message = e.message ?? "Unknown error";
 			return {

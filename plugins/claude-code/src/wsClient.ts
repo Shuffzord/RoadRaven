@@ -175,7 +175,7 @@ export function createWsClient(opts: WsClientOptions): WsClient {
 	return {
 		async send(event: OutgoingEvent): Promise<void> {
 			if (!connected || ws === null) {
-				throw new Error("Not connected to Roadmap Viewer Event API.");
+				throw new Error("Not connected to RoadRaven Event API.");
 			}
 			ws.send(JSON.stringify({ ...event, source: opts.source }));
 		},
@@ -185,7 +185,7 @@ export function createWsClient(opts: WsClientOptions): WsClient {
 		): Promise<T> {
 			return new Promise<T>((resolve, reject) => {
 				if (!connected || ws === null) {
-					reject(new Error("Not connected to Roadmap Viewer Event API."));
+					reject(new Error("Not connected to RoadRaven Event API."));
 					return;
 				}
 				const id = crypto.randomUUID();
