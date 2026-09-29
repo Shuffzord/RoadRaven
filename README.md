@@ -59,9 +59,7 @@ Nodes change colour on the canvas as the agent works. That is the whole idea.
 
 ## Demo
 
-https://user-images.githubusercontent.com/4171628/607591096-bc94a8c8-36c9-44dc-8cdb-6417437949b9.mp4
-
-Longer cut: [watch the showreel](screenshots/promo/roadraven-showreel.mp4).
+https://github.com/user-attachments/assets/404a1f7d-094d-42a4-b930-6e8f31a17b6a
 
 ![RoadRaven's own 0.8 release line: six versions shipped, the seventh in flight, each phase attributed to the agent that did it](screenshots/promo/readme-hero-rr-timeline-amber.png)
 
