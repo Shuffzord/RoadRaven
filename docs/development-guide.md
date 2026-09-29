@@ -110,9 +110,9 @@ there on its launch check and, if it points at a newer version, downloads
 `canary-win-x64-RoadRaven-canary.tar.zst`.
 
 Run the installed canary itself -- not `bun run dev` / `dev:hmr`, which
-never check for updates -- and watch the flow through Preferences › About
-or the status-bar pill: the launch check, the download, and Restart to
-update. See [Logging](./logging.md) for where the session's log ends up
+never check for updates -- and watch the flow on the update card,
+Preferences › About or the status-bar pill: the launch check, the download,
+and Restart to update. See [Logging](./logging.md) for where the session's log ends up
 across the restart.
 
 ## How to Add a New Component

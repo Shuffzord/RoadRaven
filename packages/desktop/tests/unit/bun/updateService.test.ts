@@ -293,6 +293,19 @@ describe("updateService", () => {
 		expect(fakeLog.warn).toHaveBeenCalled();
 	});
 
+	// v0.8.7: a bundle staged by an earlier session is still prepared on disk.
+	it("check() reports ready when Electrobun still has that bundle prepared", async () => {
+		fakeUpdater.checkForUpdate.mockResolvedValue({
+			...available("0.8.6"),
+			updateReady: true,
+		});
+		const service = createUpdateService({ flushPending: noFlush });
+		expect(await service.check()).toEqual({
+			status: "ready",
+			version: "0.8.6",
+		});
+	});
+
 	it("check() maps a thrown fetch error to error, logs at warn and does not throw", async () => {
 		fakeUpdater.checkForUpdate.mockRejectedValue(new TypeError("fetch failed"));
 		const service = createUpdateService({ flushPending: noFlush });

@@ -76,9 +76,13 @@ export function reduceStatusEntry(
 
 function stateFromInfo(info: UpdateInfo): UpdateState {
 	if (info.error) return { status: "error", message: info.error };
-	return info.updateAvailable
-		? { status: "available", version: info.version }
-		: { status: "up-to-date", version: info.version };
+	if (!info.updateAvailable)
+		return { status: "up-to-date", version: info.version };
+	// A bundle an earlier session downloaded is still prepared on disk
+	// (Electrobun reports updateReady): skip the prompt, offer the restart.
+	return info.updateReady
+		? { status: "ready", version: info.version }
+		: { status: "available", version: info.version };
 }
 
 function errorMessage(error: unknown): string {
