@@ -58,6 +58,14 @@ const textTargets = [
 		replacement: `@roadraven/mcp@${newVersion}`,
 		label: '"@roadraven/mcp@..."',
 	},
+	{
+		// MCP Registry metadata: the server version and the npm package
+		// version it points at are both literals, hence the global flag.
+		path: "plugins/claude-code/server.json",
+		regex: /"version":\s*"[^"]+"/g,
+		replacement: `"version": "${newVersion}"`,
+		label: '"version": "..." (server + package)',
+	},
 ];
 
 type ParsedPkg = { path: string; pkg: { version?: string } };
