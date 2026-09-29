@@ -9,7 +9,7 @@
 			"description": "MCP server plus two skills (orchestrate, work-node) that let Claude Code plan and run work as a live roadmap in a running RoadRaven desktop app.",
 			"source": "./plugins/claude-code",
 			"category": "productivity",
-			"version": "0.8.6"
+			"version": "0.8.7"
 		}
 	]
 }

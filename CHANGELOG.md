@@ -3,6 +3,40 @@
 All notable changes to RoadRaven are documented in this file. The format
 follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.8.7] - 2026-09-29
+
+### Added
+
+- **Skills for Claude Code.** Installing the Claude Code plugin now also
+  brings two skills. `roadraven:orchestrate` plans a piece of work as a
+  roadmap tree and runs it phase by phase with sub-agents, checking each
+  phase with your project's own test and lint commands.
+  `roadraven:work-node` is how one task gets done: claim a node, checkpoint
+  into its notes, stay inside the agreed files, report. They work in any
+  language, and fall back to a markdown worklog when the app is not
+  available. The Setup Wizard and `npx` install paths give the tools only.
+- The MCP server has its own README (shown on its npm page) and carries the
+  metadata needed to list it in the MCP Registry.
+- A showreel of the app, linked from the README.
+
+### Changed
+
+- **The update prompt stays with you through the whole update.** It remains
+  open as one card from "update available" through the download to
+  **Restart to update**, with a progress bar and a **Hide** button while
+  downloading. A failed download is reported on the same card. The
+  status-bar pill shows the same phases ("Downloading 42%", then "Update
+  ready").
+- An update downloaded in an earlier session is offered as ready on the next
+  launch instead of asking to download again.
+
+### Fixed
+
+- With the desktop app closed, MCP tools answered "Roadmap Viewer is not
+  running." — the app's old name, and without the `app_not_running` code the
+  documentation tells agents to expect. They now answer
+  `Error (app_not_running): RoadRaven is not running. Start the app and retry.`
+
 ## [0.8.6] - 2026-09-26
 
 ### Added
