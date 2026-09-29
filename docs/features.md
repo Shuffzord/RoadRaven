@@ -40,10 +40,15 @@ The full feature list and keyboard reference. For a short overview see the
 
 Installed stable and canary builds check for a newer version about 10
 seconds after launch (dev builds never check) and ask before downloading
-anything. Once a download finishes, Preferences › About shows the update's
-progress and a **Restart to update** button, and an "Update ready" pill
-appears in the status bar. Either one restarts the app: unsaved work is
-flushed first, and an untitled roadmap with edits gets the same
-Discard-changes prompt as closing the app. Turn the launch check off with
-**Check for updates when RoadRaven starts** in Preferences.
+anything. The update card that asks stays above the status bar while the
+download runs, with a progress bar and a **Hide** button, and then offers
+**Restart to update**; a download that fails says so on the same card.
+The status bar shows the same phases as a pill ("Downloading 42%", then
+"Update ready"), and Preferences › About has the status line and a
+**Restart to update** button of its own. A bundle downloaded in an earlier
+session is offered straight away as ready on the next launch. Every
+restart button flushes unsaved work first, and an untitled roadmap with
+edits gets the same Discard-changes prompt as closing the app. Turn the
+launch check off with **Check for updates when RoadRaven starts** in
+Preferences.
 

@@ -235,7 +235,12 @@ export const UPDATE_DOWNLOAD_LABEL = "Download";
 export const UPDATE_CHECK_LABEL = "Check for updates";
 export const UPDATE_RESTART_LABEL = "Restart to update";
 export const UPDATE_AUTOCHECK_LABEL = "Check for updates when RoadRaven starts";
-/** Status-bar pill, rendered only when an update is ready. */
+/** Status-bar pill, rendered while an update downloads and once it is ready. */
 export const UPDATE_PILL_TESTID = "update-pill";
 /** Preferences › About status line. */
 export const UPDATE_STATUS_TESTID = "update-status";
+/** v0.8.7 update card: the download-phase "Hide" and the error-phase "Close". */
+export const UPDATE_HIDE_LABEL = "Hide";
+export const UPDATE_CLOSE_LABEL = "Close";
+/** The update card's download progress bar (`role="progressbar"`). */
+export const UPDATE_PROGRESS_TESTID = "update-progress";

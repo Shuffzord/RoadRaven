@@ -1,5 +1,6 @@
 // v0.8.5 Phase 2 — updateStore: the renderer's only owner of UpdateState,
-// plus the per-launch "Later" dismissal and the prompt predicate (D-2).
+// plus the per-launch dismissal and the update card predicate (D-2; v0.8.7
+// widens it to the download and ready phases).
 import { beforeEach, describe, expect, it } from "vitest";
 import {
 	shouldPromptForUpdate,
@@ -54,13 +55,20 @@ describe("shouldPromptForUpdate", () => {
 		).toBe(true);
 	});
 
+	// v0.8.7: the card follows the version through the download to the restart.
+	it.each([
+		{ status: "downloading", version: "0.8.6", progress: 10 },
+		{ status: "ready", version: "0.8.6" },
+	] as const)("keeps the card open while $status until dismissed", (state) => {
+		expect(shouldPromptForUpdate(state, null)).toBe(true);
+		expect(shouldPromptForUpdate(state, "0.8.6")).toBe(false);
+	});
+
 	it.each([
 		{ status: "idle" },
 		{ status: "disabled", reason: "dev" },
 		{ status: "checking" },
 		{ status: "up-to-date", version: "0.8.5" },
-		{ status: "downloading", version: "0.8.6", progress: 10 },
-		{ status: "ready", version: "0.8.6" },
 		{ status: "error", message: "boom" },
 	] as const)("does not prompt while $status", (state) => {
 		expect(shouldPromptForUpdate(state, null)).toBe(false);
