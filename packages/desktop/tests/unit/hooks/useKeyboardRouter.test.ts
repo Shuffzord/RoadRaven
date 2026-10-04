@@ -258,6 +258,49 @@ describe("useKeyboardRouter", () => {
 		expect(copySpy).not.toHaveBeenCalled();
 	});
 
+	it("Ctrl+C with a text selection leaves the copy to the browser; with none, copies the subtree", () => {
+		useRoadmapStore.getState().setFocusedNode(CHILD_A_ID);
+		const copySpy = vi
+			.spyOn(useRoadmapStore.getState(), "copySubtreeToClipboard")
+			.mockResolvedValue();
+		renderRouter();
+
+		const p = document.createElement("p");
+		p.textContent = "uv sync --all-extras";
+		document.body.appendChild(p);
+		const range = document.createRange();
+		range.selectNodeContents(p);
+		const selection = window.getSelection();
+		selection?.removeAllRanges();
+		selection?.addRange(range);
+
+		try {
+			const withSelection = new KeyboardEvent("keydown", {
+				key: "c",
+				ctrlKey: true,
+				bubbles: true,
+				cancelable: true,
+			});
+			document.dispatchEvent(withSelection);
+			expect(copySpy).not.toHaveBeenCalled();
+			expect(withSelection.defaultPrevented).toBe(false);
+
+			selection?.removeAllRanges();
+			const withoutSelection = new KeyboardEvent("keydown", {
+				key: "c",
+				ctrlKey: true,
+				bubbles: true,
+				cancelable: true,
+			});
+			document.dispatchEvent(withoutSelection);
+			expect(copySpy).toHaveBeenCalledWith(CHILD_A_ID);
+			expect(withoutSelection.defaultPrevented).toBe(true);
+		} finally {
+			selection?.removeAllRanges();
+			p.remove();
+		}
+	});
+
 	it("Ctrl+V when canvas focused calls pasteFromClipboard; when input focused, does NOT", () => {
 		useRoadmapStore.getState().setFocusedNode(CHILD_A_ID);
 		const pasteSpy = vi

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useEditModeFocus } from "../hooks/useEditModeFocus";
+import { COPY_NOTES_LABEL, NOTES_COPIED_LABEL } from "../lib/domContract";
 import { useRoadmapStore } from "../store/roadmapStore";
 import { IntegrationZone } from "./IntegrationZone";
 import { MarkdownRenderer } from "./MarkdownRenderer";
@@ -63,6 +64,48 @@ function formatDate(dateStr: string | undefined): string {
 	} catch {
 		return "N/A";
 	}
+}
+
+/** Header button: copies the node's raw notes markdown (not the rendered text). */
+function CopyNotesButton({ notes }: { notes: string }) {
+	const [copied, setCopied] = useState(false);
+	const label = copied ? NOTES_COPIED_LABEL : COPY_NOTES_LABEL;
+	const handleClick = async () => {
+		await navigator.clipboard.writeText(notes);
+		setCopied(true);
+		setTimeout(() => setCopied(false), 1000);
+	};
+	return (
+		<button
+			className="flex items-center justify-center w-7 h-7 rounded-[6px] text-rv-text-tertiary hover:bg-rv-bg-hover hover:text-rv-text-primary transition-colors duration-150 disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-rv-text-tertiary"
+			type="button"
+			onClick={handleClick}
+			disabled={notes.trim() === ""}
+			aria-label={label}
+			title={label}
+		>
+			<svg
+				aria-hidden="true"
+				width="14"
+				height="14"
+				viewBox="0 0 24 24"
+				fill="none"
+				stroke="currentColor"
+				strokeWidth="2"
+				strokeLinecap="round"
+				strokeLinejoin="round"
+			>
+				{copied ? (
+					<polyline points="20 6 9 17 4 12" />
+				) : (
+					<>
+						<rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+						<path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+					</>
+				)}
+			</svg>
+		</button>
+	);
 }
 
 export function SidePanel({ isOpen, onClose }: SidePanelProps) {
@@ -252,6 +295,9 @@ export function SidePanel({ isOpen, onClose }: SidePanelProps) {
 					)}
 				</div>
 				<div className="flex items-center gap-1 shrink-0">
+					{selectedNode && !isEditing && (
+						<CopyNotesButton notes={selectedNode.notes ?? ""} />
+					)}
 					{selectedNode && !isEditing && (
 						<button
 							className="flex items-center justify-center w-7 h-7 rounded-[6px] text-rv-text-tertiary hover:bg-rv-bg-hover hover:text-rv-text-primary transition-colors duration-150"

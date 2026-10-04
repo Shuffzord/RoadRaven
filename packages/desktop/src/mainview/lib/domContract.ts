@@ -22,6 +22,15 @@ export const NODE_SURFACE_ATTR = "data-rv-surface";
 /** Save-state dot in the top-bar document chip (DocumentChip.tsx). */
 export const SAVE_STATE_ATTR = "data-save-state";
 
+// -- Side panel Copy notes button (fix/side-panel-copy) ----------------------
+// Rendered by SidePanel.tsx; read by tests/unit/ui/SidePanel.edit-mode.test.tsx
+// and tests/ui/keyboard-routing.spec.ts.
+
+/** `aria-label` / title of the header button that copies the raw notes. */
+export const COPY_NOTES_LABEL = "Copy notes";
+/** Same button for about a second after a successful copy. */
+export const NOTES_COPIED_LABEL = "Notes copied";
+
 // -- Collapse chevron (v0.8.4 Phase 0) --------------------------------------
 // Rendered by RoadmapNode.tsx; read by nodeCollapse.ts and
 // tests/ui/canvas-comfort.spec.ts.

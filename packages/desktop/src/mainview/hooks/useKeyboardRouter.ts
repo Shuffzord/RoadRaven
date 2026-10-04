@@ -45,6 +45,15 @@ function isInTextInput(active: Element | null): boolean {
 }
 
 /**
+ * True when the user has text selected anywhere in the document. Ctrl/Cmd+C
+ * then belongs to the browser (copy what they selected), not the node copy.
+ */
+function hasTextSelection(): boolean {
+	const selection = window.getSelection();
+	return !!selection && !selection.isCollapsed && selection.toString() !== "";
+}
+
+/**
  * True while a sidebar Outline row holds DOM focus. The node shortcuts below
  * the text-input guard (arrows, Enter, Space, Delete, …) are canvas-owned;
  * from the outline the row's own button semantics apply instead.
@@ -271,7 +280,7 @@ export function useKeyboardRouter(deps: RouterDeps): void {
 			if ((e.ctrlKey || e.metaKey) && (e.key === "c" || e.key === "v")) {
 				if (inTextInput) return;
 				if (e.key === "c") {
-					if (!focusedId) return;
+					if (!focusedId || hasTextSelection()) return;
 					e.preventDefault();
 					void store.copySubtreeToClipboard(focusedId);
 					return;
