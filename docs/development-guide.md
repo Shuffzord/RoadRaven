@@ -224,7 +224,7 @@ a text input or CodeMirror editor has the caret; `Ctrl+N`, `Ctrl+O`, `Ctrl+B` an
 | `F2` | Inline rename on focused node |
 | `Del` / `Backspace` | Delete focused node (confirmation dialog if it has children) |
 | `Ctrl+D` | Duplicate focused node + subtree, then open rename on the copy |
-| `Ctrl+C` | Copy node + subtree to clipboard as JSON |
+| `Ctrl+C` | Copy node + subtree to clipboard as JSON (unless text is selected -- then the browser copies the selection) |
 | `Ctrl+V` | Paste clipboard subtree under focused node |
 | `Ctrl+Arrow ↑` | Move focused node up among its siblings |
 | `Ctrl+Arrow ↓` | Move focused node down among its siblings |
@@ -235,7 +235,9 @@ Arrow-key axes follow the layout orientation: in TB (top-bottom) layout siblings
 horizontal and children flow downward; in LR (left-right) layout siblings are vertical and
 children flow rightward. `Ctrl+C` / `Ctrl+V` are context-aware -- when a text input,
 `<textarea>`, `contentEditable`, or CodeMirror (`.cm-editor`) is focused, they fall through
-to the browser's native text copy/paste instead of the node clipboard.
+to the browser's native text copy/paste instead of the node clipboard. `Ctrl+C` also falls
+through whenever any text is selected in the document (for example notes in the side panel), so
+the selection is what lands on the clipboard.
 
 ### Side panel
 

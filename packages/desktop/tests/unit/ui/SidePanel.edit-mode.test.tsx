@@ -3,6 +3,10 @@ import { act, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { RoadmapSchema } from "../../../../../packages/core/src/schema";
 import { SidePanel } from "../../../src/mainview/components/SidePanel";
+import {
+	COPY_NOTES_LABEL,
+	NOTES_COPIED_LABEL,
+} from "../../../src/mainview/lib/domContract";
 import { useRoadmapStore } from "../../../src/mainview/store/roadmapStore";
 import { resetStore } from "../../helpers/resetStore";
 
@@ -409,6 +413,70 @@ describe("SidePanel — edit mode", () => {
 		render(<SidePanel isOpen onClose={vi.fn()} />);
 		fireEvent.click(screen.getByLabelText("Copy node ID"));
 		expect(mockWrite).toHaveBeenCalledWith(ROOT_ID);
+	});
+
+	describe("Copy notes button", () => {
+		const NOTES = "**Do:**\n```\nuv sync --all-extras\n```";
+
+		function mockClipboard() {
+			const mockWrite = vi.fn().mockResolvedValue(undefined);
+			Object.defineProperty(navigator, "clipboard", {
+				value: { writeText: mockWrite },
+				writable: true,
+				configurable: true,
+			});
+			return mockWrite;
+		}
+
+		it("writes the raw notes markdown to the clipboard", async () => {
+			seedStore({}, { notes: NOTES });
+			const mockWrite = mockClipboard();
+			render(<SidePanel isOpen onClose={vi.fn()} />);
+			await act(async () => {
+				fireEvent.click(screen.getByLabelText(COPY_NOTES_LABEL));
+			});
+			expect(mockWrite).toHaveBeenCalledWith(NOTES);
+		});
+
+		it("switches its accessible name to the confirmation after a click", async () => {
+			seedStore({}, { notes: NOTES });
+			mockClipboard();
+			render(<SidePanel isOpen onClose={vi.fn()} />);
+			await act(async () => {
+				fireEvent.click(screen.getByLabelText(COPY_NOTES_LABEL));
+			});
+			expect(screen.getByLabelText(NOTES_COPIED_LABEL)).toBeTruthy();
+		});
+
+		it("is disabled when the node has no notes", () => {
+			seedStore();
+			render(<SidePanel isOpen onClose={vi.fn()} />);
+			const button = screen.getByLabelText(
+				COPY_NOTES_LABEL,
+			) as HTMLButtonElement;
+			expect(button.disabled).toBe(true);
+		});
+
+		it("is disabled when the notes are only whitespace", () => {
+			seedStore({}, { notes: "  \n\t " });
+			render(<SidePanel isOpen onClose={vi.fn()} />);
+			const button = screen.getByLabelText(
+				COPY_NOTES_LABEL,
+			) as HTMLButtonElement;
+			expect(button.disabled).toBe(true);
+		});
+
+		it("is not rendered in edit mode and does not take the F6 marker", () => {
+			seedStore({}, { notes: NOTES });
+			render(<SidePanel isOpen onClose={vi.fn()} />);
+			expect(
+				screen
+					.getByLabelText(COPY_NOTES_LABEL)
+					.hasAttribute("data-panel-focus"),
+			).toBe(false);
+			fireEvent.click(screen.getByLabelText("Edit node"));
+			expect(screen.queryByLabelText(COPY_NOTES_LABEL)).toBeNull();
+		});
 	});
 
 	// Test audit gap (2026-09-21): lib/focusHandoff.ts looks up
