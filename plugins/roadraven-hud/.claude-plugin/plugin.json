@@ -1,0 +1,25 @@
+{
+	"name": "roadraven-hud",
+	"version": "0.1.0",
+	"description": "RoadRaven pane in Claude Code: live agents on roadmap nodes, batched UAT sign-off, and a backlog you can start or prioritise",
+	"types": "./types/index.d.ts",
+	"userConfig": {
+		"theme": {
+			"type": "string",
+			"title": "Pane theme",
+			"description": "follow-app mirrors the theme picked in the RoadRaven app",
+			"default": "follow-app",
+			"options": [
+				"follow-app",
+				"amber",
+				"dark",
+				"light",
+				"moss",
+				"paper",
+				"slate",
+				"contrast",
+				"high-contrast"
+			]
+		}
+	}
+}

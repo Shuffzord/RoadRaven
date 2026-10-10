@@ -1,0 +1,60 @@
+{
+	"id": "dark",
+	"meta": {
+		"name": "Dark",
+		"mode": "dark",
+		"description": "The default: near-black surfaces, blue accent."
+	},
+	"colors": {
+		"bg-base": "#131313",
+		"bg-canvas": "#131313",
+		"bg-surface": "#1b1b1c",
+		"bg-node": "#1e1e20",
+		"bg-input": "#1a1a1c",
+		"bg-statusbar": "#151516",
+		"bg-elevated": "#252527",
+		"bg-hover": "#2e2e30",
+		"bg-active": "#363638",
+		"bg-node-hover": "#252527",
+		"bg-toolbar": "#1b1b1c",
+		"bg-panel": "#1b1b1c",
+		"bg-config": "#1b1b1c",
+		"text-primary": "#e0e0e0",
+		"text-secondary": "#999999",
+		"text-tertiary": "#a8a8a8",
+		"text-on-accent": "#0a1a2c",
+		"border": "#2a2a2c",
+		"border-subtle": "#222224",
+		"border-focus": "#4a9eff",
+		"accent": "#4a9eff",
+		"accent-hover": "#3a8eef",
+		"accent-muted": "rgba(74, 158, 255, 0.12)",
+		"accent-border": "rgba(74, 158, 255, 0.3)",
+		"dot-grid": "rgba(255, 255, 255, 0.2)",
+		"line-connector": "rgba(255, 255, 255, 0.24)",
+		"scrollbar-track": "#1a1a1c",
+		"scrollbar-thumb": "#333335",
+		"status-not-started": "#939393",
+		"status-not-started-bg": "rgba(147, 147, 147, 0.1)",
+		"status-in-progress": "#4a9eff",
+		"status-in-progress-bg": "rgba(74, 158, 255, 0.1)",
+		"status-completed": "#4ade80",
+		"status-completed-bg": "rgba(74, 222, 128, 0.1)",
+		"status-blocked": "#ff5252",
+		"status-blocked-bg": "rgba(255, 82, 82, 0.1)",
+		"pulse": "#4ade80",
+		"search": "#f5a623",
+		"plugin-claude-code-bg": "#d97757",
+		"plugin-github-actions-bg": "#2088ff",
+		"plugin-default-bg": "#64748b"
+	},
+	"shape": {
+		"border-width": "1px"
+	},
+	"shadows": {
+		"node": "0 1px 3px rgba(0, 0, 0, 0.3)",
+		"node-hover": "0 3px 10px rgba(0, 0, 0, 0.4)",
+		"panel": "-2px 0 16px rgba(0, 0, 0, 0.4)",
+		"config": "0 4px 20px rgba(0, 0, 0, 0.5)"
+	}
+}
