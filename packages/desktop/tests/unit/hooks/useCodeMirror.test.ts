@@ -146,4 +146,62 @@ describe("useCodeMirror", () => {
 		hook.unmount();
 		expect(onPersist).not.toHaveBeenCalled();
 	});
+	it("external initialDoc change replaces the doc and a later local edit keeps it (no stale overwrite)", () => {
+		const onPersist = vi.fn();
+		const container = makeContainer();
+		const hook = renderHook(
+			({ doc }) => {
+				const ref = useRef<HTMLDivElement>(container);
+				return useCodeMirror({
+					container: ref,
+					nodeId: NODE_ID,
+					initialDoc: doc,
+					onPersist,
+				});
+			},
+			{ initialProps: { doc: "hello" } },
+		);
+		// Agent appends via MCP → store → new notes prop.
+		hook.rerender({ doc: "hello\n\nagent line" });
+		const view = hook.result.current.current;
+		if (!view) throw new Error("view not mounted");
+		expect(view.state.doc.toString()).toBe("hello\n\nagent line");
+		// The sync itself must not be persisted back.
+		act(() => {
+			vi.advanceTimersByTime(2000);
+		});
+		expect(onPersist).not.toHaveBeenCalled();
+		act(() => {
+			view.dispatch({ changes: { from: view.state.doc.length, insert: "!" } });
+		});
+		act(() => {
+			vi.advanceTimersByTime(1000);
+		});
+		expect(onPersist).toHaveBeenCalledTimes(1);
+		expect(onPersist.mock.calls[0][1]).toContain("agent line");
+	});
+
+	it("external initialDoc change while a local edit is pending keeps the user's edit", () => {
+		const onPersist = vi.fn();
+		const container = makeContainer();
+		const hook = renderHook(
+			({ doc }) => {
+				const ref = useRef<HTMLDivElement>(container);
+				return useCodeMirror({
+					container: ref,
+					nodeId: NODE_ID,
+					initialDoc: doc,
+					onPersist,
+				});
+			},
+			{ initialProps: { doc: "hello" } },
+		);
+		const view = hook.result.current.current;
+		if (!view) throw new Error("view not mounted");
+		act(() => {
+			view.dispatch({ changes: { from: 5, insert: " typed" } });
+		});
+		hook.rerender({ doc: "hello agent" });
+		expect(view.state.doc.toString()).toBe("hello typed");
+	});
 });
