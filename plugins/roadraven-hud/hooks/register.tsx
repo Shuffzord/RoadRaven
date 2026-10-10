@@ -111,6 +111,9 @@ const uatNotes = atom({ ...S, key: "uatNotes" } as const, {
 	notes: {},
 	isFailing: false,
 });
+const refreshing = atom({ ...S, key: "refreshing" } as const, "idle");
+// `filePath@revision` of the snapshot drawn; "" after a failed read, so the next answer is drawn.
+const seenRevision = atom({ ...S, key: "seenRevision" } as const, "");
 
 // --- RoadRaven and the session ---------------------------------------------------------------
 
@@ -342,19 +345,16 @@ async function forgetUatNotes($: EngineInterface) {
 	await update($, uatNotes, (u) => ({ ...u, sig: null }));
 }
 
-async function syncSnapshot($: EngineInterface) {
-	const { schema = {}, filePath } = await callRR($, "getRoadmap", LEAN);
-	await adoptRoadmap($, filePath);
-	const lean = flatten((schema.nodes ?? []) as RawNode[]);
+type Schema = { nodes?: RawNode[]; title?: unknown };
+
+async function applySnapshot($: EngineInterface, schema: Schema, key: string) {
+	const lean = flatten(schema.nodes ?? []);
 	const nodes = withNotes(lean, await uatNotesFor($, lean));
 	await update($, snapshot, () => ({
-		title: roadmapTitle((schema.nodes ?? []) as RawNode[], schema.title),
+		title: roadmapTitle(schema.nodes ?? [], schema.title),
 		nodes,
 	}));
-	if ((await read($, error)) !== null) await update($, error, () => null);
-	if ((await read($, offlineSince)) !== 0)
-		await update($, offlineSince, () => 0);
-	await openOnce($);
+	await update($, seenRevision, () => key);
 	await announceUat(
 		$,
 		nodes.filter((n) => isUat(n) && n.status === "in-progress"),
@@ -363,6 +363,31 @@ async function syncSnapshot($: EngineInterface) {
 	$.ui.status(
 		`RR ${working} active · ${awaiting} awaiting · ${nodes.filter(isReadyUat).length} UAT`,
 	);
+}
+
+// The same file at the same revision draws the same tree: nothing to redo, unless UAT notes failed.
+async function isUnchanged($: EngineInterface, key: string) {
+	const seen = await read($, seenRevision);
+	return seen === key && !(await read($, uatNotes)).isFailing;
+}
+
+async function markOnline($: EngineInterface) {
+	if ((await read($, error)) !== null) await update($, error, () => null);
+	if ((await read($, offlineSince)) !== 0)
+		await update($, offlineSince, () => 0);
+	await openOnce($);
+}
+
+async function syncSnapshot($: EngineInterface) {
+	const {
+		schema = {},
+		filePath,
+		revision,
+	} = await callRR($, "getRoadmap", LEAN);
+	await adoptRoadmap($, filePath);
+	const key = `${filePath}@${revision}`;
+	if (!(await isUnchanged($, key))) await applySnapshot($, schema, key);
+	await markOnline($);
 }
 
 async function noteError($: EngineInterface, detail: string) {
@@ -380,7 +405,7 @@ async function openOnce($: EngineInterface) {
 }
 
 // ponytail: polls the whole tree every 4s; add a push frame to the event API if trees get large.
-async function refresh($: EngineInterface, themeChoice: string) {
+async function refreshOnce($: EngineInterface, themeChoice: string) {
 	await syncPalette($, themeChoice);
 	await update($, lastTry, () => Date.now());
 	try {
@@ -388,7 +413,40 @@ async function refresh($: EngineInterface, themeChoice: string) {
 	} catch (err) {
 		await noteError($, errText(err));
 		await update($, offlineSince, (t) => t || Date.now());
+		await update($, seenRevision, () => "");
 		$.ui.status(undefined);
+	}
+}
+
+// Claims the run in one atomic update; asked while one runs, it only asks that run to go again.
+async function claimRefresh($: EngineInterface) {
+	let was = "idle";
+	await update($, refreshing, (r) => {
+		was = r;
+		return r === "idle" ? "running" : "again";
+	});
+	return was === "idle";
+}
+
+// Ends the run, or keeps it for one more pass when another was asked for meanwhile.
+async function takeAgain($: EngineInterface) {
+	let was = "idle";
+	await update($, refreshing, (r) => {
+		was = r;
+		return r === "again" ? "running" : "idle";
+	});
+	return was === "again";
+}
+
+// One refresh at a time, so a slow earlier read can never overwrite a newer snapshot.
+async function refresh($: EngineInterface, themeChoice: string) {
+	if (!(await claimRefresh($))) return;
+	try {
+		do await refreshOnce($, themeChoice);
+		while (await takeAgain($));
+	} catch (err) {
+		await update($, refreshing, () => "idle");
+		throw err;
 	}
 }
 

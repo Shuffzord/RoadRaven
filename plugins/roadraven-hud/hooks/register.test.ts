@@ -257,6 +257,7 @@ function rig(on: On, answer: { current: Answer }) {
 	const opens: unknown[] = [];
 	const prompts: string[] = [];
 	const toasts: string[] = [];
+	const statuses: (string | undefined)[] = [];
 	on("mcp.call", (_$, e) => {
 		calls.push({ server: e.server, tool: e.tool, args: e.args });
 		const r = answer.current({ server: e.server, tool: e.tool, args: e.args });
@@ -268,7 +269,10 @@ function rig(on: On, answer: { current: Answer }) {
 		opens.push(e);
 		return { value: { isPlaced: true } };
 	});
-	on("ui.status", () => ({ value: undefined }));
+	on("ui.status", (_$, e) => {
+		statuses.push(e.text);
+		return { value: undefined };
+	});
 	on("ui.toast", (_$, e) => {
 		toasts.push(e.text);
 		return { value: undefined };
@@ -279,7 +283,7 @@ function rig(on: On, answer: { current: Answer }) {
 	});
 	mock.store(on);
 	const writes = (tool: string) => calls.filter((c) => c.tool === tool);
-	return { calls, opens, prompts, toasts, writes };
+	return { calls, opens, prompts, statuses, toasts, writes };
 }
 
 const PANE_PROPS = {
@@ -290,13 +294,16 @@ const PANE_PROPS = {
 	props: { title: "RoadRaven", isFocused: true, bodyColumns: 80 } as never,
 } as const;
 
-const withStatus = (id: string, status: string) =>
-	JSON.parse(
+// A status change, as the app answers it: with the next revision.
+const withStatus = (id: string, status: string) => ({
+	...JSON.parse(
 		JSON.stringify(roadmap).replace(
 			new RegExp(`("id":"${id}"[^}]*?"status":")[a-z-]+`),
 			`$1${status}`,
 		),
-	);
+	),
+	revision: roadmap.revision + 1,
+});
 
 test("callRR moves to the second server only when the first isn't connected", async ($, on) => {
 	const answer = {
@@ -630,4 +637,59 @@ test("each roadmap file brings its own attribution back, and saves under its own
 		owners: { n1: "a1" },
 		seenUat: ["u5", "u1"],
 	});
+});
+
+// The test environment has timers; its typings (no DOM lib) do not name them.
+const later = (
+	globalThis as unknown as {
+		setTimeout: (fn: () => void, ms: number) => void;
+	}
+).setTimeout;
+
+test("refreshes run one at a time; one asked for meanwhile runs once after", async ($, on) => {
+	let inFlight = 0;
+	let most = 0;
+	let reads = 0;
+	let release: () => void = () => undefined;
+	const gate = new Promise<void>((done) => {
+		release = done;
+	});
+	on("mcp.call", async (_$, e) => {
+		if (e.tool === "getRoadmap") {
+			reads++;
+			inFlight++;
+			most = Math.max(most, inFlight);
+			await gate;
+			inFlight--;
+		}
+		const text = answerRR(e);
+		return { value: { content: [{ type: "text", text }], isError: false } };
+	});
+	on("ui.open", () => ({ value: { isPlaced: true } }));
+	on("ui.status", () => ({ value: undefined }));
+	on("ui.toast", () => ({ value: undefined }));
+	mock.store(on);
+	const run = () => $.command.run({ command: "roadraven", args: "" } as never);
+	const first = run();
+	const more = [run(), run()];
+	// Long enough for every refresh asked for to reach getRoadmap if nothing holds it back.
+	await new Promise<void>((done) => later(done, 50));
+	release();
+	await Promise.all([first, ...more]);
+	expect(most).toBe(1);
+	expect(reads).toBe(2);
+});
+
+test("an unchanged file and revision skips the snapshot work", async ($, on) => {
+	const answer = { current: answerOk };
+	const r = rig(on, answer);
+	const run = () => $.command.run({ command: "roadraven", args: "" } as never);
+	await run();
+	await run();
+	await run();
+	expect(r.statuses.filter((t) => t !== undefined)).toHaveLength(1);
+	const moved = withStatus("n1", "completed");
+	answer.current = (c) => answerRR(c, moved);
+	await run();
+	expect(r.statuses.filter((t) => t !== undefined)).toHaveLength(2);
 });

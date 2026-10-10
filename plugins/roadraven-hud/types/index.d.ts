@@ -37,6 +37,9 @@ export type HudUatNotes = {
 	isFailing: boolean;
 };
 
+// One refresh at a time: "again" when another was asked for while one ran.
+export type HudRefresh = "idle" | "running" | "again";
+
 export type HudSnapshot = { title: string; nodes: HudNode[] };
 
 export type HudPalette = {
@@ -80,6 +83,8 @@ declare module "claude-code" {
 			offlineSince: number;
 			lastTry: number;
 			uatNotes: HudUatNotes;
+			refreshing: HudRefresh;
+			seenRevision: string;
 		};
 	}
 }
