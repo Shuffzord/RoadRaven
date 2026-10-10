@@ -23,6 +23,15 @@ import { join } from "node:path";
 
 const PLUGINS = ["roadraven@roadraven", "roadraven-hud@roadraven"];
 const version: string = JSON.parse(readFileSync("packages/desktop/package.json", "utf8")).version;
+// The upgrade check moves a worktree to the committed HEAD, so an uncommitted
+// version bump would test the old version: refuse instead of a false FAIL.
+const headVersion: string = JSON.parse(
+	Bun.spawnSync(["git", "show", "HEAD:packages/desktop/package.json"]).stdout.toString(),
+).version;
+if (headVersion !== version) {
+	console.error(`Working tree is at ${version} but HEAD is at ${headVersion}: commit the version bump first.`);
+	process.exit(1);
+}
 const fromIdx = process.argv.indexOf("--from");
 const fromArg = fromIdx > -1 ? process.argv[fromIdx + 1] : undefined;
 const temps: string[] = [];
