@@ -494,7 +494,7 @@ const DEDUPE_LABEL = "Remove the duplicate 'roadraven' MCP server";
  * Someone else's `roadraven` entry is left alone with advice. Returns null
  * when there is nothing to remove.
  */
-function removeWizardMcpEntry(): McpInstallStep | null {
+export function removeWizardMcpEntry(): McpInstallStep | null {
 	const path = getClaudeConfigPath();
 	const step = (status: McpInstallStep["status"], detail: string) =>
 		({

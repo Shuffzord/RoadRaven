@@ -5,7 +5,11 @@ import type {
 } from "../../../../../shared/types.ts";
 import { runClaudeSteps } from "../claudeCli";
 import { bunLogger } from "../logging";
-import { getSetupStatus, installMcpIntegration } from "../mcpInstaller";
+import {
+	getSetupStatus,
+	installMcpIntegration,
+	removeWizardMcpEntry,
+} from "../mcpInstaller";
 import { openFileDialog } from "../platform/dialogs";
 import { loadSettings, saveSettings } from "../settings";
 import {
@@ -72,6 +76,11 @@ export function createSetupRpcHandlers(
 				throw new Error(`unknown plugin command kind: ${String(kind)}`);
 			}
 			const steps = await runSteps(PLUGIN_STEPS[kind]);
+			// The plugin now brings the MCP server: drop the wizard's own entry.
+			if (steps.length > 0 && steps.every((s) => s.status !== "error")) {
+				const dedupe = removeWizardMcpEntry();
+				if (dedupe) steps.push(dedupe);
+			}
 			const failed = steps.find((s) => s.status === "error");
 			if (failed) {
 				bunLogger.warn`Plugin ${kind} failed at '${failed.label}': ${failed.detail}`;
