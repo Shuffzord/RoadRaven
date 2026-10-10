@@ -136,8 +136,19 @@ for (const { path, updated } of preparedText) {
 	writeFileSync(path, updated);
 }
 
+// bun.lock records each workspace package's version: refresh it so the lock
+// moves with the bump instead of showing up as a stray change later. Only in a
+// real checkout (the tests run this script in a temp copy without bun.lock).
+if (existsSync("bun.lock")) {
+	const lock = Bun.spawnSync(["bun", "install", "--lockfile-only"], { stdout: "ignore", stderr: "inherit" });
+	if (lock.exitCode !== 0) {
+		console.error("bun install --lockfile-only failed: update bun.lock by hand.");
+		process.exit(1);
+	}
+}
+
 console.log(
-	`Bumped ${parsedPkgs.length} package.json files + ${preparedText.length} source/config files to ${newVersion}`,
+	`Bumped ${parsedPkgs.length} package.json files + ${preparedText.length} source/config files to ${newVersion}${existsSync("bun.lock") ? " (and bun.lock)" : ""}`,
 );
 console.log(
 	`Next: git commit -am "release: v${newVersion}" && git tag v${newVersion} && git push --follow-tags`,
