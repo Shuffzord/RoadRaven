@@ -107,3 +107,31 @@ export function agentToolCallback(
 		}
 	};
 }
+
+type NoteNode = { notes?: unknown; children?: NoteNode[] };
+
+function stripNotes(nodes: NoteNode[]): void {
+	for (const n of nodes) {
+		delete n.notes;
+		if (Array.isArray(n.children)) stripNotes(n.children);
+	}
+}
+
+// getRoadmap with optional `omitNotes`: the arg is consumed here (the app never
+// sees it) and notes are stripped from the successful JSON result. Errors pass
+// through untouched.
+export function getRoadmapCallback(wsClient: WsClientLike) {
+	const base = agentToolCallback("getRoadmap", wsClient);
+	return async (args: Record<string, unknown> | undefined) => {
+		const { omitNotes, ...rest } = args ?? {};
+		const result = await base(rest);
+		if (omitNotes !== true || result.isError) return result;
+		const parsed = JSON.parse(result.content[0].text);
+		stripNotes(parsed?.schema?.nodes ?? []);
+		return {
+			content: [
+				{ type: "text" as const, text: JSON.stringify(parsed, null, 2) },
+			],
+		};
+	};
+}

@@ -4,7 +4,10 @@ import { z } from "zod";
 import { NodeStatusSchema } from "../../../packages/core/src/schema";
 import { detectInstallKind } from "./installKind";
 import { readSentinel } from "./sentinel";
-import { agentToolCallback } from "./tools/agentToolCallback";
+import {
+	agentToolCallback,
+	getRoadmapCallback,
+} from "./tools/agentToolCallback";
 import {
 	CreateNodeInputSchema,
 	CreateRoadmapInputSchema,
@@ -94,10 +97,10 @@ server.registerTool(
 	{
 		title: "Get the loaded RoadRaven roadmap",
 		description:
-			"Return the full schema tree from the desktop app, with live-event statuses merged in, plus the current `revision` (pass it as expectedRevision on writes to detect stale reads). Requires the app to be running and a file to be loaded.",
-		inputSchema: z.object({}),
+			"Return the full schema tree from the desktop app, with live-event statuses merged in, plus the current `revision` (pass it as expectedRevision on writes to detect stale reads). Pass omitNotes: true for polling (large roadmaps exceed the tool-result limit); fetch notes with getNode/findNodes. Requires the app to be running and a file to be loaded.",
+		inputSchema: z.object({ omitNotes: z.boolean().optional() }),
 	},
-	agentToolCallback("getRoadmap", wsClient),
+	getRoadmapCallback(wsClient),
 );
 
 server.registerTool(
