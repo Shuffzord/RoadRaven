@@ -129,8 +129,10 @@ add the `## [X.Y.Z] - date` entry to `CHANGELOG.md`, then commit as
 `chore(release): bump version to X.Y.Z`. Running the script with the current
 version is a safe no-op and doubles as a consistency check.
 
-The full release runbook (smoke test, tag, npm stage approval, MCP Registry,
-post-release check) is [docs/releasing.md](docs/releasing.md).
+The full release runbook is [docs/releasing.md](docs/releasing.md):
+`bun run release:smoke` before tagging (install and upgrade in an isolated
+Claude config), the tag, npm stage approval, MCP Registry, then
+`bun run release:verify`.
 
 ## Electrobun-specific patterns
 

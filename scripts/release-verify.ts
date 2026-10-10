@@ -23,9 +23,16 @@ const expectedAssets = [
 	"win-x64-RoadRaven-Setup.zip",
 ];
 
+const TOKEN = process.env.GITHUB_TOKEN || process.env.GH_TOKEN;
+
 // biome-ignore lint/suspicious/noExplicitAny: ad-hoc remote JSON
 async function getJson(url: string): Promise<any> {
-	const res = await fetch(url, { headers: { "user-agent": "release-verify" } });
+	const res = await fetch(url, {
+		headers: {
+			"user-agent": "release-verify",
+			...(TOKEN && { authorization: `Bearer ${TOKEN}` }),
+		},
+	});
 	if (!res.ok) throw new Error(`HTTP ${res.status} ${url}`);
 	return res.json();
 }

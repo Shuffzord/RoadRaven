@@ -45,8 +45,12 @@ function tempDir(prefix: string): string {
 // A fresh, verified-empty Claude config dir.
 function isolatedConfig(): Record<string, string> {
 	const env = { CLAUDE_CONFIG_DIR: tempDir("rr-smoke-claude-") };
-	const list = sh(["claude", "plugin", "list"], env);
-	if (!list.includes("No plugins installed")) throw new Error(`isolation check failed, CLAUDE_CONFIG_DIR not honoured: ${list.trim()}`);
+	const list = sh(["claude", "plugin", "list", "--json"], env);
+	let installed: unknown;
+	try {
+		installed = JSON.parse(list);
+	} catch {}
+	if (!Array.isArray(installed) || installed.length) throw new Error(`isolation check failed, CLAUDE_CONFIG_DIR not honoured: ${list.trim()}`);
 	return env;
 }
 
@@ -94,6 +98,8 @@ function previousTag(): string {
 }
 
 // The exact commands the app's update-plugin toast tells the user to paste.
+// Parsed naively (split on ";" then whitespace): the toast's commands must stay
+// free of quotes and of ";" inside arguments.
 function remedyCommands(): string[] {
 	const src = readFileSync("packages/desktop/src/mainview/components/EventToast.tsx", "utf8");
 	const m = src.match(/"update-plugin":[\s\S]*?command:\s*"([^"]+)"/);
