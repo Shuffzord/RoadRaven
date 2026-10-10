@@ -404,7 +404,7 @@ function HostCheckbox({
 	);
 }
 
-function InstallLog({ result }: { result: InstallResult | null }) {
+export function InstallLog({ result }: { result: InstallResult | null }) {
 	if (!result) return null;
 	const shared = result.steps.filter((s) => !s.host);
 	const byHost = groupStepsByHost(result.steps);

@@ -1,6 +1,10 @@
-import { useState } from "react";
+import {
+	commandLine,
+	PLUGIN_UPDATE_STEPS,
+} from "../../../../../shared/claudePlugin";
 import type { MismatchRemedy } from "../../../../../shared/types";
 import type { ActiveToast, ToastType } from "../store/toastStore";
+import { CopyCommand, openPluginDialog } from "./PluginUpdateDialog";
 
 interface Props {
 	toast: ActiveToast;
@@ -11,7 +15,11 @@ interface Remedy {
 	body: string;
 	/** Shown in a monospace line with a Copy button. */
 	command?: string;
+	/** Offer "Update now", which opens the plugin update dialog. */
+	updateNow?: boolean;
 }
+
+export const UPDATE_NOW_LABEL = "Update now";
 
 const INSTALLER_BASE_URL =
 	"https://raw.githubusercontent.com/Shuffzord/RoadRaven/master";
@@ -38,12 +46,10 @@ const MISMATCH_REMEDY: Record<
 	"restart-agent": () => ({
 		body: "RoadRaven updated its MCP server — restart your agent session to load it.",
 	}),
-	// Keep these commands free of quotes and of ";" inside arguments:
-	// scripts/release-smoke.ts parses them by splitting on ";" and whitespace.
 	"update-plugin": () => ({
 		body: "Update the RoadRaven plugin, then restart Claude Code:",
-		command:
-			"claude plugin marketplace update roadraven; claude plugin update roadraven@roadraven; claude plugin install roadraven-hud@roadraven; claude plugin update roadraven-hud@roadraven",
+		command: commandLine(PLUGIN_UPDATE_STEPS),
+		updateNow: true,
 	}),
 	"update-npm": (_producerVersion, appVersion) => ({
 		body: `Re-register the MCP server at ${appVersion}, then restart your agent:`,
@@ -64,61 +70,6 @@ function renderMismatchRemedy(detail?: string): Remedy | null {
 	).split("|");
 	if (!Object.hasOwn(MISMATCH_REMEDY, remedy)) return null;
 	return MISMATCH_REMEDY[remedy as MismatchRemedy](producerVersion, appVersion);
-}
-
-/**
- * Monospace command with a Copy button — same navigator.clipboard path and
- * "Copied ✓" feedback as the Event API URL copy buttons.
- */
-function CopyCommand({ command }: { command: string }) {
-	const [copied, setCopied] = useState(false);
-	return (
-		<div
-			style={{
-				display: "flex",
-				alignItems: "flex-start",
-				gap: 6,
-				marginTop: 6,
-			}}
-		>
-			<code
-				style={{
-					flex: 1,
-					fontFamily: "ui-monospace, monospace",
-					fontSize: 11,
-					color: "var(--rv-text-secondary)",
-					wordBreak: "break-all",
-				}}
-			>
-				{command}
-			</code>
-			<button
-				type="button"
-				onClick={() => {
-					navigator.clipboard.writeText(command).then(
-						() => {
-							setCopied(true);
-							setTimeout(() => setCopied(false), 1200);
-						},
-						() => {
-							/* clipboard denied — silent */
-						},
-					);
-				}}
-				style={{
-					background: "none",
-					border: "none",
-					cursor: "pointer",
-					color: copied ? "var(--rv-status-completed)" : "var(--rv-accent)",
-					fontSize: 11,
-					padding: "0 2px",
-					flexShrink: 0,
-				}}
-			>
-				{copied ? "Copied ✓" : "Copy"}
-			</button>
-		</div>
-	);
 }
 
 /** D-23 exact single-event headline strings, keyed by toast type. */
@@ -274,6 +225,25 @@ export function EventToast({ toast, onDismiss }: Props) {
 					<div style={{ fontSize: 11, color: "var(--rv-text-tertiary)" }}>
 						{body}
 					</div>
+				)}
+				{remedy?.updateNow && (
+					<button
+						type="button"
+						onClick={() => openPluginDialog("update")}
+						style={{
+							marginTop: 8,
+							background: "var(--rv-accent)",
+							border: "none",
+							borderRadius: 4,
+							padding: "4px 10px",
+							fontSize: 11,
+							fontWeight: 600,
+							color: "var(--rv-text-on-accent)",
+							cursor: "pointer",
+						}}
+					>
+						{UPDATE_NOW_LABEL}
+					</button>
 				)}
 				{remedy?.command && <CopyCommand command={remedy.command} />}
 			</div>

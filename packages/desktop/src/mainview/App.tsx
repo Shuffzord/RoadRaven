@@ -5,6 +5,7 @@ import { DiscardChangesDialog } from "./components/DiscardChangesDialog";
 import { EventLogDrawer } from "./components/EventLogDrawer";
 import { EventToastStack } from "./components/EventToastStack";
 import { ExternalEditToast } from "./components/ExternalEditToast";
+import { PluginUpdateDialog } from "./components/PluginUpdateDialog";
 import { PreferencesDialog } from "./components/PreferencesDialog";
 import { SaveFailureModal } from "./components/SaveFailureModal";
 import { SetupWizard } from "./components/SetupWizard";
@@ -118,6 +119,7 @@ export default function App() {
 			<EventToastStack />
 			<EventLogDrawer />
 			<SetupWizard />
+			<PluginUpdateDialog />
 			<PreferencesDialog />
 			<ThemeEditor />
 		</div>

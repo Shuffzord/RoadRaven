@@ -5,7 +5,15 @@
 import "@testing-library/jest-dom";
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { EventToast } from "../../../src/mainview/components/EventToast";
+import {
+	commandLine,
+	PLUGIN_UPDATE_STEPS,
+} from "../../../../../shared/claudePlugin";
+import {
+	EventToast,
+	UPDATE_NOW_LABEL,
+} from "../../../src/mainview/components/EventToast";
+import { usePluginDialogStore } from "../../../src/mainview/components/PluginUpdateDialog";
 import type { ActiveToast } from "../../../src/mainview/store/toastStore";
 
 function makeToast(overrides: Partial<ActiveToast> = {}): ActiveToast {
@@ -137,10 +145,21 @@ describe("EventToast version_mismatch remedy (v0.8)", () => {
 		);
 	}
 
-	it("update-plugin shows the verified plugin update command with a working Copy button", async () => {
+	it("update-plugin offers Update now, which opens the update dialog", () => {
 		renderMismatch("0.7.2|0.8.0|update-plugin");
-		const command =
-			"claude plugin marketplace update roadraven; claude plugin update roadraven@roadraven; claude plugin install roadraven-hud@roadraven; claude plugin update roadraven-hud@roadraven";
+		fireEvent.click(screen.getByText(UPDATE_NOW_LABEL));
+		expect(usePluginDialogStore.getState().kind).toBe("update");
+		act(() => usePluginDialogStore.setState({ kind: null }));
+	});
+
+	it("only update-plugin offers Update now", () => {
+		renderMismatch("0.7.2|0.8.0|update-npm");
+		expect(screen.queryByText(UPDATE_NOW_LABEL)).not.toBeInTheDocument();
+	});
+
+	it("update-plugin shows the shared plugin update command with a working Copy button", async () => {
+		renderMismatch("0.7.2|0.8.0|update-plugin");
+		const command = commandLine(PLUGIN_UPDATE_STEPS);
 		expect(
 			screen.getByText(
 				"MCP server version 0.7.2 does not match RoadRaven 0.8.0.",
