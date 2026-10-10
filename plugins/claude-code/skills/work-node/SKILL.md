@@ -109,5 +109,10 @@ heading in order, to the path the brief names or as your final message.
 Then set the final status with
 `updateNodeStatus({ nodeId, status: "completed" })` when the checks pass,
 or `status: "blocked"` when you stopped, and append a last note pointing at
-the report. The orchestrator or the human re-runs the checks before
+the report.
+
+If your task has a `uat` child, set it `in-progress` after you verify,
+with Steps and Expected in its notes; never complete or block it yourself.
+
+The orchestrator or the human re-runs the checks before
 accepting it, so report what you actually saw.

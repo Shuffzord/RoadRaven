@@ -77,6 +77,11 @@ app holds it in memory; its next save wins), or changing app settings.
   `blocked`.
 - Create nodes with `createNode({ parentId, title, type, status, notes })`
   and keep every returned id; the phase ids go into the briefs.
+- **Acceptance checks for the human** are nodes with `type: "uat"` (the id
+  the document's typeConfig defines for UAT; `uat` if none). Create them
+  `not-started` at plan time, as children of the phase they check. Their
+  notes say how to test: a short **Steps** list and an **Expected** list,
+  concrete enough to follow without reading the code.
 - Numbers (check results, counts, commit ids) go in metadata with
   `updateNodeMetadata({ nodeId, patch })`. Evidence and decisions go in
   notes with `updateNodeNotes({ nodeId, notes, mode: "append" })`. Progress
@@ -92,6 +97,7 @@ app holds it in memory; its next save wins), or changing app settings.
 | Verify | Re-run the project's checks yourself and read the diff. Confirm only the briefed files changed. |
 | Decide | Accept, or send it back with a precise ask. Patching it yourself hides the defect from the agent and from the record. |
 | Record | Set the phase status and write the check results to its metadata. If the human wants commits, one per phase, after verification. |
+| UAT | Once the phase is verified, set its UAT child `in-progress`; that shows it to the human and notifies them. Never set a UAT node `completed` or `blocked` yourself. If it comes back `blocked`, read the failure note, fix, re-verify, set it `in-progress` again. |
 
 ## Rules that save retries
 
