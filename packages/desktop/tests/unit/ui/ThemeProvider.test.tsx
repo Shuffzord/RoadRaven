@@ -292,6 +292,7 @@ describe("ThemeProvider", () => {
 		vi.mocked(electroview!.rpc!.request.loadSettings).mockRejectedValueOnce(
 			new Error("RPC not available"),
 		);
+		const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
 
 		render(
 			<ThemeProvider>
@@ -302,6 +303,11 @@ describe("ThemeProvider", () => {
 			await new Promise((r) => setTimeout(r, 10));
 		});
 		expect(useThemeStore.getState().preference).toBe(DEFAULT_THEME_ID);
+		expect(warn).toHaveBeenCalledWith(
+			"[ThemeProvider] loadSettings RPC failed, using defaults:",
+			expect.any(Error),
+		);
+		warn.mockRestore();
 	});
 });
 

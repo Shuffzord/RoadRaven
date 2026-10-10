@@ -108,6 +108,8 @@ describe("setupBunLogging", () => {
 			}),
 		});
 
+		// setupBunLogging attaches the real console sink too: catch its lines.
+		const info = vi.spyOn(console, "info").mockImplementation(() => undefined);
 		await setupBunLogging();
 		serverLogger.info("Hello frame version=1");
 		getLogger(["roadraven", "agent"]).info("agent request ok");
@@ -116,6 +118,8 @@ describe("setupBunLogging", () => {
 		const out = written.join("");
 		expect(out).toContain("Hello frame version=1");
 		expect(out).toContain("agent request ok");
+		expect(info.mock.calls.flat().join(" ")).toContain("Hello frame version=1");
+		info.mockRestore();
 		rmSync(tempDir, { recursive: true, force: true });
 	});
 });

@@ -402,7 +402,7 @@ describe("SidePanel — edit mode", () => {
 		expect(document.activeElement).toBe(elsewhere);
 	});
 
-	it("copy-ID button still works in preview mode (Phase 2 regression check)", () => {
+	it("copy-ID button still works in preview mode (Phase 2 regression check)", async () => {
 		seedStore();
 		const mockWrite = vi.fn().mockResolvedValue(undefined);
 		Object.defineProperty(navigator, "clipboard", {
@@ -413,6 +413,8 @@ describe("SidePanel — edit mode", () => {
 		render(<SidePanel isOpen onClose={vi.fn()} />);
 		fireEvent.click(screen.getByLabelText("Copy node ID"));
 		expect(mockWrite).toHaveBeenCalledWith(ROOT_ID);
+		// Let the clipboard write settle so its "copied" update lands in act().
+		await act(() => Promise.resolve());
 	});
 
 	describe("Copy notes button", () => {

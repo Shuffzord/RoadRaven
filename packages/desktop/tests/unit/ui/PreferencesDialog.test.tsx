@@ -7,6 +7,7 @@ import {
 	fireEvent,
 	render,
 	screen,
+	waitFor,
 } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -306,7 +307,7 @@ describe("PreferencesDialog", () => {
 			name: "Dark copy",
 			reservedIds: [...THEME_IDS],
 		});
-		await vi.waitFor(() =>
+		await waitFor(() =>
 			expect(useThemeStore.getState().preference).toBe("dark-copy"),
 		);
 		expect(rpc.listThemes).toHaveBeenCalled();
@@ -358,7 +359,7 @@ describe("PreferencesDialog", () => {
 			name: "Dark copy",
 			reservedIds: [...THEME_IDS],
 		});
-		await vi.waitFor(() =>
+		await waitFor(() =>
 			expect(useThemeStore.getState().draft?.id).toBe("dark-copy"),
 		);
 		expect(useThemeStore.getState().preference).toBe("dark-copy");

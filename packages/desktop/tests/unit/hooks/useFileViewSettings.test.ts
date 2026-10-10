@@ -4,7 +4,7 @@
 // on every filePath change it loads fileSettings[path] and restores the
 // layout orientation + layout knobs. Modelled on
 // useUiSettingsHydration.test.ts's electroview mocking pattern.
-import { cleanup, renderHook } from "@testing-library/react";
+import { act, cleanup, renderHook, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const { loadSettingsMock, saveSettingsMock } = vi.hoisted(() => ({
@@ -77,8 +77,8 @@ describe("useFileViewSettings — RC3 (orientation restore)", () => {
 		useRoadmapStore.getState().loadSchema(TEST_SCHEMA as never, TEST_PATH);
 
 		renderHook(() => useFileViewSettings());
-		await vi.waitFor(() => expect(loadSettingsMock).toHaveBeenCalledTimes(1));
-		await vi.waitFor(() =>
+		await waitFor(() => expect(loadSettingsMock).toHaveBeenCalledTimes(1));
+		await waitFor(() =>
 			expect(useRoadmapStore.getState().layoutOrientation).toBe("LR"),
 		);
 	});
@@ -88,7 +88,7 @@ describe("useFileViewSettings — RC3 (orientation restore)", () => {
 		useRoadmapStore.getState().loadSchema(TEST_SCHEMA as never, TEST_PATH);
 
 		renderHook(() => useFileViewSettings());
-		await vi.waitFor(() => expect(loadSettingsMock).toHaveBeenCalledTimes(1));
+		await waitFor(() => expect(loadSettingsMock).toHaveBeenCalledTimes(1));
 		expect(useRoadmapStore.getState().layoutOrientation).toBe("TB");
 	});
 
@@ -117,7 +117,7 @@ describe("useFileViewSettings — write-back", () => {
 		renderHook(() => useFileViewSettings());
 		// Same synchronous .then() callback sets `hydrated = true`, so this is
 		// also proof the guard is already armed.
-		await vi.waitFor(() =>
+		await waitFor(() =>
 			expect(useRoadmapStore.getState().layoutOrientation).toBe("LR"),
 		);
 
@@ -138,7 +138,7 @@ describe("useFileViewSettings — write-back", () => {
 		useRoadmapStore.getState().loadSchema(TEST_SCHEMA as never, TEST_PATH);
 
 		renderHook(() => useFileViewSettings());
-		await vi.waitFor(() =>
+		await waitFor(() =>
 			expect(useFileViewStore.getState().layoutKnobs.siblingGap).toBe(1.6),
 		);
 
@@ -178,7 +178,7 @@ describe("useFileViewSettings — write-back", () => {
 		useRoadmapStore.getState().loadSchema(TEST_SCHEMA as never, TEST_PATH);
 
 		renderHook(() => useFileViewSettings());
-		await vi.waitFor(() =>
+		await waitFor(() =>
 			expect(useFileViewStore.getState().layoutKnobs.depthGap).toBe(1.3),
 		);
 
@@ -230,7 +230,7 @@ describe("useFileViewSettings — no stored settings for the new path", () => {
 		});
 		useRoadmapStore.getState().loadSchema(TEST_SCHEMA as never, TEST_PATH);
 		renderHook(() => useFileViewSettings());
-		await vi.waitFor(() =>
+		await waitFor(() =>
 			expect(useFileViewStore.getState().layoutKnobs.siblingGap).toBe(1.8),
 		);
 
@@ -239,9 +239,9 @@ describe("useFileViewSettings — no stored settings for the new path", () => {
 		// way the app does it (useFileActions / useAutosave) — filePath only,
 		// the SAME schema; a loadSchema here would be opening another file.
 		loadSettingsMock.mockResolvedValueOnce({ settings: {} });
-		useRoadmapStore.setState({ filePath: NEW_PATH });
+		act(() => useRoadmapStore.setState({ filePath: NEW_PATH }));
 
-		await vi.waitFor(() => expect(loadSettingsMock).toHaveBeenCalledTimes(2));
+		await waitFor(() => expect(loadSettingsMock).toHaveBeenCalledTimes(2));
 		// Flush the second load's .then() microtask chain via a real macrotask
 		// (fake timers are not enabled yet), so the assertion below cannot pass
 		// merely because the callback hasn't run yet.
@@ -295,7 +295,7 @@ describe("useFileViewSettings — custom layout", () => {
 		useRoadmapStore.getState().loadSchema(TEST_SCHEMA as never, TEST_PATH);
 
 		renderHook(() => useFileViewSettings());
-		await vi.waitFor(() =>
+		await waitFor(() =>
 			expect(useFileViewStore.getState().customLayout).toBe(true),
 		);
 		expect(useFileViewStore.getState().nodeOffsets).toEqual(SAVED_OFFSETS);
@@ -315,7 +315,7 @@ describe("useFileViewSettings — custom layout", () => {
 		useRoadmapStore.getState().loadSchema(TEST_SCHEMA as never, TEST_PATH);
 
 		renderHook(() => useFileViewSettings());
-		await vi.waitFor(() =>
+		await waitFor(() =>
 			expect(useFileViewStore.getState().customLayout).toBe(true),
 		);
 		expect(useFileViewStore.getState().nodeOffsets).toEqual({ TB: {}, LR: {} });
@@ -330,7 +330,7 @@ describe("useFileViewSettings — custom layout", () => {
 		useRoadmapStore.getState().loadSchema(TEST_SCHEMA as never, TEST_PATH);
 
 		renderHook(() => useFileViewSettings());
-		await vi.waitFor(() => expect(loadSettingsMock).toHaveBeenCalledTimes(1));
+		await waitFor(() => expect(loadSettingsMock).toHaveBeenCalledTimes(1));
 		await new Promise((resolve) => setTimeout(resolve, 0));
 
 		expect(useFileViewStore.getState().customLayout).toBe(true);
@@ -344,7 +344,7 @@ describe("useFileViewSettings — custom layout", () => {
 		loadSettingsMock.mockResolvedValue({ settings: {} });
 		useRoadmapStore.getState().loadSchema(TEST_SCHEMA as never, TEST_PATH);
 		renderHook(() => useFileViewSettings());
-		await vi.waitFor(() => expect(loadSettingsMock).toHaveBeenCalledTimes(1));
+		await waitFor(() => expect(loadSettingsMock).toHaveBeenCalledTimes(1));
 		await new Promise((resolve) => setTimeout(resolve, 0));
 
 		vi.useFakeTimers();
@@ -372,7 +372,7 @@ describe("useFileViewSettings — custom layout", () => {
 			settings: { fileSettings: { [TEST_PATH]: saved } },
 		});
 		renderHook(() => useFileViewSettings());
-		await vi.waitFor(() =>
+		await waitFor(() =>
 			expect(useFileViewStore.getState().customLayout).toBe(true),
 		);
 		expect(useFileViewStore.getState().nodeOffsets).toEqual(saved.nodeOffsets);
@@ -388,7 +388,7 @@ describe("useFileViewSettings — custom layout", () => {
 		});
 		useRoadmapStore.getState().loadSchema(TEST_SCHEMA as never, TEST_PATH);
 		renderHook(() => useFileViewSettings());
-		await vi.waitFor(() =>
+		await waitFor(() =>
 			expect(useFileViewStore.getState().customLayout).toBe(true),
 		);
 
@@ -452,7 +452,7 @@ describe("useFileViewSettings — collapse and file change", () => {
 		});
 		useRoadmapStore.getState().loadSchema(TREE_SCHEMA as never, TEST_PATH);
 		renderHook(() => useFileViewSettings());
-		await vi.waitFor(() => expect(collapsed()).toEqual(["a"]));
+		await waitFor(() => expect(collapsed()).toEqual(["a"]));
 	});
 
 	it("keeps the on-screen collapsed set when the path has an entry without it", async () => {
@@ -462,7 +462,7 @@ describe("useFileViewSettings — collapse and file change", () => {
 		});
 		useRoadmapStore.getState().loadSchema(TREE_SCHEMA as never, TEST_PATH);
 		renderHook(() => useFileViewSettings());
-		await vi.waitFor(() =>
+		await waitFor(() =>
 			expect(useRoadmapStore.getState().layoutOrientation).toBe("LR"),
 		);
 		expect(collapsed()).toEqual(["a"]);
@@ -472,7 +472,7 @@ describe("useFileViewSettings — collapse and file change", () => {
 		loadSettingsMock.mockResolvedValue({ settings: {} });
 		useRoadmapStore.getState().loadSchema(TREE_SCHEMA as never, TEST_PATH);
 		renderHook(() => useFileViewSettings());
-		await vi.waitFor(() => expect(loadSettingsMock).toHaveBeenCalledTimes(1));
+		await waitFor(() => expect(loadSettingsMock).toHaveBeenCalledTimes(1));
 		await settle();
 
 		vi.useFakeTimers();
@@ -489,7 +489,7 @@ describe("useFileViewSettings — collapse and file change", () => {
 			settings: { fileSettings: { [TEST_PATH]: saved } },
 		});
 		renderHook(() => useFileViewSettings());
-		await vi.waitFor(() => expect(collapsed()).toEqual(["a"]));
+		await waitFor(() => expect(collapsed()).toEqual(["a"]));
 	});
 
 	it("drops ids that are no longer in the file at save time", async () => {
@@ -499,7 +499,7 @@ describe("useFileViewSettings — collapse and file change", () => {
 		useRoadmapStore.getState().loadSchema(TREE_SCHEMA as never, TEST_PATH);
 		renderHook(() => useFileViewSettings());
 		// Hydrate keeps them all.
-		await vi.waitFor(() => expect(collapsed()).toEqual(["a", "gone"]));
+		await waitFor(() => expect(collapsed()).toEqual(["a", "gone"]));
 
 		vi.useFakeTimers();
 		useFileViewStore.getState().setCollapsed("root", true);
@@ -525,11 +525,13 @@ describe("useFileViewSettings — collapse and file change", () => {
 		});
 		useRoadmapStore.getState().loadSchema(TREE_SCHEMA as never, TEST_PATH);
 		renderHook(() => useFileViewSettings());
-		await vi.waitFor(() => expect(collapsed()).toEqual(["a"]));
+		await waitFor(() => expect(collapsed()).toEqual(["a"]));
 		expect(useFileViewStore.getState().customLayout).toBe(true);
 
 		// Open: a NEW schema object arrives together with the new path.
-		useRoadmapStore.getState().loadSchema(TREE_SCHEMA as never, OTHER_PATH);
+		act(() =>
+			useRoadmapStore.getState().loadSchema(TREE_SCHEMA as never, OTHER_PATH),
+		);
 		// Reset happens inside that store write, before any hydrate.
 		expect(collapsed()).toEqual([]);
 		expect(useFileViewStore.getState().layoutKnobs).toEqual({
@@ -538,7 +540,7 @@ describe("useFileViewSettings — collapse and file change", () => {
 		expect(useFileViewStore.getState().customLayout).toBe(false);
 		expect(useFileViewStore.getState().nodeOffsets).toEqual({ TB: {}, LR: {} });
 
-		await vi.waitFor(() => expect(collapsed()).toEqual(["root"]));
+		await waitFor(() => expect(collapsed()).toEqual(["root"]));
 	});
 
 	it("opening a file with nothing stored starts fully expanded", async () => {
@@ -547,11 +549,13 @@ describe("useFileViewSettings — collapse and file change", () => {
 		});
 		useRoadmapStore.getState().loadSchema(TREE_SCHEMA as never, TEST_PATH);
 		renderHook(() => useFileViewSettings());
-		await vi.waitFor(() => expect(collapsed()).toEqual(["a"]));
+		await waitFor(() => expect(collapsed()).toEqual(["a"]));
 
 		loadSettingsMock.mockResolvedValueOnce({ settings: {} });
-		useRoadmapStore.getState().loadSchema(TREE_SCHEMA as never, OTHER_PATH);
-		await vi.waitFor(() => expect(loadSettingsMock).toHaveBeenCalledTimes(2));
+		act(() =>
+			useRoadmapStore.getState().loadSchema(TREE_SCHEMA as never, OTHER_PATH),
+		);
+		await waitFor(() => expect(loadSettingsMock).toHaveBeenCalledTimes(2));
 		await settle();
 		expect(collapsed()).toEqual([]);
 	});
@@ -566,11 +570,11 @@ describe("useFileViewSettings — collapse and file change", () => {
 		});
 		useRoadmapStore.getState().loadSchema(TREE_SCHEMA as never, TEST_PATH);
 		renderHook(() => useFileViewSettings());
-		await vi.waitFor(() => expect(collapsed()).toEqual(["a"]));
+		await waitFor(() => expect(collapsed()).toEqual(["a"]));
 
 		loadSettingsMock.mockResolvedValueOnce({ settings: {} });
-		useRoadmapStore.setState({ filePath: OTHER_PATH });
-		await vi.waitFor(() => expect(loadSettingsMock).toHaveBeenCalledTimes(2));
+		act(() => useRoadmapStore.setState({ filePath: OTHER_PATH }));
+		await waitFor(() => expect(loadSettingsMock).toHaveBeenCalledTimes(2));
 		await settle();
 
 		expect(collapsed()).toEqual(["a"]);

@@ -2,7 +2,13 @@
 
 import fs from "node:fs";
 import path from "node:path";
-import { fireEvent, render, screen } from "@testing-library/react";
+import {
+	act,
+	cleanup,
+	fireEvent,
+	render,
+	screen,
+} from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { RoadmapSchema } from "../../../../../packages/core/src/schema";
 import { resetStore } from "../../helpers/resetStore";
@@ -171,6 +177,7 @@ describe("RoadmapNodeCard — roving tabindex and DOM focus (RC8)", () => {
 	});
 
 	afterEach(() => {
+		cleanup(); // before resetStore, so the reset re-renders nothing
 		document.body.classList.remove(KEYBOARD_NAV_CLASS);
 		vi.restoreAllMocks();
 		resetStore();
@@ -428,7 +435,7 @@ describe("SidePanel", () => {
 		}
 
 		// Clean up store state
-		useRoadmapStore.getState().setSelectedNode(null);
+		act(() => useRoadmapStore.getState().setSelectedNode(null));
 	});
 
 	it("close button has aria-label='Close panel'", () => {
