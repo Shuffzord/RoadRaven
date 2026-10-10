@@ -12,6 +12,8 @@ describe("Vite build", () => {
 			cwd: projectRoot,
 			encoding: "utf-8",
 			timeout: 55_000,
+			// Capture stderr too: `bun run verify` builds again and shows warnings there.
+			stdio: "pipe",
 		});
 		expect(result).toContain("built in");
 	});
