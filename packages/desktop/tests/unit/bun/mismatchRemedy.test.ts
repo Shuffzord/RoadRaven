@@ -6,8 +6,13 @@
 import { describe, expect, it } from "vitest";
 import { mismatchRemedy } from "../../../src/bun/eventServer";
 
-/** major.minor, as the event server parses it off a version string. */
-const v = (major: number, minor: number) => ({ major, minor });
+/** A version as the event server parses it off a version string. */
+const v = (major: number, minor: number, patch = 0, prerelease?: string) => ({
+	major,
+	minor,
+	patch,
+	prerelease,
+});
 
 describe("mismatchRemedy", () => {
 	it("is update-app when the producer's major.minor is newer than the app's", () => {
@@ -21,6 +26,22 @@ describe("mismatchRemedy", () => {
 	it("is not update-app for an older producer, even with a higher minor", () => {
 		expect(mismatchRemedy(v(0, 7), v(0, 8), "npm", false)).toBe("update-npm");
 		expect(mismatchRemedy(v(0, 12), v(1, 0), "npm", false)).toBe("update-npm");
+	});
+
+	it("compares the patch, then the prerelease, when major.minor match", () => {
+		expect(mismatchRemedy(v(0, 8, 8), v(0, 8, 7), "plugin", true)).toBe(
+			"update-app",
+		);
+		expect(mismatchRemedy(v(0, 8, 7), v(0, 8, 8), "plugin", true)).toBe(
+			"update-plugin",
+		);
+		// A release is newer than its own prerelease.
+		expect(
+			mismatchRemedy(v(0, 9, 0), v(0, 9, 0, "canary.1"), "npm", true),
+		).toBe("update-app");
+		expect(
+			mismatchRemedy(v(0, 9, 0, "canary.1"), v(0, 9, 0), "npm", true),
+		).toBe("update-npm");
 	});
 
 	it("is update-plugin for an older Claude Code plugin install", () => {

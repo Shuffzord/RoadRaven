@@ -79,13 +79,30 @@ export interface StartOptions {
 	onAgentRequest: (ws: ServerWebSocket<WsData>, request: AgentRequest) => void;
 }
 
-type MajorMinor = { major: number; minor: number };
+type Version = {
+	major: number;
+	minor: number;
+	patch: number;
+	prerelease?: string;
+};
 
-/** Parse the leading `<major>.<minor>` off a version string, or null if it doesn't match. */
-function parseMajorMinor(version: string): MajorMinor | null {
-	const match = /^(\d+)\.(\d+)/.exec(version);
+/** Parse `<major>.<minor>[.<patch>][-<prerelease>]` off a version string, or null if it doesn't match. */
+function parseVersion(version: string): Version | null {
+	const match = /^(\d+)\.(\d+)(?:\.(\d+))?(?:-([0-9A-Za-z.-]+))?/.exec(version);
 	if (!match) return null;
-	return { major: Number(match[1]), minor: Number(match[2]) };
+	return {
+		major: Number(match[1]),
+		minor: Number(match[2]),
+		patch: Number(match[3] ?? 0),
+		prerelease: match[4],
+	};
+}
+
+/** The first version field (most significant first) where a and b differ, if any. */
+function firstDifference(a: Version, b: Version): keyof Version | undefined {
+	return (["major", "minor", "patch", "prerelease"] as const).find(
+		(k) => a[k] !== b[k],
+	);
 }
 
 function isEaddrinuse(err: unknown): boolean {
@@ -98,8 +115,9 @@ function isEaddrinuse(err: unknown): boolean {
 
 /**
  * Handles a hello frame: records source/version on the connection, then
- * (v0.8) compares the producer's major.minor version against the app's own
- * version, firing a version_mismatch error when they diverge. Missing or
+ * (v0.8) compares the producer's full version against the app's own version,
+ * firing a version_mismatch error when they diverge (v0.8.9: patch and
+ * prerelease included — the plugin pins an exact server version). Missing or
  * unparseable producer versions are logged only — no toast, since there's
  * nothing to compare.
  */
@@ -113,18 +131,14 @@ function handleHelloFrame(
 	ws.data.helloAt = Date.now();
 	serverLogger.info`Hello frame from source=${frame.source} version=${frame.version ?? "unset"} install=${frame.install ?? "unset"}`;
 
-	const producerVersion = frame.version ? parseMajorMinor(frame.version) : null;
+	const producerVersion = frame.version ? parseVersion(frame.version) : null;
 	if (!producerVersion) {
 		serverLogger.warn`Hello frame from source=${frame.source} has a missing or unparseable version: ${frame.version ?? "unset"}`;
 		return;
 	}
 
-	const appVersion = parseMajorMinor(opts.appVersion);
-	if (
-		appVersion &&
-		(producerVersion.major !== appVersion.major ||
-			producerVersion.minor !== appVersion.minor)
-	) {
+	const appVersion = parseVersion(opts.appVersion);
+	if (appVersion && firstDifference(producerVersion, appVersion)) {
 		const remedy = mismatchRemedy(
 			producerVersion,
 			appVersion,
@@ -148,15 +162,17 @@ function handleHelloFrame(
  * server bundled with this app (it is refreshed at startup).
  */
 export function mismatchRemedy(
-	producer: MajorMinor,
-	app: MajorMinor,
+	producer: Version,
+	app: Version,
 	install: HelloFrame["install"],
 	wizardCopyCurrent: boolean,
 ): MismatchRemedy {
+	const diff = firstDifference(producer, app);
+	// Same numbers, different prerelease: only a release beats its prerelease.
 	const producerIsNewer =
-		producer.major !== app.major
-			? producer.major > app.major
-			: producer.minor > app.minor;
+		diff === "prerelease"
+			? !producer.prerelease
+			: diff !== undefined && producer[diff] > app[diff];
 	if (producerIsNewer) return "update-app";
 	if (install === "plugin") return "update-plugin";
 	if (install === "npm") return "update-npm";
