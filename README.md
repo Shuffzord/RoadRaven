@@ -20,7 +20,7 @@ no sprints, no story points. Just a file you own.
 The headline use case: give Claude Code (or any MCP host) the roadmap, and
 watch it plan, work, and tick nodes green while you supervise.
 
-> **Alpha (v0.8.7).** Core editing and the live Event API work today. The data
+> **Alpha (v0.8.8).** Core editing and the live Event API work today. The data
 > format, APIs, and packaging may still change before v1.0. Bug reports and
 > feature requests are very welcome via [Issues](https://github.com/Shuffzord/RoadRaven/issues).
 
@@ -98,7 +98,7 @@ Code plugin below is already installed, the wizard defers to it.
 matches your installed app (the app warns on a major.minor mismatch):
 
 ```bash
-claude mcp add -s user roadraven -- npx -y @roadraven/mcp@0.8.7
+claude mcp add -s user roadraven -- npx -y @roadraven/mcp@0.8.8
 ```
 
 **Tell Claude to use it.** Tools alone give Claude no reason to plan in the
@@ -107,7 +107,7 @@ whether to put it in the current project or in `~/.claude/CLAUDE.md` for every
 project. Safe to re-run; it updates its own block and touches nothing else:
 
 ```bash
-npx -y @roadraven/mcp@0.8.7 init
+npx -y @roadraven/mcp@0.8.8 init
 ```
 
 Cursor, Codex, Copilot, Gemini, OpenCode, version-mismatch handling, and a
@@ -156,7 +156,7 @@ Every release since v0.8.0 ships a `SHA256SUMS` file.
 
 RoadRaven renders through the system WebView2 runtime on Windows, so the
 download carries no bundled browser engine. Pin a version with
-`$env:ROADRAVEN_VERSION = 'v0.8.7'` before the one-liner.
+`$env:ROADRAVEN_VERSION = 'v0.8.8'` before the one-liner.
 
 **Linux x86_64.** The one-liner above, or by hand:
 
@@ -169,19 +169,19 @@ chmod +x ./installer
 
 The installer puts the app under `~/.local/share/` and creates a desktop
 shortcut. Chromium (CEF) ships bundled, so no system browser dependency. Pin
-a version with `ROADRAVEN_VERSION=v0.8.7` in front of `sh`.
+a version with `ROADRAVEN_VERSION=v0.8.8` in front of `sh`.
 
 Once installed, RoadRaven checks GitHub Releases for updates and asks before
 downloading one.
 
 ## Status
 
-| Shipped as of v0.8.7 | Next |
+| Shipped as of v0.8.8 | Next |
 |---|---|
 | Tree canvas, keyboard editor, side-panel markdown notes and metadata | macOS installer |
 | Atomic autosave, `$ref` split files, File menu, Outline navigator | Code signing |
 | Event API over WebSocket, agent-safe writes (optimistic locking, batch updates) | Drag-and-drop reparenting |
-| MCP server on npm, Setup Wizard, Claude Code marketplace plugin | `@roadraven/core` and `@roadraven/react` on npm |
+| MCP server on npm, Setup Wizard, Claude Code plugin with orchestrate and work-node skills and the HUD mod | `@roadraven/core` and `@roadraven/react` on npm |
 | 8 themes with WCAG contrast gates, user theme files, in-app theme editor | |
 | In-app updates: checks on launch, asks before downloading, restart to install | |
 | Windows and Linux installers with verified checksums | `.deb` packaging |
