@@ -25,13 +25,15 @@ const expectedAssets = [
 
 const TOKEN = process.env.GITHUB_TOKEN || process.env.GH_TOKEN;
 
+// The token is for GitHub's API only: never send it to npm, the MCP Registry
+// or any other host this script reads.
+const authFor = (url: string) =>
+	TOKEN && new URL(url).host === "api.github.com" ? { authorization: `Bearer ${TOKEN}` } : {};
+
 // biome-ignore lint/suspicious/noExplicitAny: ad-hoc remote JSON
 async function getJson(url: string): Promise<any> {
 	const res = await fetch(url, {
-		headers: {
-			"user-agent": "release-verify",
-			...(TOKEN && { authorization: `Bearer ${TOKEN}` }),
-		},
+		headers: { "user-agent": "release-verify", ...authFor(url) },
 	});
 	if (!res.ok) throw new Error(`HTTP ${res.status} ${url}`);
 	return res.json();
