@@ -75,9 +75,9 @@ memory; its next save wins), no changing app settings.
   `blocked`.
 - Create nodes with `createNode({ parentId, title, type, status, notes })`
   and keep every returned id; the phase ids go into the briefs.
-- **UAT checks for the human** are `type: "uat"` nodes (or the document's
-  UAT type id), children of the phase they check, created `not-started`,
-  with **Steps** and **Expected** lists in the notes.
+- **UAT checks for the human** are `type: "uat"` nodes, children of the
+  phase they check, created `not-started`, with **Steps** and **Expected**
+  lists in the notes.
 - Numbers (check results, counts, commit ids) go in metadata with
   `updateNodeMetadata({ nodeId, patch })`, evidence and decisions in notes
   with `updateNodeNotes({ nodeId, notes, mode: "append" })`, progress in

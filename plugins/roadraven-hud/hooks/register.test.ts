@@ -121,7 +121,7 @@ test("pane lists active work and pending UAT; batched Pass is written on Send", 
 			await ui.find({ text: /◆ awaiting UAT · 1 check\(s\)/ }),
 		).toBeDefined();
 		expect(
-			await ui.find({ text: /1 active · 1 awaiting UAT · 3 UAT · 1 backlog/ }),
+			await ui.find({ text: /1 active · 1 awaiting UAT · 2 UAT · 1 backlog/ }),
 		).toBeDefined();
 		expect(
 			await ui.find({ text: /✗ failed \(2026-10-09\): file is empty/ }),
@@ -132,8 +132,8 @@ test("pane lists active work and pending UAT; batched Pass is written on Send", 
 			await ui.press({ key: "notes-u1" });
 			expect(await ui.find({ text: /Then\*\* log in/ })).toBeDefined();
 			await ui.press({ key: "pass-u1" });
-			await ui.press({ key: "fail-u3" });
-			await ui.input({ key: "why-u3", text: "button does nothing" });
+			await ui.press({ key: "fail-u5" });
+			await ui.input({ key: "why-u5", text: "button does nothing" });
 			expect(
 				await ui.find({ type: "Text", text: /button does nothing ✓ saved/ }),
 			).toBeDefined();
@@ -159,13 +159,13 @@ test("pane lists active work and pending UAT; batched Pass is written on Send", 
 			tool: "updateNodes",
 			expectedRevision: 1,
 			updates: [
+				{ nodeId: "u5", status: "blocked", metadata: { uat: "fail" } },
 				{ nodeId: "u1", status: "completed", metadata: { uat: "pass" } },
-				{ nodeId: "u3", status: "blocked", metadata: { uat: "fail" } },
 			],
 		},
 		{
 			tool: "updateNodeNotes",
-			nodeId: "u3",
+			nodeId: "u5",
 			mode: "append",
 			notes: expect.stringContaining("button does nothing"),
 		},
@@ -342,8 +342,8 @@ test("a double Send writes once", async ($, on) => {
 test("Send re-reads the roadmap and skips a node no longer ready", async ($, on) => {
 	const answer = { current: answerOk };
 	const r = rig(on, answer);
-	const ui = await markAndSend($, ["pass-u1", "pass-u3"]);
-	const moved = withStatus("u3", "completed");
+	const ui = await markAndSend($, ["pass-u1", "pass-u5"]);
+	const moved = withStatus("u5", "completed");
 	answer.current = (c) => answerRR(c, { ...moved, revision: 7 });
 	await ui.press({ key: "uat-submit" });
 	expect(r.writes("updateNodes").map((c) => c.args)).toEqual([
@@ -356,7 +356,7 @@ test("Send re-reads the roadmap and skips a node no longer ready", async ($, on)
 	]);
 	expect(r.writes("updateNodeStatus")).toEqual([]);
 	expect(r.prompts[0]).toContain(
-		'skipped: "Export works" (u3), no longer ready',
+		'skipped: "Search works" (u5), no longer ready',
 	);
 });
 
@@ -364,11 +364,11 @@ test("a failed note still tells the orchestrator what was written, and a retry a
 	const answer = { current: answerOk };
 	const r = rig(on, answer);
 	const session = mock.session(on);
-	const ui = await markAndSend($, ["fail-u1", "fail-u3"]);
+	const ui = await markAndSend($, ["fail-u1", "fail-u5"]);
 	await ui.input({ key: "why-u1", text: "login hangs" });
-	await ui.input({ key: "why-u3", text: "file is empty again" });
+	await ui.input({ key: "why-u5", text: "no results" });
 	answer.current = (c) =>
-		c.tool === "updateNodeNotes" && c.args.nodeId === "u3"
+		c.tool === "updateNodeNotes" && c.args.nodeId === "u1"
 			? new Error("Error (internal): disk full")
 			: answerOk(c);
 	await ui.press({ key: "uat-submit" });
@@ -384,9 +384,9 @@ test("a failed note still tells the orchestrator what was written, and a retry a
 	answer.current = answerOk;
 	await ui.press({ key: "uat-submit" });
 	expect(r.writes("updateNodeNotes").map((c) => c.args.nodeId)).toEqual([
+		"u5",
 		"u1",
-		"u3",
-		"u3",
+		"u1",
 	]);
 	expect(r.prompts).toHaveLength(1);
 });
@@ -496,6 +496,37 @@ test("a failing findNodes keeps the last notes drawn and logs once", async ($, o
 	expect(await ui.find({ text: /Login works/ })).toBeDefined();
 	await ui.press({ key: "notes-u1" });
 	expect(await ui.find({ text: /Then\*\* log in/ })).toBeDefined();
+});
+
+test("a blocked UAT item waits for a fix: drawn as failed, not offered for Pass", async ($, on) => {
+	rig(on, { current: answerOk });
+	await $.command.run({ command: "roadraven", args: "" } as never);
+	const ui = await $.ui.mount(PANE_PROPS);
+	expect(await ui.find({ text: /Export works/ })).toBeDefined();
+	expect(await ui.find({ text: /failed, waiting for a fix/ })).toBeDefined();
+	expect(
+		await ui.find({ text: /✗ failed \(2026-10-09\): file is empty/ }),
+	).toBeDefined();
+	expect(await ui.find({ key: "pass-u3" })).toBeUndefined();
+	expect(await ui.find({ key: "fail-u3" })).toBeUndefined();
+	expect(await ui.find({ key: "pass-u1" })).toBeDefined();
+});
+
+test("a UAT item sent back for a fix toasts again when it is ready for a re-test", async ($, on) => {
+	const answer = { current: answerOk };
+	const r = rig(on, answer);
+	const run = () => $.command.run({ command: "roadraven", args: "" } as never);
+	await run();
+	expect(r.toasts.filter((t) => /UAT/.test(t))).toHaveLength(1);
+	const failed = withStatus("u1", "blocked");
+	answer.current = (c) => answerRR(c, failed);
+	await run();
+	answer.current = answerOk;
+	await run();
+	expect(r.toasts.filter((t) => /UAT ready: Login works/.test(t))).toHaveLength(
+		1,
+	);
+	expect(r.toasts.filter((t) => /UAT/.test(t))).toHaveLength(2);
 });
 
 test("Next marks a not-started node next and tells the session", async ($, on) => {

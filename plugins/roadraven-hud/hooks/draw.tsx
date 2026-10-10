@@ -182,14 +182,10 @@ export function drawSent({ els, P }: View, last: HudSent | null) {
 	);
 }
 
-function uatMark(
-	P: HudPalette,
-	d: Decision | undefined,
-	n: HudNode,
-): [string, string] {
+function uatMark(P: HudPalette, d: Decision | undefined): [string, string] {
 	if (d === "pass") return ["  ✓ ", P.completed];
 	if (d === "fail") return ["  ✗ ", P.blocked];
-	return ["  ◆ ", n.status === "blocked" ? P.blocked : P.accent];
+	return ["  ◆ ", P.accent];
 }
 
 export function drawUatTitle(
@@ -198,25 +194,37 @@ export function drawUatTitle(
 	choice: Decision | undefined,
 ) {
 	const { Text } = els;
-	const [mark, ink] = uatMark(P, choice, n);
+	const [mark, ink] = uatMark(P, choice);
 	return (
 		<Text wrap="truncate-end">
 			<Text color={ink}>{mark}</Text>
 			<Text color={P.primary}>{n.title}</Text>
-			{n.status === "blocked" && !choice && !lastFailure(n.notes) && (
-				<Text color={P.blocked}> failed before</Text>
-			)}
 		</Text>
 	);
 }
 
-export function drawFailure({ els, P }: View, n: HudNode) {
-	const f = n.status === "blocked" ? lastFailure(n.notes) : undefined;
+function drawFailure({ els, P }: View, n: HudNode) {
+	const f = lastFailure(n.notes);
 	if (!f) return null;
 	return (
 		<els.Text color={P.blocked} wrap="truncate-end">
 			{`  ✗ failed (${f.date}): ${f.reason}`}
 		</els.Text>
+	);
+}
+
+// A UAT item that failed: the agent's turn, so it is shown without Pass or Fail.
+export function drawFixing(v: View, n: HudNode) {
+	const { Box, Text } = v.els;
+	return (
+		<Box key={n.id} flexDirection="column">
+			<Text wrap="truncate-end">
+				<Text color={v.P.blocked}>{"  ✗ "}</Text>
+				<Text color={v.P.primary}>{n.title}</Text>
+				<Text color={v.P.blocked}> · failed, waiting for a fix</Text>
+			</Text>
+			{drawFailure(v, n)}
+		</Box>
 	);
 }
 

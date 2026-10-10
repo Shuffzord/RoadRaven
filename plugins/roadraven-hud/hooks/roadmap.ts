@@ -30,9 +30,10 @@ export function lastFailure(notes = "") {
 }
 
 export const isUat = (n: { type?: string }) => n.type?.toLowerCase() === "uat";
-// Ready to test (in-progress) or failed before and open to a re-test (blocked).
+// Ready to test: in-progress. A blocked one failed and is the agent's to fix; it comes back in-progress.
 export const isReadyUat = (n: HudNode) =>
-	isUat(n) && (n.status === "in-progress" || n.status === "blocked");
+	isUat(n) && n.status === "in-progress";
+export const isFixingUat = (n: HudNode) => isUat(n) && n.status === "blocked";
 
 // --- why RoadRaven can't be reached, in plain words ---------------------------------------------
 

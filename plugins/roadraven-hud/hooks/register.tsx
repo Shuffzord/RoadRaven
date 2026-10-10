@@ -5,7 +5,7 @@ import type { HudAgent, HudError, HudNode, HudPalette } from "../types";
 import {
 	type Data,
 	drawActive,
-	drawFailure,
+	drawFixing,
 	drawFullNotes,
 	drawHeader,
 	drawSaved,
@@ -43,6 +43,7 @@ import {
 	toAgent,
 	tokensOf,
 	type Update,
+	uatToast,
 } from "./plan";
 import {
 	CONN,
@@ -50,6 +51,7 @@ import {
 	connKind,
 	describeAction,
 	flatten,
+	isFixingUat,
 	isReadyUat,
 	isUat,
 	notesById,
@@ -290,13 +292,10 @@ async function adoptRoadmap($: EngineInterface, filePath: unknown) {
 async function announceUat($: EngineInterface, pending: HudNode[]) {
 	const seen = new Set(await read($, seenUat));
 	const fresh = pending.filter((n) => !seen.has(n.id));
-	if (fresh.length === 0) return;
-	$.ui.toast(
-		fresh.length === 1
-			? `RoadRaven · UAT ready: ${fresh[0]?.title}`
-			: `RoadRaven · ${fresh.length} UAT items ready`,
-	);
-	await update($, seenUat, (s) => [...s, ...fresh.map((n) => n.id)]);
+	if (fresh.length > 0) $.ui.toast(uatToast(fresh));
+	// Only what is ready now stays seen: an item sent back for a fix toasts again on its re-test.
+	if (fresh.length === 0 && pending.length === seen.size) return;
+	await update($, seenUat, () => pending.map((n) => n.id));
 	await saveAttribution($);
 }
 
@@ -793,7 +792,6 @@ function drawUatItem($: EngineInterface, v: View, d: Data, n: HudNode) {
 	return (
 		<Box key={n.id} flexDirection="column">
 			{drawUatTitle(v, n, choice)}
-			{drawFailure(v, n)}
 			{n.notes && drawUatNotes($, v, n, n.notes, d.notesOpen[n.id] === true)}
 			<Box marginLeft={4}>
 				{drawChoice($, v, n, "pass", choice === "pass")}
@@ -842,6 +840,7 @@ function drawUat(
 	v: View,
 	d: Data,
 	uat: HudNode[],
+	fixing: HudNode[],
 	waiting: number,
 ) {
 	const { Box } = v.els;
@@ -850,6 +849,7 @@ function drawUat(
 			{pill(v, "UAT", uat.length)}
 			{uat.length === 0 && quiet(v, "nothing waiting for acceptance")}
 			{uat.map((n) => drawUatItem($, v, d, n))}
+			{fixing.map((n) => drawFixing(v, n))}
 			{notReady(v, waiting)}
 			{uat.length > 0 && drawUatSend($, v, d, uat)}
 			{drawSent(v, d.lastSent)}
@@ -1006,7 +1006,7 @@ function drawPane($: EngineInterface, v: View, d: Data) {
 				`${working} active · ${awaiting} awaiting UAT · ${uat.length} UAT · ${backlog.length} backlog`,
 			)}
 			{drawActive(v, d, active, loose)}
-			{drawUat($, v, d, uat, waiting)}
+			{drawUat($, v, d, uat, nodes.filter(isFixingUat), waiting)}
 			{drawBacklog($, v, d, backlog)}
 		</v.els.Box>
 	);

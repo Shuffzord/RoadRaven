@@ -115,7 +115,7 @@ test("notes keep newlines and tabs but drop escapes", () => {
 	expect(cleanNotes("a\u001b[2J\tb\r\nc\u0007\n")).toBe("a [2J\tb\nc");
 });
 
-test("only in-progress and blocked UAT nodes are ready", () => {
+test("only in-progress UAT nodes are ready: blocked waits for a fix", () => {
 	const uat = (status: string) => ({
 		id: "u",
 		title: "U",
@@ -127,7 +127,7 @@ test("only in-progress and blocked UAT nodes are ready", () => {
 		["not-started", "in-progress", "blocked", "completed"].map((s) =>
 			isReadyUat(uat(s)),
 		),
-	).toEqual([false, true, true, false]);
+	).toEqual([false, true, false, false]);
 	expect(isReadyUat({ ...uat("in-progress"), type: "task" })).toBe(false);
 });
 
