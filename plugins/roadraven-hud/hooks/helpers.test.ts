@@ -4,14 +4,17 @@ import {
 	awaitingUat,
 	clean,
 	cleanNotes,
+	connKind,
 	describeAction,
 	flatten,
 	isReadyUat,
 	isUat,
 	kTokens,
 	lastFailure,
+	moreInformative,
 	type RawNode,
 	shortModel,
+	shownKind,
 	since,
 } from "./roadmap";
 import { AMBER, luminance, rgbOf, solid, toPalette } from "./theme";
@@ -163,4 +166,20 @@ test("awaitingUat counts ready UAT checks only when they are all a node's open c
 	expect(awaitingUat(phase(uat("in-progress"), open))).toBeUndefined();
 	expect(awaitingUat(phase())).toBeUndefined();
 	expect(awaitingUat(phase(done))).toBeUndefined();
+});
+
+test("connection errors read as plain states, the most informative kept", () => {
+	const notConnected =
+		'$.mcp.call: no connected MCP tool "getRoadmap" on a server named "plugin:roadraven:roadraven"';
+	const down = "Error (app_not_running): RoadRaven is not running.";
+	expect(connKind(notConnected)).toBe("connecting");
+	expect(connKind("RoadRaven MCP server not connected")).toBe("connecting");
+	expect(connKind(down)).toBe("offline");
+	expect(connKind("Error (no_file_loaded): no roadmap")).toBe("noFile");
+	expect(connKind("Unexpected token < in JSON")).toBe("other");
+	expect(moreInformative(down, notConnected)).toBe(down);
+	expect(moreInformative(notConnected, down)).toBe(down);
+	expect(shownKind(down, true)).toBe("connecting");
+	expect(shownKind(down, false)).toBe("offline");
+	expect(shownKind("Error (no_file_loaded)", true)).toBe("noFile");
 });

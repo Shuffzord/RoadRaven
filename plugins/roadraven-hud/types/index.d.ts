@@ -22,6 +22,9 @@ export type HudNode = {
 
 export type HudSent = { count: number; at: number; isAwake: boolean };
 
+export type HudConnKind = "connecting" | "offline" | "noFile" | "other";
+export type HudError = { kind: HudConnKind; detail: string };
+
 export type HudSnapshot = { title: string; nodes: HudNode[] };
 
 export type HudPalette = {
@@ -46,7 +49,8 @@ declare module "claude-code" {
 			owners: Record<string, string>;
 			activity: Record<string, string>;
 			snapshot: HudSnapshot;
-			error: string | null;
+			error: HudError | null;
+			startedAt: number;
 			palette: HudPalette;
 			decisions: Record<string, "pass" | "fail">;
 			note: string;

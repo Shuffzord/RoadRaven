@@ -173,3 +173,28 @@ test("pane lists active work and pending UAT; batched Pass is written on Send", 
 		},
 	]);
 });
+
+test("a server that isn't connected yet reads as connecting, and Retry asks again", async ($, on) => {
+	let asks = 0;
+	on("mcp.call", (_$, e) => {
+		if (e.tool === "getRoadmap") asks++;
+		const text = `$.mcp.call: no connected MCP tool "${e.tool}"`;
+		return { value: { content: [{ type: "text", text }], isError: true } };
+	});
+	on("ui.open", () => ({ value: { isPlaced: true } }));
+	on("ui.status", () => ({ value: undefined }));
+
+	await $.command.run({ command: "roadraven", args: "" } as never);
+	const ui = await $.ui.mount({
+		plugin: "roadraven-hud",
+		surface: "terminal",
+		component: "Pane",
+		requestId: "roadraven",
+		props: { title: "RoadRaven", isFocused: true, bodyColumns: 80 } as never,
+	});
+	expect(await ui.find({ text: /Connecting to RoadRaven…/ })).toBeDefined();
+	expect(await ui.find({ text: /no connected MCP tool/ })).toBeUndefined();
+	const before = asks;
+	await ui.press({ key: "rr-retry" });
+	expect(asks).toBeGreaterThan(before);
+});

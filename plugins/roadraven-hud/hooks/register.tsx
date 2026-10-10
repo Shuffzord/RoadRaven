@@ -9,12 +9,14 @@ import { atom, read, update } from "claude-code";
 
 import type {
 	HudAgent,
+	HudError,
 	HudNode,
 	HudPalette,
 	HudSent,
 	HudSnapshot,
 } from "../types";
 import {
+	CONN,
 	clean,
 	describeAction,
 	flatten,
@@ -22,8 +24,10 @@ import {
 	isUat,
 	kTokens,
 	lastFailure,
+	moreInformative,
 	type RawNode,
 	shortModel,
+	shownKind,
 	since,
 	workCounts,
 } from "./roadmap";
@@ -31,6 +35,7 @@ import { AMBER, toPalette } from "./theme";
 
 const PANE = "roadraven";
 const POLL_MS = 4000;
+const STARTING_MS = 15_000;
 const BACKLOG_MAX = 12;
 const NOTES_LONG = 80;
 const AGENTS_KEPT = 50;
@@ -47,6 +52,7 @@ const snapshot = atom({ ...S, key: "snapshot" } as const, {
 	nodes: [],
 });
 const error = atom({ ...S, key: "error" } as const, null);
+const startedAt = atom({ ...S, key: "startedAt" } as const, 0);
 const palette = atom({ ...S, key: "palette" } as const, AMBER);
 const decisions = atom({ ...S, key: "decisions" } as const, {});
 const note = atom({ ...S, key: "note" } as const, "");
@@ -120,15 +126,15 @@ async function callRR(
 	tool: string,
 	args: Record<string, unknown> = {},
 ) {
-	let last = "RoadRaven MCP server not connected";
+	let best = "RoadRaven MCP server not connected";
 	for (const server of SERVERS) {
 		try {
 			return await callServer($, server, tool, args);
 		} catch (err) {
-			last = errText(err);
+			best = moreInformative(best, errText(err));
 		}
 	}
-	throw new Error(last);
+	throw new Error(best);
 }
 
 const framed = (text: string) =>
@@ -289,13 +295,20 @@ async function syncSnapshot($: EngineInterface) {
 	);
 }
 
+async function noteError($: EngineInterface, detail: string) {
+	const isStarting = Date.now() - (await read($, startedAt)) < STARTING_MS;
+	const next: HudError = { kind: shownKind(detail, isStarting), detail };
+	if (JSON.stringify(next) !== JSON.stringify(await read($, error)))
+		await update($, error, () => next);
+}
+
 // ponytail: polls the whole tree every 4s; add a push frame to the event API if trees get large.
 async function refresh($: EngineInterface, themeChoice: string) {
 	await syncPalette($, themeChoice);
 	try {
 		await syncSnapshot($);
 	} catch (err) {
-		await update($, error, () => errText(err));
+		await noteError($, errText(err));
 		$.ui.status(undefined);
 	}
 }
@@ -934,16 +947,33 @@ function drawPane($: EngineInterface, v: View, d: Data) {
 	);
 }
 
-function drawError({ els, P }: View, err: string) {
-	const { Box, Text } = els;
+function drawError($: EngineInterface, v: View, err: HudError) {
+	const { els, P } = v;
+	const { Box, Text, Button } = els;
+	const c = CONN[err.kind];
 	return (
 		<Box
+			flexDirection="column"
 			borderStyle="round"
-			borderColor={P.blocked}
+			borderColor={P[c.ink]}
 			backgroundColor={P.bg}
 			paddingX={1}
 		>
-			<Text color={P.blocked}>RoadRaven · {err}</Text>
+			<Box>
+				<Box flexGrow={1}>
+					<Text color={P[c.ink]}>RoadRaven · {c.text}</Text>
+				</Box>
+				<Button
+					key="rr-retry"
+					label="Retry"
+					onPress={() => refresh($, v.themeChoice)}
+				/>
+			</Box>
+			{err.kind === "other" && (
+				<Text color={P.tertiary} dimColor wrap="truncate-end">
+					{err.detail}
+				</Text>
+			)}
 		</Box>
 	);
 }
@@ -1023,6 +1053,7 @@ export const register: Register = (on, options) => {
 	};
 
 	on("session.start", async ($, e, next) => {
+		await update($, startedAt, () => Date.now());
 		await $.command.register({
 			name: "roadraven",
 			description: "Show RoadRaven active work, UAT and backlog in a pane",
@@ -1071,6 +1102,6 @@ export const register: Register = (on, options) => {
 			themeChoice,
 		};
 		const err = await read($, error);
-		return err ? drawError(v, err) : drawPane($, v, await readData($));
+		return err ? drawError($, v, err) : drawPane($, v, await readData($));
 	});
 };
