@@ -3,6 +3,29 @@
 All notable changes to RoadRaven are documented in this file. The format
 follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.8.9] - Unreleased
+
+### Fixed
+
+- **The app now tells you when the Claude Code plugin is a patch version
+  behind.** The version-mismatch toast compared only major.minor, so after
+  updating the app from 0.8.7 to 0.8.8 a plugin user saw nothing, kept the old
+  plugin and never got the RoadRaven HUD. Any version difference (patch and
+  prerelease included) now shows the toast with the plugin update commands.
+- **Event-server and agent logs reach `roadraven.log`.** Connection, version
+  and agent-request lines were dropped because their logger category wasn't
+  configured.
+
+### Changed
+
+- Release tooling: `bun run release:smoke` installs and upgrades the Claude
+  Code plugins (from the previous tag, using the app's update commands) in an
+  isolated Claude config before tagging; `bun run release:verify` checks the
+  GitHub release, npm, the MCP Registry and the marketplace after it. The
+  runbook is [docs/releasing.md](docs/releasing.md). The event-server tests
+  now run in CI and `bun run verify`, and a test checks that every logger
+  category writes somewhere.
+
 ## [0.8.8] - 2026-10-10
 
 ### Added
@@ -10,8 +33,11 @@ follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **RoadRaven HUD for Claude Code** (`plugins/roadraven-hud`). A Claude Code
   mod that draws a live RoadRaven pane inside your session, fed by the
   RoadRaven MCP server. It installs with the roadraven plugin
-  (`/plugin install roadraven@roadraven` pulls it in as a dependency), and the
-  plugin's update toast now also installs and updates it for existing users.
+  (`/plugin install roadraven@roadraven` pulls it in as a dependency).
+  Existing plugin users need `/plugin marketplace update roadraven`,
+  `/plugin update roadraven@roadraven` and `/plugin install
+  roadraven-hud@roadraven`; the update toast that suggests this only appears
+  from 0.8.9 on.
   The pane opens by itself once RoadRaven is running with a roadmap open, and
   `/roadraven` opens it any time.
   - **Active work.** Every in-progress node, with the agent working on it,
