@@ -99,6 +99,10 @@ app holds it in memory; its next save wins), or changing app settings.
   output you produced, not figures typed into a summary.
 - **One owner per file at a time.** Two agents editing one file, or you
   committing while an agent is still editing, loses work.
+- **Priority first.** A node whose metadata has `priority: "next"` (set by
+  the human from the RoadRaven pane) is taken before other not-started work.
+  Once it is started, clear the flag with `updateNodeMetadata({ nodeId,
+  patch: { priority: null } })`.
 - **Only write to nodes you created or were given.** The rest of the roadmap
   belongs to the human. Never delete or rename their nodes.
 - **Pass `expectedRevision`** from your last `getRoadmap()` or

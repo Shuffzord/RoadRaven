@@ -51,6 +51,10 @@ settings to get past a refusal; never do those.
 - **Asked to pick the next task yourself:** use
   `findNodes({ status: "not-started" })` (add `parentId` to stay inside one
   branch), tell the human which node you picked, then set it in progress.
+  A node whose metadata has `priority: "next"` (set by the human from the
+  RoadRaven pane) is taken before other not-started work; once started,
+  clear the flag with `updateNodeMetadata({ nodeId, patch: { priority: null
+  } })`.
 
 Start the notes with a two-line summary of the task and a `## Checkpoints`
 heading. Statuses are always one of `not-started`, `in-progress`,
