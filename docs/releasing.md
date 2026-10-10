@@ -22,9 +22,9 @@ layout: default
    grep -rn "<previous version>" README.md docs/   # fix prose pins by hand
    ```
    Set the `## [X.Y.Z] - date` heading in `CHANGELOG.md`.
-3. `bun run verify`
-4. `bun scripts/release-smoke.ts` (fresh install + upgrade from the previous tag in an isolated Claude config, running the app's update-toast commands).
-5. Commit `chore(release): bump version to X.Y.Z`, open the PR, wait for green CI, merge.
+3. `bun run verify`, then commit `chore(release): bump version to X.Y.Z`.
+4. `bun scripts/release-smoke.ts` (fresh install + upgrade from the previous tag in an isolated Claude config, running the app's update-toast commands). It upgrades to the committed `HEAD`, so run it after the bump commit; it refuses to run while the working tree's version differs from `HEAD`'s.
+5. Open the PR, wait for green CI, merge.
 6. Tag the merge commit (lightweight, like previous tags) and push:
    ```bash
    git switch master && git pull
