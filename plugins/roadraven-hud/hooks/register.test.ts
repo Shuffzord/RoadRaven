@@ -226,7 +226,7 @@ function answerRR(c: Q, rm: Rm = roadmap) {
 test("a roadmap over Claude Code's MCP output limit reads as too large, with Retry", async ($, on) => {
 	on("mcp.call", () => {
 		const text =
-			"Error: result (65,123 characters) exceeds maximum allowed tokens. Output has been saved to /tmp/x.txt";
+			"Error: result (65,329 characters across 795 lines) exceeds maximum allowed tokens. Output has been saved to /home/u/.claude/projects/x/tool-results/mcp-roadraven-getRoadmap-1.txt.";
 		return { value: { content: [{ type: "text", text }], isError: false } };
 	});
 	on("ui.open", () => ({ value: { isPlaced: true } }));
@@ -458,12 +458,42 @@ test("polls ask for the tree without notes and fetch UAT notes with findNodes", 
 		{ omitNotes: true },
 	]);
 	expect(r.writes("findNodes").map((c) => c.args.type)).toEqual(["uat", "UAT"]);
+});
 
-	// findNodes failing still draws the pane, without the notes.
-	answer.current = (c) =>
-		c.tool === "findNodes" ? new Error("Error (internal): boom") : answerOk(c);
+test("UAT notes are fetched again only when a UAT status changes", async ($, on) => {
+	const answer = { current: answerOk };
+	const r = rig(on, answer);
 	await $.command.run({ command: "roadraven", args: "" } as never);
+	await $.command.run({ command: "roadraven", args: "" } as never);
+	expect(r.writes("findNodes")).toHaveLength(2); // one call per type spelling, one fetch
+	const moved = withStatus("u5", "completed");
+	answer.current = (c) => answerRR(c, moved);
+	await $.command.run({ command: "roadraven", args: "" } as never);
+	expect(r.writes("findNodes")).toHaveLength(4);
+});
+
+test("a failing findNodes keeps the last notes drawn and logs once", async ($, on) => {
+	const answer = { current: answerOk };
+	const r = rig(on, answer);
+	const logs: string[] = [];
+	on("ui.log", (_$, e) => {
+		logs.push(e.text);
+		return { value: undefined };
+	});
+	await $.command.run({ command: "roadraven", args: "" } as never);
+	const moved = withStatus("u5", "completed");
+	answer.current = (c) =>
+		c.tool === "findNodes"
+			? new Error("Error (internal): boom")
+			: answerRR(c, moved);
+	await $.command.run({ command: "roadraven", args: "" } as never);
+	await $.command.run({ command: "roadraven", args: "" } as never);
+	expect(r.writes("findNodes").length).toBeGreaterThan(2);
+	expect(logs.filter((t) => /couldn't fetch UAT notes/.test(t))).toHaveLength(
+		1,
+	);
 	const ui = await $.ui.mount(PANE_PROPS);
 	expect(await ui.find({ text: /Login works/ })).toBeDefined();
-	expect(await ui.find({ text: /Open the app/ })).toBeUndefined();
+	await ui.press({ key: "notes-u1" });
+	expect(await ui.find({ text: /Then\*\* log in/ })).toBeDefined();
 });

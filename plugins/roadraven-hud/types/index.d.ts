@@ -30,6 +30,13 @@ export type HudConnKind =
 	| "other";
 export type HudError = { kind: HudConnKind; detail: string };
 
+// UAT notes as last fetched, for the UAT signature they were fetched at (null: fetch again).
+export type HudUatNotes = {
+	sig: string | null;
+	notes: Record<string, string>;
+	isFailing: boolean;
+};
+
 export type HudSnapshot = { title: string; nodes: HudNode[] };
 
 export type HudPalette = {
@@ -72,6 +79,7 @@ declare module "claude-code" {
 			autoOpened: boolean;
 			offlineSince: number;
 			lastTry: number;
+			uatNotes: HudUatNotes;
 		};
 	}
 }

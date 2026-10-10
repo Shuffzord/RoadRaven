@@ -52,7 +52,7 @@ export const CONN = {
 	},
 	noFile: { text: "Open a roadmap in RoadRaven.", ink: "accent" },
 	tooLarge: {
-		text: "This roadmap is too large for Claude Code's MCP output limit. Update the RoadRaven plugin (0.8.9 polls without notes), or raise MAX_MCP_OUTPUT_TOKENS.",
+		text: "This roadmap is too large for Claude Code's MCP output limit. Update the RoadRaven plugin, or raise MAX_MCP_OUTPUT_TOKENS.",
 		ink: "blocked",
 	},
 	other: { text: "Can't reach RoadRaven", ink: "blocked" },
@@ -146,11 +146,25 @@ export const uatTypes = (nodes: HudNode[]) => [
 	...new Set(nodes.filter(isUat).map((n) => n.type ?? "")),
 ];
 
+// Which UAT nodes there are and their statuses: UAT notes are fetched again only when it changes.
+export const uatSig = (nodes: HudNode[]) =>
+	nodes
+		.filter(isUat)
+		.map((n) => `${n.id}:${n.status}`)
+		.sort()
+		.join(",");
+
+// findNodes results as notes by node id.
+export const notesById = (found: RawNode[]): Record<string, string> =>
+	Object.fromEntries(found.flatMap((n) => (n.notes ? [[n.id, n.notes]] : [])));
+
 // Notes fetched apart from the tree, merged in by node id.
-export function withNotes(nodes: HudNode[], found: RawNode[]): HudNode[] {
-	const notes = new Map(found.map((n) => [n.id, n.notes]));
+export function withNotes(
+	nodes: HudNode[],
+	notes: Record<string, string>,
+): HudNode[] {
 	return nodes.map((n) => {
-		const s = notes.get(n.id);
+		const s = notes[n.id];
 		return s ? { ...n, notes: cleanNotes(s) } : n;
 	});
 }

@@ -26,12 +26,14 @@ import {
 	isUat,
 	kTokens,
 	lastFailure,
+	notesById,
 	parseReply,
 	type RawNode,
 	roadmapTitle,
 	shortModel,
 	shownKind,
 	since,
+	uatSig,
 	uatTypes,
 	withNotes,
 	workCounts,
@@ -80,6 +82,11 @@ const autoOpened = atom({ ...S, key: "autoOpened" } as const, false);
 // When RoadRaven stopped answering (0 while it answers), and the last time it was asked.
 const offlineSince = atom({ ...S, key: "offlineSince" } as const, 0);
 const lastTry = atom({ ...S, key: "lastTry" } as const, 0);
+const uatNotes = atom({ ...S, key: "uatNotes" } as const, {
+	sig: null,
+	notes: {},
+	isFailing: false,
+});
 
 type Els = Elements[keyof Elements];
 type Decision = "pass" | "fail";
@@ -362,22 +369,45 @@ async function findUat($: EngineInterface, types: string[]) {
 	return found;
 }
 
-// The pane draws UAT notes only; without them it still draws the rest.
-async function withUatNotes($: EngineInterface, nodes: HudNode[]) {
+// Logged once per run of failures, not on every poll.
+async function noteNotesFailure(
+	$: EngineInterface,
+	wasFailing: boolean,
+	err: unknown,
+) {
+	if (wasFailing) return;
+	$.ui.log(
+		`RoadRaven · couldn't fetch UAT notes, showing the last ones: ${errText(err)}`,
+	);
+	await update($, uatNotes, (u) => ({ ...u, isFailing: true }));
+}
+
+// The pane draws UAT notes only: fetched when the UAT nodes or their statuses change,
+// and on a failure the last ones fetched stay drawn.
+async function uatNotesFor($: EngineInterface, nodes: HudNode[]) {
+	const sig = uatSig(nodes);
+	const kept = await read($, uatNotes);
+	if (kept.sig === sig) return kept.notes;
 	try {
-		return withNotes(nodes, await findUat($, uatTypes(nodes)));
-	} catch {
-		return nodes;
+		const notes = notesById(await findUat($, uatTypes(nodes)));
+		await update($, uatNotes, () => ({ sig, notes, isFailing: false }));
+		return notes;
+	} catch (err) {
+		await noteNotesFailure($, kept.isFailing, err);
+		return kept.notes;
 	}
+}
+
+// Notes edited without a status change: the next refresh fetches them again.
+async function forgetUatNotes($: EngineInterface) {
+	await update($, uatNotes, (u) => ({ ...u, sig: null }));
 }
 
 async function syncSnapshot($: EngineInterface) {
 	const { schema = {}, filePath } = await callRR($, "getRoadmap", LEAN);
 	await adoptRoadmap($, filePath);
-	const nodes = await withUatNotes(
-		$,
-		flatten((schema.nodes ?? []) as RawNode[]),
-	);
+	const lean = flatten((schema.nodes ?? []) as RawNode[]);
+	const nodes = withNotes(lean, await uatNotesFor($, lean));
 	await update($, snapshot, () => ({
 		title: roadmapTitle((schema.nodes ?? []) as RawNode[], schema.title),
 		nodes,
@@ -668,6 +698,7 @@ async function submitUat(
 		$.ui.toast(`RoadRaven · couldn't send UAT decisions: ${plainError(err)}`);
 	}
 	await update($, isSending, () => false);
+	await forgetUatNotes($);
 	await refresh($, themeChoice);
 }
 
@@ -1436,6 +1467,7 @@ export const register: Register = (on, options) => {
 		if (!RR_TOOL.test(e.tool)) return next(e);
 		const ran = await next(e);
 		await linkOwner($, e);
+		await forgetUatNotes($);
 		void refresh($, themeChoice);
 		return ran;
 	});
