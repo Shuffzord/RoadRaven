@@ -3,7 +3,7 @@
 All notable changes to RoadRaven are documented in this file. The format
 follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## [0.8.8] - Unreleased
+## [0.8.8] - 2026-10-10
 
 ### Added
 
@@ -12,22 +12,34 @@ follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   RoadRaven MCP server. It installs with the roadraven plugin
   (`/plugin install roadraven@roadraven` pulls it in as a dependency), and the
   plugin's update toast now also installs and updates it for existing users.
+  The pane opens by itself once RoadRaven is running with a roadmap open, and
+  `/roadraven` opens it any time.
   - **Active work.** Every in-progress node, with the agent working on it,
     its model and effort, elapsed time, the current action and, once it
-    finishes, the tokens it used.
-  - **UAT.** Nodes of type `uat` can be marked passed or failed as a batch,
-    with a note per failed item. **Send** writes the statuses, appends each
-    failure note to its node and hands the orchestrator one summary.
+    finishes, the tokens it used. Phases that only wait on your acceptance
+    checks show as *awaiting UAT*. Agent labels survive a Claude Code restart.
+  - **UAT.** Nodes of type `uat` show once an agent marks them ready
+    (`in-progress`); failed ones (`blocked`) show their latest reason and can
+    be re-tested. Mark a batch Pass or Fail, with a note per failed item, and
+    **Send** writes every status in one atomic write, appends each failure
+    note to its node and wakes the orchestrator with one summary.
   - **Backlog.** Not-started nodes, each with **Run** (a one-off agent for
-    that node) and **Next** (marks it as priority). The orchestrator is told
-    either way.
-  - Toasts for new UAT items, a status line entry, and the app's themes —
-    following the app's theme by default, or a fixed one.
+    that node, after a confirmation that shows the node) and **Next** (marks
+    it as priority). The orchestrator is told either way.
+  - Toasts for UAT items as they become ready, a status line entry, full
+    notes behind a `more` toggle, plain connection states with **Retry**, and
+    the app's themes (following the app's theme by default, or a fixed one).
 - The `orchestrate` and `work-node` skills take nodes you marked priority
-  (**Next**) first.
+  (**Next**) first, and create acceptance checks as `uat` nodes with test
+  steps, marking them ready only after the work they check is verified.
 
 ### Fixed
 
+- **Agent notes no longer get overwritten in an open notes editor.** With a
+  node's notes open in Edit or Split mode, text an agent appended did not
+  appear, and your next keystroke saved the old text over it. The editor now
+  picks up outside changes, keeps an agent's append that arrives while your
+  edit is waiting to be saved, and keeps those syncs out of undo.
 - **Selected text in the side panel can be copied.** Selections are copied
   natively instead of being swallowed by the keyboard router, and the panel
   gains a **Copy notes** button.
