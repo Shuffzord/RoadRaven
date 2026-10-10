@@ -206,9 +206,27 @@ async function wake($: EngineInterface, text: string) {
 	return false;
 }
 
+async function homeDir($: EngineInterface) {
+	return (await $.env.get("HOME")) ?? (await $.env.get("USERPROFILE")) ?? "";
+}
+
+// Where the app keeps settings.json: Windows, macOS, then Linux (the fallback), as the app decides.
+async function appConfigDirs($: EngineInterface) {
+	const home = await homeDir($);
+	const local = await $.env.get("LOCALAPPDATA");
+	const xdg = (await $.env.get("XDG_CONFIG_HOME")) ?? `${home}/.config`;
+	return [
+		...(local ? [`${local}/RoadRaven`] : []),
+		`${home}/Library/Application Support/RoadRaven`,
+		`${xdg}/RoadRaven`,
+	];
+}
+
 async function appConfigDir($: EngineInterface) {
-	const xdg = await $.env.get("XDG_CONFIG_HOME");
-	return `${xdg ?? `${await $.env.get("HOME")}/.config`}/RoadRaven`;
+	const dirs = await appConfigDirs($);
+	for (const dir of dirs)
+		if (await $.fs.exists(dir).catch(() => false)) return dir;
+	return dirs[dirs.length - 1] ?? "";
 }
 
 // The app's theme id, or undefined while settings.json is mid-write (the app rewrites it in place).

@@ -591,6 +591,43 @@ test("owners of nodes no longer in the tree are dropped", async ($, on) => {
 	});
 });
 
+// The app's settings folder on each platform, and the environment that names it.
+const APP_DIRS: { dir: string; env: Record<string, string> }[] = [
+	{
+		dir: "C:/Users/u/AppData/Local/RoadRaven",
+		env: {
+			LOCALAPPDATA: "C:/Users/u/AppData/Local",
+			USERPROFILE: "C:/Users/u",
+		},
+	},
+	{
+		dir: "/Users/u/Library/Application Support/RoadRaven",
+		env: { HOME: "/Users/u" },
+	},
+	{ dir: "/home/u/.config/RoadRaven", env: { HOME: "/home/u" } },
+	{ dir: "/xdg/RoadRaven", env: { HOME: "/home/u", XDG_CONFIG_HOME: "/xdg" } },
+];
+
+for (const { dir, env } of APP_DIRS)
+	test(`follow-app reads the app's theme from ${dir}`, async ($, on) => {
+		rig(on, { current: answerOk });
+		mock.env(on, env);
+		// Paths compared by their end: on a POSIX test host the engine roots C:/... at the plugin.
+		on("fs.exists", (_$, e) => ({ value: e.path.endsWith(dir) }));
+		on("fs.read", (_$, e) => {
+			if (e.path.endsWith(`${dir}/settings.json`))
+				return { value: JSON.stringify({ theme: "probe" }) };
+			if (e.path.endsWith(`${dir}/themes/probe.json`))
+				return {
+					value: JSON.stringify({ meta: { name: "Probe" }, colors: {} }),
+				};
+			return { deny: "no such file" };
+		});
+		await $.command.run({ command: "roadraven", args: "" } as never);
+		const ui = await $.ui.mount(PANE_PROPS);
+		expect(await ui.find({ text: /· Probe/ })).toBeDefined();
+	});
+
 test("Next marks a not-started node next and tells the session", async ($, on) => {
 	const r = rig(on, { current: answerOk });
 	const session = mock.session(on);
