@@ -18,7 +18,7 @@ layout: default
 2. Release branch and bump:
    ```bash
    git switch -c chore/release-X.Y.Z
-   bun scripts/bump-version.ts X.Y.Z
+   bun scripts/bump-version.ts X.Y.Z               # also refreshes bun.lock
    grep -rn "<previous version>" README.md docs/   # fix prose pins by hand
    ```
    Set the `## [X.Y.Z] - date` heading in `CHANGELOG.md`.
