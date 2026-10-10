@@ -1,7 +1,7 @@
 /** @vitest-environment jsdom */
 // v0.8.2 Phase 3b — Outline perf contract (D-6): a status tick re-renders
 // only the row whose status changed, never the list.
-import { act, render, screen } from "@testing-library/react";
+import { act, render } from "@testing-library/react";
 import type { FunctionComponent } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type {
@@ -68,8 +68,11 @@ afterEach(() => {
 
 describe("Outline render count", () => {
 	it("a status tick on one node re-renders only that row", () => {
-		render(<Outline collapsed={false} />);
-		expect(screen.getAllByRole("treeitem")).toHaveLength(TOTAL);
+		// Plain selectors, not getAllByRole/getByRole: the role queries compute
+		// accessible names over all 300 rows in jsdom, which made this test
+		// ~0.5s alone and past the 5s timeout under a loaded parallel suite.
+		const { container } = render(<Outline collapsed={false} />);
+		expect(container.querySelectorAll('[role="treeitem"]')).toHaveLength(TOTAL);
 		expect(renders.size).toBe(TOTAL);
 		for (const count of renders.values()) expect(count).toBe(1);
 
@@ -77,9 +80,10 @@ describe("Outline render count", () => {
 		act(() => useRoadmapStore.getState().updateNodeStatus("n42", "completed"));
 
 		expect([...renders.entries()]).toEqual([["n42", 1]]);
-		const row = screen.getByRole("treeitem", { name: "Node 42" });
+		const row = container.querySelector('[role="treeitem"][title="Node 42"]');
+		expect(row).not.toBeNull();
 		expect(
-			(row.querySelector("span[aria-hidden]") as HTMLElement).style
+			(row?.querySelector("span[aria-hidden]") as HTMLElement).style
 				.backgroundColor,
 		).toBe("var(--rv-status-completed)");
 	});
