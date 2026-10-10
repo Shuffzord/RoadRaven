@@ -8,6 +8,16 @@ with `/roadraven`. Until then it stays closed and checks back less often.
 
 ![UAT section with Pass and Fail buttons](../../screenshots/hud-uat.png)
 
+## What it does on your machine
+
+- **Reads the open roadmap through the RoadRaven MCP server** (the `roadraven` plugin's server, or one you configured), polling every few seconds while RoadRaven is running.
+- **Writes to the roadmap only when you press a button:** Send writes the UAT statuses and failure notes, Next sets a node's priority.
+- **Reads RoadRaven's settings and theme files** (`settings.json` and `themes/*.json` in RoadRaven's user-data folder, plus the theme copies bundled with the mod) to follow the app's theme.
+- **Starts a Claude Code sub-agent only when you press Run and confirm.**
+- **Adds notes to your Claude Code session:** Send submits one summary prompt to the orchestrating agent; Run and Next add a short note it reads at its next turn.
+- **Keeps agent labels in Claude Code's plugin store** (`$.store`), per roadmap file, so they survive a restart.
+- Makes no network requests of its own and runs no programs.
+
 ## Install
 
 | Setup | Command |
