@@ -60,9 +60,10 @@ const textTargets = [
 	},
 	{
 		// roadraven-hud's marketplace entry: anchored on its name so the
-		// roadraven entry's version is left to the target above.
+		// roadraven entry's version is left to the target above. [\s\S] (not
+		// [^}]) so nested objects such as `relevance` may sit before `version`.
 		path: ".claude-plugin/marketplace.json",
-		regex: /("name":\s*"roadraven-hud"[^}]*?"version":\s*")[^"]+"/,
+		regex: /("name":\s*"roadraven-hud"[\s\S]*?"version":\s*")[^"]+"/,
 		replacement: `$1${newVersion}"`,
 		label: '"version": "..." (hud marketplace entry)',
 	},

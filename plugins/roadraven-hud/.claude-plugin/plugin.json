@@ -6,6 +6,10 @@
 		"name": "Shuffzord",
 		"url": "https://github.com/Shuffzord"
 	},
+	"repository": "https://github.com/Shuffzord/RoadRaven",
+	"license": "FSL-1.1-MIT",
+	"homepage": "https://shuffzord.github.io/RoadRaven/plugin-authoring.html",
+	"keywords": ["mod", "hud", "claude-code", "roadmap", "agents", "uat"],
 	"types": "./types/index.d.ts",
 	"userConfig": {
 		"theme": {
