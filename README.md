@@ -131,23 +131,20 @@ Plan the CSV export feature as a roadmap in RoadRaven and run it phase by phase.
 
 ## Claude Code HUD
 
-<!-- screenshot: HUD pane -->
+A **mod** for Claude Code: a brand-new kind of extension that changes Claude Code's own interface, here a live RoadRaven pane inside your terminal session.
 
-The `roadraven-hud` mod puts a live RoadRaven pane inside your Claude Code
-session (opened at start on wide terminals, or with `/roadraven`), plus a
-status-line entry like `RR 2 active · 1 UAT`. It shows **Active work** (each
-in-progress node with its agent, model, effort, elapsed time and current
-action), **UAT** (nodes of type `uat`: mark Pass or Fail, add notes, send the
-decisions to the orchestrator; pass completes, fail blocks) and **Backlog**
-(Run a node in a one-off sub-agent, or mark it Next so the skills take it
-first). It follows the app's theme; change it with the `theme` option in
-`/config`. Agents create acceptance checks as nodes with `type: "uat"`.
+- Live agents per node, with model, effort and current action
+- UAT checks you pass or fail in a batch, which wakes the orchestrator
+- Backlog **Run** / **Next** buttons
+- Follows the app theme
 
-It installs with the plugin above. On an older plugin install, run
-`claude plugin install roadraven-hud@roadraven`; with MCP only, add the
-marketplace and `/plugin install roadraven-hud@roadraven`. It needs the app
-running with a roadmap open. Details in the
-[HUD README](plugins/roadraven-hud/README.md).
+<!-- screenshot: capture pending -->
+![Agents working on nodes in the HUD pane](docs/images/hud-active-work.png)
+
+<!-- screenshot: capture pending -->
+![UAT section with Pass and Fail buttons](docs/images/hud-uat.png)
+
+Ships with the plugin: `/plugin install roadraven@roadraven`. [Details →](plugins/roadraven-hud/README.md)
 
 ## Install
 
