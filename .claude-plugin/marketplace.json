@@ -16,7 +16,7 @@
 			"description": "Claude Code mod: a live RoadRaven pane showing agents on roadmap nodes (model, effort, current action, tokens), batched UAT sign-off and a backlog you can start or prioritise.",
 			"source": "./plugins/roadraven-hud",
 			"category": "productivity",
-			"version": "0.1.0"
+			"version": "0.8.7"
 		}
 	]
 }

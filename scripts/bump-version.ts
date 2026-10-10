@@ -52,6 +52,21 @@ const textTargets = [
 		label: '"version": "..." (marketplace plugin entry)',
 	},
 	{
+		// roadraven-hud plugin manifest.
+		path: "plugins/roadraven-hud/.claude-plugin/plugin.json",
+		regex: /"version":\s*"[^"]+"/,
+		replacement: `"version": "${newVersion}"`,
+		label: '"version": "..." (hud plugin)',
+	},
+	{
+		// roadraven-hud's marketplace entry: anchored on its name so the
+		// roadraven entry's version is left to the target above.
+		path: ".claude-plugin/marketplace.json",
+		regex: /("name":\s*"roadraven-hud"[^}]*?"version":\s*")[^"]+"/,
+		replacement: `$1${newVersion}"`,
+		label: '"version": "..." (hud marketplace entry)',
+	},
+	{
 		// Pinned MCP server version the plugin's npx invocation installs.
 		path: "plugins/claude-code/.mcp.json",
 		regex: /@roadraven\/mcp@[^"]+/,
@@ -92,19 +107,24 @@ const parsedPkgs: ParsedPkg[] = pkgTargets.map((path) => {
 	}
 });
 
+// Targets sharing a file (marketplace.json) apply in sequence on the running
+// result, so the later write does not discard the earlier replacement.
+const pending = new Map<string, string>();
 const preparedText = textTargets.map(({ path, regex, replacement, label }) => {
 	if (!existsSync(path)) {
 		console.error(`Missing target: ${path}`);
 		process.exit(1);
 	}
-	const content = readFileSync(path, "utf8");
+	const content = pending.get(path) ?? readFileSync(path, "utf8");
 	if (!regex.test(content)) {
 		console.error(
 			`Failed to find '${label}' in ${path}. Refusing to write — partial bump would break lockstep invariant (D-04).`,
 		);
 		process.exit(1);
 	}
-	return { path, updated: content.replace(regex, replacement) };
+	const updated = content.replace(regex, replacement);
+	pending.set(path, updated);
+	return { path, updated };
 });
 
 for (const { path, pkg } of parsedPkgs) {
