@@ -68,6 +68,20 @@ export const keptAgents = (all: Record<string, HudAgent>, isDone: boolean) =>
 			.map((a) => [a.id, isDone ? { ...a, isDone } : a]),
 	);
 
+// This session's agents still running: a file's saved attribution loads beneath them.
+export const running = (all: Record<string, HudAgent>) =>
+	Object.fromEntries(Object.entries(all).filter(([, a]) => !a.isDone));
+
+export const mergeOwners = (
+	saved: Record<string, string>,
+	now: Record<string, string>,
+	isFirst: boolean,
+) => (isFirst ? { ...saved, ...now } : saved);
+
+// Only the entries keyed by a node id still in the tree.
+export const inTree = (all: Record<string, string>, ids: Set<string>) =>
+	Object.fromEntries(Object.entries(all).filter(([id]) => ids.has(id)));
+
 export const failReason = (
 	d: Decision,
 	reasons: Record<string, string>,

@@ -536,6 +536,61 @@ test("a UAT item sent back for a fix toasts again when it is ready for a re-test
 	expect(r.toasts.filter((t) => /UAT/.test(t))).toHaveLength(2);
 });
 
+test("a node linked before RoadRaven first answers keeps its owner when the file's attribution loads", async ($, on) => {
+	const answer = {
+		current: (() =>
+			new Error(
+				"Error (app_not_running): RoadRaven is not running.",
+			)) as Answer,
+	};
+	rig(on, answer);
+	on("tool.call", () => ({ result: { content: [] } }) as never);
+	on("agent.spawn", () => ({ model: "claude-haiku-5-5", agentId: "z1" }));
+	await $.command.run({ command: "roadraven", args: "" } as never);
+	await $.agent.spawn({
+		prompt: "p",
+		description: "early worker",
+		name: "early-worker",
+		subagentType: "general-purpose",
+		parentModel: "claude-opus-5-5",
+		tool_use_id: "t1",
+	} as never);
+	await $.tool.call({
+		tool: "mcp__roadraven__updateNodeStatus",
+		tool_use_id: "t2",
+		agentId: "z1",
+		nodeId: "n1",
+		status: "in-progress",
+	} as never);
+	answer.current = answerOk;
+	await $.command.run({ command: "roadraven", args: "" } as never);
+	const ui = await $.ui.mount(PANE_PROPS);
+	expect(await ui.find({ text: /early-worker/ })).toBeDefined();
+	expect(await ui.find({ text: /auth-worker/ })).toBeUndefined();
+});
+
+test("owners of nodes no longer in the tree are dropped", async ($, on) => {
+	const stored: Record<string, unknown> = {
+		[STORE_KEY]: { ...saved, owners: { n1: "a1", gone: "a1" } },
+	};
+	on("mcp.call", (_$, e) => {
+		const text = answerRR(e);
+		return { value: { content: [{ type: "text", text }], isError: false } };
+	});
+	on("ui.open", () => ({ value: { isPlaced: true } }));
+	on("ui.status", () => ({ value: undefined }));
+	on("ui.toast", () => ({ value: undefined }));
+	on("store.get", (_$, e) => ({ value: stored[e.key] }));
+	on("store.set", (_$, e) => {
+		stored[e.key] = e.value;
+		return { value: undefined };
+	});
+	await $.command.run({ command: "roadraven", args: "" } as never);
+	expect((stored[STORE_KEY] as { owners: unknown }).owners).toEqual({
+		n1: "a1",
+	});
+});
+
 test("Next marks a not-started node next and tells the session", async ($, on) => {
 	const r = rig(on, { current: answerOk });
 	const session = mock.session(on);

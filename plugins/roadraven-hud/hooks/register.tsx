@@ -27,12 +27,15 @@ import {
 	failReason,
 	framed,
 	goneToast,
+	inTree,
 	isNotStarted,
 	keptAgents,
+	mergeOwners,
 	nextPlan,
 	plainError,
 	q,
 	reviewedText,
+	running,
 	type Saved,
 	type SendPlan,
 	sendPlan,
@@ -279,8 +282,14 @@ async function loadAttribution($: EngineInterface, path: string) {
 			| Partial<Saved>
 			| undefined),
 	};
-	await update($, agents, () => keptAgents(saved.agents, true));
-	await update($, owners, () => saved.owners);
+	const isFirst = (await read($, roadmapPath)) === "";
+	// Merged, not replaced: this session's running agents stay, and so do the nodes it
+	// linked before its first file loaded (another file's links stay with that file).
+	await update($, agents, (now) => ({
+		...keptAgents(saved.agents, true),
+		...running(now),
+	}));
+	await update($, owners, (now) => mergeOwners(saved.owners, now, isFirst));
 	await update($, seenUat, () => saved.seenUat);
 	await update($, roadmapPath, () => path);
 }
@@ -345,6 +354,15 @@ async function forgetUatNotes($: EngineInterface) {
 	await update($, uatNotes, (u) => ({ ...u, sig: null }));
 }
 
+// Owners of nodes that left the tree (deleted, or another file's) are dropped.
+async function pruneOwners($: EngineInterface, nodes: HudNode[]) {
+	const kept = await read($, owners);
+	const live = inTree(kept, new Set(nodes.map((n) => n.id)));
+	if (Object.keys(live).length === Object.keys(kept).length) return;
+	await update($, owners, () => live);
+	await saveAttribution($);
+}
+
 type Schema = { nodes?: RawNode[]; title?: unknown };
 
 async function applySnapshot($: EngineInterface, schema: Schema, key: string) {
@@ -355,6 +373,7 @@ async function applySnapshot($: EngineInterface, schema: Schema, key: string) {
 		nodes,
 	}));
 	await update($, seenRevision, () => key);
+	await pruneOwners($, nodes);
 	await announceUat(
 		$,
 		nodes.filter((n) => isUat(n) && n.status === "in-progress"),
