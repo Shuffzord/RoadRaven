@@ -628,6 +628,45 @@ for (const { dir, env } of APP_DIRS)
 		expect(await ui.find({ text: /· Probe/ })).toBeDefined();
 	});
 
+test("↗ on an active, a UAT and a backlog row shows that node in RoadRaven", async ($, on) => {
+	const r = rig(on, { current: answerOk });
+	const ui = await markAndSend($, ["backlog-toggle"]);
+	for (const id of ["n1", "u1", "root"]) await ui.press({ key: `goto-${id}` });
+	expect(r.writes("revealNode").map((c) => c.args)).toEqual([
+		{ nodeId: "n1" },
+		{ nodeId: "u1" },
+		{ nodeId: "root" },
+	]);
+	expect(r.toasts).toEqual([expect.stringContaining("UAT items ready")]);
+});
+
+test("↗ against a plugin without revealNode says to update the plugin", async ($, on) => {
+	const answer = { current: answerOk };
+	const r = rig(on, answer);
+	const ui = await markAndSend($, []);
+	answer.current = (c) =>
+		c.tool === "revealNode"
+			? new Error(`$.mcp.call: no connected MCP tool "${c.tool}"`)
+			: answerOk(c);
+	await ui.press({ key: "goto-n1" });
+	expect(r.toasts.at(-1)).toMatch(/update the RoadRaven plugin/);
+	expect(await ui.find({ text: /Connecting to RoadRaven/ })).toBeUndefined();
+});
+
+test("↗ against an app without revealNode says to update the app", async ($, on) => {
+	const answer = { current: answerOk };
+	const r = rig(on, answer);
+	const ui = await markAndSend($, []);
+	answer.current = (c) =>
+		c.tool === "revealNode"
+			? new Error(
+					"Error (unknown_tool): Unknown agent tool: 'revealNode'. Update the plugin to a version that matches the app.",
+				)
+			: answerOk(c);
+	await ui.press({ key: "goto-n1" });
+	expect(r.toasts.at(-1)).toMatch(/update the RoadRaven app/);
+});
+
 test("Next marks a not-started node next and tells the session", async ($, on) => {
 	const r = rig(on, { current: answerOk });
 	const session = mock.session(on);

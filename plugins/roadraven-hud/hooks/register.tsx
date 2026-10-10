@@ -4,13 +4,14 @@ import { atom, read, update } from "claude-code";
 import type { HudAgent, HudError, HudNode, HudPalette } from "../types";
 import {
 	type Data,
-	drawActive,
+	drawAgent,
 	drawFixing,
 	drawFullNotes,
 	drawHeader,
 	drawSaved,
 	drawSent,
 	drawUatTitle,
+	drawUnowned,
 	hasMoreNotes,
 	isBusy,
 	notReady,
@@ -34,6 +35,7 @@ import {
 	nextPlan,
 	plainError,
 	q,
+	revealFailure,
 	reviewedText,
 	running,
 	type Saved,
@@ -51,6 +53,7 @@ import {
 import {
 	CONN,
 	cleanNotes,
+	codeOf,
 	connKind,
 	describeAction,
 	flatten,
@@ -184,7 +187,7 @@ async function batch<T extends { updates: Update[] }>(
 	try {
 		return await batchOnce($, plan);
 	} catch (err) {
-		if (!/stale_write/.test(errText(err))) throw err;
+		if (codeOf(errText(err)) !== "stale_write") throw err;
 		return batchOnce($, plan);
 	}
 }
@@ -792,6 +795,15 @@ async function prioritise($: EngineInterface, themeChoice: string, n: HudNode) {
 	await refresh($, themeChoice);
 }
 
+// Go to app: RoadRaven selects and centres the node and comes to the front.
+async function goToApp($: EngineInterface, id: string) {
+	try {
+		await callRR($, "revealNode", { nodeId: id });
+	} catch (err) {
+		$.ui.toast(revealFailure(errText(err), (await read($, error)) === null));
+	}
+}
+
 // --- drawing ------------------------------------------------------------------------------------
 
 function drawChoice(
@@ -881,12 +893,67 @@ function drawUatNotes(
 	);
 }
 
+function drawGoTo($: EngineInterface, { els }: View, n: HudNode) {
+	return (
+		<els.Button
+			key={`goto-${n.id}`}
+			plain
+			label=" ↗ "
+			onPress={() => goToApp($, n.id)}
+		/>
+	);
+}
+
+function drawActiveNode($: EngineInterface, v: View, d: Data, n: HudNode) {
+	const { Box, Text } = v.els;
+	const ownerId = d.owner[n.id];
+	const a = ownerId ? d.who[ownerId] : undefined;
+	return (
+		<Box key={n.id} flexDirection="column">
+			<Box>
+				<Box flexGrow={1}>
+					<Text wrap="truncate-end">
+						<Text color={v.P.inProgress}> ● </Text>
+						<Text color={v.P.primary}>{n.title}</Text>
+					</Text>
+				</Box>
+				{drawGoTo($, v, n)}
+			</Box>
+			{a ? drawAgent(v, a, d.act[a.id]) : drawUnowned(v, n, ownerId)}
+		</Box>
+	);
+}
+
+function drawActive(
+	$: EngineInterface,
+	v: View,
+	d: Data,
+	active: HudNode[],
+	loose: HudAgent[],
+) {
+	const { Box } = v.els;
+	return (
+		<Box flexDirection="column">
+			{pill(v, "ACTIVE WORK", active.length)}
+			{active.length === 0 && quiet(v, "nothing in progress")}
+			{active.map((n) => drawActiveNode($, v, d, n))}
+			{loose.length > 0 && pill(v, "AGENTS WITHOUT A NODE", loose.length)}
+			{loose.map((a) => (
+				<Box key={a.id}>{drawAgent(v, a, d.act[a.id])}</Box>
+			))}
+		</Box>
+	);
+}
+
 function drawUatItem($: EngineInterface, v: View, d: Data, n: HudNode) {
 	const { Box } = v.els;
 	const choice = d.decided[n.id];
 	return (
 		<Box key={n.id} flexDirection="column">
-			{drawUatTitle(v, n, choice)}
+			<Box>
+				<Box flexGrow={1}>{drawUatTitle(v, n, choice)}</Box>
+				{drawGoTo($, v, n)}
+			</Box>
 			{n.notes && drawUatNotes($, v, n, n.notes, d.notesOpen[n.id] === true)}
 			<Box marginLeft={4}>
 				{drawChoice($, v, n, "pass", choice === "pass")}
@@ -1032,6 +1099,7 @@ function drawBacklogRow($: EngineInterface, v: View, d: Data, n: HudNode) {
 				label="Next"
 				onPress={() => prioritise($, themeChoice, n)}
 			/>
+			{drawGoTo($, v, n)}
 		</Box>
 	);
 }
@@ -1100,7 +1168,7 @@ function drawPane($: EngineInterface, v: View, d: Data) {
 				d.snap.title,
 				`${working} active · ${awaiting} awaiting UAT · ${uat.length} UAT · ${backlog.length} backlog`,
 			)}
-			{drawActive(v, d, active, loose)}
+			{drawActive($, v, d, active, loose)}
 			{drawUat($, v, d, uat, nodes.filter(isFixingUat), waiting)}
 			{drawBacklog($, v, d, backlog)}
 		</v.els.Box>

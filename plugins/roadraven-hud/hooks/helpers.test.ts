@@ -4,6 +4,7 @@ import {
 	awaitingUat,
 	clean,
 	cleanNotes,
+	codeOf,
 	connKind,
 	describeAction,
 	flatten,
@@ -191,4 +192,19 @@ test("the pane title is the single root's title, else the document title", () =>
 	expect(roadmapTitle([root], "Old doc title")).toBe("RoadRaven v0.8.8");
 	expect(roadmapTitle([root, { ...root, id: "s" }], "Doc")).toBe("Doc");
 	expect(roadmapTitle([], undefined)).toBe("");
+});
+
+test("codeOf reads the code of a structured tool error, and nothing else", () => {
+	expect(
+		codeOf("Error (stale_write): Roadmap changed since your last read."),
+	).toBe("stale_write");
+	expect(codeOf("Error (unknown_tool): Unknown agent tool")).toBe(
+		"unknown_tool",
+	);
+	expect(
+		codeOf('$.mcp.call: no connected MCP tool "revealNode"'),
+	).toBeUndefined();
+	expect(
+		codeOf("the reply mentions Error (stale_write) later"),
+	).toBeUndefined();
 });

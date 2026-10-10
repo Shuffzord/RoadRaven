@@ -1,7 +1,7 @@
 // The pane's pure helpers: what to write, what to say, with no `$` and no state.
 import type { TurnUsage } from "claude-code";
 import type { HudAgent, HudNode } from "../types";
-import { CONN, clean, connKind, isReadyUat } from "./roadmap";
+import { CONN, clean, codeOf, connKind, isReadyUat } from "./roadmap";
 
 const AGENTS_KEPT = 50;
 
@@ -81,6 +81,16 @@ export const mergeOwners = (
 // Only the entries keyed by a node id still in the tree.
 export const inTree = (all: Record<string, string>, ids: Set<string>) =>
 	Object.fromEntries(Object.entries(all).filter(([id]) => ids.has(id)));
+
+// Why Go to app did nothing, in words: an app or a plugin from before revealNode says so.
+// A plugin's server without the tool answers "no connected MCP tool" while the polls work.
+export function revealFailure(detail: string, isOnline: boolean) {
+	if (codeOf(detail) === "unknown_tool")
+		return "RoadRaven · Go to app needs a newer app: update the RoadRaven app";
+	if (isOnline && connKind(detail) === "connecting")
+		return "RoadRaven · Go to app needs a newer plugin: update the RoadRaven plugin";
+	return `RoadRaven · couldn't show it in RoadRaven: ${plainError(detail)}`;
+}
 
 export const failReason = (
 	d: Decision,

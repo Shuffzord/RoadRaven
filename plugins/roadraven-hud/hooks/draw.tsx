@@ -81,7 +81,7 @@ function drawDoing({ els, P }: View, a: HudAgent, doing: string | undefined) {
 	);
 }
 
-function drawAgent(v: View, a: HudAgent, doing: string | undefined) {
+export function drawAgent(v: View, a: HudAgent, doing: string | undefined) {
 	const { Box, Text } = v.els;
 	return (
 		<Box flexDirection="column">
@@ -99,7 +99,7 @@ function drawAgent(v: View, a: HudAgent, doing: string | undefined) {
 }
 
 // No agent linked: a phase only waiting on ready UAT says so instead of looking stalled.
-function drawUnowned(
+export function drawUnowned(
 	{ els, P }: View,
 	n: HudNode,
 	ownerId: string | undefined,
@@ -115,41 +115,6 @@ function drawUnowned(
 			{"    "}
 			{ownerId === "main" ? "main session" : "no agent"}
 		</els.Text>
-	);
-}
-
-function drawActiveNode(v: View, d: Data, n: HudNode) {
-	const { Box, Text } = v.els;
-	const ownerId = d.owner[n.id];
-	const a = ownerId ? d.who[ownerId] : undefined;
-	return (
-		<Box key={n.id} flexDirection="column">
-			<Text wrap="truncate-end">
-				<Text color={v.P.inProgress}> ● </Text>
-				<Text color={v.P.primary}>{n.title}</Text>
-			</Text>
-			{a ? drawAgent(v, a, d.act[a.id]) : drawUnowned(v, n, ownerId)}
-		</Box>
-	);
-}
-
-export function drawActive(
-	v: View,
-	d: Data,
-	active: HudNode[],
-	loose: HudAgent[],
-) {
-	const { Box } = v.els;
-	return (
-		<Box flexDirection="column">
-			{pill(v, "ACTIVE WORK", active.length)}
-			{active.length === 0 && quiet(v, "nothing in progress")}
-			{active.map((n) => drawActiveNode(v, d, n))}
-			{loose.length > 0 && pill(v, "AGENTS WITHOUT A NODE", loose.length)}
-			{loose.map((a) => (
-				<Box key={a.id}>{drawAgent(v, a, d.act[a.id])}</Box>
-			))}
-		</Box>
 	);
 }
 
