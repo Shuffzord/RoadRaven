@@ -13,6 +13,7 @@ import {
 	lastFailure,
 	moreInformative,
 	type RawNode,
+	roadmapTitle,
 	shortModel,
 	shownKind,
 	since,
@@ -182,4 +183,11 @@ test("connection errors read as plain states, the most informative kept", () => 
 	expect(shownKind(down, true)).toBe("connecting");
 	expect(shownKind(down, false)).toBe("offline");
 	expect(shownKind("Error (no_file_loaded)", true)).toBe("noFile");
+});
+
+test("the pane title is the single root's title, else the document title", () => {
+	const root = { id: "r", title: "RoadRaven v0.8.8", status: "in-progress" };
+	expect(roadmapTitle([root], "Old doc title")).toBe("RoadRaven v0.8.8");
+	expect(roadmapTitle([root, { ...root, id: "s" }], "Doc")).toBe("Doc");
+	expect(roadmapTitle([], undefined)).toBe("");
 });

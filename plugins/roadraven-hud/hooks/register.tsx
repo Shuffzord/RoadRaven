@@ -26,6 +26,7 @@ import {
 	lastFailure,
 	moreInformative,
 	type RawNode,
+	roadmapTitle,
 	shortModel,
 	shownKind,
 	since,
@@ -281,7 +282,7 @@ async function syncSnapshot($: EngineInterface) {
 	await adoptRoadmap($, filePath);
 	const nodes = flatten((schema.nodes ?? []) as RawNode[]);
 	await update($, snapshot, () => ({
-		title: String(schema.title ?? ""),
+		title: roadmapTitle((schema.nodes ?? []) as RawNode[], schema.title),
 		nodes,
 	}));
 	if ((await read($, error)) !== null) await update($, error, () => null);

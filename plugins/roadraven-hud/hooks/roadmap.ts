@@ -118,6 +118,14 @@ function toHudNode(n: RawNode, depth: number): HudNode {
 }
 
 // The tree in reading order, each node with its depth.
+// The pane's title: the root node's title when the roadmap has a single root
+// (what the user sees and renames on the canvas), else the document's own title.
+export function roadmapTitle(nodes: RawNode[], docTitle: unknown): string {
+	const [root, ...rest] = nodes;
+	if (root && rest.length === 0) return clean(root.title);
+	return clean(String(docTitle ?? ""));
+}
+
 export function flatten(list: RawNode[], depth = 0): HudNode[] {
 	return list.flatMap((n) => [
 		toHudNode(n, depth),
