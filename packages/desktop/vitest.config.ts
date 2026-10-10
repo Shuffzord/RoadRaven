@@ -39,7 +39,6 @@ export default defineConfig({
 		// test files do `afterEach(resetStore)`; reversed, that reset runs before
 		// RTL's cleanup() and re-renders still-mounted components outside act().
 		sequence: { hooks: "list" },
-		environmentMatchGlobs: [["tests/unit/ui/**/*.test.{ts,tsx}", "jsdom"]],
 		benchmark: {
 			include: ["tests/bench/**/*.bench.ts"],
 			environment: "node",
