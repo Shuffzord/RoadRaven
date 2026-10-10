@@ -126,7 +126,13 @@ export function getRoadmapCallback(wsClient: WsClientLike) {
 		const { omitNotes, ...rest } = args ?? {};
 		const result = await base(rest);
 		if (omitNotes !== true || result.isError) return result;
-		const parsed = JSON.parse(result.content[0].text);
+		// omitNotes is only an optimisation: anything unparseable passes through.
+		let parsed: { schema?: { nodes?: unknown[] } } | undefined;
+		try {
+			parsed = JSON.parse(result.content[0]?.text as string);
+		} catch {
+			return result;
+		}
 		stripNotes(parsed?.schema?.nodes ?? []);
 		return {
 			content: [

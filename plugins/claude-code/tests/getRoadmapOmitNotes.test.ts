@@ -51,3 +51,14 @@ describe("getRoadmap omitNotes", () => {
 		expect(client.request).toHaveBeenCalledWith("getRoadmap", {});
 	});
 });
+
+describe("getRoadmap omitNotes passthrough", () => {
+	// request() resolving undefined makes the base callback's text undefined
+	// (JSON.stringify(undefined)), i.e. a success body that is not JSON.
+	it("returns a non-JSON success body unchanged without throwing", async () => {
+		const client = { request: vi.fn().mockResolvedValue(undefined) };
+		const out = await getRoadmapCallback(client)({ omitNotes: true });
+		expect(out.isError).toBeUndefined();
+		expect(out.content[0].text).toBeUndefined();
+	});
+});
