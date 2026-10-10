@@ -138,11 +138,7 @@ A **mod** for Claude Code: a brand-new kind of extension that changes Claude Cod
 - Backlog **Run** / **Next** buttons
 - Follows the app theme
 
-<!-- screenshot: capture pending -->
-![Agents working on nodes in the HUD pane](docs/images/hud-active-work.png)
-
-<!-- screenshot: capture pending -->
-![UAT section with Pass and Fail buttons](docs/images/hud-uat.png)
+![UAT section with Pass and Fail buttons](screenshots/hud-uat.png)
 
 Ships with the plugin: `/plugin install roadraven@roadraven`. [Details →](plugins/roadraven-hud/README.md)
 

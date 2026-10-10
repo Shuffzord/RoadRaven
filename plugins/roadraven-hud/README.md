@@ -5,11 +5,7 @@ Code's own interface. It adds a live RoadRaven pane inside your terminal
 session, plus a status-line entry such as `RR 2 active · 1 UAT`. The pane
 opens at session start on wide terminals, or any time with `/roadraven`.
 
-<!-- screenshot: capture pending -->
-![Agents working on nodes in the HUD pane](../../docs/images/hud-active-work.png)
-
-<!-- screenshot: capture pending -->
-![UAT section with Pass and Fail buttons](../../docs/images/hud-uat.png)
+![UAT section with Pass and Fail buttons](../../screenshots/hud-uat.png)
 
 ## Install
 
