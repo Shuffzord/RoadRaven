@@ -29,7 +29,7 @@ export function lastFailure(notes = "") {
 	return m && { date: m[1] ?? "", reason: (m[2] ?? "").trim() };
 }
 
-export const isUat = (n: HudNode) => n.type?.toLowerCase() === "uat";
+export const isUat = (n: { type?: string }) => n.type?.toLowerCase() === "uat";
 // Ready to test (in-progress) or failed before and open to a re-test (blocked).
 export const isReadyUat = (n: HudNode) =>
 	isUat(n) && (n.status === "in-progress" || n.status === "blocked");
@@ -46,6 +46,26 @@ export function since(startedAt: number, now = Date.now()): string {
 	return s < 60 ? `${s}s` : `${Math.floor(s / 60)}m ${s % 60}s`;
 }
 
+const openChildren = (n: RawNode) =>
+	(n.children ?? []).filter((c) => c.status !== "completed");
+
+// How many ready (in-progress) UAT checks a node waits on, when they are all its open children.
+export function awaitingUat(n: RawNode): number | undefined {
+	if (isUat(n)) return undefined;
+	const open = openChildren(n);
+	const ready = open.filter((c) => isUat(c) && c.status === "in-progress");
+	return open.length > 0 && ready.length === open.length
+		? ready.length
+		: undefined;
+}
+
+// In-progress non-UAT nodes, and how many of them only wait on UAT.
+export function workCounts(nodes: HudNode[]) {
+	const active = nodes.filter((n) => n.status === "in-progress" && !isUat(n));
+	const awaiting = active.filter((n) => n.awaitingUat).length;
+	return { active, working: active.length - awaiting, awaiting };
+}
+
 function toHudNode(n: RawNode, depth: number): HudNode {
 	const priority = n.metadata?.priority;
 	return {
@@ -56,6 +76,7 @@ function toHudNode(n: RawNode, depth: number): HudNode {
 		type: n.type,
 		notes: n.notes ? cleanNotes(n.notes) : undefined,
 		priority: typeof priority === "string" ? priority : undefined,
+		awaitingUat: awaitingUat(n),
 	};
 }
 

@@ -1,6 +1,7 @@
 import { expect, test } from "claude-code/testing";
 
 import {
+	awaitingUat,
 	clean,
 	cleanNotes,
 	describeAction,
@@ -9,6 +10,7 @@ import {
 	isUat,
 	kTokens,
 	lastFailure,
+	type RawNode,
 	shortModel,
 	since,
 } from "./roadmap";
@@ -134,4 +136,31 @@ test("lastFailure finds the latest UAT failure reason", () => {
 			"Open it\nthen click\n\n**UAT failed** (2026-10-01): first\n\n**UAT failed** (2026-10-09): second one\nafter",
 		),
 	).toEqual({ date: "2026-10-09", reason: "second one" });
+});
+
+test("awaitingUat counts ready UAT checks only when they are all a node's open children", () => {
+	const uat = (status: string) => ({
+		id: "u",
+		title: "U",
+		status,
+		type: "uat",
+	});
+	const phase = (...children: RawNode[]) => ({
+		id: "p",
+		title: "P",
+		status: "in-progress",
+		children,
+	});
+	const done = { id: "d", title: "D", status: "completed" };
+	const open = { id: "o", title: "O", status: "in-progress" };
+	expect(awaitingUat(phase(done, uat("in-progress"), uat("in-progress")))).toBe(
+		2,
+	);
+	expect(
+		awaitingUat(phase(uat("in-progress"), uat("not-started"))),
+	).toBeUndefined();
+	expect(awaitingUat(phase(uat("blocked")))).toBeUndefined();
+	expect(awaitingUat(phase(uat("in-progress"), open))).toBeUndefined();
+	expect(awaitingUat(phase())).toBeUndefined();
+	expect(awaitingUat(phase(done))).toBeUndefined();
 });

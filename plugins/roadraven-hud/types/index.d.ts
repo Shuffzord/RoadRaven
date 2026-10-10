@@ -17,6 +17,7 @@ export type HudNode = {
 	type?: string;
 	notes?: string;
 	priority?: string;
+	awaitingUat?: number;
 };
 
 export type HudSent = { count: number; at: number; isAwake: boolean };

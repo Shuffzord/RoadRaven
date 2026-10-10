@@ -25,6 +25,7 @@ import {
 	type RawNode,
 	shortModel,
 	since,
+	workCounts,
 } from "./roadmap";
 import { AMBER, toPalette } from "./theme";
 
@@ -282,10 +283,10 @@ async function syncSnapshot($: EngineInterface) {
 		$,
 		nodes.filter((n) => isUat(n) && n.status === "in-progress"),
 	);
-	const active = nodes.filter(
-		(n) => n.status === "in-progress" && !isUat(n),
-	).length;
-	$.ui.status(`RR ${active} active · ${nodes.filter(isReadyUat).length} UAT`);
+	const { working, awaiting } = workCounts(nodes);
+	$.ui.status(
+		`RR ${working} active · ${awaiting} awaiting · ${nodes.filter(isReadyUat).length} UAT`,
+	);
 }
 
 // ponytail: polls the whole tree every 4s; add a push frame to the event API if trees get large.
@@ -548,25 +549,37 @@ function drawAgent(v: View, a: HudAgent, doing: string | undefined) {
 	);
 }
 
+// No agent linked: a phase only waiting on ready UAT says so instead of looking stalled.
+function drawUnowned(
+	{ els, P }: View,
+	n: HudNode,
+	ownerId: string | undefined,
+) {
+	if (n.awaitingUat)
+		return (
+			<els.Text color={P.accent}>
+				{`    ◆ awaiting UAT · ${n.awaitingUat} check(s)`}
+			</els.Text>
+		);
+	return (
+		<els.Text color={P.tertiary}>
+			{"    "}
+			{ownerId === "main" ? "main session" : "no agent"}
+		</els.Text>
+	);
+}
+
 function drawActiveNode(v: View, d: Data, n: HudNode) {
 	const { Box, Text } = v.els;
 	const ownerId = d.owner[n.id];
 	const a = ownerId ? d.who[ownerId] : undefined;
-	const unowned = ownerId === "main" ? "main session" : "no agent";
 	return (
 		<Box key={n.id} flexDirection="column">
 			<Text wrap="truncate-end">
 				<Text color={v.P.inProgress}> ● </Text>
 				<Text color={v.P.primary}>{n.title}</Text>
 			</Text>
-			{a ? (
-				drawAgent(v, a, d.act[a.id])
-			) : (
-				<Text color={v.P.tertiary}>
-					{"    "}
-					{unowned}
-				</Text>
-			)}
+			{a ? drawAgent(v, a, d.act[a.id]) : drawUnowned(v, n, ownerId)}
 		</Box>
 	);
 }
@@ -891,7 +904,7 @@ function drawBacklog(
 
 function drawPane($: EngineInterface, v: View, d: Data) {
 	const nodes = d.snap.nodes;
-	const active = nodes.filter((n) => n.status === "in-progress" && !isUat(n));
+	const { active, working, awaiting } = workCounts(nodes);
 	const uat = nodes.filter(isReadyUat);
 	const waiting = nodes.filter(
 		(n) => isUat(n) && n.status === "not-started",
@@ -912,7 +925,7 @@ function drawPane($: EngineInterface, v: View, d: Data) {
 			{drawHeader(
 				v,
 				d.snap.title,
-				`${active.length} active · ${uat.length} UAT · ${backlog.length} backlog`,
+				`${working} active · ${awaiting} awaiting UAT · ${uat.length} UAT · ${backlog.length} backlog`,
 			)}
 			{drawActive(v, d, active, loose)}
 			{drawUat($, v, d, uat, waiting)}

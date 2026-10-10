@@ -30,6 +30,20 @@ const roadmap = {
 				children: [
 					{ id: "n1", title: "Wire auth", status: "in-progress", type: "task" },
 					{
+						id: "p1",
+						title: "Search phase",
+						status: "in-progress",
+						children: [
+							{ id: "t1", title: "Index", status: "completed" },
+							{
+								id: "u5",
+								title: "Search works",
+								status: "in-progress",
+								type: "uat",
+							},
+						],
+					},
+					{
 						id: "u1",
 						title: "Login works",
 						status: "in-progress",
@@ -102,6 +116,12 @@ test("pane lists active work and pending UAT; batched Pass is written on Send", 
 		expect(await ui.find({ text: /Already accepted/ })).toBeUndefined();
 		expect(await ui.find({ text: /Not built yet/ })).toBeUndefined();
 		expect(
+			await ui.find({ text: /◆ awaiting UAT · 1 check\(s\)/ }),
+		).toBeDefined();
+		expect(
+			await ui.find({ text: /1 active · 1 awaiting UAT · 3 UAT · 1 backlog/ }),
+		).toBeDefined();
+		expect(
 			await ui.find({ text: /✗ failed \(2026-10-09\): file is empty/ }),
 		).toBeDefined();
 		expect(await ui.find({ text: /failed before/ })).toBeUndefined();
@@ -130,7 +150,7 @@ test("pane lists active work and pending UAT; batched Pass is written on Send", 
 
 	expect(stored[STORE_KEY]).toMatchObject({
 		owners: { n1: "a1" },
-		seenUat: ["u1"],
+		seenUat: ["u5", "u1"],
 	});
 	expect(writes).toEqual([
 		{
