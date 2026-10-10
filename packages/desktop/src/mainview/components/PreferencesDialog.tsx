@@ -279,7 +279,12 @@ function updateAction(
 		return { label: UPDATE_DOWNLOAD_LABEL, run: downloadUpdate };
 	if (status === "ready")
 		return { label: UPDATE_RESTART_LABEL, run: restartToUpdate };
-	if (status === "idle" || status === "up-to-date" || status === "error")
+	if (
+		status === "idle" ||
+		status === "up-to-date" ||
+		status === "error" ||
+		status === "checking"
+	)
 		return { label: UPDATE_CHECK_LABEL, run: checkForUpdates };
 	return null;
 }
@@ -296,10 +301,15 @@ function UpdateSection({
 }) {
 	const state = useUpdateStore((s) => s.state);
 	const action = updateAction(state.status);
+	const isError = state.status === "error";
 
 	return (
 		<>
-			<p data-testid={UPDATE_STATUS_TESTID} style={dialogHelperTextStyle}>
+			<p
+				data-testid={UPDATE_STATUS_TESTID}
+				role={isError ? "alert" : undefined}
+				style={isError ? dialogErrorTextStyle : dialogHelperTextStyle}
+			>
 				{describeUpdateState(state)}
 			</p>
 			{action && (
@@ -307,6 +317,8 @@ function UpdateSection({
 					<button
 						type="button"
 						onClick={() => void action.run()}
+						// Stays rendered while checking so the row does not flash.
+						disabled={state.status === "checking"}
 						style={dialogSecondaryButtonStyle}
 					>
 						{action.label}

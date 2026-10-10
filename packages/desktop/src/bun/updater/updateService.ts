@@ -105,6 +105,14 @@ export function createUpdateService({
 
 	function setState(next: UpdateState): void {
 		if (next === state) return;
+		// Electrobun reports one failure twice: an error status entry, then the
+		// same message in UpdateInfo.error.
+		if (
+			next.status === "error" &&
+			state.status === "error" &&
+			next.message === state.message
+		)
+			return;
 		if (next.status === "error") {
 			log.warn`Update error: ${next.message}`;
 		} else if (next.status !== state.status) {
