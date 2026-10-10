@@ -71,6 +71,8 @@ jobs:
           key: ${{ runner.os }}-hutch-${{ hashFiles('**/bun.lock') }}
       - run: bun install
       - run: bunx vitest run
+      - name: Event server tests (bun test, outside vitest)
+        run: bun run --cwd packages/desktop test:bun
         working-directory: packages/desktop
       # Single file on purpose: installer-artifacts.test.ts in the same folder
       # throws under CI=true when no Electrobun build has produced artifacts.
