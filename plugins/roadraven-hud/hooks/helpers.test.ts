@@ -177,6 +177,10 @@ test("connection errors read as plain states", () => {
 	expect(connKind(down)).toBe("offline");
 	expect(connKind("Error (no_file_loaded): no roadmap")).toBe("noFile");
 	expect(connKind("Unexpected token < in JSON")).toBe("other");
+	// Verbatim, as Claude Code 2026-10-10 words it.
+	const notice =
+		"Error: result (65,329 characters across 795 lines) exceeds maximum allowed tokens. Output has been saved to /home/u/.claude/projects/x/tool-results/mcp-roadraven-getRoadmap-1.txt.";
+	expect(connKind(notice)).toBe("tooLarge");
 	expect(shownKind(down, true)).toBe("connecting");
 	expect(shownKind(down, false)).toBe("offline");
 	expect(shownKind("Error (no_file_loaded)", true)).toBe("noFile");

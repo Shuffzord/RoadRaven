@@ -5,6 +5,7 @@ import {
 	getConsoleSink,
 	getLogger,
 	getStreamSink,
+	type LoggerConfig,
 } from "@logtape/logtape";
 import type { FileSink } from "bun";
 // Rename is isolated in its own module so unit tests can spy on the call site
@@ -50,6 +51,25 @@ export function rotateLogFile(logFilePath: string): void {
 	}
 }
 
+// Every getLogger category in src/bun must sit under one of these (guarded by loggerCoverage.test.ts).
+export const LOGGER_CONFIGS: LoggerConfig<string, string>[] = [
+	{
+		category: ["bun"],
+		lowestLevel: "debug", // D-25: debug in dev, info in prod
+		sinks: ["console", "file"],
+	},
+	{
+		category: ["roadraven"], // events server + agent handler sub-categories
+		lowestLevel: "debug", // same D-25 policy as ["bun"]
+		sinks: ["console", "file"],
+	},
+	{
+		category: ["webview"],
+		lowestLevel: "debug",
+		sinks: ["file"], // forwarded webview logs go to file only
+	},
+];
+
 export async function setupBunLogging(): Promise<void> {
 	const logDir = getLogDirectory();
 	if (!existsSync(logDir)) {
@@ -82,18 +102,7 @@ export async function setupBunLogging(): Promise<void> {
 			console: getConsoleSink(),
 			file: getStreamSink(fileWritable),
 		},
-		loggers: [
-			{
-				category: ["bun"],
-				lowestLevel: "debug", // D-25: debug in dev, info in prod
-				sinks: ["console", "file"],
-			},
-			{
-				category: ["webview"],
-				lowestLevel: "debug",
-				sinks: ["file"], // forwarded webview logs go to file only
-			},
-		],
+		loggers: LOGGER_CONFIGS,
 	});
 }
 

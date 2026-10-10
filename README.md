@@ -94,8 +94,13 @@ Code plugin below is already installed, the wizard defers to it.
 /plugin install roadraven@roadraven
 ```
 
+Claude Code doesn't refresh third-party marketplaces on its own: turn on
+auto-update for `roadraven` in `/plugin` → Marketplaces, or run
+`/plugin marketplace update roadraven` before `/plugin update
+roadraven@roadraven` when the app tells you the plugin is out of date.
+
 **Any other MCP host.** Requires **Node.js >= 24**. Pin the version that
-matches your installed app (the app warns on a major.minor mismatch):
+matches your installed app (the app warns when the versions differ):
 
 ```bash
 claude mcp add -s user roadraven -- npx -y @roadraven/mcp@0.8.8

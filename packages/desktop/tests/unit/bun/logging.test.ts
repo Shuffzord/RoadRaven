@@ -11,8 +11,13 @@ import {
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { getLogger, reset } from "@logtape/logtape";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { rotateLogFile } from "../../../src/bun/logging";
+import {
+	rotateLogFile,
+	serverLogger,
+	setupBunLogging,
+} from "../../../src/bun/logging";
 import * as renameModule from "../../../src/bun/renameSync";
 
 describe("rotateLogFile", () => {
@@ -75,5 +80,42 @@ describe("rotateLogFile", () => {
 		expect(() => rotateLogFile(logPath)).not.toThrow();
 		// Original file is untouched since the rename failed.
 		expect(existsSync(logPath)).toBe(true);
+	});
+});
+
+describe("setupBunLogging", () => {
+	afterEach(async () => {
+		vi.unstubAllGlobals();
+		vi.unstubAllEnvs();
+		await reset();
+	});
+
+	it("routes roadraven.* categories (server, agent) to the file sink", async () => {
+		const tempDir = mkdtempSync(join(tmpdir(), "rr-log-setup-test-"));
+		vi.stubEnv("XDG_DATA_HOME", tempDir);
+		vi.stubEnv("LOCALAPPDATA", tempDir);
+		vi.stubEnv("HOME", tempDir);
+		const written: string[] = [];
+		vi.stubGlobal("Bun", {
+			file: () => ({
+				writer: () => ({
+					write: (c: Uint8Array | string) =>
+						written.push(
+							typeof c === "string" ? c : new TextDecoder().decode(c),
+						),
+					flush: () => undefined,
+				}),
+			}),
+		});
+
+		await setupBunLogging();
+		serverLogger.info("Hello frame version=1");
+		getLogger(["roadraven", "agent"]).info("agent request ok");
+
+		await new Promise((r) => setTimeout(r, 20)); // stream sink writes async
+		const out = written.join("");
+		expect(out).toContain("Hello frame version=1");
+		expect(out).toContain("agent request ok");
+		rmSync(tempDir, { recursive: true, force: true });
 	});
 });

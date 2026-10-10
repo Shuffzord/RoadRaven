@@ -28,6 +28,7 @@ const roadmap = {
 				id: "root",
 				title: "Root",
 				status: "not-started",
+				notes: "Root brief\nsecond line",
 				children: [
 					{ id: "n1", title: "Wire auth", status: "in-progress", type: "task" },
 					{
@@ -82,8 +83,7 @@ test("pane lists active work and pending UAT; batched Pass is written on Send", 
 	on("mcp.call", (_$, e) => {
 		if (e.tool === "updateNodes" || e.tool === "updateNodeNotes")
 			writes.push({ tool: e.tool, ...e.args });
-		const text =
-			e.tool === "getRoadmap" ? JSON.stringify(roadmap) : '{"ok":true}';
+		const text = answerRR(e);
 		return { value: { content: [{ type: "text", text }], isError: false } };
 	});
 	on("ui.open", () => ({ value: { isPlaced: true } }));
@@ -114,6 +114,7 @@ test("pane lists active work and pending UAT; batched Pass is written on Send", 
 		expect(await ui.find({ text: /auth-worker/ })).toBeDefined();
 		expect(await ui.find({ text: /done/ })).toBeDefined();
 		expect(await ui.find({ text: /Login works/ })).toBeDefined();
+		expect(await ui.find({ text: /Open the app/ })).toBeDefined();
 		expect(await ui.find({ text: /Already accepted/ })).toBeUndefined();
 		expect(await ui.find({ text: /Not built yet/ })).toBeUndefined();
 		expect(
@@ -196,14 +197,60 @@ test("a server that isn't connected yet reads as connecting, and Retry asks agai
 	expect(asks).toBeGreaterThan(before);
 });
 
+// What RoadRaven answers: getRoadmap leaves notes out on omitNotes; findNodes and getNode carry them.
+type N = { id: string; type?: string; notes?: string; children?: N[] };
+const strip = ({ notes: _, children, ...rest }: N): N =>
+	children ? { ...rest, children: children.map(strip) } : rest;
+const walk = (list: N[]): N[] =>
+	list.flatMap((n) => [n, ...walk(n.children ?? [])]);
+type Rm = { schema: { nodes: N[] } };
+type Q = { tool: string; args: Record<string, unknown> };
+const ANSWERS: Record<string, (c: Q, rm: Rm) => unknown> = {
+	getRoadmap: (c, rm) =>
+		c.args.omitNotes
+			? { ...rm, schema: { ...rm.schema, nodes: rm.schema.nodes.map(strip) } }
+			: rm,
+	findNodes: (c, rm) => ({
+		nodes: walk(rm.schema.nodes)
+			.filter((n) => n.type === c.args.type)
+			.map((node) => ({ node, parentId: null })),
+	}),
+	getNode: (c, rm) => ({
+		node: walk(rm.schema.nodes).find((n) => n.id === c.args.nodeId),
+	}),
+};
+function answerRR(c: Q, rm: Rm = roadmap) {
+	return JSON.stringify(ANSWERS[c.tool]?.(c, rm) ?? { ok: true });
+}
+
+test("a roadmap over Claude Code's MCP output limit reads as too large, with Retry", async ($, on) => {
+	on("mcp.call", () => {
+		const text =
+			"Error: result (65,329 characters across 795 lines) exceeds maximum allowed tokens. Output has been saved to /home/u/.claude/projects/x/tool-results/mcp-roadraven-getRoadmap-1.txt.";
+		return { value: { content: [{ type: "text", text }], isError: false } };
+	});
+	on("ui.open", () => ({ value: { isPlaced: true } }));
+	on("ui.status", () => ({ value: undefined }));
+	await $.command.run({ command: "roadraven", args: "" } as never);
+	const ui = await $.ui.mount({
+		plugin: "roadraven-hud",
+		surface: "terminal",
+		component: "Pane",
+		requestId: "roadraven",
+		props: { title: "RoadRaven", isFocused: true, bodyColumns: 80 } as never,
+	});
+	expect(await ui.find({ text: /too large for Claude Code/ })).toBeDefined();
+	expect(await ui.find({ text: /JSON Parse/ })).toBeUndefined();
+	expect(await ui.find({ key: "rr-retry" })).toBeDefined();
+});
+
 // --- the write paths ------------------------------------------------------------------------------
 
 type Call = { server: string; tool: string; args: Record<string, unknown> };
 // An answer per call: a string is the tool's text, an Error its error text.
 type Answer = (c: Call) => string | Error;
 
-const answerOk: Answer = (c) =>
-	c.tool === "getRoadmap" ? JSON.stringify(roadmap) : '{"ok":true}';
+const answerOk: Answer = (c) => answerRR(c);
 
 function rig(on: On, answer: { current: Answer }) {
 	const calls: Call[] = [];
@@ -297,10 +344,7 @@ test("Send re-reads the roadmap and skips a node no longer ready", async ($, on)
 	const r = rig(on, answer);
 	const ui = await markAndSend($, ["pass-u1", "pass-u3"]);
 	const moved = withStatus("u3", "completed");
-	answer.current = (c) =>
-		c.tool === "getRoadmap"
-			? JSON.stringify({ ...moved, revision: 7 })
-			: '{"ok":true}';
+	answer.current = (c) => answerRR(c, { ...moved, revision: 7 });
 	await ui.press({ key: "uat-submit" });
 	expect(r.writes("updateNodes").map((c) => c.args)).toEqual([
 		{
@@ -367,6 +411,9 @@ test("Run asks first, and won't start a second agent", async ($, on) => {
 	});
 	const ui = await markAndSend($, ["backlog-toggle", "run-root"]);
 	expect(await ui.find({ text: /Start an agent on Root/ })).toBeDefined();
+	expect(r.writes("getNode").map((c) => c.args)).toEqual([{ nodeId: "root" }]);
+	expect(await ui.find({ text: /Root brief/ })).toBeDefined();
+	expect(await ui.find({ text: /second line/ })).toBeUndefined();
 	expect(spawns).toEqual([]);
 	const started = ui.press({ key: "run-start-root" });
 	await didSpawn;
@@ -401,4 +448,52 @@ test("the pane opens by itself only once RoadRaven answers with a roadmap", asyn
 	await clock.advance(4000);
 	await clock.advance(4000);
 	expect(r.opens).toHaveLength(1);
+});
+
+test("polls ask for the tree without notes and fetch UAT notes with findNodes", async ($, on) => {
+	const answer = { current: answerOk };
+	const r = rig(on, answer);
+	await $.command.run({ command: "roadraven", args: "" } as never);
+	expect(r.writes("getRoadmap").map((c) => c.args)).toEqual([
+		{ omitNotes: true },
+	]);
+	expect(r.writes("findNodes").map((c) => c.args.type)).toEqual(["uat", "UAT"]);
+});
+
+test("UAT notes are fetched again only when a UAT status changes", async ($, on) => {
+	const answer = { current: answerOk };
+	const r = rig(on, answer);
+	await $.command.run({ command: "roadraven", args: "" } as never);
+	await $.command.run({ command: "roadraven", args: "" } as never);
+	expect(r.writes("findNodes")).toHaveLength(2); // one call per type spelling, one fetch
+	const moved = withStatus("u5", "completed");
+	answer.current = (c) => answerRR(c, moved);
+	await $.command.run({ command: "roadraven", args: "" } as never);
+	expect(r.writes("findNodes")).toHaveLength(4);
+});
+
+test("a failing findNodes keeps the last notes drawn and logs once", async ($, on) => {
+	const answer = { current: answerOk };
+	const r = rig(on, answer);
+	const logs: string[] = [];
+	on("ui.log", (_$, e) => {
+		logs.push(e.text);
+		return { value: undefined };
+	});
+	await $.command.run({ command: "roadraven", args: "" } as never);
+	const moved = withStatus("u5", "completed");
+	answer.current = (c) =>
+		c.tool === "findNodes"
+			? new Error("Error (internal): boom")
+			: answerRR(c, moved);
+	await $.command.run({ command: "roadraven", args: "" } as never);
+	await $.command.run({ command: "roadraven", args: "" } as never);
+	expect(r.writes("findNodes").length).toBeGreaterThan(2);
+	expect(logs.filter((t) => /couldn't fetch UAT notes/.test(t))).toHaveLength(
+		1,
+	);
+	const ui = await $.ui.mount(PANE_PROPS);
+	expect(await ui.find({ text: /Login works/ })).toBeDefined();
+	await ui.press({ key: "notes-u1" });
+	expect(await ui.find({ text: /Then\*\* log in/ })).toBeDefined();
 });

@@ -72,6 +72,9 @@ jobs:
       - run: bun install
       - run: bunx vitest run
         working-directory: packages/desktop
+      - name: Event server tests (bun test, outside vitest)
+        run: bun run test:bun
+        working-directory: packages/desktop
       # Single file on purpose: installer-artifacts.test.ts in the same folder
       # throws under CI=true when no Electrobun build has produced artifacts.
       - name: Test install.sh against a fake release

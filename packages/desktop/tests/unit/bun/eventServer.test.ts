@@ -187,13 +187,44 @@ describe("EventServer (WebSocket lifecycle)", () => {
 		expect(mismatchErrors[0]?.source).toBe("test-agent");
 	});
 
-	it("fires no version_mismatch error when hello version major.minor matches appVersion", async () => {
-		const { handle, errors } = await startServerCapturingErrors({
-			appVersion: "0.8.0",
+	// v0.8.9: the plugin pins an exact MCP server version, so a patch release
+	// of the app leaves plugin users one patch behind; that must toast.
+	it("fires exactly one version_mismatch error when only the patch differs", async () => {
+		const errors: Array<{ type: string; source: string; detail?: string }> = [];
+		const handle = await startTestServer({
+			appVersion: "0.8.8",
+			onError: (err) => errors.push(err),
 		});
 		if (!handle) return;
 
-		await helloAndClose(handle.port, "0.8.3");
+		await helloAndClose(handle.port, "0.8.7", "claude-code", "plugin");
+
+		const mismatch = errors.filter((e) => e.type === "version_mismatch");
+		expect(mismatch).toHaveLength(1);
+		expect(mismatch[0]?.detail).toBe("0.8.7|0.8.8|update-plugin");
+	});
+
+	it("fires a version_mismatch error when only the prerelease suffix differs", async () => {
+		const { handle, errors } = await startServerCapturingErrors({
+			appVersion: "0.9.0-canary.2",
+		});
+		if (!handle) return;
+
+		await helloAndClose(handle.port, "0.9.0-canary.1");
+
+		expect(errors.filter((e) => e.type === "version_mismatch")).toHaveLength(1);
+	});
+
+	it.each([
+		"0.8.8",
+		"0.9.0-canary.1",
+	])("fires no version_mismatch error when hello version equals appVersion %s", async (version) => {
+		const { handle, errors } = await startServerCapturingErrors({
+			appVersion: version,
+		});
+		if (!handle) return;
+
+		await helloAndClose(handle.port, version);
 
 		expect(errors.filter((e) => e.type === "version_mismatch")).toHaveLength(0);
 	});

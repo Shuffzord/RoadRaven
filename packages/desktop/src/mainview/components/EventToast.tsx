@@ -38,6 +38,8 @@ const MISMATCH_REMEDY: Record<
 	"restart-agent": () => ({
 		body: "RoadRaven updated its MCP server — restart your agent session to load it.",
 	}),
+	// Keep these commands free of quotes and of ";" inside arguments:
+	// scripts/release-smoke.ts parses them by splitting on ";" and whitespace.
 	"update-plugin": () => ({
 		body: "Update the RoadRaven plugin, then restart Claude Code:",
 		command:
