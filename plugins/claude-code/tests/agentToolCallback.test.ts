@@ -29,3 +29,13 @@ describe("agentToolCallback when the app is not running", () => {
 		);
 	});
 });
+
+describe("agentToolCallback success", () => {
+	it("returns compact JSON", async () => {
+		const result = { a: 1, b: [{ c: "d" }] };
+		const client = { request: vi.fn().mockResolvedValue(result) };
+		const out = await agentToolCallback("getNode", client)({});
+		expect(out.content[0].text).toBe(JSON.stringify(result));
+		expect(out.content[0].text).not.toContain("\n");
+	});
+});

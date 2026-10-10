@@ -25,6 +25,12 @@ describe("resolveClaudeMdPath", () => {
 	});
 });
 
+describe("CLAUDE_MD_SNIPPET", () => {
+	it("tells agents to read the roadmap with omitNotes: true", () => {
+		expect(CLAUDE_MD_SNIPPET).toContain("`getRoadmap` with `omitNotes: true`");
+	});
+});
+
 describe("applySnippet", () => {
 	it("returns just the snippet for a missing or empty file", () => {
 		expect(applySnippet(undefined)).toBe(CLAUDE_MD_SNIPPET);

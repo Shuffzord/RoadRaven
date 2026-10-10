@@ -6,6 +6,7 @@ import { detectInstallKind } from "./installKind";
 import { readSentinel } from "./sentinel";
 import {
 	agentToolCallback,
+	findNodesCallback,
 	getRoadmapCallback,
 } from "./tools/agentToolCallback";
 import {
@@ -97,7 +98,7 @@ server.registerTool(
 	{
 		title: "Get the loaded RoadRaven roadmap",
 		description:
-			"Return the full schema tree from the desktop app, with live-event statuses merged in, plus the current `revision` (pass it as expectedRevision on writes to detect stale reads). Pass omitNotes: true for polling (large roadmaps exceed the tool-result limit); fetch notes with getNode/findNodes. Requires the app to be running and a file to be loaded.",
+			"Return the full schema tree from the desktop app, with live-event statuses merged in, plus the current `revision` (pass it as expectedRevision on writes to detect stale reads). Pass omitNotes: true for polling (large roadmaps exceed the tool-result limit): it leaves out notes and the createdAt/updatedAt timestamps; fetch notes with getNode/findNodes. Requires the app to be running and a file to be loaded.",
 		inputSchema: z.object({ omitNotes: z.boolean().optional() }),
 	},
 	getRoadmapCallback(wsClient),
@@ -119,10 +120,10 @@ server.registerTool(
 	{
 		title: "Find RoadRaven nodes by structured filter",
 		description:
-			"Search nodes by AND-combined filter: titleContains (case-insensitive substring), status, type, metaKey + metaValue, parentId. All fields optional. Returns matching nodes with their parent IDs.",
+			"Search nodes by AND-combined filter: titleContains (case-insensitive substring), status, type, metaKey + metaValue, parentId. All fields optional. Returns matching nodes (without their children; use parentId or getNode for those) with their parent IDs.",
 		inputSchema: FindNodesInputSchema,
 	},
-	agentToolCallback("findNodes", wsClient),
+	findNodesCallback(wsClient),
 );
 
 server.registerTool(

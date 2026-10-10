@@ -67,8 +67,8 @@ memory; its next save wins), no changing app settings.
 ```
 
 - Put the goal node where the human says, or under the open document's top
-  node (`getRoadmap()` shows the tree; `findNodes({ titleContains })` finds
-  by name).
+  node (`getRoadmap({ omitNotes: true })` shows the tree, `getNode()` one
+  node's notes; `findNodes({ titleContains })` finds by name).
 - Call `getTypeConfig()` and `getStatusConfig()` first. Use a `type` id only
   if the document defines it; otherwise leave `type` out rather than invent
   one. Statuses are always `not-started`, `in-progress`, `completed` or
@@ -105,7 +105,7 @@ memory; its next save wins), no changing app settings.
   it: `updateNodeMetadata({ nodeId, patch: { priority: null } })`.
 - **Only write to nodes you created or were given.** The rest of the roadmap
   belongs to the human. Never delete or rename their nodes.
-- **Pass `expectedRevision`** from your last `getRoadmap()` or `getNode()`
+- **Pass `expectedRevision`** from your last read (`getNode()` or the tree)
   when a write must not clobber the human's edits; on `stale_write`, read
   again and redo. `updateNodes({ updates })` is one all-or-nothing write.
 - **Decide with defaults.** State the decision, give a one-line reason, and

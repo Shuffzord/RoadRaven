@@ -4,7 +4,7 @@
 // (test 5 in agent-contracts.test.ts) covers the delegation path for all 17 callers.
 //
 // Result shape (RESEARCH §9 — same as the existing updateNodeStatus tool):
-//   success                                    → { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] }
+//   success                                    → { content: [{ type: "text", text: JSON.stringify(shape(result)) }] }
 //   error WITH structured code+message (+hint) → { content: [Error (<code>): <msg> <hint>], isError: true }
 //   error WITHOUT a code (transport failure)   → consult sentinel:
 //                                                  app down → "Error (app_not_running): RoadRaven is not running…"
@@ -61,15 +61,18 @@ function formatStructuredError(e: {
 	};
 }
 
+// `shape` reshapes a successful result before it is serialised (compact JSON,
+// to keep tool results small); errors never reach it.
 export function agentToolCallback(
 	method: string,
 	wsClient: WsClientLike,
+	shape: (result: unknown) => unknown = (r) => r,
 ): (args: Record<string, unknown> | undefined) => Promise<McpResult> {
 	return async (args) => {
 		try {
 			const result = await wsClient.request(method, args ?? {});
 			return {
-				content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
+				content: [{ type: "text", text: JSON.stringify(shape(result)) }],
 			};
 		} catch (err: unknown) {
 			const e = err as {
@@ -108,36 +111,51 @@ export function agentToolCallback(
 	};
 }
 
-type NoteNode = { notes?: unknown; children?: NoteNode[] };
+type NoteNode = {
+	notes?: unknown;
+	createdAt?: unknown;
+	updatedAt?: unknown;
+	children?: NoteNode[];
+};
 
 function stripNotes(nodes: NoteNode[]): void {
 	for (const n of nodes) {
 		delete n.notes;
+		delete n.createdAt;
+		delete n.updatedAt;
 		if (Array.isArray(n.children)) stripNotes(n.children);
 	}
 }
 
 // getRoadmap with optional `omitNotes`: the arg is consumed here (the app never
-// sees it) and notes are stripped from the successful JSON result. Errors pass
-// through untouched.
+// sees it) and notes and timestamps are stripped from the successful result.
+// Errors and non-object results pass through untouched.
 export function getRoadmapCallback(wsClient: WsClientLike) {
-	const base = agentToolCallback("getRoadmap", wsClient);
-	return async (args: Record<string, unknown> | undefined) => {
+	const lean = agentToolCallback("getRoadmap", wsClient, (r) => {
+		stripNotes((r as { schema?: { nodes?: NoteNode[] } })?.schema?.nodes ?? []);
+		return r;
+	});
+	const full = agentToolCallback("getRoadmap", wsClient);
+	return (args: Record<string, unknown> | undefined) => {
 		const { omitNotes, ...rest } = args ?? {};
-		const result = await base(rest);
-		if (omitNotes !== true || result.isError) return result;
-		// omitNotes is only an optimisation: anything unparseable passes through.
-		let parsed: { schema?: { nodes?: unknown[] } } | undefined;
-		try {
-			parsed = JSON.parse(result.content[0]?.text as string);
-		} catch {
-			return result;
-		}
-		stripNotes(parsed?.schema?.nodes ?? []);
-		return {
-			content: [
-				{ type: "text" as const, text: JSON.stringify(parsed, null, 2) },
-			],
-		};
+		return (omitNotes === true ? lean : full)(rest);
 	};
+}
+
+type FoundNode = { node: { children?: unknown }; [key: string]: unknown };
+
+// findNodes: each match comes back without its subtree, so a status query that
+// matches the root cannot return the whole tree. Notes, metadata and parentId stay.
+export function findNodesCallback(wsClient: WsClientLike) {
+	return agentToolCallback("findNodes", wsClient, (r) => {
+		const res = r as { nodes?: FoundNode[] } | undefined;
+		if (!Array.isArray(res?.nodes)) return r;
+		return {
+			...res,
+			nodes: res.nodes.map(({ node: { children: _, ...node }, ...m }) => ({
+				...m,
+				node,
+			})),
+		};
+	});
 }
