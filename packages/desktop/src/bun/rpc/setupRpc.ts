@@ -33,9 +33,10 @@ export function createSetupRpcHandlers(appVersion: string): {
 			return getSetupStatus(appVersion, loadSettings());
 		},
 		// installMcpIntegration: copy the bundled MCP server into the user
-		// data dir and register it in the selected hosts' configs.
-		installMcpIntegration: ({ hosts }) => {
-			const result = installMcpIntegration(hosts);
+		// data dir and register it in the selected hosts' configs (Claude
+		// Code: install the plugin via the `claude` CLI, entry as fallback).
+		installMcpIntegration: async ({ hosts }) => {
+			const result = await installMcpIntegration(hosts);
 			if (result.ok) {
 				bunLogger.info`MCP integration installed: server=${result.serverPath} config=${result.configPath}`;
 			} else {

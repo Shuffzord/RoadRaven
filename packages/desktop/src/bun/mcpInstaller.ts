@@ -23,11 +23,17 @@ import {
 	writeFileSync,
 } from "node:fs";
 import { dirname, join, resolve } from "node:path";
+import {
+	type ClaudeCommand,
+	commandLine,
+	PLUGIN_INSTALL_STEPS,
+} from "../../../../shared/claudePlugin";
 import type {
 	AppSettings,
 	McpHost,
 	McpInstallStep,
 } from "../../../../shared/types";
+import { runClaudeSteps } from "./claudeCli";
 import { getUserDataDir } from "./settings";
 
 /** Key under `mcpServers` / `mcp` that RoadRaven owns. Only this key is ever touched. */
@@ -70,9 +76,15 @@ function homeDir(): string {
 	return process.env.HOME || process.env.USERPROFILE || "";
 }
 
+/** Claude Code's config dir: CLAUDE_CONFIG_DIR when set (as the CLI does), else ~/.claude. */
+function claudeDir(): string {
+	return process.env.CLAUDE_CONFIG_DIR || join(homeDir(), ".claude");
+}
+
 /** Path to the user-scope Claude Code config that stores global MCP servers. */
 export function getClaudeConfigPath(): string {
-	return join(homeDir(), ".claude.json");
+	const dir = process.env.CLAUDE_CONFIG_DIR;
+	return dir ? join(dir, ".claude.json") : join(homeDir(), ".claude.json");
 }
 
 /**
@@ -80,9 +92,7 @@ export function getClaudeConfigPath(): string {
  * the config file or the ~/.claude directory as sufficient evidence.
  */
 export function detectClaudeCode(): boolean {
-	return (
-		existsSync(getClaudeConfigPath()) || existsSync(join(homeDir(), ".claude"))
-	);
+	return existsSync(getClaudeConfigPath()) || existsSync(claudeDir());
 }
 
 /** Path to the OpenCode config. OpenCode uses `~/.config` on Windows too. */
@@ -335,7 +345,7 @@ export function isOpenCodeMcpInstalled(): boolean {
 
 /** Path to Claude Code's plugin install manifest (v2 shape). */
 function getPluginInstallPath(): string {
-	return join(homeDir(), ".claude", "plugins", "installed_plugins.json");
+	return join(claudeDir(), "plugins", "installed_plugins.json");
 }
 
 /**
@@ -471,6 +481,89 @@ function registerOpenCodeHost(dest: string): {
 	}
 }
 
+/** Runs `claude` commands as wizard steps — runClaudeSteps, or a fake in tests. */
+export type ClaudeStepsRunner = (
+	steps: readonly ClaudeCommand[],
+) => Promise<McpInstallStep[]>;
+
+const DEDUPE_LABEL = "Remove the duplicate 'roadraven' MCP server";
+
+/**
+ * Once the plugin provides the MCP server, drop the wizard's own
+ * `mcpServers.roadraven` entry — only when it points at our installed server.
+ * Someone else's `roadraven` entry is left alone with advice. Returns null
+ * when there is nothing to remove.
+ */
+function removeWizardMcpEntry(): McpInstallStep | null {
+	const path = getClaudeConfigPath();
+	const step = (status: McpInstallStep["status"], detail: string) =>
+		({
+			id: "dedupe",
+			label: DEDUPE_LABEL,
+			status,
+			detail,
+			host: "claude",
+		}) as const;
+	try {
+		const config = readClaudeConfig(); // throws on corrupt — do NOT overwrite
+		const servers = config?.mcpServers as
+			| Record<string, McpServerEntry>
+			| undefined;
+		const entry = servers?.[MCP_SERVER_NAME];
+		if (!config || !servers || !entry) return null;
+		if (entry.args?.[0] !== getInstalledMcpServerPath()) {
+			return step(
+				"skipped",
+				`Another 'roadraven' MCP server is set up in ${path}, so RoadRaven left it. To avoid having the tools twice, run in a terminal: claude mcp remove roadraven -s user`,
+			);
+		}
+		const { [MCP_SERVER_NAME]: _ours, ...rest } = servers;
+		writeClaudeConfig(path, { ...config, mcpServers: rest });
+		return step("ok", path);
+	} catch (e) {
+		return step("error", `Could not update ${path}: ${String(e)}`);
+	}
+}
+
+/** The plain-words step shown when the plugin could not be installed. */
+function pluginFallbackStep(
+	failed: McpInstallStep | undefined,
+): McpInstallStep {
+	const reason = failed?.detail
+		? `${failed.label}: ${failed.detail}`
+		: failed?.label;
+	return {
+		id: "plugin-fallback",
+		label: "Install the RoadRaven plugin yourself",
+		status: "skipped",
+		detail: `The plugin was not installed (${reason ?? "unknown error"}). RoadRaven set up its MCP server instead, so the tools still work. To also get the skills and the terminal pane, run this in a terminal: ${commandLine(PLUGIN_INSTALL_STEPS)}`,
+		host: "claude",
+	};
+}
+
+/**
+ * Claude Code: install the RoadRaven plugin with the `claude` CLI. On success
+ * the plugin brings the MCP server, so the wizard's own entry is removed; on
+ * failure fall back to registering the entry, plus the commands to run.
+ */
+async function installClaudeHost(
+	dest: string,
+	runSteps: ClaudeStepsRunner,
+): Promise<{ ok: boolean; steps: McpInstallStep[] }> {
+	const pluginSteps = await runSteps(PLUGIN_INSTALL_STEPS);
+	const failed = pluginSteps.find((s) => s.status === "error");
+	if (pluginSteps.length > 0 && !failed) {
+		const dedupe = removeWizardMcpEntry();
+		const steps = dedupe ? [...pluginSteps, dedupe] : pluginSteps;
+		return { ok: dedupe?.status !== "error", steps };
+	}
+	const registered = registerClaudeHost(dest);
+	return {
+		ok: registered.ok,
+		steps: [...pluginSteps, pluginFallbackStep(failed), ...registered.steps],
+	};
+}
+
 /**
  * Install (or refresh) the RoadRaven MCP integration for the given hosts.
  * Idempotent: re-running re-copies the server file and re-writes the same
@@ -479,10 +572,15 @@ function registerOpenCodeHost(dest: string): {
  * (the wizard only offers detected hosts, per row checkbox), those hosts are
  * targeted regardless of current detection — same as the pre-v0.8 behaviour
  * for Claude Code, which registers even when no prior config was detected.
+ * For Claude Code the RoadRaven plugin is installed with the `claude` CLI
+ * first (see installClaudeHost); the MCP entry is only the fallback.
  * `configPath` in the result always points at the Claude config (back-compat
  * with pre-v0.8 callers), regardless of which hosts were targeted.
  */
-export function installMcpIntegration(hosts?: McpHost[]): McpInstallResult {
+export async function installMcpIntegration(
+	hosts?: McpHost[],
+	runSteps: ClaudeStepsRunner = runClaudeSteps,
+): Promise<McpInstallResult> {
 	const steps: McpInstallStep[] = [];
 
 	const source = resolveBundledMcpServer();
@@ -535,7 +633,7 @@ export function installMcpIntegration(hosts?: McpHost[]): McpInstallResult {
 	let ok = true;
 
 	if (targetHosts.includes("claude")) {
-		const claude = registerClaudeHost(dest);
+		const claude = await installClaudeHost(dest, runSteps);
 		steps.push(...claude.steps);
 		if (!claude.ok) ok = false;
 	}
