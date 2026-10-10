@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import {
 	commandLine,
 	PLUGIN_INSTALL_STEPS,
@@ -8,6 +8,7 @@ import {
 	CLI_NOT_FOUND_LABEL,
 	type ClaudeRunner,
 	claudeArgv,
+	runClaude,
 	runClaudeSteps,
 } from "../../../src/bun/claudeCli";
 
@@ -138,5 +139,66 @@ describe("plugin commands", () => {
 		expect(commandLine(PLUGIN_UPDATE_STEPS)).toBe(
 			"claude plugin marketplace update roadraven; claude plugin update roadraven@roadraven; claude plugin install roadraven@roadraven; claude plugin update roadraven-hud@roadraven",
 		);
+	});
+});
+
+describe("runClaude", () => {
+	// A stream nobody closes: a grandchild still holding the pipe.
+	const openPipe = () => new ReadableStream<Uint8Array>({});
+
+	afterEach(() => {
+		vi.useRealTimers();
+	});
+
+	it("returns after a timeout even when the pipes stay open", async () => {
+		vi.useFakeTimers();
+		const proc = {
+			stdout: openPipe(),
+			stderr: openPipe(),
+			exited: Promise.resolve(143),
+			signalCode: "SIGTERM",
+			kill: vi.fn(),
+		};
+		const pending = runClaude([BIN], 1000, () => proc);
+		await vi.advanceTimersByTimeAsync(10_000);
+		const res = await pending;
+		expect(res.timedOut).toBe(true);
+		expect(res.exitCode).toBe(143);
+	});
+
+	it("kills and returns when the child never exits", async () => {
+		vi.useFakeTimers();
+		const proc = {
+			stdout: openPipe(),
+			stderr: openPipe(),
+			exited: new Promise<number>(() => {
+				// never exits
+			}),
+			signalCode: null,
+			kill: vi.fn(),
+		};
+		const pending = runClaude([BIN], 1000, () => proc);
+		await vi.advanceTimersByTimeAsync(10_000);
+		const res = await pending;
+		expect(res.timedOut).toBe(true);
+		expect(proc.kill).toHaveBeenCalledWith("SIGKILL");
+	});
+
+	it("reads the output of a normal run", async () => {
+		const text = (s: string) =>
+			new Response(s).body as ReadableStream<Uint8Array>;
+		const res = await runClaude([BIN], 1000, () => ({
+			stdout: text("out"),
+			stderr: text("err"),
+			exited: Promise.resolve(0),
+			signalCode: null,
+			kill: vi.fn(),
+		}));
+		expect(res).toEqual({
+			exitCode: 0,
+			stdout: "out",
+			stderr: "err",
+			timedOut: false,
+		});
 	});
 });

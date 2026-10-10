@@ -30,22 +30,69 @@ export const CLI_NOT_FOUND_LABEL = "Claude Code CLI not found";
 /** All steps together must finish inside the 120 s RPC limit. */
 const DEFAULT_BUDGET_MS = 100_000;
 
+/** The slice of `Bun.spawn` runClaude uses; a parameter so tests can fake it. */
+type SpawnClaude = (
+	argv: string[],
+	opts: {
+		stdin: "ignore";
+		stdout: "pipe";
+		stderr: "pipe";
+		env: typeof process.env;
+		timeout: number;
+	},
+) => {
+	stdout: ReadableStream<Uint8Array>;
+	stderr: ReadableStream<Uint8Array>;
+	exited: Promise<number>;
+	signalCode: string | null;
+	kill(signal?: string | number): void;
+};
+
 /** Default runner: no stdin, the app's env (CLAUDE_CONFIG_DIR included). */
-export const runClaude: ClaudeRunner = async (argv, timeoutMs) => {
-	const proc = Bun.spawn(argv, {
+export async function runClaude(
+	argv: string[],
+	timeoutMs: number,
+	spawn: SpawnClaude = (cmd, opts) => Bun.spawn(cmd, opts),
+): Promise<ClaudeRunResult> {
+	const proc = spawn(argv, {
 		stdin: "ignore",
 		stdout: "pipe",
 		stderr: "pipe",
 		env: process.env,
 		timeout: timeoutMs,
 	});
-	const [stdout, stderr, exitCode] = await Promise.all([
+	const output = Promise.all([
 		new Response(proc.stdout).text(),
 		new Response(proc.stderr).text(),
-		proc.exited,
 	]);
-	return { exitCode, stdout, stderr, timedOut: proc.signalCode !== null };
-};
+	// `timeout` sends SIGTERM; this backstop covers a child that ignores it.
+	const exitCode = await within(proc.exited, timeoutMs + PIPE_GRACE_MS, null);
+	if (exitCode === null) proc.kill("SIGKILL");
+	// A grandchild can keep the pipes open after the child is gone.
+	const [stdout, stderr] = await within(output, PIPE_GRACE_MS, ["", ""]);
+	return {
+		exitCode: exitCode ?? -1,
+		stdout,
+		stderr,
+		timedOut: exitCode === null || proc.signalCode !== null,
+	};
+}
+
+/** How long to wait on the pipes once the child has exited (or been killed). */
+const PIPE_GRACE_MS = 2_000;
+
+/** `promise`, or `fallback` once `ms` have passed. */
+function within<T, F>(
+	promise: Promise<T>,
+	ms: number,
+	fallback: F,
+): Promise<T | F> {
+	let timer: ReturnType<typeof setTimeout> | undefined;
+	const late = new Promise<F>((resolve) => {
+		timer = setTimeout(resolve, ms, fallback);
+	});
+	return Promise.race([promise, late]).finally(() => clearTimeout(timer));
+}
 
 /** Where `claude` usually lives when a GUI launch has a short PATH. */
 function claudeCandidates(): string[] {
