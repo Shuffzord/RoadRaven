@@ -42,12 +42,23 @@ export function createMainWindow<Rpc extends RpcInstance>(
 // The window returned by createMainWindow, without callers naming BrowserWindow.
 type MainWindowLike = Pick<
 	BrowserWindow<RpcInstance>,
-	"setTitle" | "close" | "on"
+	"setTitle" | "close" | "on" | "activate"
 >;
 
 /** Wraps BrowserWindow#setTitle (devkit sdks/main/core/BrowserWindow.ts:277). */
 export function setMainWindowTitle(win: MainWindowLike, title: string): void {
 	win.setTitle(title);
+}
+
+/**
+ * Wraps BrowserWindow#activate (devkit BrowserWindow.ts:299) — raises and
+ * focuses the window. `focus()` is the deprecated alias. The window manager
+ * may refuse (focus-stealing prevention); the call is best-effort.
+ */
+export function activateMainWindow(
+	win: Pick<MainWindowLike, "activate">,
+): void {
+	win.activate();
 }
 
 /**

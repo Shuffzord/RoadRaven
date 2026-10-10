@@ -16,6 +16,9 @@ vi.mock("../../../src/bun/saveFile", () => ({
 	setCachedMainPath: vi.fn(),
 	clearCachedMainPath: vi.fn(),
 }));
+vi.mock("../../../src/bun/platform/window", () => ({
+	activateMainWindow: vi.fn(),
+}));
 vi.mock("../../../src/bun/refMap", () => ({
 	getOwnership: vi.fn(() => new Map<string, string>()), // CR-03: real Map default
 	setOwnership: vi.fn(),
@@ -23,6 +26,7 @@ vi.mock("../../../src/bun/refMap", () => ({
 
 import { agentRequestHandler } from "../../../src/bun/agentRequestHandler";
 import { validateToolInput } from "../../../src/bun/agentToolSchemas";
+import { activateMainWindow } from "../../../src/bun/platform/window";
 import { getOwnership, setOwnership } from "../../../src/bun/refMap";
 import {
 	getCachedMainPath,
@@ -598,5 +602,49 @@ describe("agentToolSchemas — createNode.id + updateNodeNotes.mode (v0.7 Phase 
 		});
 		expect(bad.ok).toBe(false);
 		expect((bad as { ok: false; code: string }).code).toBe("invalid_input");
+	});
+});
+
+describe("agentRequestHandler — revealNode raises the window", () => {
+	beforeEach(() => {
+		vi.clearAllMocks();
+	});
+
+	it("activates the main window after the renderer reveals the node", async () => {
+		const { ws, sent } = makeWs();
+		const win = makeMainWindow(async () => ({ ok: true, data: { ok: true } }));
+		await agentRequestHandler(
+			ws,
+			makeRequest("revealNode", { nodeId: "n-1" }),
+			win,
+		);
+		expect(activateMainWindow).toHaveBeenCalledWith(win);
+		expect(JSON.parse(sent[0]).result).toEqual({ ok: true });
+	});
+
+	it("does not activate the window when the node is unknown", async () => {
+		const { ws } = makeWs();
+		const win = makeMainWindow(async () => ({
+			ok: false,
+			error: "Node 'x' not found.",
+			code: "node_not_found",
+		}));
+		await agentRequestHandler(
+			ws,
+			makeRequest("revealNode", { nodeId: "x" }),
+			win,
+		);
+		expect(activateMainWindow).not.toHaveBeenCalled();
+	});
+
+	it("does not activate the window for other tools", async () => {
+		const { ws } = makeWs();
+		const win = makeMainWindow(async () => ({ ok: true, data: {} }));
+		await agentRequestHandler(ws, makeRequest("getOpenFile", {}), win);
+		expect(activateMainWindow).not.toHaveBeenCalled();
+	});
+
+	it("requires a nodeId", () => {
+		expect(validateToolInput("revealNode", {}).ok).toBe(false);
 	});
 });

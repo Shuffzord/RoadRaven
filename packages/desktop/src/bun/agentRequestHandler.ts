@@ -2,6 +2,7 @@ import { getLogger } from "@logtape/logtape";
 import type { ServerWebSocket } from "bun";
 import { validateToolInput } from "./agentToolSchemas";
 import type { AgentRequest } from "./eventSchema";
+import { activateMainWindow } from "./platform/window";
 import { getOwnership, setOwnership } from "./refMap";
 import {
 	getCachedMainPath,
@@ -20,7 +21,7 @@ type WsLike = ServerWebSocket<{
 	connectedAt: number;
 }>;
 
-type MainWindowLike = {
+type MainWindowLike = Parameters<typeof activateMainWindow>[0] & {
 	webview: {
 		rpc?: {
 			request: {
@@ -58,6 +59,14 @@ function sendError(
 	if (hint !== undefined) error.hint = hint;
 	if (data !== undefined) error.data = data;
 	ws.send(JSON.stringify({ type: "response", id, error }));
+}
+
+/**
+ * revealNode: the renderer has selected and centred the node; bring the window
+ * to the front so the human sees it.
+ */
+function raiseOnReveal(method: string, mainWindow: MainWindowLike): void {
+	if (method === "revealNode") activateMainWindow(mainWindow);
 }
 
 /**
@@ -232,6 +241,7 @@ export async function agentRequestHandler(
 					}
 				}
 			}
+			raiseOnReveal(request.method, mainWindow);
 			agentLogger.info`Agent tool ok tool=${request.method} durationMs=${durationMs}`;
 			sendResponse(ws, request.id, result.data);
 		} else {

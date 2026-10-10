@@ -16,9 +16,15 @@ import {
 } from "../../../src/mainview/store/historyStore";
 import { useRoadmapStore } from "../../../src/mainview/store/roadmapStore";
 
-const { loadFileMock, newFileMock } = vi.hoisted(() => ({
+const { loadFileMock, newFileMock, requestNodeFocusMock } = vi.hoisted(() => ({
 	loadFileMock: vi.fn(),
 	newFileMock: vi.fn(),
+	requestNodeFocusMock: vi.fn(),
+}));
+
+// requestNodeFocus dispatches a window event; this suite runs with no window.
+vi.mock("../../../src/mainview/lib/focusRequest", () => ({
+	requestNodeFocus: requestNodeFocusMock,
 }));
 
 vi.mock("../../../src/mainview/rpc", () => ({
@@ -179,6 +185,45 @@ describe("agentRpcHandler — cameraFitView (v0.8.1 viewport tool)", () => {
 		expect(rows.length).toBe(1);
 		expect(rows[0].source).toBe("claude-code");
 		expect(rows[0].meta?.tool).toBe("cameraFitView");
+	});
+});
+
+describe("agentRpcHandler — revealNode", () => {
+	beforeEach(() => {
+		useRoadmapStore.getState().loadSchema(makeSchema(), "/tmp/test.json");
+		useEventLogStore.setState({ rows: [] });
+		requestNodeFocusMock.mockClear();
+	});
+	afterEach(() => {
+		useRoadmapStore.setState({
+			schema: null,
+			filePath: null,
+			nodeIndex: new Map(),
+		});
+		useEventLogStore.setState({ rows: [] });
+	});
+
+	it("selects and centres the node AND emits a drawer event", async () => {
+		const nodeId = "00000000-0000-0000-0000-000000000002";
+		const result = await handleAgentRequest("revealNode", { nodeId });
+
+		expect(result).toEqual({ ok: true, data: { ok: true } });
+		expect(requestNodeFocusMock).toHaveBeenCalledWith(nodeId, {
+			align: "center",
+			select: true,
+		});
+		const rows = useEventLogStore.getState().rows;
+		expect(rows.length).toBe(1);
+		expect(rows[0].meta?.tool).toBe("revealNode");
+		expect(rows[0].nodeId).toBe(nodeId);
+	});
+
+	it("returns node_not_found for an unknown id and focuses nothing", async () => {
+		const result = await handleAgentRequest("revealNode", { nodeId: "nope" });
+
+		expect(result).toMatchObject({ ok: false, code: "node_not_found" });
+		expect(requestNodeFocusMock).not.toHaveBeenCalled();
+		expect(useEventLogStore.getState().rows).toHaveLength(0);
 	});
 });
 
