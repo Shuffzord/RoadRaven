@@ -1,4 +1,9 @@
-import type { RoadmapRPCType } from "../../../../../shared/types.ts";
+import { PLUGIN_STEPS } from "../../../../../shared/claudePlugin.ts";
+import type {
+	AppSettings,
+	RoadmapRPCType,
+} from "../../../../../shared/types.ts";
+import { runClaudeSteps } from "../claudeCli";
 import { bunLogger } from "../logging";
 import { getSetupStatus, installMcpIntegration } from "../mcpInstaller";
 import { openFileDialog } from "../platform/dialogs";
@@ -21,16 +26,62 @@ type RpcHandler<K extends keyof BunRequests> = (
 
 // -- Setup Wizard (v0.6) --------------------------------------------
 
-export function createSetupRpcHandlers(appVersion: string): {
+/** v0.9: offer the plugin install once the wizard is done, once per app version. */
+export function shouldOfferPluginInstall(
+	status: { claudeDetected: boolean; pluginInstalled: boolean },
+	settings: AppSettings,
+	appVersion: string,
+): boolean {
+	return (
+		status.claudeDetected &&
+		!status.pluginInstalled &&
+		settings.setup?.completed === true &&
+		settings.pluginInstallDismissedFor !== appVersion
+	);
+}
+
+export function createSetupRpcHandlers(
+	appVersion: string,
+	runSteps: typeof runClaudeSteps = runClaudeSteps,
+): {
 	getSetupStatus: RpcHandler<"getSetupStatus">;
 	installMcpIntegration: RpcHandler<"installMcpIntegration">;
 	completeSetup: RpcHandler<"completeSetup">;
+	runPluginCommands: RpcHandler<"runPluginCommands">;
+	dismissPluginInstall: RpcHandler<"dismissPluginInstall">;
 } {
 	return {
 		// getSetupStatus: renderer pulls this on mount to decide whether to
 		// auto-open the first-run wizard and to seed the MCP step's state.
 		getSetupStatus: () => {
-			return getSetupStatus(appVersion, loadSettings());
+			const settings = loadSettings();
+			const status = getSetupStatus(appVersion, settings);
+			return {
+				...status,
+				offerPluginInstall: shouldOfferPluginInstall(
+					status,
+					settings,
+					appVersion,
+				),
+			};
+		},
+		// runPluginCommands: the plugin dialog's button. Only the fixed lists
+		// in shared/claudePlugin.ts run; the renderer never sends a command.
+		runPluginCommands: async ({ kind }) => {
+			if (!Object.hasOwn(PLUGIN_STEPS, kind)) {
+				throw new Error(`unknown plugin command kind: ${String(kind)}`);
+			}
+			const steps = await runSteps(PLUGIN_STEPS[kind]);
+			const failed = steps.find((s) => s.status === "error");
+			if (failed) {
+				bunLogger.warn`Plugin ${kind} failed at '${failed.label}': ${failed.detail}`;
+			}
+			return { ok: !failed, steps };
+		},
+		// dismissPluginInstall: the user closed the install offer.
+		dismissPluginInstall: () => {
+			saveSettings({ pluginInstallDismissedFor: appVersion });
+			return { ok: true as const };
 		},
 		// installMcpIntegration: copy the bundled MCP server into the user
 		// data dir and register it in the selected hosts' configs (Claude

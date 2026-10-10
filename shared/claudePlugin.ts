@@ -25,3 +25,9 @@ export function commandLine(steps: readonly ClaudeCommand[]): string {
 		.map((args) => ["claude", ...args.filter((a) => a !== "--json")].join(" "))
 		.join("; ");
 }
+
+/** What the plugin dialog asks Bun to run; Bun maps it to a fixed list. */
+export type PluginCommandKind = "install" | "update";
+
+export const PLUGIN_STEPS: Record<PluginCommandKind, readonly ClaudeCommand[]> =
+	{ install: PLUGIN_INSTALL_STEPS, update: PLUGIN_UPDATE_STEPS };

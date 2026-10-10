@@ -1,4 +1,5 @@
 import type { IntegrationEvent } from "../packages/core/src/plugin.ts";
+import type { PluginCommandKind } from "./claudePlugin.ts";
 import type { ThemeFile } from "./themeSchema.ts";
 
 export type { IntegrationEvent };
@@ -112,6 +113,8 @@ export interface AppSettings {
 		/** True once the user has finished or dismissed the first-run wizard. */
 		completed?: boolean;
 	};
+	/** v0.9: the app version for which the user closed the "install the Claude Code plugin" offer. */
+	pluginInstallDismissedFor?: string;
 	/** v0.8.5: self-update preferences. */
 	updates?: {
 		/** Check for an update once, shortly after launch. Absent = true. */
@@ -298,7 +301,22 @@ export type RoadmapRPCType = {
 					// the wizard then defers to it instead of registering a
 					// second, duplicate server.
 					pluginInstalled: boolean;
+					// v0.9: Claude Code is here without the plugin, the wizard
+					// is done and the offer was not closed for this version.
+					offerPluginInstall: boolean;
 				};
+			};
+			// v0.9: run the fixed `claude` plugin install / update commands
+			// (shared/claudePlugin.ts). The renderer only picks the list.
+			runPluginCommands: {
+				params: { kind: PluginCommandKind };
+				response: { ok: boolean; steps: McpInstallStep[] };
+			};
+			// v0.9: the user closed the install offer; don't show it again for
+			// this app version.
+			dismissPluginInstall: {
+				params: Record<string, never>;
+				response: { ok: true };
 			};
 			// installMcpIntegration: copies the bundled MCP server into the user
 			// data dir and registers it under mcpServers.roadraven in the user's
