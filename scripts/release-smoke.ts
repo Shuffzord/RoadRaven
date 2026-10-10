@@ -11,8 +11,9 @@
 //    roadraven@roadraven, expect roadraven + roadraven-hud at the current
 //    version and no errors in `plugin list --json`.
 // 2. upgrade: a worktree of the previous release tag as the marketplace,
-//    install, move the worktree to HEAD, run the app's `update-plugin`
-//    remedy (parsed from EventToast.tsx) verbatim, expect the same as (1).
+//    install, move the worktree to HEAD, run the app's plugin update
+//    commands (PLUGIN_UPDATE_STEPS, shared/claudePlugin.ts), expect the
+//    same as (1).
 // 3. MCP pin: plugins/claude-code/.mcp.json pins @roadraven/mcp@<version>.
 //
 // Installed versions come from installed_plugins.json: for local-path
@@ -20,6 +21,7 @@
 import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { commandLine, PLUGIN_UPDATE_STEPS } from "../shared/claudePlugin.ts";
 
 const PLUGINS = ["roadraven@roadraven", "roadraven-hud@roadraven"];
 const version: string = JSON.parse(readFileSync("packages/desktop/package.json", "utf8")).version;
@@ -106,16 +108,6 @@ function previousTag(): string {
 	return newest;
 }
 
-// The exact commands the app's update-plugin toast tells the user to paste.
-// Parsed naively (split on ";" then whitespace): the toast's commands must stay
-// free of quotes and of ";" inside arguments.
-function remedyCommands(): string[] {
-	const src = readFileSync("packages/desktop/src/mainview/components/EventToast.tsx", "utf8");
-	const m = src.match(/"update-plugin":[\s\S]*?command:\s*"([^"]+)"/);
-	if (!m) throw new Error("update-plugin command not found in EventToast.tsx");
-	return m[1].split(";").map((c) => c.trim()).filter(Boolean);
-}
-
 function upgrade(): string {
 	const tag = previousTag();
 	const head = sh(["git", "rev-parse", "HEAD"]).trim();
@@ -128,10 +120,11 @@ function upgrade(): string {
 	assertInstalled(env, oldVersion, ["roadraven@roadraven"]);
 	sh(["git", "-C", wt, "checkout", "--detach", head]);
 	const ran: string[] = [];
-	for (const cmd of remedyCommands()) {
+	for (const args of PLUGIN_UPDATE_STEPS) {
 		// Like a pasted `a; b; c`: a failing step does not stop the rest.
+		const cmd = commandLine([args]);
 		try {
-			sh(cmd.split(/\s+/), env);
+			sh(["claude", ...args], env);
 			ran.push(`ok: ${cmd}`);
 		} catch (e) {
 			ran.push(`FAILED: ${(e as Error).message}`);
