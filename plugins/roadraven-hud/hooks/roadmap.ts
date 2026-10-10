@@ -40,6 +40,8 @@ const CONN_RULES: [HudConnKind, RegExp][] = [
 	["offline", /app_not_running/],
 	["noFile", /no_file_loaded/],
 	["connecting", /no connected MCP tool|not connected|no server/i],
+	// Claude Code swaps an over-limit tool result for a plain-text notice.
+	["tooLarge", /exceeds maximum allowed tokens|characters\).*exceeds/i],
 ];
 
 export const CONN = {
@@ -49,17 +51,33 @@ export const CONN = {
 		ink: "blocked",
 	},
 	noFile: { text: "Open a roadmap in RoadRaven.", ink: "accent" },
+	tooLarge: {
+		text: "This roadmap is too large for Claude Code's MCP output limit. Update the RoadRaven plugin (0.8.9 polls without notes), or raise MAX_MCP_OUTPUT_TOKENS.",
+		ink: "blocked",
+	},
 	other: { text: "Can't reach RoadRaven", ink: "blocked" },
 } as const;
 
 export const connKind = (err: string): HudConnKind =>
 	CONN_RULES.find(([, re]) => re.test(err))?.[0] ?? "other";
 
+// Answers that don't change while the servers come up.
+const STEADY: ReadonlySet<HudConnKind> = new Set(["noFile", "tooLarge"]);
+
 // Shortly after start the MCP servers may not be up yet: nothing is red then.
 export const shownKind = (err: string, isStarting: boolean): HudConnKind => {
 	const kind = connKind(err);
-	return isStarting && kind !== "noFile" ? "connecting" : kind;
+	return isStarting && !STEADY.has(kind) ? "connecting" : kind;
 };
+
+// A tool's text as JSON; anything else (such as Claude Code's size notice) is thrown as its first line.
+export function parseReply(text: string) {
+	try {
+		return JSON.parse(text);
+	} catch {
+		throw new Error(clean(text.replace(/\n[\s\S]*/, "")) || "empty reply");
+	}
+}
 
 // claude-haiku-5-5 → haiku 5.5
 export const shortModel = (m: string) =>
@@ -121,6 +139,20 @@ export function flatten(list: RawNode[], depth = 0): HudNode[] {
 		toHudNode(n, depth),
 		...flatten(n.children ?? [], depth + 1),
 	]);
+}
+
+// Each spelling of the UAT type in the tree (findNodes matches type exactly).
+export const uatTypes = (nodes: HudNode[]) => [
+	...new Set(nodes.filter(isUat).map((n) => n.type ?? "")),
+];
+
+// Notes fetched apart from the tree, merged in by node id.
+export function withNotes(nodes: HudNode[], found: RawNode[]): HudNode[] {
+	const notes = new Map(found.map((n) => [n.id, n.notes]));
+	return nodes.map((n) => {
+		const s = notes.get(n.id);
+		return s ? { ...n, notes: cleanNotes(s) } : n;
+	});
 }
 
 const ARG_KEYS = [

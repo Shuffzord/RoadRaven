@@ -18,6 +18,7 @@ import type {
 import {
 	CONN,
 	clean,
+	cleanNotes,
 	connKind,
 	describeAction,
 	flatten,
@@ -25,11 +26,14 @@ import {
 	isUat,
 	kTokens,
 	lastFailure,
+	parseReply,
 	type RawNode,
 	roadmapTitle,
 	shortModel,
 	shownKind,
 	since,
+	uatTypes,
+	withNotes,
 	workCounts,
 } from "./roadmap";
 import { AMBER, toPalette } from "./theme";
@@ -69,6 +73,8 @@ const roadmapPath = atom({ ...S, key: "roadmapPath" } as const, "");
 const isSending = atom({ ...S, key: "isSending" } as const, false);
 // The backlog node whose Run waits for its confirm; "" for none.
 const confirmRun = atom({ ...S, key: "confirmRun" } as const, "");
+// The first line of that node's notes, fetched when Run is pressed (polls carry no notes).
+const runNotes = atom({ ...S, key: "runNotes" } as const, "");
 const starting = atom({ ...S, key: "starting" } as const, {});
 const autoOpened = atom({ ...S, key: "autoOpened" } as const, false);
 // When RoadRaven stopped answering (0 while it answers), and the last time it was asked.
@@ -92,6 +98,7 @@ type Data = {
 	lastSent: HudSent | null;
 	sending: boolean;
 	confirmId: string;
+	confirmNotes: string;
 	starts: Record<string, true>;
 };
 
@@ -132,7 +139,7 @@ async function callServer(
 	const r = await $.mcp.call(server, tool, args);
 	const text = textOf(r);
 	if (r.isError) throw new Error(text || `${tool} failed`);
-	return JSON.parse(text);
+	return parseReply(text);
 }
 
 async function callRR(
@@ -166,8 +173,11 @@ type Update = {
 	metadata?: Record<string, unknown>;
 };
 
+// Polls and re-reads leave notes out: a large roadmap's notes exceed Claude Code's tool-result limit.
+const LEAN = { omitNotes: true };
+
 async function freshRead($: EngineInterface) {
-	const { revision, schema = {} } = await callRR($, "getRoadmap");
+	const { revision, schema = {} } = await callRR($, "getRoadmap", LEAN);
 	return {
 		revision: revision as number,
 		nodes: flatten((schema.nodes ?? []) as RawNode[]),
@@ -343,10 +353,31 @@ async function announceUat($: EngineInterface, pending: HudNode[]) {
 	await saveAttribution($);
 }
 
+async function findUat($: EngineInterface, types: string[]) {
+	const found: RawNode[] = [];
+	for (const type of types) {
+		const r = await callRR($, "findNodes", { type });
+		found.push(...(r.nodes ?? []).map((f: { node: RawNode }) => f.node));
+	}
+	return found;
+}
+
+// The pane draws UAT notes only; without them it still draws the rest.
+async function withUatNotes($: EngineInterface, nodes: HudNode[]) {
+	try {
+		return withNotes(nodes, await findUat($, uatTypes(nodes)));
+	} catch {
+		return nodes;
+	}
+}
+
 async function syncSnapshot($: EngineInterface) {
-	const { schema = {}, filePath } = await callRR($, "getRoadmap");
+	const { schema = {}, filePath } = await callRR($, "getRoadmap", LEAN);
 	await adoptRoadmap($, filePath);
-	const nodes = flatten((schema.nodes ?? []) as RawNode[]);
+	const nodes = await withUatNotes(
+		$,
+		flatten((schema.nodes ?? []) as RawNode[]),
+	);
 	await update($, snapshot, () => ({
 		title: roadmapTitle((schema.nodes ?? []) as RawNode[], schema.title),
 		nodes,
@@ -678,9 +709,22 @@ async function runNode($: EngineInterface, n: HudNode) {
 const goneToast = (n: HudNode) =>
 	`RoadRaven · ${n.title} is no longer not-started; nothing done`;
 
+async function nodeNotes($: EngineInterface, id: string) {
+	try {
+		const { node } = await callRR($, "getNode", { nodeId: id });
+		return cleanNotes(String(node?.notes ?? ""));
+	} catch {
+		return "";
+	}
+}
+
 // A first press of Run only asks; Start agent on the confirm row spawns.
-function askRun($: EngineInterface, id: string) {
-	return update($, confirmRun, () => id);
+async function askRun($: EngineInterface, id: string) {
+	await update($, runNotes, () => "");
+	await update($, confirmRun, () => id);
+	const notes = await nodeNotes($, id);
+	if ((await read($, confirmRun)) === id)
+		await update($, runNotes, () => notes);
 }
 
 async function claimStart($: EngineInterface, id: string) {
@@ -1109,7 +1153,12 @@ function drawRun($: EngineInterface, { els, P }: View, d: Data, n: HudNode) {
 	);
 }
 
-function drawRunConfirm($: EngineInterface, v: View, n: HudNode) {
+function drawRunConfirm(
+	$: EngineInterface,
+	v: View,
+	n: HudNode,
+	notes: string,
+) {
 	const { Box, Text, Button } = v.els;
 	return (
 		<Box key={n.id} flexDirection="column" marginLeft={2}>
@@ -1117,9 +1166,9 @@ function drawRunConfirm($: EngineInterface, v: View, n: HudNode) {
 				<Text color={v.P.accent}>Start an agent on </Text>
 				<Text color={v.P.primary}>{n.title}</Text>
 			</Text>
-			{n.notes && (
+			{notes && (
 				<Text color={v.P.tertiary} wrap="truncate-end">
-					{n.notes.split("\n")[0]}
+					{notes.split("\n")[0]}
 				</Text>
 			)}
 			<Box>
@@ -1141,7 +1190,8 @@ function drawRunConfirm($: EngineInterface, v: View, n: HudNode) {
 }
 
 function drawBacklogEntry($: EngineInterface, v: View, d: Data, n: HudNode) {
-	if (d.confirmId === n.id && !isBusy(d, n.id)) return drawRunConfirm($, v, n);
+	if (d.confirmId === n.id && !isBusy(d, n.id))
+		return drawRunConfirm($, v, n, d.confirmNotes);
 	return drawBacklogRow($, v, d, n);
 }
 
@@ -1291,6 +1341,7 @@ async function readData($: EngineInterface): Promise<Data> {
 		lastSent,
 		sending,
 		confirmId,
+		confirmNotes,
 		starts,
 	] = await Promise.all([
 		read($, snapshot),
@@ -1305,6 +1356,7 @@ async function readData($: EngineInterface): Promise<Data> {
 		read($, sent),
 		read($, isSending),
 		read($, confirmRun),
+		read($, runNotes),
 		read($, starting),
 	]);
 	return {
@@ -1320,6 +1372,7 @@ async function readData($: EngineInterface): Promise<Data> {
 		lastSent,
 		sending,
 		confirmId,
+		confirmNotes,
 		starts,
 	};
 }

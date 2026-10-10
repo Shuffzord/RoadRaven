@@ -22,7 +22,12 @@ export type HudNode = {
 
 export type HudSent = { count: number; at: number; isAwake: boolean };
 
-export type HudConnKind = "connecting" | "offline" | "noFile" | "other";
+export type HudConnKind =
+	| "connecting"
+	| "offline"
+	| "noFile"
+	| "tooLarge"
+	| "other";
 export type HudError = { kind: HudConnKind; detail: string };
 
 export type HudSnapshot = { title: string; nodes: HudNode[] };
@@ -62,6 +67,7 @@ declare module "claude-code" {
 			roadmapPath: string;
 			isSending: boolean;
 			confirmRun: string;
+			runNotes: string;
 			starting: Record<string, true>;
 			autoOpened: boolean;
 			offlineSince: number;
