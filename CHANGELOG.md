@@ -3,6 +3,37 @@
 All notable changes to RoadRaven are documented in this file. The format
 follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.8.8] - Unreleased
+
+### Added
+
+- **RoadRaven HUD for Claude Code** (`plugins/roadraven-hud`). A Claude Code
+  mod that draws a live RoadRaven pane inside your session, fed by the
+  RoadRaven MCP server. It installs with the roadraven plugin
+  (`/plugin install roadraven@roadraven` pulls it in as a dependency), and the
+  plugin's update toast now also installs and updates it for existing users.
+  - **Active work.** Every in-progress node, with the agent working on it,
+    its model and effort, elapsed time, the current action and, once it
+    finishes, the tokens it used.
+  - **UAT.** Nodes of type `uat` can be marked passed or failed as a batch,
+    with a note per failed item. **Send** writes the statuses, appends each
+    failure note to its node and hands the orchestrator one summary.
+  - **Backlog.** Not-started nodes, each with **Run** (a one-off agent for
+    that node) and **Next** (marks it as priority). The orchestrator is told
+    either way.
+  - Toasts for new UAT items, a status line entry, and the app's themes —
+    following the app's theme by default, or a fixed one.
+- The `orchestrate` and `work-node` skills take nodes you marked priority
+  (**Next**) first.
+
+### Fixed
+
+- **Selected text in the side panel can be copied.** Selections are copied
+  natively instead of being swallowed by the keyboard router, and the panel
+  gains a **Copy notes** button.
+- The HUD draws roadmap text without control characters, and node titles
+  handed to a model are quoted as roadmap data.
+
 ## [0.8.7] - 2026-09-29
 
 ### Added

@@ -33,6 +33,8 @@ registering a second server.
 /plugin install roadraven@roadraven
 ```
 
+The plugin also installs the Claude Code HUD (`roadraven-hud`), a live RoadRaven pane in the session.
+
 **CLI one-liner.** `-s user` registers it for every project, like the Setup
 Wizard and the plugin do (`claude mcp add` defaults to the current project only):
 

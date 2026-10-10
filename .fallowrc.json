@@ -28,12 +28,23 @@
     // CI, or the Claude allowlist; not reachable from the app import graph.
     "scripts/check-core-deps.ts",
     "scripts/bump-version.ts",
+    "scripts/sync-hud-themes.ts",
     "scripts/normalize-uuids.mjs",
     "scripts/validate-cfa-roadmap.mjs",
     "scripts/validate-roadmap.mjs",
     "scripts/storytelling-video/run.ts",
-    "scripts/storytelling-video/validate-timeline.ts"
+    "scripts/storytelling-video/validate-timeline.ts",
+
+    // Claude Code mod: hooks/hooks.json names its module, and `claude plugin test`
+    // runs its *.test.ts files; Claude Code loads both, nothing imports them.
+    "plugins/roadraven-hud/hooks/register.tsx",
+    "plugins/roadraven-hud/hooks/register.test.ts",
+    "plugins/roadraven-hud/hooks/helpers.test.ts"
   ],
+
+  // `claude-code` is the module Claude Code provides to a mod at run time
+  // (types only, empty import); there is no npm package to list.
+  "ignoreDependencies": ["claude-code"],
 
   // Paths excluded from analysis entirely.
   "ignorePatterns": [

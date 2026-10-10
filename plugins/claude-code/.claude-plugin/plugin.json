@@ -10,5 +10,6 @@
 	"license": "FSL-1.1-MIT",
 	"homepage": "https://shuffzord.github.io/RoadRaven/plugin-authoring.html",
 	"keywords": ["mcp", "claude-code", "roadraven", "roadmap", "event-api"],
-	"mcpServers": "./.mcp.json"
+	"mcpServers": "./.mcp.json",
+	"dependencies": ["roadraven-hud"]
 }

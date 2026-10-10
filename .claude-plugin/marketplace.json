@@ -9,7 +9,18 @@
 			"description": "MCP server plus two skills (orchestrate, work-node) that let Claude Code plan and run work as a live roadmap in a running RoadRaven desktop app.",
 			"source": "./plugins/claude-code",
 			"category": "productivity",
-			"version": "0.8.7"
+			"version": "0.8.7",
+			"tags": ["mcp", "roadmap", "claude-code", "event-api", "skills"],
+			"relevance": { "topic": "roadmaps", "signals": { "filesRead": ["**/*.roadmap.json", "**/roadmap.json"] } }
+		},
+		{
+			"name": "roadraven-hud",
+			"description": "Claude Code mod: a live RoadRaven pane showing agents on roadmap nodes (model, effort, current action, tokens), batched UAT sign-off and a backlog you can start or prioritise.",
+			"source": "./plugins/roadraven-hud",
+			"category": "productivity",
+			"version": "0.8.7",
+			"tags": ["mod", "hud", "claude-code", "roadmap", "agents", "uat"],
+			"relevance": { "topic": "roadmaps", "signals": { "filesRead": ["**/*.roadmap.json", "**/roadmap.json"] } }
 		}
 	]
 }

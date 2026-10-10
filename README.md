@@ -129,6 +129,19 @@ reports. Details in the [plugin README](plugins/claude-code/README.md). Try:
 Plan the CSV export feature as a roadmap in RoadRaven and run it phase by phase.
 ```
 
+## Claude Code HUD
+
+A **mod** for Claude Code: a brand-new kind of extension that changes Claude Code's own interface, here a live RoadRaven pane inside your terminal session.
+
+- Live agents per node, with model, effort and current action
+- UAT checks you pass or fail in a batch, which wakes the orchestrator
+- Backlog **Run** / **Next** buttons
+- Follows the app theme
+
+![UAT section with Pass and Fail buttons](screenshots/hud-uat.png)
+
+Ships with the plugin: `/plugin install roadraven@roadraven`. [Details →](plugins/roadraven-hud/README.md)
+
 ## Install
 
 Download from [GitHub Releases](https://github.com/Shuffzord/RoadRaven/releases/latest).

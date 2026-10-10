@@ -92,3 +92,7 @@ temp/
 package-lock.json
 pnpm-lock.yaml
 yarn.lock
+
+# Claude Code writes its mod API typings beside a mod it loads from disk
+plugins/roadraven-hud/.claude-plugin/types/
+plugins/roadraven-hud/tsconfig.json

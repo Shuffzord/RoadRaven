@@ -1,4 +1,6 @@
 /** @vitest-environment jsdom */
+
+import { undo } from "@codemirror/commands";
 import { act, renderHook } from "@testing-library/react";
 import { useRef } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -145,5 +147,158 @@ describe("useCodeMirror", () => {
 		const { hook } = renderCodeMirror("hello", onPersist);
 		hook.unmount();
 		expect(onPersist).not.toHaveBeenCalled();
+	});
+	it("external initialDoc change replaces the doc and a later local edit keeps it (no stale overwrite)", () => {
+		const onPersist = vi.fn();
+		const container = makeContainer();
+		const hook = renderHook(
+			({ doc }) => {
+				const ref = useRef<HTMLDivElement>(container);
+				return useCodeMirror({
+					container: ref,
+					nodeId: NODE_ID,
+					initialDoc: doc,
+					onPersist,
+				});
+			},
+			{ initialProps: { doc: "hello" } },
+		);
+		// Agent appends via MCP → store → new notes prop.
+		hook.rerender({ doc: "hello\n\nagent line" });
+		const view = hook.result.current.current;
+		if (!view) throw new Error("view not mounted");
+		expect(view.state.doc.toString()).toBe("hello\n\nagent line");
+		// The sync itself must not be persisted back.
+		act(() => {
+			vi.advanceTimersByTime(2000);
+		});
+		expect(onPersist).not.toHaveBeenCalled();
+		act(() => {
+			view.dispatch({ changes: { from: view.state.doc.length, insert: "!" } });
+		});
+		act(() => {
+			vi.advanceTimersByTime(1000);
+		});
+		expect(onPersist).toHaveBeenCalledTimes(1);
+		expect(onPersist.mock.calls[0][1]).toContain("agent line");
+	});
+
+	it("external initialDoc change while a local edit is pending keeps the user's edit", () => {
+		const onPersist = vi.fn();
+		const container = makeContainer();
+		const hook = renderHook(
+			({ doc }) => {
+				const ref = useRef<HTMLDivElement>(container);
+				return useCodeMirror({
+					container: ref,
+					nodeId: NODE_ID,
+					initialDoc: doc,
+					onPersist,
+				});
+			},
+			{ initialProps: { doc: "hello" } },
+		);
+		const view = hook.result.current.current;
+		if (!view) throw new Error("view not mounted");
+		act(() => {
+			view.dispatch({ changes: { from: 5, insert: " typed" } });
+		});
+		hook.rerender({ doc: "hello agent" });
+		expect(view.state.doc.toString()).toBe("hello typed");
+	});
+
+	// Re-renderable hook whose initialDoc prop stands in for the store's notes.
+	function renderWithDoc(doc: string, onPersist = vi.fn()) {
+		const container = makeContainer();
+		const hook = renderHook(
+			({ doc }) => {
+				const ref = useRef<HTMLDivElement>(container);
+				return useCodeMirror({
+					container: ref,
+					nodeId: NODE_ID,
+					initialDoc: doc,
+					onPersist,
+				});
+			},
+			{ initialProps: { doc } },
+		);
+		const view = hook.result.current.current;
+		if (!view) throw new Error("view not mounted");
+		return { hook, view, onPersist };
+	}
+
+	it("external append during a pending local edit is kept alongside the edit when the persist fires", () => {
+		const { hook, view, onPersist } = renderWithDoc("hello");
+		act(() => {
+			view.dispatch({ changes: { from: 5, insert: " typed" } });
+		});
+		hook.rerender({ doc: "hello\n\n**UAT failed**" });
+		act(() => {
+			vi.advanceTimersByTime(1000);
+		});
+		expect(onPersist).toHaveBeenCalledTimes(1);
+		expect(onPersist).toHaveBeenCalledWith(
+			NODE_ID,
+			"hello typed\n\n**UAT failed**",
+		);
+		expect(view.state.doc.toString()).toBe("hello typed\n\n**UAT failed**");
+	});
+
+	it("conflicting (non-append) external change during a pending edit keeps both texts", () => {
+		const { hook, view, onPersist } = renderWithDoc("hello");
+		act(() => {
+			view.dispatch({ changes: { from: 5, insert: " typed" } });
+		});
+		hook.rerender({ doc: "rewritten by agent" });
+		act(() => {
+			vi.advanceTimersByTime(1000);
+		});
+		expect(onPersist).toHaveBeenCalledTimes(1);
+		const saved: string = onPersist.mock.calls[0][1];
+		expect(saved.startsWith("hello typed")).toBe(true);
+		expect(saved.endsWith("rewritten by agent")).toBe(true);
+		expect(view.state.doc.toString()).toBe(saved);
+	});
+
+	it("undo after an external sync does not remove the synced text", () => {
+		const { hook, view } = renderWithDoc("hello");
+		act(() => {
+			view.dispatch({ changes: { from: 5, insert: " typed" } });
+		});
+		act(() => {
+			vi.advanceTimersByTime(1000);
+		});
+		hook.rerender({ doc: "hello typed" });
+		hook.rerender({ doc: "hello typed\n\nagent line" });
+		expect(view.state.doc.toString()).toBe("hello typed\n\nagent line");
+		act(() => {
+			undo(view);
+		});
+		expect(view.state.doc.toString()).toContain("agent line");
+	});
+
+	it("switching nodes with a pending edit flushes it without the next node's notes", () => {
+		const onPersist = vi.fn();
+		const container = makeContainer();
+		const hook = renderHook(
+			({ id, doc }) => {
+				const ref = useRef<HTMLDivElement>(container);
+				return useCodeMirror({
+					container: ref,
+					nodeId: id,
+					initialDoc: doc,
+					onPersist,
+				});
+			},
+			{ initialProps: { id: NODE_ID, doc: "hello" } },
+		);
+		const view = hook.result.current.current;
+		if (!view) throw new Error("view not mounted");
+		act(() => {
+			view.dispatch({ changes: { from: 5, insert: " typed" } });
+		});
+		hook.rerender({ id: "other-node", doc: "other notes" });
+		expect(onPersist).toHaveBeenCalledTimes(1);
+		expect(onPersist).toHaveBeenCalledWith(NODE_ID, "hello typed");
 	});
 });

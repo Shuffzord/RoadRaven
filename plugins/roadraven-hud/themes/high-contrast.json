@@ -1,0 +1,57 @@
+{
+	"id": "high-contrast",
+	"meta": {
+		"name": "High Contrast",
+		"mode": "dark",
+		"description": "Pure black, white borders, 2px edges."
+	},
+	"colors": {
+		"bg-base": "#000000",
+		"bg-canvas": "#000000",
+		"bg-surface": "#0a0a0a",
+		"bg-node": "#0e0e0e",
+		"bg-input": "#0a0a0a",
+		"bg-statusbar": "#050505",
+		"bg-elevated": "#111111",
+		"bg-hover": "#1a1a1a",
+		"bg-active": "#222222",
+		"bg-node-hover": "#151515",
+		"bg-toolbar": "#0a0a0a",
+		"bg-panel": "#0a0a0a",
+		"bg-config": "#0a0a0a",
+		"text-primary": "#ffffff",
+		"text-secondary": "#cccccc",
+		"text-tertiary": "#999999",
+		"text-on-accent": "#000000",
+		"border": "#ffffff",
+		"border-subtle": "#666666",
+		"border-focus": "#60b0ff",
+		"accent": "#60b0ff",
+		"accent-hover": "#80c0ff",
+		"accent-muted": "rgba(96, 176, 255, 0.15)",
+		"accent-border": "rgba(96, 176, 255, 0.5)",
+		"dot-grid": "rgba(255, 255, 255, 0.08)",
+		"line-connector": "rgba(255, 255, 255, 0.25)",
+		"scrollbar-track": "#0a0a0a",
+		"scrollbar-thumb": "#555555",
+		"status-not-started": "#888888",
+		"status-not-started-bg": "rgba(136, 136, 136, 0.15)",
+		"status-in-progress": "#60b0ff",
+		"status-in-progress-bg": "rgba(96, 176, 255, 0.15)",
+		"status-completed": "#5aee90",
+		"status-completed-bg": "rgba(90, 238, 144, 0.15)",
+		"status-blocked": "#ff5555",
+		"status-blocked-bg": "rgba(255, 85, 85, 0.15)",
+		"pulse": "#5aee90",
+		"search": "#ff9e2c"
+	},
+	"shape": {
+		"border-width": "2px"
+	},
+	"shadows": {
+		"node": "0 0 0 2px var(--rv-border)",
+		"node-hover": "0 0 0 2px var(--rv-accent)",
+		"panel": "-2px 0 16px rgba(0, 0, 0, 0.6)",
+		"config": "0 4px 20px rgba(0, 0, 0, 0.7)"
+	}
+}

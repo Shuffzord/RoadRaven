@@ -1,6 +1,11 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { expect, type Page, test } from "@playwright/test";
+import {
+	COPY_NOTES_LABEL,
+	NOTES_COPIED_LABEL,
+} from "../../src/mainview/lib/domContract";
+import { CLIPBOARD_MAGIC } from "../../src/mainview/store/clipboard";
 import { seedSchema } from "./helpers/seed";
 
 // Phase 5 a11y manual-walkthrough findings — BUG-1 and BUG-2 from
@@ -120,5 +125,80 @@ test.describe("Keyboard routing — Phase 5 a11y manual findings", () => {
 			afterCount,
 			"Plain Tab (no shift) must still create a sibling.",
 		).toBe(initialCount + 1);
+	});
+});
+
+// Side-panel copy (fix/side-panel-copy). RC1: Ctrl+C on a focused node used to
+// win over a text selection in the panel and write the subtree JSON envelope.
+test.describe("Copying from the side panel", () => {
+	const NODE_ID = "aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee";
+	const SELECTED_TEXT = "uv sync --all-extras";
+	const NOTES = `**Do:**\n\`\`\`\n${SELECTED_TEXT}\n\`\`\``;
+	const SCHEMA = {
+		version: "1.0",
+		title: "Copy Test",
+		nodes: [
+			{ id: NODE_ID, title: "Root", status: "not-started", notes: NOTES },
+		],
+	};
+
+	test.use({ permissions: ["clipboard-read", "clipboard-write"] });
+
+	async function openNodeWithNotes(page: Page): Promise<void> {
+		await seedSchema(page, SCHEMA);
+		await page.locator(`[data-source-id="${NODE_ID}"]`).click();
+		await expect(
+			page.locator('aside[aria-label="Node details"] pre'),
+		).toBeVisible();
+		await page.evaluate(() => navigator.clipboard.writeText("sentinel"));
+	}
+
+	const readClipboard = (page: Page) =>
+		page.evaluate(() => navigator.clipboard.readText());
+
+	test("RC1: Ctrl+C with notes text selected in the panel copies that text, not the node JSON", async ({
+		page,
+	}) => {
+		await openNodeWithNotes(page);
+		await page.evaluate(() => {
+			const pre = document.querySelector(
+				'aside[aria-label="Node details"] pre',
+			) as HTMLElement;
+			const range = document.createRange();
+			range.selectNodeContents(pre);
+			const selection = window.getSelection();
+			selection?.removeAllRanges();
+			selection?.addRange(range);
+		});
+		await page.keyboard.press("Control+c");
+		await expect
+			.poll(async () => (await readClipboard(page)).trim())
+			.toBe(SELECTED_TEXT);
+		expect(await readClipboard(page)).not.toContain(CLIPBOARD_MAGIC);
+	});
+
+	test("Ctrl+C with no selection and a node focused still copies the subtree", async ({
+		page,
+	}) => {
+		await openNodeWithNotes(page);
+		await page.evaluate(() => window.getSelection()?.removeAllRanges());
+		await page.locator(`[data-source-id="${NODE_ID}"]`).focus();
+		await page.keyboard.press("Control+c");
+		await expect
+			.poll(async () => await readClipboard(page))
+			.toContain(CLIPBOARD_MAGIC);
+	});
+
+	test("Copy notes button puts the raw notes markdown on the clipboard", async ({
+		page,
+	}) => {
+		await openNodeWithNotes(page);
+		await page.getByRole("button", { name: COPY_NOTES_LABEL }).click();
+		await expect(
+			page.getByRole("button", { name: NOTES_COPIED_LABEL }),
+		).toBeVisible();
+		// Windows clipboards store line breaks as CRLF; the text itself is untouched.
+		const copied = (await readClipboard(page)).replaceAll("\r\n", "\n");
+		expect(copied).toBe(NOTES);
 	});
 });

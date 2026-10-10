@@ -1,0 +1,60 @@
+{
+	"id": "paper",
+	"meta": {
+		"name": "Paper",
+		"mode": "light",
+		"description": "Warm off-white, terracotta accent, serif headings. Editorial · Calm · Literary."
+	},
+	"colors": {
+		"bg-base": "#f6f3ec",
+		"bg-canvas": "#f9f5ea",
+		"bg-surface": "#eee9dc",
+		"bg-node": "#ffffff",
+		"bg-input": "#ede6d2",
+		"bg-statusbar": "#eee9dc",
+		"bg-elevated": "#ffffff",
+		"bg-hover": "#ede6d2",
+		"bg-active": "#e4dcc2",
+		"bg-node-hover": "#faf7ee",
+		"bg-toolbar": "#f6f3ec",
+		"bg-panel": "#eee9dc",
+		"bg-config": "#ffffff",
+		"text-primary": "#2a241c",
+		"text-secondary": "#6e6453",
+		"text-tertiary": "#716552",
+		"text-on-accent": "#ffffff",
+		"border": "#e1d9c5",
+		"border-subtle": "#ebe4d0",
+		"border-focus": "#9a4a2a",
+		"accent": "#9a4a2a",
+		"accent-hover": "#853e21",
+		"accent-muted": "rgba(154, 74, 42, 0.06)",
+		"accent-border": "rgba(154, 74, 42, 0.25)",
+		"dot-grid": "rgba(42, 36, 28, 0.1)",
+		"line-connector": "rgba(42, 36, 28, 0.36)",
+		"scrollbar-track": "#ede6d2",
+		"scrollbar-thumb": "#cabe9e",
+		"status-not-started": "#6f6450",
+		"status-not-started-bg": "rgba(111, 100, 80, 0.1)",
+		"status-in-progress": "#55702c",
+		"status-in-progress-bg": "rgba(85, 112, 44, 0.12)",
+		"status-completed": "#3d6e52",
+		"status-completed-bg": "rgba(61, 110, 82, 0.12)",
+		"status-blocked": "#a8412a",
+		"status-blocked-bg": "rgba(168, 65, 42, 0.12)",
+		"pulse": "#c2410c",
+		"search": "#0e7490"
+	},
+	"shape": {
+		"border-width": "1px"
+	},
+	"fonts": {
+		"heading": "\"Source Serif 4\", \"Source Serif Pro\", \"Iowan Old Style\", Georgia, Cambria, \"Times New Roman\", serif"
+	},
+	"shadows": {
+		"node": "0 1px 0 rgba(42, 36, 28, 0.04), 0 1px 2px rgba(42, 36, 28, 0.06)",
+		"node-hover": "0 2px 0 rgba(42, 36, 28, 0.05), 0 4px 10px rgba(42, 36, 28, 0.08)",
+		"panel": "-2px 0 16px rgba(42, 36, 28, 0.06)",
+		"config": "0 4px 20px rgba(42, 36, 28, 0.1)"
+	}
+}

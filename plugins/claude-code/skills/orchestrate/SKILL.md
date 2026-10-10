@@ -28,14 +28,12 @@ either case, stop and ask the human once:
 | `agent_api_disabled` | The human switched agent access off. | Whether they want to turn it back on. |
 
 If the human declines, or it still fails, keep the plan in markdown as
-[references/worklog-fallback.md](references/worklog-fallback.md) describes,
-and tell the human once, plainly, that without the app there is no live tree
-to watch, only a markdown file. When the session cannot ask anyone (a
-non-interactive run, or no channel to the human), go straight to that
-fallback and say in your final message that the app was unavailable and
-nobody could be asked. The worklog is the sanctioned fallback. A workaround
-is never allowed: trying other paths, editing the roadmap file on disk (the
-app holds it in memory; its next save wins), or changing app settings.
+[references/worklog-fallback.md](references/worklog-fallback.md) describes
+and tell the human once that there is no live tree to watch, only a markdown
+file. When nobody can be asked (a non-interactive run), go straight to that
+fallback and say so in your final message. Never work around the app: no
+other paths, no editing the roadmap file on disk (the app holds it in
+memory; its next save wins), no changing app settings.
 
 ## The loop
 
@@ -44,11 +42,11 @@ app holds it in memory; its next save wins), or changing app settings.
    measurement first; if it will not reproduce, report that instead of
    planning a fix. Diagnoses made only by reading code are wrong often
    enough that this step pays for itself.
-2. **Find the project's own checks.** Look for the test, lint, type-check and
-   build commands in the README, the package manifest (`package.json`
-   scripts, `pyproject.toml`, `Cargo.toml`, `Makefile`, `go.mod` and so on)
-   and the CI config. If they are unclear, ask. Run them once before any
-   change so "it broke" later is a comparison, not an argument.
+2. **Find the project's own checks.** Look for the test, lint, type-check
+   and build commands in the README, the package manifest (`package.json`
+   scripts, `pyproject.toml`, `Cargo.toml`, `Makefile`, `go.mod`) and the CI
+   config; ask if unclear. Run them once before any change so "it broke"
+   later is a comparison.
 3. **Plan as a roadmap.** Build the tree described below. Include, per phase,
    the existing tests it is expected to change and why, so a test that
    changes unexpectedly stands out.
@@ -68,19 +66,22 @@ app holds it in memory; its next save wins), or changing app settings.
   Phase 2 — <name>
 ```
 
-- Ask the human where the goal node belongs, or put it under the top node
-  of the open document: `getRoadmap()` shows the tree, and
-  `findNodes({ titleContains })` finds a node by name.
+- Put the goal node where the human says, or under the open document's top
+  node (`getRoadmap()` shows the tree; `findNodes({ titleContains })` finds
+  by name).
 - Call `getTypeConfig()` and `getStatusConfig()` first. Use a `type` id only
   if the document defines it; otherwise leave `type` out rather than invent
   one. Statuses are always `not-started`, `in-progress`, `completed` or
   `blocked`.
 - Create nodes with `createNode({ parentId, title, type, status, notes })`
   and keep every returned id; the phase ids go into the briefs.
+- **UAT checks for the human** are `type: "uat"` nodes (or the document's
+  UAT type id), children of the phase they check, created `not-started`,
+  with **Steps** and **Expected** lists in the notes.
 - Numbers (check results, counts, commit ids) go in metadata with
-  `updateNodeMetadata({ nodeId, patch })`. Evidence and decisions go in
-  notes with `updateNodeNotes({ nodeId, notes, mode: "append" })`. Progress
-  is the status, set with `updateNodeStatus({ nodeId, status })`.
+  `updateNodeMetadata({ nodeId, patch })`, evidence and decisions in notes
+  with `updateNodeNotes({ nodeId, notes, mode: "append" })`, progress in
+  `updateNodeStatus({ nodeId, status })`.
 - Call `cameraFitView()` after building the tree so the human sees all of it.
 
 ## Per phase
@@ -92,6 +93,7 @@ app holds it in memory; its next save wins), or changing app settings.
 | Verify | Re-run the project's checks yourself and read the diff. Confirm only the briefed files changed. |
 | Decide | Accept, or send it back with a precise ask. Patching it yourself hides the defect from the agent and from the record. |
 | Record | Set the phase status and write the check results to its metadata. If the human wants commits, one per phase, after verification. |
+| UAT | Once the phase is verified, set its UAT child `in-progress`; that shows it to the human and notifies them. Never set a UAT node `completed` or `blocked` yourself. If it comes back `blocked`, read the failure note, fix, re-verify, set it `in-progress` again. |
 
 ## Rules that save retries
 
@@ -99,21 +101,20 @@ app holds it in memory; its next save wins), or changing app settings.
   output you produced, not figures typed into a summary.
 - **One owner per file at a time.** Two agents editing one file, or you
   committing while an agent is still editing, loses work.
+- **`priority: "next"` (set from the pane) goes first;** once started, clear
+  it: `updateNodeMetadata({ nodeId, patch: { priority: null } })`.
 - **Only write to nodes you created or were given.** The rest of the roadmap
   belongs to the human. Never delete or rename their nodes.
-- **Pass `expectedRevision`** from your last `getRoadmap()` or
-  `getNode({ nodeId })` when a write must not clobber the human's edits. On
-  `stale_write`, read again and redo the change. `updateNodes({ updates })`
-  applies many status or notes changes as one all-or-nothing write.
+- **Pass `expectedRevision`** from your last `getRoadmap()` or `getNode()`
+  when a write must not clobber the human's edits; on `stale_write`, read
+  again and redo. `updateNodes({ updates })` is one all-or-nothing write.
 - **Decide with defaults.** State the decision, give a one-line reason, and
   move on. Ask the human only when the answer changes direction: scope,
   product behaviour, something irreversible.
-- **Test targets are behaviours**, never a coverage percentage. A percentage
-  target produces tests that protect nothing. Strings a test depends on
-  (selectors, labels, event names) live in constants the code and the test
-  both import.
-- **Performance claims need interleaved runs** on the same machine (A, B, A,
-  B...), with every sample listed. Background load alone can shift a timing
-  more than the change you are measuring.
+- **Test targets are behaviours**, never a coverage percentage, which
+  produces tests that protect nothing. Strings a test depends on (selectors,
+  labels, event names) live in constants the code and the test both import.
+- **Performance claims need interleaved runs** (A, B, A, B on one machine,
+  every sample listed): background load alone can outweigh the change.
 - **After an interruption,** read the node notes and the working tree before
   resuming. Never assume work landed because a report said so.

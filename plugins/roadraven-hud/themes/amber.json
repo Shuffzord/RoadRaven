@@ -1,0 +1,57 @@
+{
+	"id": "amber",
+	"meta": {
+		"name": "Amber",
+		"mode": "dark",
+		"description": "Warm black, phosphor amber, monospace UI. Developer · Focused · Late-night."
+	},
+	"colors": {
+		"bg-base": "#1a1612",
+		"bg-canvas": "#100d0a",
+		"bg-surface": "#14110e",
+		"bg-node": "#1d1813",
+		"bg-input": "#14110e",
+		"bg-statusbar": "#0f0c08",
+		"bg-elevated": "#2b241c",
+		"bg-hover": "#26201a",
+		"bg-active": "#322a22",
+		"bg-node-hover": "#241e17",
+		"bg-toolbar": "#14110e",
+		"bg-panel": "#14110e",
+		"bg-config": "#1d1813",
+		"text-primary": "#f2d6a4",
+		"text-secondary": "#b99975",
+		"text-tertiary": "#a48864",
+		"text-on-accent": "#1a1208",
+		"border": "#2a231b",
+		"border-subtle": "#221c15",
+		"border-focus": "#ffa83d",
+		"accent": "#ffa83d",
+		"accent-hover": "#ffb655",
+		"accent-muted": "rgba(255, 168, 61, 0.12)",
+		"accent-border": "rgba(255, 168, 61, 0.35)",
+		"dot-grid": "rgba(255, 168, 61, 0.08)",
+		"line-connector": "rgba(255, 168, 61, 0.34)",
+		"scrollbar-track": "#14110e",
+		"scrollbar-thumb": "#3a3025",
+		"status-not-started": "#9e8f6e",
+		"status-not-started-bg": "rgba(158, 143, 110, 0.12)",
+		"status-in-progress": "#ffa83d",
+		"status-in-progress-bg": "rgba(255, 168, 61, 0.14)",
+		"status-completed": "#a8c775",
+		"status-completed-bg": "rgba(168, 199, 117, 0.14)",
+		"status-blocked": "#e87f4e",
+		"status-blocked-bg": "rgba(232, 127, 78, 0.15)",
+		"pulse": "#ffa83d",
+		"search": "#22b8cf"
+	},
+	"shape": {
+		"border-width": "1px"
+	},
+	"shadows": {
+		"node": "0 0 0 1px rgba(255, 168, 61, 0.1)",
+		"node-hover": "0 0 0 1px rgba(255, 168, 61, 0.3), 0 0 12px rgba(255, 168, 61, 0.12)",
+		"panel": "-2px 0 16px rgba(0, 0, 0, 0.6)",
+		"config": "0 4px 20px rgba(0, 0, 0, 0.7)"
+	}
+}
