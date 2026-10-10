@@ -1,6 +1,7 @@
 import { expect, test } from "claude-code/testing";
 
 import {
+	clean,
 	describeAction,
 	flatten,
 	isUat,
@@ -81,4 +82,23 @@ test("describeAction and the small formatters", () => {
 	expect(shortModel("claude-haiku-5-5")).toBe("haiku 5.5");
 	expect(kTokens(12345)).toBe("12.3k");
 	expect(since(0, 75_000)).toBe("1m 15s");
+});
+
+test("roadmap text and tool arguments lose control characters before drawing", () => {
+	expect(clean("ok\u001b]52;c;aGk=\u0007 title\u009b2J")).toBe(
+		"ok ]52;c;aGk=  title 2J",
+	);
+	const [n] = flatten([
+		{
+			id: "x",
+			title: "evil\u001b[2J",
+			status: "not-started",
+			notes: "line one\u001b[31m\nline two",
+		},
+	]);
+	expect(n?.title).toBe("evil [2J");
+	expect(n?.notes).toBe("line one [31m");
+	expect(describeAction({ tool: "Bash", command: "printf '\u001b[2J'" })).toBe(
+		"Bash printf ' [2J'",
+	);
 });

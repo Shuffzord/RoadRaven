@@ -10,6 +10,15 @@ export type RawNode = {
 	children?: RawNode[];
 };
 
+// Roadmap text and tool arguments are drawn in a terminal: drop control
+// characters (escape sequences included) before any of it reaches the screen.
+// biome-ignore lint/suspicious/noControlCharactersInRegex: matching them is the point
+const CONTROL = /[\u0000-\u001f\u007f-\u009f]/g;
+export const clean = (s: string) => s.replace(CONTROL, " ");
+
+const firstLine = (s: string | undefined) =>
+	s ? clean(s.split("\n")[0] ?? "") : undefined;
+
 export const isUat = (n: HudNode) => n.type?.toLowerCase() === "uat";
 
 // claude-haiku-5-5 → haiku 5.5
@@ -28,11 +37,11 @@ function toHudNode(n: RawNode, depth: number): HudNode {
 	const priority = n.metadata?.priority;
 	return {
 		id: n.id,
-		title: n.title,
+		title: clean(n.title),
 		status: n.status,
 		depth,
 		type: n.type,
-		notes: n.notes,
+		notes: firstLine(n.notes),
 		priority: typeof priority === "string" ? priority : undefined,
 	};
 }
@@ -65,6 +74,6 @@ export function describeAction(
 	e: { tool: string } & Record<string, unknown>,
 ): string {
 	const key = ARG_KEYS.find((k) => typeof e[k] === "string");
-	if (!key) return toolName(e.tool);
-	return `${toolName(e.tool)} ${argText(key, String(e[key]))}`;
+	if (!key) return clean(toolName(e.tool));
+	return clean(`${toolName(e.tool)} ${argText(key, String(e[key]))}`);
 }
