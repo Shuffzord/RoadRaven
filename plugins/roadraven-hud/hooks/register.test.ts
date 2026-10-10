@@ -497,3 +497,106 @@ test("a failing findNodes keeps the last notes drawn and logs once", async ($, o
 	await ui.press({ key: "notes-u1" });
 	expect(await ui.find({ text: /Then\*\* log in/ })).toBeDefined();
 });
+
+test("Next marks a not-started node next and tells the session", async ($, on) => {
+	const r = rig(on, { current: answerOk });
+	const session = mock.session(on);
+	await markAndSend($, ["backlog-toggle", "next-root"]);
+	expect(r.writes("updateNodes").map((c) => c.args)).toEqual([
+		{
+			expectedRevision: 1,
+			updates: [{ nodeId: "root", metadata: { priority: "next" } }],
+		},
+	]);
+	expect(JSON.stringify(session.appended())).toContain("prioritise node");
+	expect(r.toasts).toContain("RoadRaven · Root marked next");
+});
+
+test("Next on a node that has started writes nothing and says so", async ($, on) => {
+	const answer = { current: answerOk };
+	const r = rig(on, answer);
+	const ui = await markAndSend($, ["backlog-toggle"]);
+	const moved = withStatus("root", "in-progress");
+	answer.current = (c) => answerRR(c, moved);
+	await ui.press({ key: "next-root" });
+	expect(r.writes("updateNodes")).toEqual([]);
+	expect(r.toasts).toContain(
+		"RoadRaven · Root is no longer not-started; nothing done",
+	);
+});
+
+test("Run that the session refuses starts nothing and says why", async ($, on) => {
+	const r = rig(on, { current: answerOk });
+	const session = mock.session(on);
+	on("agent.spawn", () => ({ deny: "agents are off here" }));
+	await markAndSend($, ["backlog-toggle", "run-root", "run-start-root"]);
+	expect(r.toasts).toContain(
+		"RoadRaven · could not start an agent: agents are off here",
+	);
+	expect(session.appended()).toEqual([]);
+});
+
+test("Run on a node that has started since the confirm starts nothing", async ($, on) => {
+	const answer = { current: answerOk };
+	const r = rig(on, answer);
+	const spawns: unknown[] = [];
+	on("agent.spawn", (_$, e) => {
+		spawns.push(e);
+		return { deny: "unexpected" };
+	});
+	const ui = await markAndSend($, ["backlog-toggle", "run-root"]);
+	const moved = withStatus("root", "in-progress");
+	answer.current = (c) => answerRR(c, moved);
+	await ui.press({ key: "run-start-root" });
+	expect(spawns).toEqual([]);
+	expect(r.toasts).toContain(
+		"RoadRaven · Root is no longer not-started; nothing done",
+	);
+});
+
+test("each roadmap file brings its own attribution back, and saves under its own key", async ($, on) => {
+	const OTHER = "/work/other.json";
+	const otherKey = `attribution:${OTHER}`;
+	const stored: Record<string, unknown> = {
+		[STORE_KEY]: saved,
+		[otherKey]: {
+			agents: { b1: { ...saved.agents.a1, id: "b1", label: "other-worker" } },
+			owners: { n1: "b1" },
+			seenUat: [],
+		},
+	};
+	const other = { ...roadmap, filePath: OTHER };
+	let rm = roadmap;
+	on("mcp.call", (_$, e) => {
+		const text = answerRR(e, rm);
+		return { value: { content: [{ type: "text", text }], isError: false } };
+	});
+	on("ui.open", () => ({ value: { isPlaced: true } }));
+	on("ui.status", () => ({ value: undefined }));
+	on("ui.toast", () => ({ value: undefined }));
+	on("store.get", (_$, e) => ({ value: stored[e.key] }));
+	on("store.set", (_$, e) => {
+		stored[e.key] = e.value;
+		return { value: undefined };
+	});
+	const open = () => $.command.run({ command: "roadraven", args: "" } as never);
+
+	await open();
+	const ui = await $.ui.mount(PANE_PROPS);
+	expect(await ui.find({ text: /auth-worker/ })).toBeDefined();
+	rm = other;
+	await open();
+	expect(await ui.find({ text: /other-worker/ })).toBeDefined();
+	expect(await ui.find({ text: /auth-worker/ })).toBeUndefined();
+	expect(stored[otherKey]).toMatchObject({
+		owners: { n1: "b1" },
+		seenUat: ["u5", "u1"],
+	});
+	rm = roadmap;
+	await open();
+	expect(await ui.find({ text: /auth-worker/ })).toBeDefined();
+	expect(stored[STORE_KEY]).toMatchObject({
+		owners: { n1: "a1" },
+		seenUat: ["u5", "u1"],
+	});
+});
