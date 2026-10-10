@@ -41,7 +41,7 @@ const MISMATCH_REMEDY: Record<
 	"update-plugin": () => ({
 		body: "Update the RoadRaven plugin, then restart Claude Code:",
 		command:
-			"claude plugin marketplace update roadraven; claude plugin update roadraven@roadraven",
+			"claude plugin marketplace update roadraven; claude plugin update roadraven@roadraven; claude plugin install roadraven-hud@roadraven; claude plugin update roadraven-hud@roadraven",
 	}),
 	"update-npm": (_producerVersion, appVersion) => ({
 		body: `Re-register the MCP server at ${appVersion}, then restart your agent:`,

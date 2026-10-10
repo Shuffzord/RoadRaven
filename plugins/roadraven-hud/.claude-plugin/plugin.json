@@ -2,6 +2,10 @@
 	"name": "roadraven-hud",
 	"version": "0.8.7",
 	"description": "RoadRaven pane in Claude Code: live agents on roadmap nodes, batched UAT sign-off, and a backlog you can start or prioritise",
+	"author": {
+		"name": "Shuffzord",
+		"url": "https://github.com/Shuffzord"
+	},
 	"types": "./types/index.d.ts",
 	"userConfig": {
 		"theme": {

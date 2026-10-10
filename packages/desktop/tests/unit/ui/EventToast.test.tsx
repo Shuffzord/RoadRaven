@@ -140,7 +140,7 @@ describe("EventToast version_mismatch remedy (v0.8)", () => {
 	it("update-plugin shows the verified plugin update command with a working Copy button", async () => {
 		renderMismatch("0.7.2|0.8.0|update-plugin");
 		const command =
-			"claude plugin marketplace update roadraven; claude plugin update roadraven@roadraven";
+			"claude plugin marketplace update roadraven; claude plugin update roadraven@roadraven; claude plugin install roadraven-hud@roadraven; claude plugin update roadraven-hud@roadraven";
 		expect(
 			screen.getByText(
 				"MCP server version 0.7.2 does not match RoadRaven 0.8.0.",
