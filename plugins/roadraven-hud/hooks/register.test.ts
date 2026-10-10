@@ -71,6 +71,11 @@ test("pane lists active work and pending UAT; batched Pass is written on Send", 
 	});
 	on("ui.open", () => ({ value: { isPlaced: true } }));
 	on("ui.status", () => ({ value: undefined }));
+	const prompts: string[] = [];
+	on("prompt.submit", (_$, e) => {
+		prompts.push(e.text);
+		return { text: e.text };
+	});
 	const stored: Record<string, unknown> = { [STORE_KEY]: saved };
 	on("store.get", (_$, e) => ({ value: stored[e.key] }));
 	on("store.set", (_$, e) => {
@@ -101,8 +106,19 @@ test("pane lists active work and pending UAT; batched Pass is written on Send", 
 			await ui.press({ key: "pass-u1" });
 			await ui.press({ key: "fail-u3" });
 			await ui.input({ key: "why-u3", text: "button does nothing" });
+			expect(
+				await ui.find({ type: "Text", text: /button does nothing ✓ saved/ }),
+			).toBeDefined();
 			expect(writes).toEqual([]);
 			await ui.press({ key: "uat-submit" });
+			expect(
+				await ui.find({
+					text: /✓ Sent 2 decision\(s\) at \d\d:\d\d — the orchestrator is on it/,
+				}),
+			).toBeDefined();
+			expect(prompts).toEqual([
+				expect.stringContaining("[RoadRaven pane] The user reviewed 2 UAT"),
+			]);
 		}
 	}
 

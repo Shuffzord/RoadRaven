@@ -19,6 +19,8 @@ export type HudNode = {
 	priority?: string;
 };
 
+export type HudSent = { count: number; at: number; isAwake: boolean };
+
 export type HudSnapshot = { title: string; nodes: HudNode[] };
 
 export type HudPalette = {
@@ -51,6 +53,7 @@ declare module "claude-code" {
 			showBacklog: boolean;
 			seenUat: string[];
 			openNotes: Record<string, true>;
+			sent: HudSent | null;
 			roadmapPath: string;
 		};
 	}
