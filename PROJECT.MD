@@ -129,6 +129,9 @@ add the `## [X.Y.Z] - date` entry to `CHANGELOG.md`, then commit as
 `chore(release): bump version to X.Y.Z`. Running the script with the current
 version is a safe no-op and doubles as a consistency check.
 
+The full release runbook (smoke test, tag, npm stage approval, MCP Registry,
+post-release check) is [docs/releasing.md](docs/releasing.md).
+
 ## Electrobun-specific patterns
 
 - Load bundled views with `views://mainview/index.html`

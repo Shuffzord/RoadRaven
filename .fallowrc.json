@@ -29,6 +29,8 @@
     "scripts/check-core-deps.ts",
     "scripts/bump-version.ts",
     "scripts/sync-hud-themes.ts",
+    "scripts/release-smoke.ts",
+    "scripts/release-verify.ts",
     "scripts/normalize-uuids.mjs",
     "scripts/validate-cfa-roadmap.mjs",
     "scripts/validate-roadmap.mjs",

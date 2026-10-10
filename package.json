@@ -26,6 +26,8 @@
     "screenshots": "bun run packages/desktop/scripts/screenshots/run.ts",
     "screenshots:cfa": "bun run packages/desktop/scripts/screenshots/run.ts --scene cfa-overview",
     "theme:lint": "bun run --cwd packages/desktop theme:lint",
+    "release:smoke": "bun scripts/release-smoke.ts",
+    "release:verify": "bun scripts/release-verify.ts",
     "verify": "bun run test && bun run test:typecheck && bun run test:typecheck:tests && bun run test:build && bun run test:lint",
     "prepare": "husky",
     "postinstall": "bun run --cwd packages/desktop prepare:electrobun"
