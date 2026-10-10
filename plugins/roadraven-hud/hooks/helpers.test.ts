@@ -2,8 +2,10 @@ import { expect, test } from "claude-code/testing";
 
 import {
 	clean,
+	cleanNotes,
 	describeAction,
 	flatten,
+	isReadyUat,
 	isUat,
 	kTokens,
 	shortModel,
@@ -97,8 +99,28 @@ test("roadmap text and tool arguments lose control characters before drawing", (
 		},
 	]);
 	expect(n?.title).toBe("evil [2J");
-	expect(n?.notes).toBe("line one [31m");
+	expect(n?.notes).toBe("line one [31m\nline two");
 	expect(describeAction({ tool: "Bash", command: "printf '\u001b[2J'" })).toBe(
 		"Bash printf ' [2J'",
 	);
+});
+
+test("notes keep newlines and tabs but drop escapes", () => {
+	expect(cleanNotes("a\u001b[2J\tb\r\nc\u0007\n")).toBe("a [2J\tb\nc");
+});
+
+test("only in-progress and blocked UAT nodes are ready", () => {
+	const uat = (status: string) => ({
+		id: "u",
+		title: "U",
+		status,
+		depth: 0,
+		type: "UAT",
+	});
+	expect(
+		["not-started", "in-progress", "blocked", "completed"].map((s) =>
+			isReadyUat(uat(s)),
+		),
+	).toEqual([false, true, true, false]);
+	expect(isReadyUat({ ...uat("in-progress"), type: "task" })).toBe(false);
 });

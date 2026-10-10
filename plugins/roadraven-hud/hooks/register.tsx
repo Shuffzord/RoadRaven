@@ -12,6 +12,7 @@ import {
 	clean,
 	describeAction,
 	flatten,
+	isReadyUat,
 	isUat,
 	kTokens,
 	type RawNode,
@@ -23,6 +24,8 @@ import { AMBER, toPalette } from "./theme";
 const PANE = "roadraven";
 const POLL_MS = 4000;
 const BACKLOG_MAX = 12;
+const NOTES_LONG = 80;
+const AGENTS_KEPT = 50;
 // The server is `roadraven` when configured by hand, `plugin:roadraven:roadraven` when the plugin ships it.
 const SERVERS = ["roadraven", "plugin:roadraven:roadraven"];
 const RR_TOOL = /^mcp__(plugin_roadraven_)?roadraven__/;
@@ -42,6 +45,9 @@ const note = atom({ ...S, key: "note" } as const, "");
 const failNotes = atom({ ...S, key: "failNotes" } as const, {});
 const showBacklog = atom({ ...S, key: "showBacklog" } as const, false);
 const seenUat = atom({ ...S, key: "seenUat" } as const, []);
+const openNotes = atom({ ...S, key: "openNotes" } as const, {});
+// The roadmap whose attribution the atoms hold; "" until the first refresh, or while untitled.
+const roadmapPath = atom({ ...S, key: "roadmapPath" } as const, "");
 
 type Els = Elements[keyof Elements];
 type Decision = "pass" | "fail";
@@ -56,6 +62,7 @@ type Data = {
 	noteText: string;
 	whyFailed: Record<string, string>;
 	backlogOpen: boolean;
+	notesOpen: Record<string, true>;
 };
 
 const CHOICE = {
@@ -182,6 +189,59 @@ async function syncPalette($: EngineInterface, themeChoice: string) {
 		await update($, palette, () => next);
 }
 
+// --- attribution kept across restarts, per roadmap file ------------------------------------------
+
+type Saved = {
+	agents: Record<string, HudAgent>;
+	owners: Record<string, string>;
+	seenUat: string[];
+};
+const storeKey = (path: string) => `attribution:${path}`;
+
+const byRecent = (a: HudAgent, b: HudAgent) => b.startedAt - a.startedAt;
+// The newest AGENTS_KEPT agents; a restart ended every one of them, so they load as done.
+const keptAgents = (all: Record<string, HudAgent>, isDone: boolean) =>
+	Object.fromEntries(
+		Object.values(all)
+			.sort(byRecent)
+			.slice(0, AGENTS_KEPT)
+			.map((a) => [a.id, isDone ? { ...a, isDone } : a]),
+	);
+
+async function saveAttribution($: EngineInterface) {
+	const path = await read($, roadmapPath);
+	if (!path) return;
+	const saved: Saved = {
+		agents: keptAgents(await read($, agents), false),
+		owners: await read($, owners),
+		seenUat: await read($, seenUat),
+	};
+	// Losing the saved attribution only costs the labels after a restart: never fail the pane on it.
+	await $.store.set(storeKey(path), saved).catch(() => undefined);
+}
+
+async function loadAttribution($: EngineInterface, path: string) {
+	const saved: Saved = {
+		agents: {},
+		owners: {},
+		seenUat: [],
+		...((await $.store.get(storeKey(path)).catch(() => undefined)) as
+			| Partial<Saved>
+			| undefined),
+	};
+	await update($, agents, () => keptAgents(saved.agents, true));
+	await update($, owners, () => saved.owners);
+	await update($, seenUat, () => saved.seenUat);
+	await update($, roadmapPath, () => path);
+}
+
+// A newly opened roadmap file (or a fresh session) brings its own attribution back first.
+async function adoptRoadmap($: EngineInterface, filePath: unknown) {
+	if (typeof filePath !== "string" || !filePath) return;
+	if (filePath !== (await read($, roadmapPath)))
+		await loadAttribution($, filePath);
+}
+
 async function announceUat($: EngineInterface, pending: HudNode[]) {
 	const seen = new Set(await read($, seenUat));
 	const fresh = pending.filter((n) => !seen.has(n.id));
@@ -192,22 +252,26 @@ async function announceUat($: EngineInterface, pending: HudNode[]) {
 			: `RoadRaven · ${fresh.length} UAT items ready`,
 	);
 	await update($, seenUat, (s) => [...s, ...fresh.map((n) => n.id)]);
+	await saveAttribution($);
 }
 
 async function syncSnapshot($: EngineInterface) {
-	const { schema = {} } = await callRR($, "getRoadmap");
+	const { schema = {}, filePath } = await callRR($, "getRoadmap");
+	await adoptRoadmap($, filePath);
 	const nodes = flatten((schema.nodes ?? []) as RawNode[]);
 	await update($, snapshot, () => ({
 		title: String(schema.title ?? ""),
 		nodes,
 	}));
 	if ((await read($, error)) !== null) await update($, error, () => null);
-	const pending = nodes.filter((n) => isUat(n) && n.status !== "completed");
-	await announceUat($, pending);
+	await announceUat(
+		$,
+		nodes.filter((n) => isUat(n) && n.status === "in-progress"),
+	);
 	const active = nodes.filter(
 		(n) => n.status === "in-progress" && !isUat(n),
 	).length;
-	$.ui.status(`RR ${active} active · ${pending.length} UAT`);
+	$.ui.status(`RR ${active} active · ${nodes.filter(isReadyUat).length} UAT`);
 }
 
 // ponytail: polls the whole tree every 4s; add a push frame to the event API if trees get large.
@@ -221,12 +285,18 @@ async function refresh($: EngineInterface, themeChoice: string) {
 	}
 }
 
-function recordAgent($: EngineInterface, agent: HudAgent) {
-	return update($, agents, (a) => ({ ...a, [agent.id]: agent }));
+async function recordAgent($: EngineInterface, agent: HudAgent) {
+	await update($, agents, (a) => ({ ...a, [agent.id]: agent }));
+	await saveAttribution($);
 }
 
-function finishAgent($: EngineInterface, id: string, tokens: number) {
-	return update($, agents, (a) => {
+async function setOwner($: EngineInterface, nodeId: string, agentId: string) {
+	await update($, owners, (o) => ({ ...o, [nodeId]: agentId }));
+	await saveAttribution($);
+}
+
+async function finishAgent($: EngineInterface, id: string, tokens: number) {
+	await update($, agents, (a) => {
 		const agent = a[id];
 		return agent
 			? {
@@ -239,6 +309,7 @@ function finishAgent($: EngineInterface, id: string, tokens: number) {
 				}
 			: a;
 	});
+	await saveAttribution($);
 }
 
 async function noteActivity($: EngineInterface, e: ToolCallInput) {
@@ -255,7 +326,7 @@ async function linkOwner($: EngineInterface, e: ToolCallInput) {
 	const nodeId = (e as { nodeId?: unknown }).nodeId;
 	if (typeof nodeId !== "string" || !e.tool.endsWith("__updateNodeStatus"))
 		return;
-	await update($, owners, (o) => ({ ...o, [nodeId]: e.agentId ?? "main" }));
+	await setOwner($, nodeId, e.agentId ?? "main");
 }
 
 // --- what the pane's buttons do ---------------------------------------------------------------
@@ -264,6 +335,13 @@ function toggleDecision($: EngineInterface, id: string, d: Decision) {
 	return update($, decisions, (all) => {
 		const { [id]: was, ...rest } = all;
 		return was === d ? rest : { ...rest, [id]: d };
+	});
+}
+
+function toggleNotes($: EngineInterface, id: string) {
+	return update($, openNotes, (all) => {
+		const { [id]: was, ...rest } = all;
+		return was ? rest : { ...rest, [id]: true as const };
 	});
 }
 
@@ -363,7 +441,7 @@ async function runNode($: EngineInterface, n: HudNode) {
 		startedAt: Date.now(),
 		isDone: false,
 	});
-	await update($, owners, (o) => ({ ...o, [n.id]: id }));
+	await setOwner($, n.id, id);
 	await tell(
 		$,
 		`The user started a one-off sub-agent on node ${q(n.title)} (${n.id}) outside the current plan. Don't re-plan or duplicate it; check its result when it reports back.`,
@@ -569,13 +647,50 @@ function drawUatTitle(
 	);
 }
 
-function drawUatNotes({ els, P }: View, n: HudNode) {
-	if (!n.notes) return null;
+const hasMoreNotes = (notes: string) =>
+	notes.includes("\n") || notes.length > NOTES_LONG;
+
+function drawFullNotes({ els, P }: View, notes: string) {
+	const { Text } = els;
+	if ("Markdown" in els) return <els.Markdown text={notes} dimColor />;
+	return <Text color={P.tertiary}>{notes}</Text>;
+}
+
+function drawNotesToggle(
+	$: EngineInterface,
+	{ els }: View,
+	n: HudNode,
+	isOpen: boolean,
+) {
 	return (
-		<els.Text color={P.tertiary} wrap="truncate-end">
-			{"    "}
-			{n.notes.split("\n")[0]}
-		</els.Text>
+		<els.Button
+			key={`notes-${n.id}`}
+			plain
+			label={isOpen ? " less" : " more"}
+			onPress={() => toggleNotes($, n.id)}
+		/>
+	);
+}
+
+function drawUatNotes(
+	$: EngineInterface,
+	v: View,
+	n: HudNode,
+	notes: string,
+	isOpen: boolean,
+) {
+	const { Box, Text } = v.els;
+	return (
+		<Box marginLeft={4} flexDirection={isOpen ? "column" : "row"}>
+			{isOpen ? (
+				drawFullNotes(v, notes)
+			) : (
+				<Text color={v.P.tertiary} wrap="truncate-end">
+					{notes.split("\n")[0]}
+				</Text>
+			)}
+			{hasMoreNotes(notes) && drawNotesToggle($, v, n, isOpen)}
+		</Box>
 	);
 }
 
@@ -585,7 +700,7 @@ function drawUatItem($: EngineInterface, v: View, d: Data, n: HudNode) {
 	return (
 		<Box key={n.id} flexDirection="column">
 			{drawUatTitle(v, n, choice)}
-			{drawUatNotes(v, n)}
+			{n.notes && drawUatNotes($, v, n, n.notes, d.notesOpen[n.id] === true)}
 			<Box marginLeft={4}>
 				{drawChoice($, v, n, "pass", choice === "pass")}
 				{drawChoice($, v, n, "fail", choice === "fail")}
@@ -623,13 +738,23 @@ function drawUatSend($: EngineInterface, v: View, d: Data, uat: HudNode[]) {
 	);
 }
 
-function drawUat($: EngineInterface, v: View, d: Data, uat: HudNode[]) {
+const notReady = (v: View, waiting: number) =>
+	waiting > 0 && quiet(v, `${waiting} not ready yet`);
+
+function drawUat(
+	$: EngineInterface,
+	v: View,
+	d: Data,
+	uat: HudNode[],
+	waiting: number,
+) {
 	const { Box } = v.els;
 	return (
 		<Box flexDirection="column">
 			{pill(v, "UAT", uat.length)}
 			{uat.length === 0 && quiet(v, "nothing waiting for acceptance")}
 			{uat.map((n) => drawUatItem($, v, d, n))}
+			{notReady(v, waiting)}
 			{uat.length > 0 && drawUatSend($, v, d, uat)}
 		</Box>
 	);
@@ -709,7 +834,10 @@ function drawBacklog(
 function drawPane($: EngineInterface, v: View, d: Data) {
 	const nodes = d.snap.nodes;
 	const active = nodes.filter((n) => n.status === "in-progress" && !isUat(n));
-	const uat = nodes.filter((n) => isUat(n) && n.status !== "completed");
+	const uat = nodes.filter(isReadyUat);
+	const waiting = nodes.filter(
+		(n) => isUat(n) && n.status === "not-started",
+	).length;
 	const backlog = nodes.filter((n) => n.status === "not-started" && !isUat(n));
 	const linked = new Set(Object.values(d.owner));
 	const loose = Object.values(d.who).filter(
@@ -729,7 +857,7 @@ function drawPane($: EngineInterface, v: View, d: Data) {
 				`${active.length} active · ${uat.length} UAT · ${backlog.length} backlog`,
 			)}
 			{drawActive(v, d, active, loose)}
-			{drawUat($, v, d, uat)}
+			{drawUat($, v, d, uat, waiting)}
 			{drawBacklog($, v, d.backlogOpen, backlog)}
 		</v.els.Box>
 	);
@@ -750,18 +878,38 @@ function drawError({ els, P }: View, err: string) {
 }
 
 async function readData($: EngineInterface): Promise<Data> {
-	const [snap, who, owner, act, decided, noteText, whyFailed, backlogOpen] =
-		await Promise.all([
-			read($, snapshot),
-			read($, agents),
-			read($, owners),
-			read($, activity),
-			read($, decisions),
-			read($, note),
-			read($, failNotes),
-			read($, showBacklog),
-		]);
-	return { snap, who, owner, act, decided, noteText, whyFailed, backlogOpen };
+	const [
+		snap,
+		who,
+		owner,
+		act,
+		decided,
+		noteText,
+		whyFailed,
+		backlogOpen,
+		notesOpen,
+	] = await Promise.all([
+		read($, snapshot),
+		read($, agents),
+		read($, owners),
+		read($, activity),
+		read($, decisions),
+		read($, note),
+		read($, failNotes),
+		read($, showBacklog),
+		read($, openNotes),
+	]);
+	return {
+		snap,
+		who,
+		owner,
+		act,
+		decided,
+		noteText,
+		whyFailed,
+		backlogOpen,
+		notesOpen,
+	};
 }
 
 // --- hooks --------------------------------------------------------------------------------------

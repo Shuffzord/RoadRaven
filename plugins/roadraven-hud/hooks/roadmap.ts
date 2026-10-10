@@ -16,10 +16,16 @@ export type RawNode = {
 const CONTROL = /[\u0000-\u001f\u007f-\u009f]/g;
 export const clean = (s: string) => s.replace(CONTROL, " ");
 
-const firstLine = (s: string | undefined) =>
-	s ? clean(s.split("\n")[0] ?? "") : undefined;
+// Notes keep their newlines and tabs (Markdown draws them); every other control character goes.
+// biome-ignore lint/suspicious/noControlCharactersInRegex: matching them is the point
+const NOTES_CONTROL = /[\u0000-\u0008\u000b-\u001f\u007f-\u009f]/g;
+export const cleanNotes = (s: string) =>
+	s.replace(/\r\n?/g, "\n").replace(NOTES_CONTROL, " ").trim();
 
 export const isUat = (n: HudNode) => n.type?.toLowerCase() === "uat";
+// Ready to test (in-progress) or failed before and open to a re-test (blocked).
+export const isReadyUat = (n: HudNode) =>
+	isUat(n) && (n.status === "in-progress" || n.status === "blocked");
 
 // claude-haiku-5-5 → haiku 5.5
 export const shortModel = (m: string) =>
@@ -41,7 +47,7 @@ function toHudNode(n: RawNode, depth: number): HudNode {
 		status: n.status,
 		depth,
 		type: n.type,
-		notes: firstLine(n.notes),
+		notes: n.notes ? cleanNotes(n.notes) : undefined,
 		priority: typeof priority === "string" ? priority : undefined,
 	};
 }

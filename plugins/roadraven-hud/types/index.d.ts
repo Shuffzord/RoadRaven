@@ -50,6 +50,8 @@ declare module "claude-code" {
 			failNotes: Record<string, string>;
 			showBacklog: boolean;
 			seenUat: string[];
+			openNotes: Record<string, true>;
+			roadmapPath: string;
 		};
 	}
 }
