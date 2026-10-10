@@ -311,6 +311,17 @@ server.registerTool(
 	agentToolCallback("cameraFitView", wsClient),
 );
 
+server.registerTool(
+	"revealNode",
+	{
+		title: "Show a node in RoadRaven",
+		description:
+			"Select a node, centre the camera on it, open its side panel and bring the RoadRaven window to the front. Where the window manager refuses to raise the window, the node is still selected. Use it to show the human the node you are on.",
+		inputSchema: GetNodeInputSchema,
+	},
+	agentToolCallback("revealNode", wsClient),
+);
+
 // -------- Shutdown + transport (Phase 4 carry-forward, unchanged) --------
 
 const shutdown = async () => {
