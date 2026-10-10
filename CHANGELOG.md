@@ -3,7 +3,7 @@
 All notable changes to RoadRaven are documented in this file. The format
 follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## [0.8.9] - Unreleased
+## [0.8.9] - 2026-10-10
 
 ### Fixed
 
@@ -12,6 +12,11 @@ follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   updating the app from 0.8.7 to 0.8.8 a plugin user saw nothing, kept the old
   plugin and never got the RoadRaven HUD. Any version difference (patch and
   prerelease included) now shows the toast with the plugin update commands.
+- **The RoadRaven HUD works on large roadmaps.** A roadmap with long notes
+  outgrew Claude Code's MCP result limit and the pane showed "JSON Parse
+  error". The pane now polls without notes (new `getRoadmap({ omitNotes })`),
+  fetches UAT notes only when UAT items change, and says plainly when a
+  roadmap is still too large.
 - **Event-server and agent logs reach `roadraven.log`.** Connection, version
   and agent-request lines were dropped because their logger category wasn't
   configured.
