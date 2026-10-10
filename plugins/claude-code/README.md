@@ -17,6 +17,14 @@ roadmap open, `no_file_loaded`. The app only opens or saves files where you
 already work, so a request for another path returns `path_not_permitted`.
 Install the app first: see [Install](https://github.com/Shuffzord/RoadRaven#install).
 
+## What it does on your machine
+
+- **Downloads and runs `@roadraven/mcp`** from npm through `npx`, pinned to the plugin's exact version, as a local stdio MCP server.
+- **Reads one file:** `event-api.json` in RoadRaven's user-data folder (`~/.config/RoadRaven` on Linux, `%LOCALAPPDATA%\RoadRaven` on Windows), which the desktop app writes with its local port.
+- **Connects only to the RoadRaven desktop app**, over a WebSocket on `127.0.0.1`, to read and edit the open roadmap. It sends nothing anywhere else and collects no telemetry.
+- **Writes files only when you run `npx @roadraven/mcp init` yourself:** it offers to add a short RoadRaven section to a `CLAUDE.md`, and asks first.
+- The skills are instructions for Claude; they run nothing on their own.
+
 ## Install
 
 Three ways, easiest first.
