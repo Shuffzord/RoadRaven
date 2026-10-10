@@ -3,7 +3,8 @@
 A **mod** for Claude Code: a brand-new kind of extension that changes Claude
 Code's own interface. It adds a live RoadRaven pane inside your terminal
 session, plus a status-line entry such as `RR 2 active · 1 UAT`. The pane
-opens at session start on wide terminals, or any time with `/roadraven`.
+opens by itself once RoadRaven is running with a roadmap open, or any time
+with `/roadraven`. Until then it stays closed and checks back less often.
 
 ![UAT section with Pass and Fail buttons](../../screenshots/hud-uat.png)
 
@@ -21,7 +22,7 @@ opens at session start on wide terminals, or any time with `/roadraven`.
 | --- | --- | --- |
 | Active work | In-progress nodes with the agent on each: name, model, effort, elapsed time, current action, tokens when done | none |
 | UAT | Nodes with type `uat` that are ready | Pass / Fail per item, note per failed item, optional batch note, then "Send N decision(s) to orchestrator" |
-| Backlog | `not-started` nodes (`[show]` / `[hide]`) | **Run**: one-off sub-agent on the node, orchestrator told. **Next**: sets `metadata.priority = "next"`, taken first by the orchestrate and work-node skills |
+| Backlog | `not-started` nodes (`[show]` / `[hide]`) | **Run**: asks first (Start agent / Cancel), then a one-off sub-agent on the node, orchestrator told. **Next**: sets `metadata.priority = "next"`, taken first by the orchestrate and work-node skills |
 
 UAT decisions: Pass sets `completed`, Fail sets `blocked`. Failure notes are
 appended to the node and the session gets one summary.

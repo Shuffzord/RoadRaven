@@ -55,16 +55,6 @@ export const CONN = {
 export const connKind = (err: string): HudConnKind =>
 	CONN_RULES.find(([, re]) => re.test(err))?.[0] ?? "other";
 
-// A real answer from a server beats "not connected" from one that isn't there.
-const RANK: Record<HudConnKind, number> = {
-	connecting: 0,
-	other: 1,
-	noFile: 2,
-	offline: 2,
-};
-export const moreInformative = (kept: string, next: string) =>
-	RANK[connKind(next)] > RANK[connKind(kept)] ? next : kept;
-
 // Shortly after start the MCP servers may not be up yet: nothing is red then.
 export const shownKind = (err: string, isStarting: boolean): HudConnKind => {
 	const kind = connKind(err);

@@ -60,6 +60,12 @@ declare module "claude-code" {
 			openNotes: Record<string, true>;
 			sent: HudSent | null;
 			roadmapPath: string;
+			isSending: boolean;
+			confirmRun: string;
+			starting: Record<string, true>;
+			autoOpened: boolean;
+			offlineSince: number;
+			lastTry: number;
 		};
 	}
 }
