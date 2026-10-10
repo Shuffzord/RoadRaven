@@ -21,6 +21,7 @@ import {
 	isReadyUat,
 	isUat,
 	kTokens,
+	lastFailure,
 	type RawNode,
 	shortModel,
 	since,
@@ -684,10 +685,20 @@ function drawUatTitle(
 		<Text wrap="truncate-end">
 			<Text color={ink}>{mark}</Text>
 			<Text color={P.primary}>{n.title}</Text>
-			{n.status === "blocked" && !choice && (
+			{n.status === "blocked" && !choice && !lastFailure(n.notes) && (
 				<Text color={P.blocked}> failed before</Text>
 			)}
 		</Text>
+	);
+}
+
+function drawFailure({ els, P }: View, n: HudNode) {
+	const f = n.status === "blocked" ? lastFailure(n.notes) : undefined;
+	if (!f) return null;
+	return (
+		<els.Text color={P.blocked} wrap="truncate-end">
+			{`  ✗ failed (${f.date}): ${f.reason}`}
+		</els.Text>
 	);
 }
 
@@ -744,6 +755,7 @@ function drawUatItem($: EngineInterface, v: View, d: Data, n: HudNode) {
 	return (
 		<Box key={n.id} flexDirection="column">
 			{drawUatTitle(v, n, choice)}
+			{drawFailure(v, n)}
 			{n.notes && drawUatNotes($, v, n, n.notes, d.notesOpen[n.id] === true)}
 			<Box marginLeft={4}>
 				{drawChoice($, v, n, "pass", choice === "pass")}

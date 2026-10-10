@@ -22,6 +22,13 @@ const NOTES_CONTROL = /[\u0000-\u0008\u000b-\u001f\u007f-\u009f]/g;
 export const cleanNotes = (s: string) =>
 	s.replace(/\r\n?/g, "\n").replace(NOTES_CONTROL, " ").trim();
 
+// The pane appends `**UAT failed** (date): reason` on a Fail; the last such entry is the latest reason.
+const FAILED = /\*\*UAT failed\*\* \(([^)]*)\): *([^\n]*)/g;
+export function lastFailure(notes = "") {
+	const m = [...notes.matchAll(FAILED)].pop();
+	return m && { date: m[1] ?? "", reason: (m[2] ?? "").trim() };
+}
+
 export const isUat = (n: HudNode) => n.type?.toLowerCase() === "uat";
 // Ready to test (in-progress) or failed before and open to a re-test (blocked).
 export const isReadyUat = (n: HudNode) =>

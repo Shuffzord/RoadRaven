@@ -47,6 +47,8 @@ const roadmap = {
 						title: "Export works",
 						status: "blocked",
 						type: "uat",
+						notes:
+							"Click Export\n\n**UAT failed** (2026-10-01): old reason\n\n**UAT failed** (2026-10-09): file is empty",
 					},
 					{
 						id: "u4",
@@ -99,6 +101,10 @@ test("pane lists active work and pending UAT; batched Pass is written on Send", 
 		expect(await ui.find({ text: /Login works/ })).toBeDefined();
 		expect(await ui.find({ text: /Already accepted/ })).toBeUndefined();
 		expect(await ui.find({ text: /Not built yet/ })).toBeUndefined();
+		expect(
+			await ui.find({ text: /✗ failed \(2026-10-09\): file is empty/ }),
+		).toBeDefined();
+		expect(await ui.find({ text: /failed before/ })).toBeUndefined();
 		expect(await ui.find({ text: /1 not ready yet/ })).toBeDefined();
 		if (surface === "terminal") {
 			await ui.press({ key: "notes-u1" });

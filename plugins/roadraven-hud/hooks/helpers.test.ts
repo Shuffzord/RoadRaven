@@ -8,6 +8,7 @@ import {
 	isReadyUat,
 	isUat,
 	kTokens,
+	lastFailure,
 	shortModel,
 	since,
 } from "./roadmap";
@@ -123,4 +124,14 @@ test("only in-progress and blocked UAT nodes are ready", () => {
 		),
 	).toEqual([false, true, true, false]);
 	expect(isReadyUat({ ...uat("in-progress"), type: "task" })).toBe(false);
+});
+
+test("lastFailure finds the latest UAT failure reason", () => {
+	expect(lastFailure(undefined)).toBeUndefined();
+	expect(lastFailure("steps\nmore steps")).toBeUndefined();
+	expect(
+		lastFailure(
+			"Open it\nthen click\n\n**UAT failed** (2026-10-01): first\n\n**UAT failed** (2026-10-09): second one\nafter",
+		),
+	).toEqual({ date: "2026-10-09", reason: "second one" });
 });
