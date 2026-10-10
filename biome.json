@@ -45,7 +45,9 @@
 			"!.claude/worktrees",
 			"!**/.hutch",
 			"!**/.cottontail-tmp",
-			"!**/*.bak.json"
+			"!**/*.bak.json",
+			"!plugins/roadraven-hud/.claude-plugin/types",
+			"!plugins/roadraven-hud/tsconfig.json"
 		]
 	},
 	"overrides": [
