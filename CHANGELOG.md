@@ -18,7 +18,7 @@ follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   or out of date, RoadRaven offers a dialog with one button that runs the
   install or update and shows each step. If it fails, it shows the error and
   the commands to copy.
-- **Go to app from the RoadRaven pane.** A `↗` button on each pane row selects
+- **Go to app from the RoadRaven pane.** A **↗ Show in app** button on each pane row selects
   that item in RoadRaven, centres it and opens its notes. Agents can do the
   same with the new `revealNode` tool.
 

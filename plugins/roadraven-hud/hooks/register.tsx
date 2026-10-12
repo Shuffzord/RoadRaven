@@ -903,7 +903,7 @@ function drawGoTo($: EngineInterface, { els }: View, n: HudNode) {
 		<els.Button
 			key={`goto-${n.id}`}
 			plain
-			label=" ↗ "
+			label=" ↗ Show in app "
 			onPress={() => goToApp($, n.id)}
 		/>
 	);
