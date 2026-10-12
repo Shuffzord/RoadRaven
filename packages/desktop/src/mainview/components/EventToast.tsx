@@ -53,7 +53,8 @@ const MISMATCH_REMEDY: Record<
 	}),
 	"update-npm": (_producerVersion, appVersion) => ({
 		body: `Re-register the MCP server at ${appVersion}, then restart your agent:`,
-		command: `claude mcp remove roadraven; claude mcp add -s user roadraven -- npx -y @roadraven/mcp@${appVersion}`,
+		// One command per line: cmd.exe does not split on `;`.
+		command: `claude mcp remove roadraven\nclaude mcp add -s user roadraven -- npx -y @roadraven/mcp@${appVersion}`,
 	}),
 	reinstall: () => ({
 		body: "Re-run the Setup Wizard and install the integration.",

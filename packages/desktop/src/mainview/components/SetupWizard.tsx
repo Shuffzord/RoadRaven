@@ -694,6 +694,8 @@ const stepDetailStyle: React.CSSProperties = {
 	color: "var(--rv-text-tertiary)",
 	marginLeft: 20,
 	marginTop: 2,
+	// Commands to run come one per line (commandLine).
+	whiteSpace: "pre-line",
 	wordBreak: "break-all",
 };
 

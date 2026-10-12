@@ -80,7 +80,10 @@ function openMenu(name: string): HTMLElement {
 
 function menuOptions(name: string): (string | null)[] {
 	openMenu(name);
-	return screen.getAllByRole("menuitemradio").map((el) => el.textContent);
+	// The label text node; the checked option's ✓ indicator follows it.
+	return screen
+		.getAllByRole("menuitemradio")
+		.map((el) => el.firstChild?.textContent ?? null);
 }
 
 function pick(name: string, option: string): void {

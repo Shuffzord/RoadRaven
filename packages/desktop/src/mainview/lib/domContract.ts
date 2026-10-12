@@ -253,3 +253,17 @@ export const UPDATE_HIDE_LABEL = "Hide";
 export const UPDATE_CLOSE_LABEL = "Close";
 /** The update card's download progress bar (`role="progressbar"`). */
 export const UPDATE_PROGRESS_TESTID = "update-progress";
+
+// -- MenuSelect dropdowns (v0.9.0 Windows review) ----------------------------
+// Rendered by MenuSelect.tsx; read by useKeyboardRouter.ts and
+// tests/unit/ui/MenuSelect.test.tsx.
+
+/**
+ * A focused menu-button trigger. Radix DropdownMenu sets this on every
+ * Trigger (MenuSelect, FileMenu, the layout knobs), ThemePicker sets it by
+ * hand. The keyboard router stands down while one holds DOM focus, so
+ * Enter / Space / ArrowDown open the menu instead of editing the canvas.
+ */
+export const MENU_TRIGGER_SELECTOR = '[aria-haspopup="menu"]';
+/** The ✓ shown on MenuSelect's checked option. */
+export const MENU_SELECT_CHECK_TESTID = "menu-select-check";

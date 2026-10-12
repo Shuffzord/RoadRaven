@@ -22,6 +22,7 @@ import {
 	readFileSync,
 	realpathSync,
 	renameSync,
+	rmSync,
 	statSync,
 	writeFileSync,
 } from "node:fs";
@@ -319,12 +320,21 @@ export function writeClaudeConfig(
 	const dir = dirname(target);
 	if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
 	const tmp = `${target}.roadraven-tmp`;
+	// A temp file left by an earlier failed write is read-only when the target
+	// was, and would make this open fail even after the target is fixed.
+	rmSync(tmp, { force: true });
 	writeFileSync(tmp, `${JSON.stringify(config, null, 2)}\n`, {
 		encoding: "utf-8",
 		mode,
 	});
 	chmodSync(tmp, mode);
-	renameSync(tmp, target);
+	try {
+		renameSync(tmp, target);
+	} catch (e) {
+		// Windows refuses to rename over a read-only target.
+		rmSync(tmp, { force: true });
+		throw e;
+	}
 }
 
 /** True if roadraven is registered AND its server file still exists on disk. */
@@ -552,7 +562,7 @@ function pluginFallbackStep(
 		id: "plugin-fallback",
 		label: "Install the RoadRaven plugin yourself",
 		status: "skipped",
-		detail: `The plugin was not installed (${reason ?? "unknown error"}). RoadRaven set up its MCP server instead, so the tools still work. To also get the skills and the terminal pane, run this in a terminal: ${commandLine(PLUGIN_INSTALL_STEPS)}`,
+		detail: `The plugin was not installed (${reason ?? "unknown error"}). RoadRaven set up its MCP server instead, so the tools still work. To also get the skills and the terminal pane, run these in a terminal:\n${commandLine(PLUGIN_INSTALL_STEPS)}`,
 		host: "claude",
 	};
 }

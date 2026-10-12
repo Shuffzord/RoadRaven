@@ -317,10 +317,12 @@ async function loadAttribution($: EngineInterface, path: string) {
 }
 
 // A newly opened roadmap file (or a fresh session) brings its own attribution back first.
+// An untitled roadmap (no file path) has none: with no path, nothing is saved under the last file's key.
 async function adoptRoadmap($: EngineInterface, filePath: unknown) {
-	if (typeof filePath !== "string" || !filePath) return;
-	if (filePath !== (await read($, roadmapPath)))
-		await loadAttribution($, filePath);
+	const path = typeof filePath === "string" ? filePath : "";
+	if (path === (await read($, roadmapPath))) return;
+	if (path) await loadAttribution($, path);
+	else await update($, roadmapPath, () => "");
 }
 
 async function announceUat($: EngineInterface, pending: HudNode[]) {
@@ -489,6 +491,15 @@ async function refresh($: EngineInterface, themeChoice: string) {
 		await update($, refreshing, () => "idle");
 		throw err;
 	}
+}
+
+// A reload (an option change, /reload-plugins, a respawned hooks worker) cancels the old load's
+// waits, so a refresh, Send or Run it had in flight never clears its flag: a fresh load clears them
+// all here. Every flag that claims work in flight belongs in this one place.
+async function clearInFlight($: EngineInterface) {
+	await update($, refreshing, () => "idle");
+	await update($, isSending, () => false);
+	await update($, starting, () => ({}));
 }
 
 // Unreachable for a minute: ask every 30s instead of every 4s.
@@ -1278,6 +1289,7 @@ export const register: Register = (on, options) => {
 
 	on("session.start", async ($, e, next) => {
 		await update($, startedAt, () => Date.now());
+		await clearInFlight($);
 		await $.command.register({
 			name: "roadraven",
 			description: "Show RoadRaven active work, UAT and backlog in a pane",

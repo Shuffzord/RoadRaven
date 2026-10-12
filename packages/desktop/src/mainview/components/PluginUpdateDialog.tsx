@@ -194,6 +194,8 @@ export function CopyCommand({ command }: { command: string }) {
 					fontFamily: "ui-monospace, monospace",
 					fontSize: 11,
 					color: "var(--rv-text-secondary)",
+					// Commands come one per line (commandLine).
+					whiteSpace: "pre-wrap",
 					wordBreak: "break-all",
 				}}
 			>

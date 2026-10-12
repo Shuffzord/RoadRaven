@@ -4,8 +4,32 @@
 // Run via: bun test (not vitest — uses Bun.serve + subprocess spawn with Bun runtime).
 
 import { spawn } from "node:child_process";
+import { mkdtempSync, readdirSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
+
+// The standalone writes its sentinel into the user data dir. Point every
+// variable getUserDataDir reads at a temp dir, so a run never overwrites the
+// real app's event-api.json (a killed child on Windows never deletes it).
+let dataHome: string;
+beforeEach(() => {
+	dataHome = mkdtempSync(join(tmpdir(), "rr-e2e-"));
+});
+afterEach(() => {
+	rmSync(dataHome, { recursive: true, force: true });
+});
+
+function standaloneEnv(port: string): NodeJS.ProcessEnv {
+	return {
+		...process.env,
+		LOCALAPPDATA: dataHome,
+		HOME: dataHome,
+		USERPROFILE: dataHome,
+		XDG_CONFIG_HOME: dataHome,
+		ROADRAVEN_EVENT_PORT: port,
+	};
+}
 
 describe("Event API end-to-end", () => {
 	it("standalone bun entry boots event server, writes sentinel, accepts ws connection", async () => {
@@ -16,7 +40,7 @@ describe("Event API end-to-end", () => {
 		);
 
 		const child = spawn("bun", ["run", standaloneEntry], {
-			env: { ...process.env, ROADRAVEN_EVENT_PORT: "0" }, // OS-assigned port
+			env: standaloneEnv("0"), // OS-assigned port
 			stdio: ["ignore", "pipe", "pipe"],
 		});
 
@@ -59,6 +83,8 @@ describe("Event API end-to-end", () => {
 
 		expect(ready.port).toBeGreaterThan(0);
 		expect(ready.pid).toBeGreaterThan(0);
+		const written = readdirSync(dataHome, { recursive: true }).map(String);
+		expect(written.some((p) => p.endsWith("event-api.json"))).toBe(true);
 
 		// Connect via WebSocket and send hello
 		const ws = new WebSocket(`ws://127.0.0.1:${ready.port}`);
@@ -96,7 +122,7 @@ describe("Event API end-to-end", () => {
 		);
 
 		const child = spawn("bun", ["run", standaloneEntry], {
-			env: { ...process.env, ROADRAVEN_EVENT_PORT: "not-a-number" },
+			env: standaloneEnv("not-a-number"),
 			stdio: ["ignore", "pipe", "pipe"],
 		});
 

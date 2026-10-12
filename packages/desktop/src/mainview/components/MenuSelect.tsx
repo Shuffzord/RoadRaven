@@ -1,6 +1,18 @@
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import type { CSSProperties } from "react";
+import { MENU_SELECT_CHECK_TESTID } from "../lib/domContract";
 import { ITEM_CLASS, MENU_SURFACE_CLASS } from "./menuStyles";
+
+// A long list (many event sources, a schema with many types) stays inside
+// the window and scrolls, as the native select did. Radix measures the room
+// left on the opening side, collisionPadding included.
+const SCROLL_CLASS =
+	"max-h-[var(--radix-dropdown-menu-content-available-height)] overflow-y-auto";
+// Windows High Contrast (forced-colors) drops background and text colours,
+// so the keyboard highlight gets an outline there; the ✓ marks the checked
+// option in every mode.
+const ITEM_EXTRA_CLASS =
+	"data-[state=checked]:text-[var(--rv-accent)] forced-colors:data-[highlighted]:outline-solid forced-colors:data-[highlighted]:outline-2 forced-colors:data-[highlighted]:-outline-offset-2";
 
 export interface MenuSelectOption {
 	value: string;
@@ -44,7 +56,7 @@ export function MenuSelect({
 			</DropdownMenu.Trigger>
 			<DropdownMenu.Portal>
 				<DropdownMenu.Content
-					className={MENU_SURFACE_CLASS}
+					className={`${MENU_SURFACE_CLASS} ${SCROLL_CLASS}`}
 					aria-labelledby={undefined}
 					aria-label={label}
 					align="start"
@@ -56,9 +68,16 @@ export function MenuSelect({
 							<DropdownMenu.RadioItem
 								key={o.value}
 								value={o.value}
-								className={`${ITEM_CLASS} data-[state=checked]:text-[var(--rv-accent)]`}
+								className={`${ITEM_CLASS} ${ITEM_EXTRA_CLASS}`}
 							>
 								{o.label}
+								<DropdownMenu.ItemIndicator
+									aria-hidden="true"
+									data-testid={MENU_SELECT_CHECK_TESTID}
+									className="ml-3"
+								>
+									✓
+								</DropdownMenu.ItemIndicator>
 							</DropdownMenu.RadioItem>
 						))}
 					</DropdownMenu.RadioGroup>
