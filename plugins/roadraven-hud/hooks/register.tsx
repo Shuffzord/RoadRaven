@@ -1282,8 +1282,12 @@ export const register: Register = (on, options) => {
 			name: "roadraven",
 			description: "Show RoadRaven active work, UAT and backlog in a pane",
 		});
-		$.clock.every(POLL_MS, () => void poll($, themeChoice));
-		void refresh($, themeChoice);
+		// A failed refresh already shows in the pane; what still throws is dropped, not left unhandled.
+		$.clock.every(
+			POLL_MS,
+			() => void poll($, themeChoice).catch(() => undefined),
+		);
+		void refresh($, themeChoice).catch(() => undefined);
 		return next(e);
 	});
 
@@ -1300,7 +1304,7 @@ export const register: Register = (on, options) => {
 		const ran = await next(e);
 		await linkOwner($, e);
 		await forgetUatNotes($);
-		void refresh($, themeChoice);
+		void refresh($, themeChoice).catch(() => undefined);
 		return ran;
 	});
 
