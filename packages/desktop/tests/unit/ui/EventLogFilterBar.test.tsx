@@ -79,9 +79,9 @@ describe("EventLogFilterBar (D-20)", () => {
 		// Should have "All sources" + 2 distinct sources = 3 options total
 		const options = screen.getAllByRole("menuitemradio");
 		expect(options.length).toBe(3);
-		expect(options[0].textContent).toBe("All sources");
-		expect(options[1].textContent).toBe("agent-a");
-		expect(options[2].textContent).toBe("agent-b");
+		expect(options[0]).toHaveAccessibleName("All sources");
+		expect(options[1]).toHaveAccessibleName("agent-a");
+		expect(options[2]).toHaveAccessibleName("agent-b");
 	});
 
 	it("Selected node only toggle disables when no node selected", () => {
@@ -127,10 +127,10 @@ describe("EventLogFilterBar (D-20)", () => {
 		const options = screen.getAllByRole("menuitemradio");
 		// "All statuses" + 3 status entries = 4 options
 		expect(options.length).toBe(4);
-		expect(options[0].textContent).toBe("All statuses");
-		expect(options[1].textContent).toBe("not-started");
-		expect(options[2].textContent).toBe("in-progress");
-		expect(options[3].textContent).toBe("done");
+		expect(options[0]).toHaveAccessibleName("All statuses");
+		expect(options[1]).toHaveAccessibleName("not-started");
+		expect(options[2]).toHaveAccessibleName("in-progress");
+		expect(options[3]).toHaveAccessibleName("done");
 	});
 
 	it("picking a source sets the source filter; All sources clears it", () => {
