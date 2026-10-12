@@ -248,8 +248,8 @@ test("a roadmap over Claude Code's MCP output limit reads as too large, with Ret
 // --- the write paths ------------------------------------------------------------------------------
 
 type Call = { server: string; tool: string; args: Record<string, unknown> };
-// An answer per call: a string is the tool's text, an Error its error text.
-type Answer = (c: Call) => string | Error;
+// An answer per call: a string is the tool's text, an Error its error text, `hang()` no answer ever.
+type Answer = (c: Call) => string | Error | Promise<never>;
 
 const answerOk: Answer = (c) => answerRR(c);
 
@@ -259,9 +259,13 @@ function rig(on: On, answer: { current: Answer }) {
 	const prompts: string[] = [];
 	const toasts: string[] = [];
 	const statuses: (string | undefined)[] = [];
-	on("mcp.call", (_$, e) => {
+	on("mcp.call", async (_$, e) => {
 		calls.push({ server: e.server, tool: e.tool, args: e.args });
-		const r = answer.current({ server: e.server, tool: e.tool, args: e.args });
+		const r = await answer.current({
+			server: e.server,
+			tool: e.tool,
+			args: e.args,
+		});
 		const isError = r instanceof Error;
 		const text = isError ? r.message : r;
 		return { value: { content: [{ type: "text", text }], isError } };
@@ -613,12 +617,15 @@ for (const { dir, env } of APP_DIRS)
 	test(`follow-app reads the app's theme from ${dir}`, async ($, on) => {
 		rig(on, { current: answerOk });
 		mock.env(on, env);
-		// Paths compared by their end: on a POSIX test host the engine roots C:/... at the plugin.
-		on("fs.exists", (_$, e) => ({ value: e.path.endsWith(dir) }));
+		// The engine hands hooks host paths: on a POSIX host it roots C:/... at the plugin, on Windows
+		// it resolves each path with backslashes. So paths are compared by their end, in `/` form.
+		const endsWith = (path: string, end: string) =>
+			path.replaceAll("\\", "/").endsWith(end);
+		on("fs.exists", (_$, e) => ({ value: endsWith(e.path, dir) }));
 		on("fs.read", (_$, e) => {
-			if (e.path.endsWith(`${dir}/settings.json`))
+			if (endsWith(e.path, `${dir}/settings.json`))
 				return { value: JSON.stringify({ theme: "probe" }) };
-			if (e.path.endsWith(`${dir}/themes/probe.json`))
+			if (endsWith(e.path, `${dir}/themes/probe.json`))
 				return {
 					value: JSON.stringify({ meta: { name: "Probe" }, colors: {} }),
 				};
@@ -771,6 +778,48 @@ test("each roadmap file brings its own attribution back, and saves under its own
 	});
 });
 
+test("an untitled roadmap leaves the previous file's saved attribution alone", async ($, on) => {
+	const stored: Record<string, unknown> = { [STORE_KEY]: saved };
+	// The app answers an untitled roadmap with no file path.
+	const untitled = {
+		revision: 9,
+		filePath: null,
+		isUntitled: true,
+		schema: { nodes: [{ id: "x", title: "Scratch", status: "not-started" }] },
+	};
+	let rm: Rm = roadmap;
+	on("mcp.call", (_$, e) => {
+		const text = answerRR(e, rm);
+		return { value: { content: [{ type: "text", text }], isError: false } };
+	});
+	on("ui.open", () => ({ value: { isPlaced: true } }));
+	on("ui.status", () => ({ value: undefined }));
+	const toasts: string[] = [];
+	on("ui.toast", (_$, e) => {
+		toasts.push(e.text);
+		return { value: undefined };
+	});
+	on("store.get", (_$, e) => ({ value: stored[e.key] }));
+	on("store.set", (_$, e) => {
+		stored[e.key] = e.value;
+		return { value: undefined };
+	});
+	const open = () => $.command.run({ command: "roadraven", args: "" } as never);
+
+	await open();
+	const ofA = JSON.stringify(stored[STORE_KEY]);
+	rm = untitled;
+	await open();
+	const ui = await $.ui.mount(PANE_PROPS);
+	expect(await ui.find({ text: /Scratch/ })).toBeDefined();
+	expect(JSON.stringify(stored[STORE_KEY])).toBe(ofA);
+	rm = roadmap;
+	await open();
+	expect(JSON.stringify(stored[STORE_KEY])).toBe(ofA);
+	expect(await ui.find({ text: /auth-worker/ })).toBeDefined();
+	expect(toasts.filter((t) => /UAT/.test(t))).toHaveLength(1);
+});
+
 // The test environment has timers; its typings (no DOM lib) do not name them.
 const later = (
 	globalThis as unknown as {
@@ -810,6 +859,81 @@ test("refreshes run one at a time; one asked for meanwhile runs once after", asy
 	await Promise.all([first, ...more]);
 	expect(most).toBe(1);
 	expect(reads).toBe(2);
+});
+
+// A reload (a theme change, /reload-plugins, a respawned hooks worker) drops the old environment and
+// cancels its waits, so work it had in flight never settles; the kit has no reload, so a wait that
+// never settles stands in for the cancelled one, and the fresh load's session.start is raised again.
+function hang() {
+	let reached: () => void = () => undefined;
+	const isReached = new Promise<void>((done) => {
+		reached = done;
+	});
+	const never = () => {
+		reached();
+		return new Promise<never>(() => undefined);
+	};
+	return { never, isReached };
+}
+
+function sessions($: Engine, on: On) {
+	mock.clock(on);
+	on("command.register", () => ({ value: { command: "roadraven" } }));
+	on("session.start", (_$, e) => ({ cwd: e.cwd }));
+	return () =>
+		$.session.start({
+			cwd: "/work",
+			surface: "terminal",
+			isInteractive: true,
+		} as never);
+}
+
+test("a session start clears a refresh the previous load left in flight", async ($, on) => {
+	const stall = hang();
+	const answer = { current: (() => stall.never()) as Answer };
+	const r = rig(on, answer);
+	const start = sessions($, on);
+	void $.command.run({ command: "roadraven", args: "" } as never);
+	await stall.isReached;
+	answer.current = answerOk;
+	await start();
+	for (let i = 0; i < 3; i++)
+		await $.command.run({ command: "roadraven", args: "" } as never);
+	expect(r.writes("getRoadmap").length).toBeGreaterThan(1);
+});
+
+test("a session start clears a Send the previous load left in flight", async ($, on) => {
+	const stall = hang();
+	const answer = { current: answerOk };
+	const r = rig(on, answer);
+	const start = sessions($, on);
+	const ui = await markAndSend($, ["pass-u1"]);
+	answer.current = (c) =>
+		c.tool === "updateNodes" ? stall.never() : answerOk(c);
+	void ui.press({ key: "uat-submit" });
+	await stall.isReached;
+	answer.current = answerOk;
+	await start();
+	await ui.press({ key: "uat-submit" });
+	expect(r.writes("updateNodes")).toHaveLength(2);
+});
+
+test("a session start clears a Run the previous load left in flight", async ($, on) => {
+	const stall = hang();
+	rig(on, { current: answerOk });
+	const start = sessions($, on);
+	const spawns: unknown[] = [];
+	on("agent.spawn", (_$, e) => {
+		spawns.push(e);
+		return spawns.length === 1 ? stall.never() : { deny: "refused" };
+	});
+	const ui = await markAndSend($, ["backlog-toggle", "run-root"]);
+	void ui.press({ key: "run-start-root" });
+	await stall.isReached;
+	await start();
+	await ui.press({ key: "run-root" });
+	await ui.press({ key: "run-start-root" });
+	expect(spawns).toHaveLength(2);
 });
 
 test("an unchanged file and revision skips the snapshot work", async ($, on) => {
