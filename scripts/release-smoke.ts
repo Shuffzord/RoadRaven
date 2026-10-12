@@ -121,7 +121,7 @@ function upgrade(): string {
 	sh(["git", "-C", wt, "checkout", "--detach", head]);
 	const ran: string[] = [];
 	for (const args of PLUGIN_UPDATE_STEPS) {
-		// Like a pasted `a; b; c`: a failing step does not stop the rest.
+		// Like pasting the commands one per line: a failing step does not stop the rest.
 		const cmd = commandLine([args]);
 		try {
 			sh(["claude", ...args], env);

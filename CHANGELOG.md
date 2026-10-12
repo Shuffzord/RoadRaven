@@ -47,7 +47,18 @@ follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   well as Fail; a re-tested UAT item notifies you again; a failed
   item waits for the agent's fix instead of offering Pass; refreshes no longer
   overlap and skip work when nothing changed; agent labels survive switching
-  files; the follow-app theme works on Windows and macOS.
+  files; the follow-app theme works on Windows and macOS. A reload in the
+  middle of a refresh no longer leaves the pane, Send or Run stuck, and
+  opening an untitled roadmap no longer wipes the previous file's agent
+  labels.
+- **Plugin install on Windows.** When an install step times out, RoadRaven
+  stops the whole `claude` process, not just the command prompt that started
+  it. If `claude` sits in a folder whose name has `&`, `^` or `%`, RoadRaven
+  doesn't run it and shows the commands instead. The commands to copy come
+  one per line, so they also work in the Windows command prompt.
+- **Dropdown keys.** With a dropdown button focused, Enter, Space and the
+  arrow keys open the menu instead of editing the selected node. Long lists
+  scroll inside the window, and the current choice has a ✓.
 
 ### Changed
 
