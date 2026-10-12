@@ -1,5 +1,6 @@
 import type { On } from "claude-code";
 import { type Engine, expect, mock, test } from "claude-code/testing";
+import { CHOICE } from "./plan";
 
 const STORE_KEY = "attribution:/work/plan.roadraven.json";
 // Attribution a previous session left behind: the agent that worked n1.
@@ -823,4 +824,51 @@ test("an unchanged file and revision skips the snapshot work", async ($, on) => 
 	answer.current = (c) => answerRR(c, moved);
 	await run();
 	expect(r.statuses.filter((t) => t !== undefined)).toHaveLength(2);
+});
+
+test("a Pass shows a note field; its note is appended and sent to the orchestrator", async ($, on) => {
+	const r = rig(on, { current: answerOk });
+	const ui = await markAndSend($, []);
+	expect(await ui.find({ key: "why-u1" })).toBeUndefined();
+	await ui.press({ key: "pass-u1" });
+	expect((await ui.find({ key: "why-u1" }))?.props.placeholder).toBe(
+		CHOICE.pass.placeholder,
+	);
+	await ui.input({ key: "why-u1", text: "worked, but slow" });
+	await ui.press({ key: "uat-submit" });
+	expect(r.writes("updateNodeNotes").map((c) => c.args)).toEqual([
+		{
+			nodeId: "u1",
+			mode: "append",
+			notes: expect.stringMatching(
+				/^\*\*UAT passed\*\* \(\d{4}-\d\d-\d\d\): worked, but slow$/,
+			),
+		},
+	]);
+	expect(r.prompts[0]).toContain('PASS: "Login works" (u1) — worked, but slow');
+});
+
+test("Pass then Fail keeps the typed note and writes it as the fail line", async ($, on) => {
+	const r = rig(on, { current: answerOk });
+	const ui = await markAndSend($, ["pass-u1"]);
+	await ui.input({ key: "why-u1", text: "login hangs" });
+	await ui.press({ key: "fail-u1" });
+	expect((await ui.find({ key: "why-u1" }))?.props.placeholder).toBe(
+		CHOICE.fail.placeholder,
+	);
+	await ui.press({ key: "uat-submit" });
+	expect(r.writes("updateNodeNotes").map((c) => c.args.notes)).toEqual([
+		expect.stringMatching(
+			/^\*\*UAT failed\*\* \(\d{4}-\d\d-\d\d\): login hangs$/,
+		),
+	]);
+	expect(r.prompts[0]).toContain('FAIL: "Login works" (u1) — login hangs');
+});
+
+test("a Pass without a note appends nothing to the node's notes", async ($, on) => {
+	const r = rig(on, { current: answerOk });
+	const ui = await markAndSend($, ["pass-u1"]);
+	await ui.press({ key: "uat-submit" });
+	expect(r.writes("updateNodes")).toHaveLength(1);
+	expect(r.writes("updateNodeNotes")).toEqual([]);
 });

@@ -8,8 +8,20 @@ const AGENTS_KEPT = 50;
 export type Decision = "pass" | "fail";
 
 export const CHOICE = {
-	pass: { label: " ✓ Pass ", ink: "completed", status: "completed" },
-	fail: { label: " ✗ Fail ", ink: "blocked", status: "blocked" },
+	pass: {
+		label: " ✓ Pass ",
+		ink: "completed",
+		status: "completed",
+		word: "passed",
+		placeholder: "Note (optional, appended to the node's notes)",
+	},
+	fail: {
+		label: " ✗ Fail ",
+		ink: "blocked",
+		status: "blocked",
+		word: "failed",
+		placeholder: "What failed? (appended to the node's notes)",
+	},
 } as const;
 
 export const errText = (err: unknown) =>
@@ -92,11 +104,12 @@ export function revealFailure(detail: string, isOnline: boolean) {
 	return `RoadRaven · couldn't show it in RoadRaven: ${plainError(detail)}`;
 }
 
-export const failReason = (
-	d: Decision,
-	reasons: Record<string, string>,
-	id: string,
-) => (d === "fail" ? reasons[id]?.trim() || undefined : undefined);
+export const itemNote = (notes: Record<string, string>, id: string) =>
+	notes[id]?.trim() || undefined;
+
+// The line appended to a reviewed node's notes: `**UAT passed** (date): note`, or failed.
+export const uatNoteLine = (d: Decision, why: string) =>
+	`**UAT ${CHOICE[d].word}** (${new Date().toISOString().slice(0, 10)}): ${why}`;
 
 export const decisionLine = (
 	n: HudNode,

@@ -25,11 +25,11 @@ import {
 	type Decision,
 	decisionLine,
 	errText,
-	failReason,
 	framed,
 	goneToast,
 	inTree,
 	isNotStarted,
+	itemNote,
 	keptAgents,
 	mergeOwners,
 	nextPlan,
@@ -48,6 +48,7 @@ import {
 	toAgent,
 	tokensOf,
 	type Update,
+	uatNoteLine,
 	uatToast,
 } from "./plan";
 import {
@@ -95,7 +96,7 @@ const startedAt = atom({ ...S, key: "startedAt" } as const, 0);
 const palette = atom({ ...S, key: "palette" } as const, AMBER);
 const decisions = atom({ ...S, key: "decisions" } as const, {});
 const note = atom({ ...S, key: "note" } as const, "");
-const failNotes = atom({ ...S, key: "failNotes" } as const, {});
+const itemNotes = atom({ ...S, key: "itemNotes" } as const, {});
 const showBacklog = atom({ ...S, key: "showBacklog" } as const, false);
 const seenUat = atom({ ...S, key: "seenUat" } as const, []);
 const sent = atom({ ...S, key: "sent" } as const, null);
@@ -576,10 +577,11 @@ function dropDecisions($: EngineInterface, ids: string[]) {
 }
 
 // Each appended note drops its decision at once, so a retry never appends it again.
-async function appendFailNotes(
+async function appendItemNotes(
 	$: EngineInterface,
 	items: HudNode[],
 	reasons: Record<string, string | undefined>,
+	chosen: Record<string, Decision>,
 ) {
 	for (const n of items) {
 		const why = reasons[n.id];
@@ -587,7 +589,7 @@ async function appendFailNotes(
 		await callRR($, "updateNodeNotes", {
 			nodeId: n.id,
 			mode: "append",
-			notes: `**UAT failed** (${new Date().toISOString().slice(0, 10)}): ${why}`,
+			notes: uatNoteLine(chosen[n.id] ?? "pass", why),
 		});
 		await dropDecisions($, [n.id]);
 	}
@@ -603,7 +605,7 @@ async function reportPartial(
 	const missing = plan.items.filter((n) => left[n.id]).map((n) => q(n.title));
 	await tell(
 		$,
-		`${reviewedText(plan.items.length, lines)}\nThe failure note(s) of ${missing.join(", ")} could not be appended (${errText(err)}); the user may send them again.`,
+		`${reviewedText(plan.items.length, lines)}\nThe UAT note(s) of ${missing.join(", ")} could not be appended (${errText(err)}); the user may send them again.`,
 	);
 }
 
@@ -621,7 +623,7 @@ async function finishSend($: EngineInterface, plan: SendPlan, lines: string[]) {
 	}));
 	await update($, decisions, () => ({}));
 	await update($, note, () => "");
-	await update($, failNotes, () => ({}));
+	await update($, itemNotes, () => ({}));
 }
 
 async function writeStatuses(
@@ -630,12 +632,9 @@ async function writeStatuses(
 	chosen: Record<string, Decision>,
 ) {
 	const plan = await batch($, (nodes) => sendPlan(marked, chosen, nodes));
-	const reasons = await read($, failNotes);
+	const reasons = await read($, itemNotes);
 	const why = Object.fromEntries(
-		plan.items.map((n) => [
-			n.id,
-			failReason(chosen[n.id] ?? "pass", reasons, n.id),
-		]),
+		plan.items.map((n) => [n.id, itemNote(reasons, n.id)]),
 	);
 	// Written, and nothing left to append: done whatever happens next.
 	await dropDecisions($, [
@@ -662,7 +661,7 @@ async function sendDecisions($: EngineInterface, uat: HudNode[]) {
 		...plan.skipped.map(skippedLine),
 	];
 	try {
-		await appendFailNotes($, plan.items, why);
+		await appendItemNotes($, plan.items, why, chosen);
 	} catch (err) {
 		await reportPartial($, plan, lines, err);
 		throw err;
@@ -835,17 +834,23 @@ function drawChoice(
 	);
 }
 
-function drawFailNote($: EngineInterface, v: View, n: HudNode, value: string) {
+function drawItemNote(
+	$: EngineInterface,
+	v: View,
+	n: HudNode,
+	d: Decision,
+	value: string,
+) {
 	const { els } = v;
 	if (!("Input" in els)) return null; // mobile draws no field
 	const { Box, Input } = els;
 	const save = (t: string) =>
-		void update($, failNotes, (f) => ({ ...f, [n.id]: t }));
+		void update($, itemNotes, (f) => ({ ...f, [n.id]: t }));
 	return (
 		<Box marginLeft={4} flexDirection="column">
 			<Input
 				key={`why-${n.id}`}
-				placeholder="What failed? (appended to the node's notes)"
+				placeholder={CHOICE[d].placeholder}
 				value={value}
 				onInput={save}
 				onSubmit={save}
@@ -959,7 +964,7 @@ function drawUatItem($: EngineInterface, v: View, d: Data, n: HudNode) {
 				{drawChoice($, v, n, "pass", choice === "pass")}
 				{drawChoice($, v, n, "fail", choice === "fail")}
 			</Box>
-			{choice === "fail" && drawFailNote($, v, n, d.whyFailed[n.id] ?? "")}
+			{choice && drawItemNote($, v, n, choice, d.itemText[n.id] ?? "")}
 		</Box>
 	);
 }
@@ -1214,7 +1219,7 @@ async function readData($: EngineInterface): Promise<Data> {
 		act,
 		decided,
 		noteText,
-		whyFailed,
+		itemText,
 		backlogOpen,
 		notesOpen,
 		lastSent,
@@ -1229,7 +1234,7 @@ async function readData($: EngineInterface): Promise<Data> {
 		read($, activity),
 		read($, decisions),
 		read($, note),
-		read($, failNotes),
+		read($, itemNotes),
 		read($, showBacklog),
 		read($, openNotes),
 		read($, sent),
@@ -1245,7 +1250,7 @@ async function readData($: EngineInterface): Promise<Data> {
 		act,
 		decided,
 		noteText,
-		whyFailed,
+		itemText,
 		backlogOpen,
 		notesOpen,
 		lastSent,

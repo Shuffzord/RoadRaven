@@ -23,7 +23,7 @@ export type Data = {
 	act: Record<string, string>;
 	decided: Record<string, Decision>;
 	noteText: string;
-	whyFailed: Record<string, string>;
+	itemText: Record<string, string>;
 	backlogOpen: boolean;
 	notesOpen: Record<string, true>;
 	lastSent: HudSent | null;

@@ -69,7 +69,7 @@ declare module "claude-code" {
 			palette: HudPalette;
 			decisions: Record<string, "pass" | "fail">;
 			note: string;
-			failNotes: Record<string, string>;
+			itemNotes: Record<string, string>;
 			showBacklog: boolean;
 			seenUat: string[];
 			openNotes: Record<string, true>;
