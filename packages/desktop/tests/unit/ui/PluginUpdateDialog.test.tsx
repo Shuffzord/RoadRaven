@@ -32,6 +32,12 @@ import {
 	PluginUpdateDialog,
 } from "../../../src/mainview/components/PluginUpdateDialog";
 
+/** The copyable command block, matched on its exact text, newlines included. */
+const commandBlock = (text: string) =>
+	screen.getByText(
+		(_, el) => el?.tagName === "CODE" && el.textContent === text,
+	);
+
 const step = (i: number, status: "ok" | "error", detail?: string) => ({
 	id: `plugin-${i}`,
 	label: commandLine([PLUGIN_UPDATE_STEPS[i]]),
@@ -95,7 +101,7 @@ describe("PluginUpdateDialog", () => {
 		});
 		expect(screen.getByText("git clone failed")).toBeInTheDocument();
 		const all = commandLine(PLUGIN_UPDATE_STEPS);
-		expect(screen.getByText(all)).toBeInTheDocument();
+		expect(commandBlock(all)).toHaveStyle({ whiteSpace: "pre-wrap" });
 		await act(async () => {
 			fireEvent.click(screen.getByText("Copy"));
 		});
@@ -111,9 +117,7 @@ describe("PluginUpdateDialog", () => {
 			fireEvent.click(screen.getByText(PLUGIN_DIALOG_COPY.update.button));
 		});
 		expect(screen.getByText(/RPC timed out/)).toBeInTheDocument();
-		expect(
-			screen.getByText(commandLine(PLUGIN_UPDATE_STEPS)),
-		).toBeInTheDocument();
+		expect(commandBlock(commandLine(PLUGIN_UPDATE_STEPS))).toBeInTheDocument();
 	});
 
 	it("offers the install when Bun says so; closing it is remembered", async () => {

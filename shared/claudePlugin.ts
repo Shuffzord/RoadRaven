@@ -19,11 +19,15 @@ export const PLUGIN_UPDATE_STEPS: readonly ClaudeCommand[] = [
 	["plugin", "update", "roadraven-hud@roadraven", "--json"],
 ];
 
-/** The commands as one line a person can paste into a terminal (no `--json`). */
+/**
+ * The commands as text a person can paste into a terminal (no `--json`), one
+ * per line: cmd.exe does not split on `;`, and newlines work in cmd,
+ * PowerShell and bash alike.
+ */
 export function commandLine(steps: readonly ClaudeCommand[]): string {
 	return steps
 		.map((args) => ["claude", ...args.filter((a) => a !== "--json")].join(" "))
-		.join("; ");
+		.join("\n");
 }
 
 /** What the plugin dialog asks Bun to run; Bun maps it to a fixed list. */

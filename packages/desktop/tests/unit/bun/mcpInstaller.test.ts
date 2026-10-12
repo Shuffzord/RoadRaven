@@ -1,8 +1,10 @@
 import {
+	chmodSync,
 	existsSync,
 	lstatSync,
 	mkdirSync,
 	mkdtempSync,
+	readdirSync,
 	readFileSync,
 	rmSync,
 	statSync,
@@ -11,13 +13,18 @@ import {
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
 	commandLine,
 	PLUGIN_INSTALL_STEPS,
 } from "../../../../../shared/claudePlugin";
 import type { McpInstallStep } from "../../../../../shared/types";
-import { CLI_NOT_FOUND_LABEL } from "../../../src/bun/claudeCli";
+import {
+	CLI_NOT_FOUND_LABEL,
+	CLI_UNSAFE_PATH_LABEL,
+	type ClaudeRunner,
+	runClaudeSteps,
+} from "../../../src/bun/claudeCli";
 import {
 	buildMcpServerEntry,
 	buildOpenCodeServerEntry,
@@ -167,10 +174,41 @@ describe("writeClaudeConfig (file mode + symlinks)", () => {
 		dir = mkdtempSync(join(tmpdir(), "rr-write-cfg-"));
 	});
 	afterEach(() => {
+		// Clear read-only bits first so the temp dir can be removed on Windows.
+		for (const name of readdirSync(dir)) {
+			const p = join(dir, name);
+			if (statSync(p).isFile()) chmodSync(p, 0o666);
+		}
 		rmSync(dir, { recursive: true, force: true });
 	});
 	const posixOnly = process.platform === "win32" ? it.skip : it;
 	const mode = (p: string) => statSync(p).mode & 0o777;
+
+	it("a read-only temp file left by an earlier failed write does not block the next one", () => {
+		const path = join(dir, ".claude.json");
+		writeFileSync(path, "{}");
+		const tmp = `${path}.roadraven-tmp`;
+		writeFileSync(tmp, "stale");
+		chmodSync(tmp, 0o444);
+		writeClaudeConfig(path, { a: 1 });
+		expect(JSON.parse(readFileSync(path, "utf-8"))).toEqual({ a: 1 });
+		expect(existsSync(tmp)).toBe(false);
+	});
+
+	// POSIX renames over a read-only file; Windows refuses (EPERM).
+	it.runIf(process.platform === "win32")(
+		"a write that fails on a read-only target leaves no temp file, so the next one works",
+		() => {
+			const path = join(dir, ".claude.json");
+			writeFileSync(path, "{}");
+			chmodSync(path, 0o444);
+			expect(() => writeClaudeConfig(path, { a: 1 })).toThrow();
+			expect(existsSync(`${path}.roadraven-tmp`)).toBe(false);
+			chmodSync(path, 0o666); // the user clears the read-only attribute
+			writeClaudeConfig(path, { a: 2 });
+			expect(JSON.parse(readFileSync(path, "utf-8"))).toEqual({ a: 2 });
+		},
+	);
 
 	posixOnly("keeps an existing 0600 file at 0600", () => {
 		const path = join(dir, ".claude.json");
@@ -443,6 +481,25 @@ describe("installMcpIntegration (sandboxed)", () => {
 		expect(result.steps.some((s) => s.label === CLI_NOT_FOUND_LABEL)).toBe(
 			true,
 		);
+	});
+
+	it("a claude.cmd that cmd.exe would misread is not run; the wizard falls back", async () => {
+		const runner = vi.fn<ClaudeRunner>();
+		const result = await installMcpIntegration(["claude"], (steps) =>
+			runClaudeSteps(steps, runner, {
+				find: () => "C:\\Users\\Tom & Jerry\\AppData\\Roaming\\npm\\claude.cmd",
+			}),
+		);
+		expect(runner).not.toHaveBeenCalled();
+		expect(result.ok).toBe(true);
+		expect(readConfig().mcpServers[MCP_SERVER_NAME].args).toEqual([
+			getInstalledMcpServerPath(),
+		]);
+		expect(result.steps.some((s) => s.label === CLI_UNSAFE_PATH_LABEL)).toBe(
+			true,
+		);
+		const fallback = result.steps.find((s) => s.id === "plugin-fallback");
+		expect(fallback?.detail).toContain(commandLine(PLUGIN_INSTALL_STEPS));
 	});
 
 	it("honours CLAUDE_CONFIG_DIR for detection and writes", async () => {

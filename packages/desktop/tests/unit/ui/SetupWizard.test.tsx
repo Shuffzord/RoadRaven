@@ -1,5 +1,6 @@
 /** @vitest-environment jsdom */
 // v0.9 Phase 1 — the Setup Wizard installs the RoadRaven Claude Code plugin.
+import "@testing-library/jest-dom";
 import {
 	act,
 	cleanup,
@@ -8,6 +9,10 @@ import {
 	screen,
 } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+	commandLine,
+	PLUGIN_INSTALL_STEPS,
+} from "../../../../../shared/claudePlugin";
 
 const rpc = vi.hoisted(() => ({
 	getSetupStatus: vi.fn(),
@@ -95,6 +100,32 @@ describe("SetupWizard — Claude Code plugin", () => {
 		fireEvent.click(screen.getByRole("button", { name: /install/i }));
 		expect(screen.getByRole("button", { name: "Installing…" })).toBeTruthy();
 		await act(async () => pending.resolve({ ok: true, steps: pluginSteps }));
+	});
+
+	it("shows a step detail's commands one per line", async () => {
+		const detail = `Run these in a terminal:\n${commandLine(PLUGIN_INSTALL_STEPS)}`;
+		rpc.installMcpIntegration.mockResolvedValue({
+			ok: true,
+			steps: [
+				{
+					id: "plugin-fallback",
+					label: "Install the RoadRaven plugin yourself",
+					status: "skipped",
+					detail,
+					host: "claude",
+				},
+			],
+		});
+		await openMcpStep();
+		fireEvent.click(screen.getByLabelText(CLAUDE_REINSTALL_LABEL));
+		await act(async () => {
+			fireEvent.click(screen.getByRole("button", { name: /install/i }));
+		});
+		const el = screen.getByText((_, e) => e?.textContent === detail);
+		for (const command of commandLine(PLUGIN_INSTALL_STEPS).split("\n")) {
+			expect(el.textContent).toContain(command);
+		}
+		expect(el).toHaveStyle({ whiteSpace: "pre-line" });
 	});
 
 	it("counts the plugin as installed on the last step", async () => {

@@ -170,7 +170,11 @@ describe("EventToast version_mismatch remedy (v0.8)", () => {
 				"Update the RoadRaven plugin, then restart Claude Code:",
 			),
 		).toBeInTheDocument();
-		expect(screen.getByText(command)).toBeInTheDocument();
+		// One command per line: the text keeps its newlines and shows them.
+		const code = screen.getByText(
+			(_, el) => el?.tagName === "CODE" && el.textContent === command,
+		);
+		expect(code).toHaveStyle({ whiteSpace: "pre-wrap" });
 
 		await act(async () => {
 			fireEvent.click(screen.getByText("Copy"));
@@ -179,18 +183,26 @@ describe("EventToast version_mismatch remedy (v0.8)", () => {
 		expect(screen.getByText("Copied ✓")).toBeInTheDocument();
 	});
 
-	it("update-npm re-registers the server pinned to the app version", () => {
+	it("update-npm re-registers the server pinned to the app version", async () => {
 		renderMismatch("0.7.2|0.8.0-beta.1|update-npm");
 		expect(
 			screen.getByText(
 				"Re-register the MCP server at 0.8.0-beta.1, then restart your agent:",
 			),
 		).toBeInTheDocument();
-		expect(
-			screen.getByText(
-				"claude mcp remove roadraven; claude mcp add -s user roadraven -- npx -y @roadraven/mcp@0.8.0-beta.1",
-			),
-		).toBeInTheDocument();
+		// One command per line: cmd.exe does not split on `;`.
+		const command = [
+			"claude mcp remove roadraven",
+			"claude mcp add -s user roadraven -- npx -y @roadraven/mcp@0.8.0-beta.1",
+		].join("\n");
+		const code = screen.getByText(
+			(_, el) => el?.tagName === "CODE" && el.textContent === command,
+		);
+		expect(code).toHaveStyle({ whiteSpace: "pre-wrap" });
+		await act(async () => {
+			fireEvent.click(screen.getByText("Copy"));
+		});
+		expect(navigator.clipboard.writeText).toHaveBeenCalledWith(command);
 	});
 
 	it("update-app on Windows shows the PowerShell installer one-liner", () => {
