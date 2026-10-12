@@ -15,11 +15,14 @@
 // unit-tested without touching the real filesystem.
 
 import {
+	chmodSync,
 	copyFileSync,
 	existsSync,
 	mkdirSync,
 	readFileSync,
+	realpathSync,
 	renameSync,
+	statSync,
 	writeFileSync,
 } from "node:fs";
 import { dirname, join, resolve } from "node:path";
@@ -299,16 +302,29 @@ export function readOpenCodeConfig(): Record<string, unknown> | null {
 	return JSON.parse(raw) as Record<string, unknown>;
 }
 
-/** Atomic-ish write via temp file + rename so a crash can't truncate the config. */
+/**
+ * Atomic-ish write via temp file + rename so a crash can't truncate the config.
+ * Writes through a symlink to its real target (the link stays a link) and
+ * keeps the target's permission bits — 0600 for a new file, since these
+ * configs can hold tokens. chmod after write because umask trims the create
+ * mode. Windows ignores the mode bits; the write itself is unchanged there.
+ */
 export function writeClaudeConfig(
 	path: string,
 	config: Record<string, unknown>,
 ): void {
-	const dir = dirname(path);
+	const exists = existsSync(path);
+	const target = exists ? realpathSync(path) : path;
+	const mode = exists ? statSync(target).mode & 0o777 : 0o600;
+	const dir = dirname(target);
 	if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
-	const tmp = `${path}.roadraven-tmp`;
-	writeFileSync(tmp, `${JSON.stringify(config, null, 2)}\n`, "utf-8");
-	renameSync(tmp, path);
+	const tmp = `${target}.roadraven-tmp`;
+	writeFileSync(tmp, `${JSON.stringify(config, null, 2)}\n`, {
+		encoding: "utf-8",
+		mode,
+	});
+	chmodSync(tmp, mode);
+	renameSync(tmp, target);
 }
 
 /** True if roadraven is registered AND its server file still exists on disk. */

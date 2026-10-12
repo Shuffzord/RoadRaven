@@ -1,9 +1,12 @@
 import {
 	existsSync,
+	lstatSync,
 	mkdirSync,
 	mkdtempSync,
 	readFileSync,
 	rmSync,
+	statSync,
+	symlinkSync,
 	writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
@@ -33,6 +36,7 @@ import {
 	mergeOpenCodeConfig,
 	refreshInstalledMcpServer,
 	resolveBundledMcpServer,
+	writeClaudeConfig,
 } from "../../../src/bun/mcpInstaller";
 
 // --- Pure merge logic (no filesystem) --------------------------------------
@@ -156,6 +160,43 @@ const noCli = async (): Promise<McpInstallStep[]> => [
 		host: "claude",
 	},
 ];
+
+describe("writeClaudeConfig (file mode + symlinks)", () => {
+	let dir: string;
+	beforeEach(() => {
+		dir = mkdtempSync(join(tmpdir(), "rr-write-cfg-"));
+	});
+	afterEach(() => {
+		rmSync(dir, { recursive: true, force: true });
+	});
+	const posixOnly = process.platform === "win32" ? it.skip : it;
+	const mode = (p: string) => statSync(p).mode & 0o777;
+
+	posixOnly("keeps an existing 0600 file at 0600", () => {
+		const path = join(dir, ".claude.json");
+		writeFileSync(path, "{}", { mode: 0o600 });
+		writeClaudeConfig(path, { a: 1 });
+		expect(mode(path)).toBe(0o600);
+		expect(JSON.parse(readFileSync(path, "utf-8"))).toEqual({ a: 1 });
+	});
+
+	posixOnly("creates a new file as 0600", () => {
+		const path = join(dir, "sub", ".claude.json");
+		writeClaudeConfig(path, { a: 1 });
+		expect(mode(path)).toBe(0o600);
+	});
+
+	posixOnly("writes through a symlink and keeps it a symlink", () => {
+		const target = join(dir, "real.json");
+		const link = join(dir, ".claude.json");
+		writeFileSync(target, "{}", { mode: 0o600 });
+		symlinkSync(target, link);
+		writeClaudeConfig(link, { a: 1 });
+		expect(lstatSync(link).isSymbolicLink()).toBe(true);
+		expect(JSON.parse(readFileSync(target, "utf-8"))).toEqual({ a: 1 });
+		expect(mode(target)).toBe(0o600);
+	});
+});
 
 describe("installMcpIntegration (sandboxed)", () => {
 	let sandbox: string;
