@@ -1,5 +1,5 @@
 import { existsSync } from "node:fs";
-import { mkdir, unlink } from "node:fs/promises";
+import { mkdir, readFile, unlink } from "node:fs/promises";
 import { join } from "node:path";
 import { atomicWrite } from "./atomicWrite";
 import { getUserDataDir } from "./settings";
@@ -26,10 +26,14 @@ export async function writeSentinel(data: SentinelShape): Promise<void> {
 	await atomicWrite(getSentinelPath(), JSON.stringify(data, null, 2));
 }
 
+// Only removes the file when it is ours: an instance still shutting down after
+// the next one started must not delete the newer instance's sentinel.
 export async function deleteSentinel(): Promise<void> {
 	try {
-		await unlink(getSentinelPath());
+		const path = getSentinelPath();
+		const { pid } = JSON.parse(await readFile(path, "utf-8")) as SentinelShape;
+		if (pid === process.pid) await unlink(path);
 	} catch {
-		// File may not exist (never bound) or be held by another process; best-effort delete
+		// Missing, unreadable or corrupt file, or held by another process; best-effort delete
 	}
 }
