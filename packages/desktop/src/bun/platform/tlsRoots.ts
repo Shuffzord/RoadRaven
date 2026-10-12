@@ -13,6 +13,9 @@ const SYSTEM_BUNDLES = [
 	"/etc/ssl/ca-bundle.pem", // openSUSE
 ];
 
+// The runtime reads these at startup; wrapping fetch would replace that trust.
+const CA_ENV = ["SSL_CERT_FILE", "SSL_CERT_DIR", "NODE_EXTRA_CA_CERTS"];
+
 const WRAPPED = Symbol.for("roadraven.defaultCa");
 
 type Fetch = (
@@ -35,12 +38,15 @@ export function installDefaultCa({
 	platform = process.platform,
 	fetch = globalThis.fetch,
 	readFile = (path: string) => readFileSync(path, "utf8"),
+	env = process.env,
 }: {
 	platform?: NodeJS.Platform;
 	fetch?: Fetch;
 	readFile?: (path: string) => string;
+	env?: Record<string, string | undefined>;
 } = {}): void {
 	if (platform !== "linux" || WRAPPED in fetch) return;
+	if (CA_ENV.some((name) => env[name])) return;
 	const ca = systemCa(readFile) ?? [...rootCertificates];
 	const wrapped: Fetch = (input, init) =>
 		fetch(input, { ...init, tls: { ca, ...init?.tls } });

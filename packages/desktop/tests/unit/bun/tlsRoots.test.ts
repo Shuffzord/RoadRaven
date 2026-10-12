@@ -27,7 +27,7 @@ describe("installDefaultCa", () => {
 		const read = vi.fn((path: string) =>
 			path === "/etc/ssl/cert.pem" ? BUNDLE : noFile(path),
 		);
-		installDefaultCa({ platform: "linux", fetch, readFile: read });
+		installDefaultCa({ platform: "linux", fetch, readFile: read, env: {} });
 
 		await globalThis.fetch(URL, { method: "HEAD" });
 
@@ -47,7 +47,7 @@ describe("installDefaultCa", () => {
 	it("falls back to tls.rootCertificates when no system bundle exists", async () => {
 		const fetch = fakeFetch();
 		vi.stubGlobal("fetch", fetch);
-		installDefaultCa({ platform: "linux", fetch, readFile: noFile });
+		installDefaultCa({ platform: "linux", fetch, readFile: noFile, env: {} });
 
 		await globalThis.fetch(URL);
 
@@ -59,7 +59,12 @@ describe("installDefaultCa", () => {
 	it("keeps a caller-supplied tls.ca", async () => {
 		const fetch = fakeFetch();
 		vi.stubGlobal("fetch", fetch);
-		installDefaultCa({ platform: "linux", fetch, readFile: () => BUNDLE });
+		installDefaultCa({
+			platform: "linux",
+			fetch,
+			readFile: () => BUNDLE,
+			env: {},
+		});
 
 		await globalThis.fetch(URL, {
 			tls: { ca: "mine", rejectUnauthorized: true },
@@ -81,12 +86,34 @@ describe("installDefaultCa", () => {
 		expect(globalThis.fetch).toBe(fetch);
 	});
 
+	it.each([
+		"SSL_CERT_FILE",
+		"SSL_CERT_DIR",
+		"NODE_EXTRA_CA_CERTS",
+	])("leaves fetch unchanged when %s is set", (name) => {
+		const fetch = fakeFetch();
+		vi.stubGlobal("fetch", fetch);
+		installDefaultCa({
+			platform: "linux",
+			fetch,
+			readFile: () => BUNDLE,
+			env: { [name]: "/corp/ca.pem" },
+		});
+
+		expect(globalThis.fetch).toBe(fetch);
+	});
+
 	it("is idempotent: a second call does not wrap again", async () => {
 		const fetch = fakeFetch();
 		vi.stubGlobal("fetch", fetch);
-		installDefaultCa({ platform: "linux", fetch, readFile: () => BUNDLE });
+		installDefaultCa({
+			platform: "linux",
+			fetch,
+			readFile: () => BUNDLE,
+			env: {},
+		});
 		const wrapped = globalThis.fetch;
-		installDefaultCa({ platform: "linux", readFile: () => BUNDLE });
+		installDefaultCa({ platform: "linux", readFile: () => BUNDLE, env: {} });
 
 		expect(globalThis.fetch).toBe(wrapped);
 		await globalThis.fetch(URL);
