@@ -1,7 +1,7 @@
 /** @vitest-environment jsdom */
 // v0.8.2 D3 — the top-bar document chip: basename + save-state dot, the full
 // path and linked files in the native tooltip, and the File menu on click.
-import { fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import {
 	afterEach,
 	beforeAll,
@@ -140,7 +140,7 @@ describe("DocumentChip — save-state dot", () => {
 });
 
 describe("DocumentChip — File menu", () => {
-	it("a press on the chip opens the File menu", () => {
+	it("a press on the chip opens the File menu", async () => {
 		useRoadmapStore.getState().loadSchema(SCHEMA, "/tmp/plan.json");
 		render(<DocumentChip />);
 		expect(chip().getAttribute("aria-haspopup")).toBe("menu");
@@ -149,5 +149,7 @@ describe("DocumentChip — File menu", () => {
 
 		const menu = screen.getByRole("menu", { name: "File menu" });
 		expect(menu.textContent).toContain("Save As…");
+		// Let Open Recent's recent-files load settle inside act().
+		await act(() => Promise.resolve());
 	});
 });

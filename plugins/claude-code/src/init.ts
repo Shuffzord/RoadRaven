@@ -17,8 +17,9 @@ export const CLAUDE_MD_SNIPPET = `${START}
 This project's plan is a RoadRaven roadmap (\`roadmap.json\`), shown live in the
 RoadRaven desktop app and edited through the \`roadraven\` MCP tools.
 
-- Before multi-step work, call \`getRoadmap\` and find the node for the task. If
-  none exists, create one with \`createNode\` under the right parent.
+- Before multi-step work, call \`getRoadmap\` with \`omitNotes: true\` and find
+  the node for the task (\`getNode\` reads its notes). If none exists, create
+  one with \`createNode\` under the right parent.
 - Mark the node as started with \`updateNodeStatus\` when you begin and as
   finished (or blocked) when you are done. Use the status names from
   \`getStatusConfig\`. Do this per task, not at the end.

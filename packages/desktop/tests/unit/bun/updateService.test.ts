@@ -293,6 +293,26 @@ describe("updateService", () => {
 		expect(fakeLog.warn).toHaveBeenCalled();
 	});
 
+	// v0.9.0: Electrobun emits an error status entry and then returns the same
+	// message in UpdateInfo.error — one failure, one log line, one push.
+	it("a failed check emits its error once", async () => {
+		const message = "Failed to check for updates: unable to get issuer";
+		fakeUpdater.checkForUpdate.mockImplementation(async () => {
+			emitStatus(entry("error", undefined, message));
+			return { ...available(""), updateAvailable: false, error: message };
+		});
+		const service = createUpdateService({ flushPending: noFlush });
+		const listener = vi.fn();
+		service.onStateChange(listener);
+		await service.check();
+
+		const errors = listener.mock.calls.filter(
+			([s]) => (s as UpdateState).status === "error",
+		);
+		expect(errors).toEqual([[{ status: "error", message }]]);
+		expect(fakeLog.warn).toHaveBeenCalledTimes(1);
+	});
+
 	// v0.8.7: a bundle staged by an earlier session is still prepared on disk.
 	it("check() reports ready when Electrobun still has that bundle prepared", async () => {
 		fakeUpdater.checkForUpdate.mockResolvedValue({

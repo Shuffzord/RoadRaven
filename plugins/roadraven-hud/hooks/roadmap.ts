@@ -30,15 +30,22 @@ export function lastFailure(notes = "") {
 }
 
 export const isUat = (n: { type?: string }) => n.type?.toLowerCase() === "uat";
-// Ready to test (in-progress) or failed before and open to a re-test (blocked).
+// Ready to test: in-progress. A blocked one failed and is the agent's to fix; it comes back in-progress.
 export const isReadyUat = (n: HudNode) =>
-	isUat(n) && (n.status === "in-progress" || n.status === "blocked");
+	isUat(n) && n.status === "in-progress";
+export const isFixingUat = (n: HudNode) => isUat(n) && n.status === "blocked";
 
 // --- why RoadRaven can't be reached, in plain words ---------------------------------------------
 
+// The code of a structured tool error, `Error (<code>): message`, as the RoadRaven server writes it.
+export const codeOf = (text: string) => /^Error \(([a-z_]+)\)/.exec(text)?.[1];
+
+const CODE_KINDS: Record<string, HudConnKind> = {
+	app_not_running: "offline",
+	no_file_loaded: "noFile",
+};
+
 const CONN_RULES: [HudConnKind, RegExp][] = [
-	["offline", /app_not_running/],
-	["noFile", /no_file_loaded/],
 	["connecting", /no connected MCP tool|not connected|no server/i],
 	// Claude Code swaps an over-limit tool result for a plain-text notice.
 	["tooLarge", /exceeds maximum allowed tokens|characters\).*exceeds/i],
@@ -58,8 +65,12 @@ export const CONN = {
 	other: { text: "Can't reach RoadRaven", ink: "blocked" },
 } as const;
 
+const codeKind = (err: string): HudConnKind | undefined =>
+	CODE_KINDS[codeOf(err) ?? ""];
+const ruleKind = (err: string) =>
+	CONN_RULES.find(([, re]) => re.test(err))?.[0];
 export const connKind = (err: string): HudConnKind =>
-	CONN_RULES.find(([, re]) => re.test(err))?.[0] ?? "other";
+	codeKind(err) ?? ruleKind(err) ?? "other";
 
 // Answers that don't change while the servers come up.
 const STEADY: ReadonlySet<HudConnKind> = new Set(["noFile", "tooLarge"]);

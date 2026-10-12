@@ -4,6 +4,7 @@ import {
 	awaitingUat,
 	clean,
 	cleanNotes,
+	codeOf,
 	connKind,
 	describeAction,
 	flatten,
@@ -115,7 +116,7 @@ test("notes keep newlines and tabs but drop escapes", () => {
 	expect(cleanNotes("a\u001b[2J\tb\r\nc\u0007\n")).toBe("a [2J\tb\nc");
 });
 
-test("only in-progress and blocked UAT nodes are ready", () => {
+test("only in-progress UAT nodes are ready: blocked waits for a fix", () => {
 	const uat = (status: string) => ({
 		id: "u",
 		title: "U",
@@ -127,7 +128,7 @@ test("only in-progress and blocked UAT nodes are ready", () => {
 		["not-started", "in-progress", "blocked", "completed"].map((s) =>
 			isReadyUat(uat(s)),
 		),
-	).toEqual([false, true, true, false]);
+	).toEqual([false, true, false, false]);
 	expect(isReadyUat({ ...uat("in-progress"), type: "task" })).toBe(false);
 });
 
@@ -191,4 +192,19 @@ test("the pane title is the single root's title, else the document title", () =>
 	expect(roadmapTitle([root], "Old doc title")).toBe("RoadRaven v0.8.8");
 	expect(roadmapTitle([root, { ...root, id: "s" }], "Doc")).toBe("Doc");
 	expect(roadmapTitle([], undefined)).toBe("");
+});
+
+test("codeOf reads the code of a structured tool error, and nothing else", () => {
+	expect(
+		codeOf("Error (stale_write): Roadmap changed since your last read."),
+	).toBe("stale_write");
+	expect(codeOf("Error (unknown_tool): Unknown agent tool")).toBe(
+		"unknown_tool",
+	);
+	expect(
+		codeOf('$.mcp.call: no connected MCP tool "revealNode"'),
+	).toBeUndefined();
+	expect(
+		codeOf("the reply mentions Error (stale_write) later"),
+	).toBeUndefined();
 });

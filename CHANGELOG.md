@@ -3,6 +3,61 @@
 All notable changes to RoadRaven are documented in this file. The format
 follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [Unreleased]
+
+### Added
+
+- **The Setup Wizard installs the Claude Code plugin.** Choosing Claude Code
+  now installs the RoadRaven plugin (the tools, the `orchestrate` and
+  `work-node` skills and the terminal pane) with the `claude` command, not
+  just the MCP server. If `claude` can't be found or the install fails, the
+  wizard sets up the MCP server as before and shows the commands to run.
+  Once the plugin is installed, the wizard removes its own copy of the MCP
+  server, so Claude Code doesn't list the RoadRaven tools twice.
+- **Install and update the plugin from the app.** When the plugin is missing
+  or out of date, RoadRaven offers a dialog with one button that runs the
+  install or update and shows each step. If it fails, it shows the error and
+  the commands to copy.
+- **Go to app from the RoadRaven pane.** A **↗ Show in app** button on each pane row selects
+  that item in RoadRaven, centres it and opens its notes. Agents can do the
+  same with the new `revealNode` tool.
+
+### Fixed
+
+- **Updates work on Linux.** The app's runtime didn't trust any certificate
+  authority on Linux, so every update check failed with "unable to get local
+  issuer certificate". The app now uses the system's certificates.
+- **The Setup Wizard keeps `~/.claude.json` private.** When it wrote Claude
+  Code's config, earlier versions left the file readable by other users on
+  the computer (mode 0644 instead of 0600) and replaced a symlinked config
+  with a plain file. It now keeps the file's permissions and writes through
+  the link. If you ran the wizard on Linux or macOS before, run
+  `chmod 600 ~/.claude.json` once.
+- **Dropdowns open on Linux.** The Status and Type menus in the side panel
+  and the Event Log filters didn't open on Linux, because the app's Linux
+  browser engine can't show native drop-down lists. They are now the same
+  in-app menus the rest of RoadRaven uses.
+- **A failed update check is visible.** Preferences shows the error as an
+  alert, and the Check for updates button no longer flashes while checking.
+- **Agents no longer see "RoadRaven is not running" after a restart.** An app
+  instance that was still closing could delete the file the next instance
+  had just written to tell agents where to connect. It now deletes only its
+  own.
+- **The RoadRaven pane:** every UAT item you mark can carry a note, Pass as
+  well as Fail; a re-tested UAT item notifies you again; a failed
+  item waits for the agent's fix instead of offering Pass; refreshes no longer
+  overlap and skip work when nothing changed; agent labels survive switching
+  files; the follow-app theme works on Windows and macOS.
+
+### Changed
+
+- **Smaller MCP replies.** Tool results are compact JSON, `findNodes` returns
+  matches without their subtrees, and `getRoadmap({ omitNotes: true })` also
+  leaves out timestamps, so agents stay under Claude Code's result limit on
+  big roadmaps.
+- `bun run verify` prints nothing on a passing run, and a desktop test fails
+  on an unexpected `console.error` or `console.warn`.
+
 ## [0.8.9] - 2026-10-10
 
 ### Fixed

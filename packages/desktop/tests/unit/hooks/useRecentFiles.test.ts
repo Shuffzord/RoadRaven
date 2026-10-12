@@ -1,7 +1,7 @@
 /** @vitest-environment jsdom */
 // v0.8.2 F4 — the recent-files list refetches whenever the open file changes,
 // and (A4) whenever the renderer edits the list through useFileActions.ts.
-import { act, cleanup, renderHook } from "@testing-library/react";
+import { act, cleanup, renderHook, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { RoadmapSchema } from "../../../../../packages/core/src/schema";
 
@@ -56,7 +56,7 @@ describe("useRecentFiles", () => {
 			settings: { recentFiles: ["/tmp/a.json"] },
 		});
 		const { result } = renderHook(() => useRecentFiles());
-		await vi.waitFor(() => expect(result.current).toEqual(["/tmp/a.json"]));
+		await waitFor(() => expect(result.current).toEqual(["/tmp/a.json"]));
 		expect(loadSettingsMock).toHaveBeenCalledTimes(1);
 
 		loadSettingsMock.mockResolvedValueOnce({
@@ -65,7 +65,7 @@ describe("useRecentFiles", () => {
 		act(() => {
 			useRoadmapStore.getState().loadSchema(SCHEMA, "/tmp/b.json");
 		});
-		await vi.waitFor(() =>
+		await waitFor(() =>
 			expect(result.current).toEqual(["/tmp/b.json", "/tmp/a.json"]),
 		);
 		expect(loadSettingsMock).toHaveBeenCalledTimes(2);
@@ -74,7 +74,7 @@ describe("useRecentFiles", () => {
 	it("ignores store traffic that leaves filePath alone", async () => {
 		loadSettingsMock.mockResolvedValue({ settings: { recentFiles: [] } });
 		renderHook(() => useRecentFiles());
-		await vi.waitFor(() => expect(loadSettingsMock).toHaveBeenCalledTimes(1));
+		await waitFor(() => expect(loadSettingsMock).toHaveBeenCalledTimes(1));
 
 		act(() => {
 			useRoadmapStore.getState().loadSchema(SCHEMA, null);
@@ -88,17 +88,17 @@ describe("useRecentFiles", () => {
 describe("useRecentFiles — renderer-side edits (A4)", () => {
 	it("refetches when the recent-files-changed event fires", async () => {
 		renderHook(() => useRecentFiles());
-		await vi.waitFor(() => expect(loadSettingsMock).toHaveBeenCalledTimes(1));
+		await waitFor(() => expect(loadSettingsMock).toHaveBeenCalledTimes(1));
 
 		act(() => {
 			window.dispatchEvent(new Event(RECENT_FILES_CHANGED_EVENT));
 		});
-		await vi.waitFor(() => expect(loadSettingsMock).toHaveBeenCalledTimes(2));
+		await waitFor(() => expect(loadSettingsMock).toHaveBeenCalledTimes(2));
 	});
 
 	it("stops listening once unmounted", async () => {
 		const { unmount } = renderHook(() => useRecentFiles());
-		await vi.waitFor(() => expect(loadSettingsMock).toHaveBeenCalledTimes(1));
+		await waitFor(() => expect(loadSettingsMock).toHaveBeenCalledTimes(1));
 		unmount();
 
 		window.dispatchEvent(new Event(RECENT_FILES_CHANGED_EVENT));
@@ -111,7 +111,7 @@ describe("useRecentFiles — renderer-side edits (A4)", () => {
 			settings: { recentFiles: ["/tmp/a.json", "/tmp/b.json"] },
 		});
 		const { result } = renderHook(() => useRecentFiles());
-		await vi.waitFor(() =>
+		await waitFor(() =>
 			expect(result.current).toEqual(["/tmp/a.json", "/tmp/b.json"]),
 		);
 
@@ -127,7 +127,7 @@ describe("useRecentFiles — renderer-side edits (A4)", () => {
 		expect(saveSettingsMock).toHaveBeenCalledWith({
 			settings: { recentFiles: ["/tmp/b.json"] },
 		});
-		await vi.waitFor(() => expect(result.current).toEqual(["/tmp/b.json"]));
+		await waitFor(() => expect(result.current).toEqual(["/tmp/b.json"]));
 	});
 
 	it("clearRecentFiles saves an empty list without reading first", async () => {

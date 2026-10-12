@@ -1,7 +1,7 @@
 // Phase 4 Wave 1 — real test implementations for Plan 04-02 Task 4.
 // Sources: D-04, D-05 in 04-CONTEXT.md, §1.4 in 04-RESEARCH.md.
 
-import { existsSync, mkdtempSync, readFileSync } from "node:fs";
+import { existsSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -84,5 +84,27 @@ describe("Sentinel file lifecycle", () => {
 
 		const contents = JSON.parse(readFileSync(getSentinelPath(), "utf-8"));
 		expect(contents.pid).toBe(process.pid);
+	});
+	it("leaves another instance's sentinel (different pid) in place", async () => {
+		await writeSentinel({
+			port: 47921,
+			url: "ws://127.0.0.1:47921",
+			startedAt: new Date().toISOString(),
+			pid: process.pid + 1,
+		});
+
+		await deleteSentinel();
+		expect(existsSync(getSentinelPath())).toBe(true);
+	});
+
+	it("leaves a corrupt sentinel in place without throwing", async () => {
+		writeFileSync(getSentinelPath(), "{not json");
+
+		await expect(deleteSentinel()).resolves.toBeUndefined();
+		expect(existsSync(getSentinelPath())).toBe(true);
+	});
+
+	it("does not throw when the sentinel is missing", async () => {
+		await expect(deleteSentinel()).resolves.toBeUndefined();
 	});
 });

@@ -34,7 +34,11 @@ export default defineConfig({
 			"tests/integration/eventApi.test.ts",
 			"tests/integration/eventApi-e2e.test.ts",
 		],
-		environmentMatchGlobs: [["tests/unit/ui/**/*.test.{ts,tsx}", "jsdom"]],
+		setupFiles: ["tests/setup/failOnConsole.ts", "tests/setup/jsdomRange.ts"],
+		// Run afterEach hooks in the order they were added, not reversed. UI
+		// test files do `afterEach(resetStore)`; reversed, that reset runs before
+		// RTL's cleanup() and re-renders still-mounted components outside act().
+		sequence: { hooks: "list" },
 		benchmark: {
 			include: ["tests/bench/**/*.bench.ts"],
 			environment: "node",

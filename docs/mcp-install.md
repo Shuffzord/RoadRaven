@@ -113,14 +113,16 @@ server was installed (the server reports this itself since v0.8):
 - **Claude Code plugin.** Update the plugin, then restart Claude Code:
 
   ```
-  claude plugin marketplace update roadraven; claude plugin update roadraven@roadraven
+  claude plugin marketplace update roadraven
+  claude plugin update roadraven@roadraven
   ```
 
 - **npm (`npx`).** Re-register the server pinned to the app's version (the
   toast fills it in), then restart your agent:
 
   ```
-  claude mcp remove roadraven; claude mcp add -s user roadraven -- npx -y @roadraven/mcp@<app version>
+  claude mcp remove roadraven
+  claude mcp add -s user roadraven -- npx -y @roadraven/mcp@<app version>
   ```
 
 If the server is *newer* than the app, update RoadRaven instead — the toast

@@ -7,6 +7,7 @@ import {
 	fireEvent,
 	render,
 	screen,
+	waitFor,
 } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -306,7 +307,7 @@ describe("PreferencesDialog", () => {
 			name: "Dark copy",
 			reservedIds: [...THEME_IDS],
 		});
-		await vi.waitFor(() =>
+		await waitFor(() =>
 			expect(useThemeStore.getState().preference).toBe("dark-copy"),
 		);
 		expect(rpc.listThemes).toHaveBeenCalled();
@@ -358,7 +359,7 @@ describe("PreferencesDialog", () => {
 			name: "Dark copy",
 			reservedIds: [...THEME_IDS],
 		});
-		await vi.waitFor(() =>
+		await waitFor(() =>
 			expect(useThemeStore.getState().draft?.id).toBe("dark-copy"),
 		);
 		expect(useThemeStore.getState().preference).toBe("dark-copy");
@@ -394,7 +395,7 @@ describe("PreferencesDialog", () => {
 		],
 		[{ status: "available", version: "0.8.6" }, UPDATE_DOWNLOAD_LABEL],
 		[{ status: "ready", version: "0.8.6" }, UPDATE_RESTART_LABEL],
-		[{ status: "checking" }, null],
+		[{ status: "checking" }, UPDATE_CHECK_LABEL],
 		[{ status: "downloading", version: "0.8.6", progress: 30 }, null],
 		[{ status: "disabled", reason: "dev" }, null],
 	])("About while %o shows its status line and button %s", async (state, button) => {
@@ -420,6 +421,29 @@ describe("PreferencesDialog", () => {
 		expect(screen.getByTestId(UPDATE_STATUS_TESTID).textContent).toBe(
 			"Failed to check for updates: fetch failed",
 		);
+	});
+
+	// v0.9.0: a failed check reads as an error, not as grey helper text.
+	it("an update error is announced with role=alert", async () => {
+		const state: UpdateState = {
+			status: "error",
+			message: "Failed to check for updates: fetch failed",
+		};
+		useUpdateStore.getState().setState(state);
+		await openDialog();
+
+		expect(screen.getByRole("alert").textContent).toBe(
+			describeUpdateState(state),
+		);
+	});
+
+	// v0.9.0: the Check button stays put while checking, so it does not flash.
+	it("while checking the Check button is present and disabled", async () => {
+		useUpdateStore.getState().setState({ status: "checking" });
+		await openDialog();
+
+		const button = screen.getByRole("button", { name: UPDATE_CHECK_LABEL });
+		expect((button as HTMLButtonElement).disabled).toBe(true);
 	});
 
 	it("the status line follows a pushed state change", async () => {

@@ -78,8 +78,19 @@ describe("TopBar — toolbar chrome", () => {
 	// v0.8.2 D2-A / D3: the New/Open buttons became the File menu trigger and
 	// the document chip sits in the centre once a document is open.
 	it("renders one toolbar with the brand and the primary actions", () => {
+		// jsdom does not know the HTML <search> element TopBar uses (CEF and
+		// WebKit do); React warns once per file, on this first render.
+		const error = vi
+			.spyOn(console, "error")
+			.mockImplementation(() => undefined);
 		seed();
 		render(<TopBar />);
+		expect(error).toHaveBeenCalledTimes(1);
+		expect(error).toHaveBeenCalledWith(
+			expect.stringContaining("is unrecognized in this browser"),
+			"search",
+		);
+		error.mockRestore();
 
 		expect(screen.getByRole("toolbar", { name: "Main toolbar" })).toBeTruthy();
 		expect(screen.getByText("RoadRaven")).toBeTruthy();

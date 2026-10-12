@@ -27,6 +27,7 @@ import {
 } from "./mcpInstaller";
 import { onBeforeQuit } from "./platform/lifecycle";
 import { showNotification } from "./platform/notifications";
+import { installDefaultCa } from "./platform/tlsRoots";
 import { getReleaseChannel } from "./platform/updater";
 import {
 	closeMainWindow,
@@ -264,6 +265,9 @@ process.on("SIGINT", async () => {
 process.on("exit", (code) => {
 	bunLogger.info`process.exit(${code}) — flush must have run via before-quit or SIG* path`;
 });
+
+// Linux: give main-process fetch() a CA list before anything goes online.
+installDefaultCa();
 
 // v0.8.5: self-update service. Created before the RPC table because its
 // handlers close over it; the push subscription and launch check are wired

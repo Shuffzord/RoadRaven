@@ -215,6 +215,7 @@ const TOOL_SCHEMAS: Record<string, z.ZodType> = {
 	openFile: OpenFileInputSchema,
 	// Viewport
 	cameraFitView: NoArgsSchema,
+	revealNode: GetNodeInputSchema,
 };
 
 export type ValidationResult =

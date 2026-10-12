@@ -14,8 +14,19 @@ const tree = {
 				status: "done",
 				type: "task",
 				notes: "big",
+				createdAt: "2026-01-01T00:00:00.000Z",
+				updatedAt: "2026-01-02T00:00:00.000Z",
 				metadata: { k: "v" },
-				children: [{ id: "b", title: "B", notes: "x", children: [] }],
+				children: [
+					{
+						id: "b",
+						title: "B",
+						notes: "x",
+						createdAt: "2026-01-03T00:00:00.000Z",
+						updatedAt: "2026-01-04T00:00:00.000Z",
+						children: [],
+					},
+				],
 			},
 		],
 	},
@@ -25,13 +36,17 @@ const tree = {
 const run = async (args: Record<string, unknown>) => {
 	const client = { request: vi.fn().mockResolvedValue(structuredClone(tree)) };
 	const result = await getRoadmapCallback(client)(args);
-	return { client, out: JSON.parse(result.content[0].text) };
+	const text = result.content[0].text;
+	return { client, text, out: JSON.parse(text) };
 };
 
 describe("getRoadmap omitNotes", () => {
-	it("strips notes recursively and keeps every other field", async () => {
-		const { client, out } = await run({ omitNotes: true });
-		expect(JSON.stringify(out)).not.toContain("notes");
+	it("strips notes and timestamps recursively and keeps every other field", async () => {
+		const { client, text, out } = await run({ omitNotes: true });
+		expect(text).not.toContain("notes");
+		expect(text).not.toContain("createdAt");
+		expect(text).not.toContain("updatedAt");
+		expect(text).toBe(JSON.stringify(out));
 		const a = out.schema.nodes[0];
 		expect(a).toMatchObject({
 			id: "a",
@@ -46,8 +61,9 @@ describe("getRoadmap omitNotes", () => {
 	});
 
 	it.each([{}, { omitNotes: false }])("keeps notes for %j", async (args) => {
-		const { client, out } = await run(args);
+		const { client, text, out } = await run(args);
 		expect(out).toEqual(tree);
+		expect(text).toBe(JSON.stringify(tree));
 		expect(client.request).toHaveBeenCalledWith("getRoadmap", {});
 	});
 });

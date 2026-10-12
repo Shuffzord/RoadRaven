@@ -162,6 +162,15 @@ describe.each(listSkillDirs())("skill %s", (skill) => {
 		}
 	});
 
+	it("reads the tree with getRoadmap({ omitNotes: true })", () => {
+		for (const file of skillFiles(skill)) {
+			const calls = read(file).match(/getRoadmap\([^)]*\)/g) ?? [];
+			for (const call of calls) {
+				expect(call, file).toBe("getRoadmap({ omitNotes: true })");
+			}
+		}
+	});
+
 	it("never writes a tool name with an mcp__ prefix", () => {
 		for (const file of skillFiles(skill)) {
 			expect(read(file), file).not.toContain("mcp__");

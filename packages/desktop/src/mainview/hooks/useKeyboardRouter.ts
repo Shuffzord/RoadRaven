@@ -1,6 +1,10 @@
 import { useEffect, useRef } from "react";
 import type { RoadmapNode } from "../../../../../packages/core/src/schema";
-import { STATUS_HOTKEYS, STRUCTURE_KEYS } from "../lib/domContract";
+import {
+	MENU_TRIGGER_SELECTOR,
+	STATUS_HOTKEYS,
+	STRUCTURE_KEYS,
+} from "../lib/domContract";
 import { type FileCommandId, getFileCommand } from "../lib/fileCommands";
 import { requestNodeFocus } from "../lib/focusRequest";
 import { stepHistoryAndReveal } from "../lib/historyActions";
@@ -60,6 +64,17 @@ function hasTextSelection(): boolean {
  */
 function isInOutline(active: Element | null): boolean {
 	return !!active?.closest?.("[data-outline-tree]");
+}
+
+/**
+ * True while a menu button (MenuSelect, the File menu, …) holds DOM focus.
+ * Enter / Space / ArrowDown then open that menu and Tab moves focus on
+ * natively; the canvas shortcuts below must not run on the focused node.
+ * Escape still falls through: a closed menu does not use it, and the event
+ * log drawer closes on Escape from its filter triggers.
+ */
+function isMenuTrigger(active: Element | null): boolean {
+	return !!active?.matches?.(MENU_TRIGGER_SELECTOR);
 }
 
 function isModalOpen(): boolean {
@@ -303,6 +318,7 @@ export function useKeyboardRouter(deps: RouterDeps): void {
 			}
 
 			if (inTextInput || isInOutline(active)) return;
+			if (e.key !== "Escape" && isMenuTrigger(active)) return;
 
 			// C — toggle collapse/expand on the focused node's subtree. Drives the
 			// same chevron-click path the mouse uses (fileViewStore owns the

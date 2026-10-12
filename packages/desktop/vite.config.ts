@@ -22,6 +22,23 @@ export default defineConfig({
 		outDir: "../../dist",
 		emptyOutDir: true,
 		target: "esnext",
+		// The bundle loads from local views://, not over a network, so the
+		// 500 kB default says nothing; this limit stays a tripwire for big growth.
+		chunkSizeWarningLimit: 1600,
+		rollupOptions: {
+			onwarn(warning, warn) {
+				// Some modules are imported dynamically on purpose (init order and
+				// import cycles, see useFileActions.ts and rpcHandlers.ts), not to
+				// split code, so "dynamic import will not move module" is expected.
+				if (
+					warning.plugin === "vite:reporter" &&
+					warning.message.includes("dynamic import will not move module")
+				) {
+					return;
+				}
+				warn(warning);
+			},
+		},
 	},
 	server: {
 		port: 5173,

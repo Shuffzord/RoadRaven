@@ -985,6 +985,24 @@ export async function handleAgentRequest(
 			return { ok: true, data: { ok: true } };
 		}
 
+		case "revealNode": {
+			// Select the node, expand its ancestors and centre the camera on it;
+			// the side panel follows the selection. Bun raises the window after.
+			const nodeId = args.nodeId as string;
+			if (!store.nodeIndex.has(nodeId)) {
+				return {
+					ok: false,
+					error: `Node '${nodeId}' not found.`,
+					code: "node_not_found",
+					hint: "Call getRoadmap or findNodes to discover node IDs.",
+				};
+			}
+			const { requestNodeFocus } = await import("../lib/focusRequest");
+			requestNodeFocus(nodeId, { align: "center", select: true });
+			appendAgentDrawerEvent("revealNode", nodeId, args, store, eventLog);
+			return { ok: true, data: { ok: true } };
+		}
+
 		// -------- DEFAULT --------
 		default:
 			return {

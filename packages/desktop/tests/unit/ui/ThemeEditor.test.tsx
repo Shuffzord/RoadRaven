@@ -9,6 +9,7 @@ import {
 	fireEvent,
 	render,
 	screen,
+	waitFor,
 	within,
 } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -257,12 +258,12 @@ describe("ThemeEditor", () => {
 		type("--rv-accent", "#00ff00");
 		type("--rv-accent", "#00ff01");
 		expect(rpc.writeTheme).not.toHaveBeenCalled();
-		await vi.waitFor(() => expect(rpc.writeTheme).toHaveBeenCalledTimes(1));
+		await waitFor(() => expect(rpc.writeTheme).toHaveBeenCalledTimes(1));
 		expect(rpc.writeTheme).toHaveBeenCalledWith({
 			file: { ...mine, colors: { ...mine.colors, accent: "#00ff01" } },
 			reservedIds: [...THEME_IDS],
 		});
-		await vi.waitFor(() =>
+		await waitFor(() =>
 			expect(screen.getByTestId(EDITOR_SAVE_STATUS_TESTID).textContent).toBe(
 				"Saved · just now",
 			),
@@ -281,7 +282,7 @@ describe("ThemeEditor", () => {
 		} as never);
 		open();
 		type("--rv-accent", "#00ff00");
-		await vi.waitFor(() =>
+		await waitFor(() =>
 			expect(screen.getByTestId(EDITOR_SAVE_STATUS_TESTID).textContent).toBe(
 				"Could not save: disk full",
 			),
@@ -298,7 +299,7 @@ describe("ThemeEditor", () => {
 		open();
 		expect(screen.queryByRole("button", { name: /revert/i })).toBeNull();
 		type("--rv-accent", "#00ff00");
-		await vi.waitFor(() =>
+		await waitFor(() =>
 			expect(screen.getByTestId(EDITOR_SAVE_STATUS_TESTID).textContent).toBe(
 				"Saved · just now",
 			),
@@ -357,7 +358,7 @@ describe("ThemeEditor", () => {
 		act(() => {
 			fireEvent.keyDown(hexInput("--rv-accent"), { key: "Escape" });
 		});
-		await vi.waitFor(() => expect(draft()).toBeNull());
+		await waitFor(() => expect(draft()).toBeNull());
 		expect(screen.queryByRole("dialog")).toBeNull();
 		expect(usePreferencesStore.getState().open).toBe(true);
 	});
@@ -366,7 +367,7 @@ describe("ThemeEditor", () => {
 		open();
 		type("--rv-accent", "#00ff00");
 		fireEvent.click(screen.getByRole("button", { name: EDITOR_CLOSE_LABEL }));
-		await vi.waitFor(() => expect(draft()).toBeNull());
+		await waitFor(() => expect(draft()).toBeNull());
 		expect(rpc.writeTheme).toHaveBeenCalledTimes(1);
 		cleanup();
 

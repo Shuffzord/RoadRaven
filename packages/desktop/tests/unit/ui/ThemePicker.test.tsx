@@ -8,6 +8,7 @@ import {
 	fireEvent,
 	render,
 	screen,
+	waitFor,
 } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { UserThemeEntry } from "../../../../../shared/types";
@@ -165,7 +166,6 @@ describe("ThemePicker with user themes", () => {
 		expect(document.activeElement).toBe(items[0]);
 		// From System (last built-in) ArrowDown enters the user group.
 		const systemIdx = BUILT_IN_THEMES.length;
-		items[systemIdx].focus();
 		for (let i = 0; i < systemIdx; i++) {
 			fireEvent.keyDown(menu, { key: "ArrowDown" });
 		}
@@ -233,7 +233,7 @@ describe("ThemePicker delete control", () => {
 		expect(useThemeStore.getState().deleteUserTheme).toHaveBeenCalledWith(
 			"mine",
 		);
-		await vi.waitFor(() =>
+		await waitFor(() =>
 			expect(screen.queryByRole("dialog", { name: /Delete theme/ })).toBe(null),
 		);
 		// The menu is still open: the user sees the row go.
@@ -247,13 +247,13 @@ describe("ThemePicker delete control", () => {
 		fireEvent.click(
 			screen.getByRole("button", { name: DELETE_THEME_CANCEL_LABEL }),
 		);
-		await vi.waitFor(() =>
+		await waitFor(() =>
 			expect(screen.queryByRole("dialog", { name: /Delete theme/ })).toBe(null),
 		);
 		expect(useThemeStore.getState().deleteUserTheme).not.toHaveBeenCalled();
 		expect(screen.getByRole("menu", { name: "Theme" })).toBeTruthy();
 		// Radix hands focus back on a macrotask after the dialog unmounts.
-		await vi.waitFor(() =>
+		await waitFor(() =>
 			expect(document.activeElement).toBe(
 				screen.getByRole("menuitem", { name: "Murky" }),
 			),
@@ -262,11 +262,11 @@ describe("ThemePicker delete control", () => {
 		fireEvent.click(deleteButton("Murky"));
 		const dialog = confirmDialog("Murky");
 		fireEvent.keyDown(dialog, { key: "Escape" });
-		await vi.waitFor(() =>
+		await waitFor(() =>
 			expect(screen.queryByRole("dialog", { name: /Delete theme/ })).toBe(null),
 		);
 		expect(screen.getByRole("menu", { name: "Theme" })).toBeTruthy();
-		await vi.waitFor(() =>
+		await waitFor(() =>
 			expect(document.activeElement).toBe(
 				screen.getByRole("menuitem", { name: "Murky" }),
 			),

@@ -29,6 +29,13 @@ interface InstallResult {
 
 const TOTAL_STEPS = 3;
 
+/** Claude row label when the plugin is already installed (re-running is safe). */
+export const CLAUDE_REINSTALL_LABEL =
+	"Claude Code — reinstall / update the RoadRaven plugin";
+
+export const DONE_PLUGIN_TEXT =
+	"The RoadRaven plugin is installed in Claude Code. Restart Claude Code, keep RoadRaven running, and open a roadmap — Claude can now edit it and push live status, and the RoadRaven skills and terminal pane are ready.";
+
 const STEP_SYMBOL: Record<McpInstallStep["status"], string> = {
 	ok: "✓",
 	error: "✕",
@@ -50,8 +57,8 @@ function computeDefaultHosts(status: SetupStatus): Set<McpHost> {
 
 /**
  * SetupWizard — first-run onboarding (v0.6). Walks the user through RoadRaven
- * setup and can install the Claude Code MCP integration (register the
- * `roadraven` server) without hand-editing ~/.claude.json. Auto-opens on first
+ * setup and can install the RoadRaven Claude Code plugin (falling back to
+ * registering the `roadraven` MCP server) without hand-editing config files. Auto-opens on first
  * launch; re-openable from the TopBar. Closing at any point marks setup done.
  */
 export function SetupWizard() {
@@ -236,13 +243,15 @@ function McpStep({
 	if (!status) return <Body>Checking setup…</Body>;
 	return (
 		<>
-			<Title>MCP integration</Title>
+			<Title>Connect your AI agent</Title>
 			<Body>
-				Register the <code style={codeStyle}>roadraven</code> MCP server with
-				your detected agent hosts so they can create, edit, and push live status
-				to your roadmap. Close the host app before installing (it writes this
-				config too), then restart it afterwards. RoadRaven must be running for
-				the tools to work.
+				For Claude Code, RoadRaven installs its Claude Code plugin: the tools
+				that let Claude create, edit, and push live status to your roadmap, the
+				RoadRaven skills, and the terminal pane. If that can't be done, it sets
+				up the tools only and shows the commands to run yourself. For OpenCode,
+				it registers the <code style={codeStyle}>roadraven</code> MCP server.
+				Close the agent app before installing, then restart it afterwards.
+				RoadRaven must be running for the tools to work.
 			</Body>
 			<HostList
 				status={status}
@@ -254,7 +263,11 @@ function McpStep({
 				installing={installing}
 				serverAvailable={status.mcpServerAvailable}
 				hasSelection={selectedHosts.size > 0}
-				alreadyInstalled={status.mcpInstalled || status.openCodeInstalled}
+				alreadyInstalled={
+					status.pluginInstalled ||
+					status.mcpInstalled ||
+					status.openCodeInstalled
+				}
 				onInstall={onInstall}
 			/>
 		</>
@@ -262,17 +275,20 @@ function McpStep({
 }
 
 function DoneStep({ status }: { status: SetupStatus | null }) {
-	const installed = status?.mcpInstalled === true;
 	return (
 		<>
 			<Title>You're all set</Title>
-			<Body>
-				{installed
-					? "The roadraven MCP server is registered. Restart Claude Code, keep RoadRaven running, and open a roadmap — Claude can now edit it and push live status."
-					: "Setup is complete. You can install the Claude Code MCP integration any time from the settings button in the top bar."}
-			</Body>
+			<Body>{doneText(status)}</Body>
 		</>
 	);
+}
+
+function doneText(status: SetupStatus | null): string {
+	if (status?.pluginInstalled) return DONE_PLUGIN_TEXT;
+	if (status?.mcpInstalled) {
+		return "The roadraven MCP server is registered. Restart Claude Code, keep RoadRaven running, and open a roadmap — Claude can now edit it and push live status.";
+	}
+	return "Setup is complete. You can connect Claude Code any time from the settings button in the top bar.";
 }
 
 /* ---- MCP step pieces ---- */
@@ -333,7 +349,7 @@ function HostList({
 	);
 }
 
-/** A single host's row: the plugin-installed notice (Claude only) or its selection checkbox. */
+/** A single host's selection checkbox; Claude offers a reinstall when the plugin is present. */
 function HostRow({
 	host,
 	status,
@@ -345,18 +361,11 @@ function HostRow({
 	selectedHosts: Set<McpHost>;
 	onToggleHost: (host: McpHost) => void;
 }) {
-	if (host === "claude" && status.pluginInstalled) {
-		return (
-			<Detected
-				ok
-				label="Claude Code — already installed via the RoadRaven plugin"
-				fallback=""
-			/>
-		);
-	}
+	const reinstall = host === "claude" && status.pluginInstalled;
 	return (
 		<HostCheckbox
 			host={host}
+			label={reinstall ? CLAUDE_REINSTALL_LABEL : HOST_LABEL[host]}
 			checked={selectedHosts.has(host)}
 			onToggle={onToggleHost}
 		/>
@@ -365,10 +374,12 @@ function HostRow({
 
 function HostCheckbox({
 	host,
+	label,
 	checked,
 	onToggle,
 }: {
 	host: McpHost;
+	label: string;
 	checked: boolean;
 	onToggle: (host: McpHost) => void;
 }) {
@@ -388,12 +399,12 @@ function HostCheckbox({
 				checked={checked}
 				onChange={() => onToggle(host)}
 			/>
-			{HOST_LABEL[host]}
+			{label}
 		</label>
 	);
 }
 
-function InstallLog({ result }: { result: InstallResult | null }) {
+export function InstallLog({ result }: { result: InstallResult | null }) {
 	if (!result) return null;
 	const shared = result.steps.filter((s) => !s.host);
 	const byHost = groupStepsByHost(result.steps);
@@ -683,6 +694,8 @@ const stepDetailStyle: React.CSSProperties = {
 	color: "var(--rv-text-tertiary)",
 	marginLeft: 20,
 	marginTop: 2,
+	// Commands to run come one per line (commandLine).
+	whiteSpace: "pre-line",
 	wordBreak: "break-all",
 };
 

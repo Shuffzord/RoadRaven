@@ -1,5 +1,6 @@
 import type { On } from "claude-code";
 import { type Engine, expect, mock, test } from "claude-code/testing";
+import { CHOICE } from "./plan";
 
 const STORE_KEY = "attribution:/work/plan.roadraven.json";
 // Attribution a previous session left behind: the agent that worked n1.
@@ -121,7 +122,7 @@ test("pane lists active work and pending UAT; batched Pass is written on Send", 
 			await ui.find({ text: /◆ awaiting UAT · 1 check\(s\)/ }),
 		).toBeDefined();
 		expect(
-			await ui.find({ text: /1 active · 1 awaiting UAT · 3 UAT · 1 backlog/ }),
+			await ui.find({ text: /1 active · 1 awaiting UAT · 2 UAT · 1 backlog/ }),
 		).toBeDefined();
 		expect(
 			await ui.find({ text: /✗ failed \(2026-10-09\): file is empty/ }),
@@ -132,8 +133,8 @@ test("pane lists active work and pending UAT; batched Pass is written on Send", 
 			await ui.press({ key: "notes-u1" });
 			expect(await ui.find({ text: /Then\*\* log in/ })).toBeDefined();
 			await ui.press({ key: "pass-u1" });
-			await ui.press({ key: "fail-u3" });
-			await ui.input({ key: "why-u3", text: "button does nothing" });
+			await ui.press({ key: "fail-u5" });
+			await ui.input({ key: "why-u5", text: "button does nothing" });
 			expect(
 				await ui.find({ type: "Text", text: /button does nothing ✓ saved/ }),
 			).toBeDefined();
@@ -159,13 +160,13 @@ test("pane lists active work and pending UAT; batched Pass is written on Send", 
 			tool: "updateNodes",
 			expectedRevision: 1,
 			updates: [
+				{ nodeId: "u5", status: "blocked", metadata: { uat: "fail" } },
 				{ nodeId: "u1", status: "completed", metadata: { uat: "pass" } },
-				{ nodeId: "u3", status: "blocked", metadata: { uat: "fail" } },
 			],
 		},
 		{
 			tool: "updateNodeNotes",
-			nodeId: "u3",
+			nodeId: "u5",
 			mode: "append",
 			notes: expect.stringContaining("button does nothing"),
 		},
@@ -247,8 +248,8 @@ test("a roadmap over Claude Code's MCP output limit reads as too large, with Ret
 // --- the write paths ------------------------------------------------------------------------------
 
 type Call = { server: string; tool: string; args: Record<string, unknown> };
-// An answer per call: a string is the tool's text, an Error its error text.
-type Answer = (c: Call) => string | Error;
+// An answer per call: a string is the tool's text, an Error its error text, `hang()` no answer ever.
+type Answer = (c: Call) => string | Error | Promise<never>;
 
 const answerOk: Answer = (c) => answerRR(c);
 
@@ -257,9 +258,14 @@ function rig(on: On, answer: { current: Answer }) {
 	const opens: unknown[] = [];
 	const prompts: string[] = [];
 	const toasts: string[] = [];
-	on("mcp.call", (_$, e) => {
+	const statuses: (string | undefined)[] = [];
+	on("mcp.call", async (_$, e) => {
 		calls.push({ server: e.server, tool: e.tool, args: e.args });
-		const r = answer.current({ server: e.server, tool: e.tool, args: e.args });
+		const r = await answer.current({
+			server: e.server,
+			tool: e.tool,
+			args: e.args,
+		});
 		const isError = r instanceof Error;
 		const text = isError ? r.message : r;
 		return { value: { content: [{ type: "text", text }], isError } };
@@ -268,7 +274,10 @@ function rig(on: On, answer: { current: Answer }) {
 		opens.push(e);
 		return { value: { isPlaced: true } };
 	});
-	on("ui.status", () => ({ value: undefined }));
+	on("ui.status", (_$, e) => {
+		statuses.push(e.text);
+		return { value: undefined };
+	});
 	on("ui.toast", (_$, e) => {
 		toasts.push(e.text);
 		return { value: undefined };
@@ -279,7 +288,7 @@ function rig(on: On, answer: { current: Answer }) {
 	});
 	mock.store(on);
 	const writes = (tool: string) => calls.filter((c) => c.tool === tool);
-	return { calls, opens, prompts, toasts, writes };
+	return { calls, opens, prompts, statuses, toasts, writes };
 }
 
 const PANE_PROPS = {
@@ -290,13 +299,16 @@ const PANE_PROPS = {
 	props: { title: "RoadRaven", isFocused: true, bodyColumns: 80 } as never,
 } as const;
 
-const withStatus = (id: string, status: string) =>
-	JSON.parse(
+// A status change, as the app answers it: with the next revision.
+const withStatus = (id: string, status: string) => ({
+	...JSON.parse(
 		JSON.stringify(roadmap).replace(
 			new RegExp(`("id":"${id}"[^}]*?"status":")[a-z-]+`),
 			`$1${status}`,
 		),
-	);
+	),
+	revision: roadmap.revision + 1,
+});
 
 test("callRR moves to the second server only when the first isn't connected", async ($, on) => {
 	const answer = {
@@ -342,8 +354,8 @@ test("a double Send writes once", async ($, on) => {
 test("Send re-reads the roadmap and skips a node no longer ready", async ($, on) => {
 	const answer = { current: answerOk };
 	const r = rig(on, answer);
-	const ui = await markAndSend($, ["pass-u1", "pass-u3"]);
-	const moved = withStatus("u3", "completed");
+	const ui = await markAndSend($, ["pass-u1", "pass-u5"]);
+	const moved = withStatus("u5", "completed");
 	answer.current = (c) => answerRR(c, { ...moved, revision: 7 });
 	await ui.press({ key: "uat-submit" });
 	expect(r.writes("updateNodes").map((c) => c.args)).toEqual([
@@ -356,7 +368,7 @@ test("Send re-reads the roadmap and skips a node no longer ready", async ($, on)
 	]);
 	expect(r.writes("updateNodeStatus")).toEqual([]);
 	expect(r.prompts[0]).toContain(
-		'skipped: "Export works" (u3), no longer ready',
+		'skipped: "Search works" (u5), no longer ready',
 	);
 });
 
@@ -364,11 +376,11 @@ test("a failed note still tells the orchestrator what was written, and a retry a
 	const answer = { current: answerOk };
 	const r = rig(on, answer);
 	const session = mock.session(on);
-	const ui = await markAndSend($, ["fail-u1", "fail-u3"]);
+	const ui = await markAndSend($, ["fail-u1", "fail-u5"]);
 	await ui.input({ key: "why-u1", text: "login hangs" });
-	await ui.input({ key: "why-u3", text: "file is empty again" });
+	await ui.input({ key: "why-u5", text: "no results" });
 	answer.current = (c) =>
-		c.tool === "updateNodeNotes" && c.args.nodeId === "u3"
+		c.tool === "updateNodeNotes" && c.args.nodeId === "u1"
 			? new Error("Error (internal): disk full")
 			: answerOk(c);
 	await ui.press({ key: "uat-submit" });
@@ -384,9 +396,9 @@ test("a failed note still tells the orchestrator what was written, and a retry a
 	answer.current = answerOk;
 	await ui.press({ key: "uat-submit" });
 	expect(r.writes("updateNodeNotes").map((c) => c.args.nodeId)).toEqual([
+		"u5",
 		"u1",
-		"u3",
-		"u3",
+		"u1",
 	]);
 	expect(r.prompts).toHaveLength(1);
 });
@@ -496,4 +508,491 @@ test("a failing findNodes keeps the last notes drawn and logs once", async ($, o
 	expect(await ui.find({ text: /Login works/ })).toBeDefined();
 	await ui.press({ key: "notes-u1" });
 	expect(await ui.find({ text: /Then\*\* log in/ })).toBeDefined();
+});
+
+test("a blocked UAT item waits for a fix: drawn as failed, not offered for Pass", async ($, on) => {
+	rig(on, { current: answerOk });
+	await $.command.run({ command: "roadraven", args: "" } as never);
+	const ui = await $.ui.mount(PANE_PROPS);
+	expect(await ui.find({ text: /Export works/ })).toBeDefined();
+	expect(await ui.find({ text: /failed, waiting for a fix/ })).toBeDefined();
+	expect(
+		await ui.find({ text: /✗ failed \(2026-10-09\): file is empty/ }),
+	).toBeDefined();
+	expect(await ui.find({ key: "pass-u3" })).toBeUndefined();
+	expect(await ui.find({ key: "fail-u3" })).toBeUndefined();
+	expect(await ui.find({ key: "pass-u1" })).toBeDefined();
+});
+
+test("a UAT item sent back for a fix toasts again when it is ready for a re-test", async ($, on) => {
+	const answer = { current: answerOk };
+	const r = rig(on, answer);
+	const run = () => $.command.run({ command: "roadraven", args: "" } as never);
+	await run();
+	expect(r.toasts.filter((t) => /UAT/.test(t))).toHaveLength(1);
+	const failed = withStatus("u1", "blocked");
+	answer.current = (c) => answerRR(c, failed);
+	await run();
+	answer.current = answerOk;
+	await run();
+	expect(r.toasts.filter((t) => /UAT ready: Login works/.test(t))).toHaveLength(
+		1,
+	);
+	expect(r.toasts.filter((t) => /UAT/.test(t))).toHaveLength(2);
+});
+
+test("a node linked before RoadRaven first answers keeps its owner when the file's attribution loads", async ($, on) => {
+	const answer = {
+		current: (() =>
+			new Error(
+				"Error (app_not_running): RoadRaven is not running.",
+			)) as Answer,
+	};
+	rig(on, answer);
+	on("tool.call", () => ({ result: { content: [] } }) as never);
+	on("agent.spawn", () => ({ model: "claude-haiku-5-5", agentId: "z1" }));
+	await $.command.run({ command: "roadraven", args: "" } as never);
+	await $.agent.spawn({
+		prompt: "p",
+		description: "early worker",
+		name: "early-worker",
+		subagentType: "general-purpose",
+		parentModel: "claude-opus-5-5",
+		tool_use_id: "t1",
+	} as never);
+	await $.tool.call({
+		tool: "mcp__roadraven__updateNodeStatus",
+		tool_use_id: "t2",
+		agentId: "z1",
+		nodeId: "n1",
+		status: "in-progress",
+	} as never);
+	answer.current = answerOk;
+	await $.command.run({ command: "roadraven", args: "" } as never);
+	const ui = await $.ui.mount(PANE_PROPS);
+	expect(await ui.find({ text: /early-worker/ })).toBeDefined();
+	expect(await ui.find({ text: /auth-worker/ })).toBeUndefined();
+});
+
+test("owners of nodes no longer in the tree are dropped", async ($, on) => {
+	const stored: Record<string, unknown> = {
+		[STORE_KEY]: { ...saved, owners: { n1: "a1", gone: "a1" } },
+	};
+	on("mcp.call", (_$, e) => {
+		const text = answerRR(e);
+		return { value: { content: [{ type: "text", text }], isError: false } };
+	});
+	on("ui.open", () => ({ value: { isPlaced: true } }));
+	on("ui.status", () => ({ value: undefined }));
+	on("ui.toast", () => ({ value: undefined }));
+	on("store.get", (_$, e) => ({ value: stored[e.key] }));
+	on("store.set", (_$, e) => {
+		stored[e.key] = e.value;
+		return { value: undefined };
+	});
+	await $.command.run({ command: "roadraven", args: "" } as never);
+	expect((stored[STORE_KEY] as { owners: unknown }).owners).toEqual({
+		n1: "a1",
+	});
+});
+
+// The app's settings folder on each platform, and the environment that names it.
+const APP_DIRS: { dir: string; env: Record<string, string> }[] = [
+	{
+		dir: "C:/Users/u/AppData/Local/RoadRaven",
+		env: {
+			LOCALAPPDATA: "C:/Users/u/AppData/Local",
+			USERPROFILE: "C:/Users/u",
+		},
+	},
+	{
+		dir: "/Users/u/Library/Application Support/RoadRaven",
+		env: { HOME: "/Users/u" },
+	},
+	{ dir: "/home/u/.config/RoadRaven", env: { HOME: "/home/u" } },
+	{ dir: "/xdg/RoadRaven", env: { HOME: "/home/u", XDG_CONFIG_HOME: "/xdg" } },
+];
+
+for (const { dir, env } of APP_DIRS)
+	test(`follow-app reads the app's theme from ${dir}`, async ($, on) => {
+		rig(on, { current: answerOk });
+		mock.env(on, env);
+		// The engine hands hooks host paths: on a POSIX host it roots C:/... at the plugin, on Windows
+		// it resolves each path with backslashes. So paths are compared by their end, in `/` form.
+		const endsWith = (path: string, end: string) =>
+			path.replaceAll("\\", "/").endsWith(end);
+		on("fs.exists", (_$, e) => ({ value: endsWith(e.path, dir) }));
+		on("fs.read", (_$, e) => {
+			if (endsWith(e.path, `${dir}/settings.json`))
+				return { value: JSON.stringify({ theme: "probe" }) };
+			if (endsWith(e.path, `${dir}/themes/probe.json`))
+				return {
+					value: JSON.stringify({ meta: { name: "Probe" }, colors: {} }),
+				};
+			return { deny: "no such file" };
+		});
+		await $.command.run({ command: "roadraven", args: "" } as never);
+		const ui = await $.ui.mount(PANE_PROPS);
+		expect(await ui.find({ text: /· Probe/ })).toBeDefined();
+	});
+
+test("↗ on an active, a UAT and a backlog row shows that node in RoadRaven", async ($, on) => {
+	const r = rig(on, { current: answerOk });
+	const ui = await markAndSend($, ["backlog-toggle"]);
+	for (const id of ["n1", "u1", "root"]) await ui.press({ key: `goto-${id}` });
+	expect(r.writes("revealNode").map((c) => c.args)).toEqual([
+		{ nodeId: "n1" },
+		{ nodeId: "u1" },
+		{ nodeId: "root" },
+	]);
+	expect(r.toasts).toEqual([expect.stringContaining("UAT items ready")]);
+});
+
+test("↗ against a plugin without revealNode says to update the plugin", async ($, on) => {
+	const answer = { current: answerOk };
+	const r = rig(on, answer);
+	const ui = await markAndSend($, []);
+	answer.current = (c) =>
+		c.tool === "revealNode"
+			? new Error(`$.mcp.call: no connected MCP tool "${c.tool}"`)
+			: answerOk(c);
+	await ui.press({ key: "goto-n1" });
+	expect(r.toasts.at(-1)).toMatch(/update the RoadRaven plugin/);
+	expect(await ui.find({ text: /Connecting to RoadRaven/ })).toBeUndefined();
+});
+
+test("↗ against an app without revealNode says to update the app", async ($, on) => {
+	const answer = { current: answerOk };
+	const r = rig(on, answer);
+	const ui = await markAndSend($, []);
+	answer.current = (c) =>
+		c.tool === "revealNode"
+			? new Error(
+					"Error (unknown_tool): Unknown agent tool: 'revealNode'. Update the plugin to a version that matches the app.",
+				)
+			: answerOk(c);
+	await ui.press({ key: "goto-n1" });
+	expect(r.toasts.at(-1)).toMatch(/update the RoadRaven app/);
+});
+
+test("Next marks a not-started node next and tells the session", async ($, on) => {
+	const r = rig(on, { current: answerOk });
+	const session = mock.session(on);
+	await markAndSend($, ["backlog-toggle", "next-root"]);
+	expect(r.writes("updateNodes").map((c) => c.args)).toEqual([
+		{
+			expectedRevision: 1,
+			updates: [{ nodeId: "root", metadata: { priority: "next" } }],
+		},
+	]);
+	expect(JSON.stringify(session.appended())).toContain("prioritise node");
+	expect(r.toasts).toContain("RoadRaven · Root marked next");
+});
+
+test("Next on a node that has started writes nothing and says so", async ($, on) => {
+	const answer = { current: answerOk };
+	const r = rig(on, answer);
+	const ui = await markAndSend($, ["backlog-toggle"]);
+	const moved = withStatus("root", "in-progress");
+	answer.current = (c) => answerRR(c, moved);
+	await ui.press({ key: "next-root" });
+	expect(r.writes("updateNodes")).toEqual([]);
+	expect(r.toasts).toContain(
+		"RoadRaven · Root is no longer not-started; nothing done",
+	);
+});
+
+test("Run that the session refuses starts nothing and says why", async ($, on) => {
+	const r = rig(on, { current: answerOk });
+	const session = mock.session(on);
+	on("agent.spawn", () => ({ deny: "agents are off here" }));
+	await markAndSend($, ["backlog-toggle", "run-root", "run-start-root"]);
+	expect(r.toasts).toContain(
+		"RoadRaven · could not start an agent: agents are off here",
+	);
+	expect(session.appended()).toEqual([]);
+});
+
+test("Run on a node that has started since the confirm starts nothing", async ($, on) => {
+	const answer = { current: answerOk };
+	const r = rig(on, answer);
+	const spawns: unknown[] = [];
+	on("agent.spawn", (_$, e) => {
+		spawns.push(e);
+		return { deny: "unexpected" };
+	});
+	const ui = await markAndSend($, ["backlog-toggle", "run-root"]);
+	const moved = withStatus("root", "in-progress");
+	answer.current = (c) => answerRR(c, moved);
+	await ui.press({ key: "run-start-root" });
+	expect(spawns).toEqual([]);
+	expect(r.toasts).toContain(
+		"RoadRaven · Root is no longer not-started; nothing done",
+	);
+});
+
+test("each roadmap file brings its own attribution back, and saves under its own key", async ($, on) => {
+	const OTHER = "/work/other.json";
+	const otherKey = `attribution:${OTHER}`;
+	const stored: Record<string, unknown> = {
+		[STORE_KEY]: saved,
+		[otherKey]: {
+			agents: { b1: { ...saved.agents.a1, id: "b1", label: "other-worker" } },
+			owners: { n1: "b1" },
+			seenUat: [],
+		},
+	};
+	const other = { ...roadmap, filePath: OTHER };
+	let rm = roadmap;
+	on("mcp.call", (_$, e) => {
+		const text = answerRR(e, rm);
+		return { value: { content: [{ type: "text", text }], isError: false } };
+	});
+	on("ui.open", () => ({ value: { isPlaced: true } }));
+	on("ui.status", () => ({ value: undefined }));
+	on("ui.toast", () => ({ value: undefined }));
+	on("store.get", (_$, e) => ({ value: stored[e.key] }));
+	on("store.set", (_$, e) => {
+		stored[e.key] = e.value;
+		return { value: undefined };
+	});
+	const open = () => $.command.run({ command: "roadraven", args: "" } as never);
+
+	await open();
+	const ui = await $.ui.mount(PANE_PROPS);
+	expect(await ui.find({ text: /auth-worker/ })).toBeDefined();
+	rm = other;
+	await open();
+	expect(await ui.find({ text: /other-worker/ })).toBeDefined();
+	expect(await ui.find({ text: /auth-worker/ })).toBeUndefined();
+	expect(stored[otherKey]).toMatchObject({
+		owners: { n1: "b1" },
+		seenUat: ["u5", "u1"],
+	});
+	rm = roadmap;
+	await open();
+	expect(await ui.find({ text: /auth-worker/ })).toBeDefined();
+	expect(stored[STORE_KEY]).toMatchObject({
+		owners: { n1: "a1" },
+		seenUat: ["u5", "u1"],
+	});
+});
+
+test("an untitled roadmap leaves the previous file's saved attribution alone", async ($, on) => {
+	const stored: Record<string, unknown> = { [STORE_KEY]: saved };
+	// The app answers an untitled roadmap with no file path.
+	const untitled = {
+		revision: 9,
+		filePath: null,
+		isUntitled: true,
+		schema: { nodes: [{ id: "x", title: "Scratch", status: "not-started" }] },
+	};
+	let rm: Rm = roadmap;
+	on("mcp.call", (_$, e) => {
+		const text = answerRR(e, rm);
+		return { value: { content: [{ type: "text", text }], isError: false } };
+	});
+	on("ui.open", () => ({ value: { isPlaced: true } }));
+	on("ui.status", () => ({ value: undefined }));
+	const toasts: string[] = [];
+	on("ui.toast", (_$, e) => {
+		toasts.push(e.text);
+		return { value: undefined };
+	});
+	on("store.get", (_$, e) => ({ value: stored[e.key] }));
+	on("store.set", (_$, e) => {
+		stored[e.key] = e.value;
+		return { value: undefined };
+	});
+	const open = () => $.command.run({ command: "roadraven", args: "" } as never);
+
+	await open();
+	const ofA = JSON.stringify(stored[STORE_KEY]);
+	rm = untitled;
+	await open();
+	const ui = await $.ui.mount(PANE_PROPS);
+	expect(await ui.find({ text: /Scratch/ })).toBeDefined();
+	expect(JSON.stringify(stored[STORE_KEY])).toBe(ofA);
+	rm = roadmap;
+	await open();
+	expect(JSON.stringify(stored[STORE_KEY])).toBe(ofA);
+	expect(await ui.find({ text: /auth-worker/ })).toBeDefined();
+	expect(toasts.filter((t) => /UAT/.test(t))).toHaveLength(1);
+});
+
+// The test environment has timers; its typings (no DOM lib) do not name them.
+const later = (
+	globalThis as unknown as {
+		setTimeout: (fn: () => void, ms: number) => void;
+	}
+).setTimeout;
+
+test("refreshes run one at a time; one asked for meanwhile runs once after", async ($, on) => {
+	let inFlight = 0;
+	let most = 0;
+	let reads = 0;
+	let release: () => void = () => undefined;
+	const gate = new Promise<void>((done) => {
+		release = done;
+	});
+	on("mcp.call", async (_$, e) => {
+		if (e.tool === "getRoadmap") {
+			reads++;
+			inFlight++;
+			most = Math.max(most, inFlight);
+			await gate;
+			inFlight--;
+		}
+		const text = answerRR(e);
+		return { value: { content: [{ type: "text", text }], isError: false } };
+	});
+	on("ui.open", () => ({ value: { isPlaced: true } }));
+	on("ui.status", () => ({ value: undefined }));
+	on("ui.toast", () => ({ value: undefined }));
+	mock.store(on);
+	const run = () => $.command.run({ command: "roadraven", args: "" } as never);
+	const first = run();
+	const more = [run(), run()];
+	// Long enough for every refresh asked for to reach getRoadmap if nothing holds it back.
+	await new Promise<void>((done) => later(done, 50));
+	release();
+	await Promise.all([first, ...more]);
+	expect(most).toBe(1);
+	expect(reads).toBe(2);
+});
+
+// A reload (a theme change, /reload-plugins, a respawned hooks worker) drops the old environment and
+// cancels its waits, so work it had in flight never settles; the kit has no reload, so a wait that
+// never settles stands in for the cancelled one, and the fresh load's session.start is raised again.
+function hang() {
+	let reached: () => void = () => undefined;
+	const isReached = new Promise<void>((done) => {
+		reached = done;
+	});
+	const never = () => {
+		reached();
+		return new Promise<never>(() => undefined);
+	};
+	return { never, isReached };
+}
+
+function sessions($: Engine, on: On) {
+	mock.clock(on);
+	on("command.register", () => ({ value: { command: "roadraven" } }));
+	on("session.start", (_$, e) => ({ cwd: e.cwd }));
+	return () =>
+		$.session.start({
+			cwd: "/work",
+			surface: "terminal",
+			isInteractive: true,
+		} as never);
+}
+
+test("a session start clears a refresh the previous load left in flight", async ($, on) => {
+	const stall = hang();
+	const answer = { current: (() => stall.never()) as Answer };
+	const r = rig(on, answer);
+	const start = sessions($, on);
+	void $.command.run({ command: "roadraven", args: "" } as never);
+	await stall.isReached;
+	answer.current = answerOk;
+	await start();
+	for (let i = 0; i < 3; i++)
+		await $.command.run({ command: "roadraven", args: "" } as never);
+	expect(r.writes("getRoadmap").length).toBeGreaterThan(1);
+});
+
+test("a session start clears a Send the previous load left in flight", async ($, on) => {
+	const stall = hang();
+	const answer = { current: answerOk };
+	const r = rig(on, answer);
+	const start = sessions($, on);
+	const ui = await markAndSend($, ["pass-u1"]);
+	answer.current = (c) =>
+		c.tool === "updateNodes" ? stall.never() : answerOk(c);
+	void ui.press({ key: "uat-submit" });
+	await stall.isReached;
+	answer.current = answerOk;
+	await start();
+	await ui.press({ key: "uat-submit" });
+	expect(r.writes("updateNodes")).toHaveLength(2);
+});
+
+test("a session start clears a Run the previous load left in flight", async ($, on) => {
+	const stall = hang();
+	rig(on, { current: answerOk });
+	const start = sessions($, on);
+	const spawns: unknown[] = [];
+	on("agent.spawn", (_$, e) => {
+		spawns.push(e);
+		return spawns.length === 1 ? stall.never() : { deny: "refused" };
+	});
+	const ui = await markAndSend($, ["backlog-toggle", "run-root"]);
+	void ui.press({ key: "run-start-root" });
+	await stall.isReached;
+	await start();
+	await ui.press({ key: "run-root" });
+	await ui.press({ key: "run-start-root" });
+	expect(spawns).toHaveLength(2);
+});
+
+test("an unchanged file and revision skips the snapshot work", async ($, on) => {
+	const answer = { current: answerOk };
+	const r = rig(on, answer);
+	const run = () => $.command.run({ command: "roadraven", args: "" } as never);
+	await run();
+	await run();
+	await run();
+	expect(r.statuses.filter((t) => t !== undefined)).toHaveLength(1);
+	const moved = withStatus("n1", "completed");
+	answer.current = (c) => answerRR(c, moved);
+	await run();
+	expect(r.statuses.filter((t) => t !== undefined)).toHaveLength(2);
+});
+
+test("a Pass shows a note field; its note is appended and sent to the orchestrator", async ($, on) => {
+	const r = rig(on, { current: answerOk });
+	const ui = await markAndSend($, []);
+	expect(await ui.find({ key: "why-u1" })).toBeUndefined();
+	await ui.press({ key: "pass-u1" });
+	expect((await ui.find({ key: "why-u1" }))?.props.placeholder).toBe(
+		CHOICE.pass.placeholder,
+	);
+	await ui.input({ key: "why-u1", text: "worked, but slow" });
+	await ui.press({ key: "uat-submit" });
+	expect(r.writes("updateNodeNotes").map((c) => c.args)).toEqual([
+		{
+			nodeId: "u1",
+			mode: "append",
+			notes: expect.stringMatching(
+				/^\*\*UAT passed\*\* \(\d{4}-\d\d-\d\d\): worked, but slow$/,
+			),
+		},
+	]);
+	expect(r.prompts[0]).toContain('PASS: "Login works" (u1) — worked, but slow');
+});
+
+test("Pass then Fail keeps the typed note and writes it as the fail line", async ($, on) => {
+	const r = rig(on, { current: answerOk });
+	const ui = await markAndSend($, ["pass-u1"]);
+	await ui.input({ key: "why-u1", text: "login hangs" });
+	await ui.press({ key: "fail-u1" });
+	expect((await ui.find({ key: "why-u1" }))?.props.placeholder).toBe(
+		CHOICE.fail.placeholder,
+	);
+	await ui.press({ key: "uat-submit" });
+	expect(r.writes("updateNodeNotes").map((c) => c.args.notes)).toEqual([
+		expect.stringMatching(
+			/^\*\*UAT failed\*\* \(\d{4}-\d\d-\d\d\): login hangs$/,
+		),
+	]);
+	expect(r.prompts[0]).toContain('FAIL: "Login works" (u1) — login hangs');
+});
+
+test("a Pass without a note appends nothing to the node's notes", async ($, on) => {
+	const r = rig(on, { current: answerOk });
+	const ui = await markAndSend($, ["pass-u1"]);
+	await ui.press({ key: "uat-submit" });
+	expect(r.writes("updateNodes")).toHaveLength(1);
+	expect(r.writes("updateNodeNotes")).toEqual([]);
 });
