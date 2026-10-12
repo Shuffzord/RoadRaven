@@ -27,6 +27,12 @@ follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **Updates work on Linux.** The app's runtime didn't trust any certificate
   authority on Linux, so every update check failed with "unable to get local
   issuer certificate". The app now uses the system's certificates.
+- **The Setup Wizard keeps `~/.claude.json` private.** When it wrote Claude
+  Code's config, earlier versions left the file readable by other users on
+  the computer (mode 0644 instead of 0600) and replaced a symlinked config
+  with a plain file. It now keeps the file's permissions and writes through
+  the link. If you ran the wizard on Linux or macOS before, run
+  `chmod 600 ~/.claude.json` once.
 - **Dropdowns open on Linux.** The Status and Type menus in the side panel
   and the Event Log filters didn't open on Linux, because the app's Linux
   browser engine can't show native drop-down lists. They are now the same
