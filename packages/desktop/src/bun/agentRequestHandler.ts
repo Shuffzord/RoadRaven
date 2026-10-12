@@ -63,10 +63,16 @@ function sendError(
 
 /**
  * revealNode: the renderer has selected and centred the node; bring the window
- * to the front so the human sees it.
+ * to the front so the human sees it. Best-effort: the reveal already
+ * succeeded, so a failed raise is logged, not reported to the agent.
  */
 function raiseOnReveal(method: string, mainWindow: MainWindowLike): void {
-	if (method === "revealNode") activateMainWindow(mainWindow);
+	if (method !== "revealNode") return;
+	try {
+		activateMainWindow(mainWindow);
+	} catch (err) {
+		agentLogger.warn`revealNode: could not raise the window: ${String(err)}`;
+	}
 }
 
 /**

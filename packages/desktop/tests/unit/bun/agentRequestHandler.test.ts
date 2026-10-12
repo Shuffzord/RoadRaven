@@ -622,6 +622,22 @@ describe("agentRequestHandler — revealNode raises the window", () => {
 		expect(JSON.parse(sent[0]).result).toEqual({ ok: true });
 	});
 
+	it("still answers ok when raising the window throws", async () => {
+		vi.mocked(activateMainWindow).mockImplementationOnce(() => {
+			throw new Error("no window");
+		});
+		const { ws, sent } = makeWs();
+		const win = makeMainWindow(async () => ({ ok: true, data: { ok: true } }));
+		await agentRequestHandler(
+			ws,
+			makeRequest("revealNode", { nodeId: "n-1" }),
+			win,
+		);
+		const reply = JSON.parse(sent[0]);
+		expect(reply.error).toBeUndefined();
+		expect(reply.result).toEqual({ ok: true });
+	});
+
 	it("does not activate the window when the node is unknown", async () => {
 		const { ws } = makeWs();
 		const win = makeMainWindow(async () => ({
