@@ -27,6 +27,10 @@ follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **Updates work on Linux.** The app's runtime didn't trust any certificate
   authority on Linux, so every update check failed with "unable to get local
   issuer certificate". The app now uses the system's certificates.
+- **Dropdowns open on Linux.** The Status and Type menus in the side panel
+  and the Event Log filters didn't open on Linux, because the app's Linux
+  browser engine can't show native drop-down lists. They are now the same
+  in-app menus the rest of RoadRaven uses.
 - **A failed update check is visible.** Preferences shows the error as an
   alert, and the Check for updates button no longer flashes while checking.
 - **Agents no longer see "RoadRaven is not running" after a restart.** An app
