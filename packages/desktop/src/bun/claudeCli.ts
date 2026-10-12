@@ -117,10 +117,15 @@ export function findClaude(): string | null {
 	return Bun.which("claude") ?? claudeCandidates().find(existsSync) ?? null;
 }
 
-/** Full argv for one command; `.cmd` / `.bat` shims need cmd.exe. */
+/**
+ * Full argv for one command; `.cmd` / `.bat` shims need cmd.exe.
+ * No `/s`: Bun quotes a path with spaces, giving `/c "C:\Jane Doe\claude.cmd" x`.
+ * Without `/s`, cmd keeps those quotes when the line has exactly two quote
+ * characters and the quoted part names an executable file; with `/s` it always
+ * strips the first and last quote, which breaks the path at the space.
+ */
 export function claudeArgv(bin: string, args: ClaudeCommand): string[] {
-	if (/\.(cmd|bat)$/i.test(bin))
-		return ["cmd.exe", "/d", "/s", "/c", bin, ...args];
+	if (/\.(cmd|bat)$/i.test(bin)) return ["cmd.exe", "/d", "/c", bin, ...args];
 	return [bin, ...args];
 }
 

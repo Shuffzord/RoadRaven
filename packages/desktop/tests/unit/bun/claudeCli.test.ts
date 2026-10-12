@@ -89,12 +89,13 @@ describe("runClaudeSteps", () => {
 		expect(runner.mock.calls[0][0]).toEqual(
 			claudeArgv("C:\\npm\\claude.cmd", PLUGIN_INSTALL_STEPS[0]),
 		);
-		expect(claudeArgv("C:\\npm\\claude.cmd", ["x"])).toEqual([
+		// No /s: with it cmd strips the quotes around a path with spaces.
+		const spaced = "C:\\Users\\Jane Doe\\AppData\\Roaming\\npm\\claude.cmd";
+		expect(claudeArgv(spaced, ["x"])).toEqual([
 			"cmd.exe",
 			"/d",
-			"/s",
 			"/c",
-			"C:\\npm\\claude.cmd",
+			spaced,
 			"x",
 		]);
 		expect(claudeArgv(BIN, ["x"])).toEqual([BIN, "x"]);
