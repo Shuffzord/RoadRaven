@@ -1,5 +1,11 @@
 /** @vitest-environment jsdom */
-import { act, fireEvent, render, screen } from "@testing-library/react";
+import {
+	act,
+	fireEvent,
+	render,
+	screen,
+	waitFor,
+} from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { RoadmapSchema } from "../../../../../packages/core/src/schema";
 import { SidePanel } from "../../../src/mainview/components/SidePanel";
@@ -65,6 +71,23 @@ function seedStore(
 	useRoadmapStore.getState().setSelectedNode(selectedId);
 }
 
+/** A left press on the dropdown's trigger, the way Radix DropdownMenu opens. */
+function openMenu(name: string): HTMLElement {
+	const trigger = screen.getByRole("button", { name });
+	fireEvent.pointerDown(trigger, { button: 0, ctrlKey: false });
+	return trigger;
+}
+
+function menuOptions(name: string): (string | null)[] {
+	openMenu(name);
+	return screen.getAllByRole("menuitemradio").map((el) => el.textContent);
+}
+
+function pick(name: string, option: string): void {
+	openMenu(name);
+	fireEvent.click(screen.getByRole("menuitemradio", { name: option }));
+}
+
 beforeEach(() => {
 	vi.restoreAllMocks();
 	resetStore();
@@ -123,9 +146,7 @@ describe("SidePanel — edit mode", () => {
 		seedStore();
 		render(<SidePanel isOpen onClose={vi.fn()} />);
 		fireEvent.click(screen.getByLabelText("Edit node"));
-		const select = screen.getByLabelText("Status") as HTMLSelectElement;
-		const labels = Array.from(select.options).map((o) => o.textContent);
-		expect(labels).toEqual([
+		expect(menuOptions("Status")).toEqual([
 			"Not Started",
 			"In Progress",
 			"Completed",
@@ -137,16 +158,15 @@ describe("SidePanel — edit mode", () => {
 		seedStore({ statusConfig: undefined });
 		render(<SidePanel isOpen onClose={vi.fn()} />);
 		fireEvent.click(screen.getByLabelText("Edit node"));
-		const select = screen.getByLabelText("Status") as HTMLSelectElement;
-		expect(select.options.length).toBe(4);
+		expect(menuOptions("Status")).toHaveLength(4);
 	});
 
-	it("selecting a new status calls updateNodeStatus", () => {
+	it("opening Status and picking In Progress sets the node in-progress", () => {
 		seedStore();
 		render(<SidePanel isOpen onClose={vi.fn()} />);
 		fireEvent.click(screen.getByLabelText("Edit node"));
-		const select = screen.getByLabelText("Status") as HTMLSelectElement;
-		fireEvent.change(select, { target: { value: "in-progress" } });
+		pick("Status", "In Progress");
+		expect(screen.queryByRole("menu")).toBeNull();
 		expect(useRoadmapStore.getState().nodeIndex.get(ROOT_ID)?.status).toBe(
 			"in-progress",
 		);
@@ -156,8 +176,8 @@ describe("SidePanel — edit mode", () => {
 		seedStore();
 		render(<SidePanel isOpen onClose={vi.fn()} />);
 		fireEvent.click(screen.getByLabelText("Edit node"));
-		const select = screen.getByLabelText("Type") as HTMLSelectElement;
-		const labels = Array.from(select.options).map((o) => o.textContent);
+		const labels = menuOptions("Type");
+		expect(labels).toContain("(none)");
 		expect(labels).toContain("Epic");
 		expect(labels).toContain("Task");
 	});
@@ -188,9 +208,7 @@ describe("SidePanel — edit mode", () => {
 		render(<SidePanel isOpen onClose={vi.fn()} />);
 		fireEvent.click(screen.getByLabelText("Edit node"));
 
-		fireEvent.change(screen.getByLabelText("Type"), {
-			target: { value: "task" },
-		});
+		pick("Type", "Task");
 
 		expect(useRoadmapStore.getState().nodeIndex.get(ROOT_ID)?.type).toBe(
 			"task",
@@ -288,9 +306,19 @@ describe("SidePanel — edit mode", () => {
 		seedStore();
 		render(<SidePanel isOpen onClose={vi.fn()} />);
 		fireEvent.click(screen.getByLabelText("Edit node"));
-		const select = screen.getByLabelText("Status") as HTMLSelectElement;
-		fireEvent.change(select, { target: { value: "in-progress" } });
+		pick("Status", "In Progress");
 		expect(screen.getByText("saved")).toBeTruthy();
+	});
+
+	it("Escape closes an open Status menu and keeps edit mode", async () => {
+		seedStore();
+		render(<SidePanel isOpen onClose={vi.fn()} />);
+		fireEvent.click(screen.getByLabelText("Edit node"));
+		const trigger = openMenu("Status");
+		fireEvent.keyDown(screen.getByRole("menu"), { key: "Escape" });
+		expect(screen.queryByRole("menu")).toBeNull();
+		expect(screen.getByLabelText("Title")).toBeTruthy();
+		await waitFor(() => expect(document.activeElement).toBe(trigger));
 	});
 
 	it("switching to a different node with the SAME title still resets edit mode", () => {

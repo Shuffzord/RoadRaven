@@ -1,6 +1,7 @@
 import type { StatusConfig } from "../../../../../packages/core/src/schema";
 import { getDistinctSources, useEventLogStore } from "../store/eventLogStore";
 import { useRoadmapStore } from "../store/roadmapStore";
+import { MenuSelect } from "./MenuSelect";
 
 // Stable empty fallback — prevents Zustand's useSyncExternalStore from
 // returning a new [] reference on every render when schema is null
@@ -43,12 +44,15 @@ export function EventLogFilterBar() {
 			</span>
 
 			{/* Source dropdown */}
-			<select
+			<MenuSelect
+				label="Source filter"
 				value={filter.source ?? ""}
-				onChange={(e) =>
-					useEventLogStore
-						.getState()
-						.setFilterSource(e.target.value === "" ? null : e.target.value)
+				options={[
+					{ value: "", label: "All sources" },
+					...sources.map((x) => ({ value: x, label: x })),
+				]}
+				onChange={(v) =>
+					useEventLogStore.getState().setFilterSource(v === "" ? null : v)
 				}
 				style={{
 					fontSize: 12,
@@ -61,15 +65,7 @@ export function EventLogFilterBar() {
 							: "var(--rv-text-secondary)",
 					padding: "2px 4px",
 				}}
-				aria-label="Source filter"
-			>
-				<option value="">All sources</option>
-				{sources.map((s) => (
-					<option key={s} value={s}>
-						{s}
-					</option>
-				))}
-			</select>
+			/>
 
 			{/* Selected node toggle */}
 			<button
@@ -105,12 +101,15 @@ export function EventLogFilterBar() {
 			</button>
 
 			{/* Status dropdown */}
-			<select
+			<MenuSelect
+				label="Status filter"
 				value={filter.status ?? ""}
-				onChange={(e) =>
-					useEventLogStore
-						.getState()
-						.setFilterStatus(e.target.value === "" ? null : e.target.value)
+				options={[
+					{ value: "", label: "All statuses" },
+					...statusConfig.map((sc) => ({ value: sc.id, label: sc.id })),
+				]}
+				onChange={(v) =>
+					useEventLogStore.getState().setFilterStatus(v === "" ? null : v)
 				}
 				style={{
 					fontSize: 12,
@@ -123,15 +122,7 @@ export function EventLogFilterBar() {
 							: "var(--rv-text-secondary)",
 					padding: "2px 4px",
 				}}
-				aria-label="Status filter"
-			>
-				<option value="">All statuses</option>
-				{statusConfig.map((sc) => (
-					<option key={sc.id} value={sc.id}>
-						{sc.id}
-					</option>
-				))}
-			</select>
+			/>
 
 			{/* Clear button — visible only when any filter active */}
 			{hasActive && (

@@ -23,6 +23,21 @@ function makeEvent(
 	};
 }
 
+/** A left press on the dropdown's trigger, the way Radix DropdownMenu opens. */
+function openMenu(name: string): void {
+	fireEvent.pointerDown(screen.getByRole("button", { name }), {
+		button: 0,
+		ctrlKey: false,
+	});
+}
+
+function pick(name: string, option: string): void {
+	openMenu(name);
+	act(() => {
+		fireEvent.click(screen.getByRole("menuitemradio", { name: option }));
+	});
+}
+
 beforeEach(() => {
 	act(() => {
 		useEventLogStore.setState({
@@ -60,9 +75,9 @@ describe("EventLogFilterBar (D-20)", () => {
 		});
 		render(<EventLogFilterBar />);
 
-		const select = screen.getByRole("combobox", { name: /source filter/i });
+		openMenu("Source filter");
 		// Should have "All sources" + 2 distinct sources = 3 options total
-		const options = select.querySelectorAll("option");
+		const options = screen.getAllByRole("menuitemradio");
 		expect(options.length).toBe(3);
 		expect(options[0].textContent).toBe("All sources");
 		expect(options[1].textContent).toBe("agent-a");
@@ -108,14 +123,43 @@ describe("EventLogFilterBar (D-20)", () => {
 		});
 		render(<EventLogFilterBar />);
 
-		const select = screen.getByRole("combobox", { name: /status filter/i });
-		const options = select.querySelectorAll("option");
+		openMenu("Status filter");
+		const options = screen.getAllByRole("menuitemradio");
 		// "All statuses" + 3 status entries = 4 options
 		expect(options.length).toBe(4);
 		expect(options[0].textContent).toBe("All statuses");
 		expect(options[1].textContent).toBe("not-started");
 		expect(options[2].textContent).toBe("in-progress");
 		expect(options[3].textContent).toBe("done");
+	});
+
+	it("picking a source sets the source filter; All sources clears it", () => {
+		act(() => {
+			useEventLogStore.getState().appendEvents([makeEvent("n1", "agent-a")]);
+		});
+		render(<EventLogFilterBar />);
+
+		pick("Source filter", "agent-a");
+		expect(useEventLogStore.getState().filter.source).toBe("agent-a");
+		pick("Source filter", "All sources");
+		expect(useEventLogStore.getState().filter.source).toBeNull();
+	});
+
+	it("picking a status sets the status filter", () => {
+		act(() => {
+			useRoadmapStore.setState({
+				schema: {
+					version: 1,
+					title: "Test",
+					nodes: [],
+					statusConfig: [{ id: "blocked", label: "Blocked", color: "#aaa" }],
+				} as never,
+			});
+		});
+		render(<EventLogFilterBar />);
+
+		pick("Status filter", "blocked");
+		expect(useEventLogStore.getState().filter.status).toBe("blocked");
 	});
 
 	it("Clear button visible when any filter active", () => {

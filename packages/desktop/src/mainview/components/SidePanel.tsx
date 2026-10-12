@@ -4,6 +4,7 @@ import { COPY_NOTES_LABEL, NOTES_COPIED_LABEL } from "../lib/domContract";
 import { useRoadmapStore } from "../store/roadmapStore";
 import { IntegrationZone } from "./IntegrationZone";
 import { MarkdownRenderer } from "./MarkdownRenderer";
+import { MenuSelect } from "./MenuSelect";
 import { MetadataEditor } from "./MetadataEditor";
 import { NotesEditor } from "./NotesEditor";
 import { ResizeHandle } from "./ResizeHandle";
@@ -175,7 +176,8 @@ export function SidePanel({ isOpen, onClose }: SidePanelProps) {
 	useEffect(() => {
 		if (!isEditing) return;
 		const handler = (e: KeyboardEvent) => {
-			if (e.key === "Escape") {
+			// An open MenuSelect's Escape only closes the menu (Radix marks it handled).
+			if (e.key === "Escape" && !e.defaultPrevented) {
 				cancellingRef.current = true;
 				setIsEditing(false);
 				setTitleDraft(selectedNode?.title ?? "");
@@ -393,18 +395,13 @@ export function SidePanel({ isOpen, onClose }: SidePanelProps) {
 							STATUS
 						</FieldLabel>
 						{isEditing ? (
-							<select
+							<MenuSelect
+								label="Status"
 								value={status}
-								onChange={(e) => handleStatusChange(e.target.value)}
-								aria-label="Status"
+								options={statuses.map((s) => ({ value: s.id, label: s.label }))}
+								onChange={handleStatusChange}
 								className="w-full text-[12px] text-rv-text-primary bg-rv-bg-input border border-rv-border rounded-[6px] px-2 py-1 mb-4 focus:border-rv-border-focus outline-none"
-							>
-								{statuses.map((s) => (
-									<option key={s.id} value={s.id}>
-										{s.label}
-									</option>
-								))}
-							</select>
+							/>
 						) : (
 							<div className="flex items-center gap-2 px-2.5 py-1.5 bg-rv-bg-input border border-rv-border rounded-[6px] mb-4">
 								<span
@@ -420,19 +417,16 @@ export function SidePanel({ isOpen, onClose }: SidePanelProps) {
 						<FieldLabel flashing={flashedFields.has("type")}>TYPE</FieldLabel>
 						{isEditing ? (
 							types.length > 0 ? (
-								<select
+								<MenuSelect
+									label="Type"
 									value={selectedNode.type ?? ""}
-									onChange={(e) => handleTypeChange(e.target.value)}
-									aria-label="Type"
+									options={[
+										{ value: "", label: "(none)" },
+										...types.map((t) => ({ value: t.id, label: t.label })),
+									]}
+									onChange={handleTypeChange}
 									className="w-full text-[12px] text-rv-text-primary bg-rv-bg-input border border-rv-border rounded-[6px] px-2 py-1 mb-4 focus:border-rv-border-focus outline-none"
-								>
-									<option value="">(none)</option>
-									{types.map((t) => (
-										<option key={t.id} value={t.id}>
-											{t.label}
-										</option>
-									))}
-								</select>
+								/>
 							) : (
 								<input
 									type="text"
