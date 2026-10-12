@@ -29,7 +29,12 @@ follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   issuer certificate". The app now uses the system's certificates.
 - **A failed update check is visible.** Preferences shows the error as an
   alert, and the Check for updates button no longer flashes while checking.
-- **The RoadRaven pane:** a re-tested UAT item notifies you again; a failed
+- **Agents no longer see "RoadRaven is not running" after a restart.** An app
+  instance that was still closing could delete the file the next instance
+  had just written to tell agents where to connect. It now deletes only its
+  own.
+- **The RoadRaven pane:** every UAT item you mark can carry a note, Pass as
+  well as Fail; a re-tested UAT item notifies you again; a failed
   item waits for the agent's fix instead of offering Pass; refreshes no longer
   overlap and skip work when nothing changed; agent labels survive switching
   files; the follow-app theme works on Windows and macOS.
