@@ -13,6 +13,10 @@ import {
 	clampKnobs,
 	KNOB_DEFAULTS,
 } from "../../../src/mainview/lib/layoutKnobs";
+import {
+	isLogoFxVariant,
+	LOGO_FX_VARIANT,
+} from "../../../src/mainview/lib/logoFx/constants";
 
 function walk(nodes: readonly RoadmapNode[]): RoadmapNode[] {
 	return nodes.flatMap((node) => [node, ...walk(node.children ?? [])]);
@@ -31,8 +35,42 @@ describe("SCENES", () => {
 		expect(SCENE_IDS).toEqual(SCENES.map((scene) => scene.id));
 	});
 
-	it("is the RoadRaven timeline, its detail, and the CFA overview", () => {
-		expect(SCENE_IDS).toEqual(["rr-timeline", "rr-detail", "cfa-overview"]);
+	it("is the RoadRaven timeline, its detail, the CFA overview, then the logo-effect scenes", () => {
+		expect(SCENE_IDS).toEqual([
+			"rr-timeline",
+			"rr-detail",
+			"cfa-overview",
+			"rr-fx-circuit",
+			"rr-fx-aurora",
+		]);
+	});
+
+	it("the default capture (SCENE_IDS[0]) is still rr-timeline and has no logoFx", () => {
+		expect(SCENE_IDS[0]).toBe("rr-timeline");
+		expect(SCENES[0]).not.toHaveProperty("logoFx");
+	});
+
+	it("only the two rr-fx scenes carry logoFx, with the circuit and aurora variants", () => {
+		const withFx = SCENES.filter((scene) => scene.logoFx);
+		expect(withFx.map((scene) => scene.id)).toEqual([
+			"rr-fx-circuit",
+			"rr-fx-aurora",
+		]);
+		expect(withFx.map((scene) => scene.logoFx?.variant)).toEqual([
+			LOGO_FX_VARIANT.CIRCUIT_PULSE,
+			LOGO_FX_VARIANT.STATUS_AURORA,
+		]);
+	});
+
+	// effects.ts keeps its durations private; the shortest effect (shimmer) is
+	// 1900 ms, so that is the plain upper bound every freeze point must beat.
+	it.each(
+		byId.filter(([, scene]) => scene.logoFx),
+	)("%s: logoFx names a real variant and a freeze point mid-flight", (_id, scene) => {
+		const fx = scene.logoFx;
+		expect(isLogoFxVariant(fx?.variant)).toBe(true);
+		expect(fx?.atMs).toBeGreaterThan(0);
+		expect(fx?.atMs).toBeLessThan(1900);
 	});
 
 	it.each(byId)("%s is a well-formed preset", (_id, scene) => {

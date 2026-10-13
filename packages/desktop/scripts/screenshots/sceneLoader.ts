@@ -6,6 +6,11 @@ import {
 	NODE_PLUGIN_ATTR,
 	NODE_STATUS_ATTR,
 } from "../../src/mainview/lib/domContract";
+import {
+	LOGO_FX_COOLDOWN_MS,
+	LOGO_FX_EVENT,
+	LOGO_FX_SOURCE,
+} from "../../src/mainview/lib/logoFx/constants";
 import type { BuiltFixture } from "./fixtures/index";
 import { focalPosition } from "./focal";
 import { qualityFromEnv } from "./quality";
@@ -146,7 +151,11 @@ export async function expectAttribution(
 }
 
 /** Fit the camera, wait for geometry to settle, then screenshot. */
-export async function captureScene(page: Page, path: string): Promise<Buffer> {
+export async function captureScene(
+	page: Page,
+	path: string,
+	logoFx?: ScenePreset["logoFx"],
+): Promise<Buffer> {
 	await page.evaluate(async () => {
 		await document.fonts.ready;
 		window.dispatchEvent(new CustomEvent("roadraven:fit-view"));
@@ -168,10 +177,60 @@ export async function captureScene(page: Page, path: string): Promise<Buffer> {
 		page.locator(`[${NODE_STATUS_ATTR}="in-progress"]`).first(),
 	).toBeVisible();
 	await page.mouse.move(0, 0);
+	if (logoFx) return captureFrozenEffect(page, path, logoFx);
 	return page.screenshot({
 		path,
 		animations: "disabled",
 		caret: "hide",
 		scale: "device",
 	});
+}
+
+/** Longer than the player's post-effect cooldown, so the request is not dropped. */
+const FX_SETTLE_MS = LOGO_FX_COOLDOWN_MS + 100;
+
+/**
+ * Play the effect with motion allowed, freeze its animations `atMs` in, and
+ * shoot with `animations: "allow"` — "disabled" would fast-forward the effect
+ * layer to its end state. Motion goes back to reduced afterwards, so later
+ * scenes stay deterministic.
+ */
+async function captureFrozenEffect(
+	page: Page,
+	path: string,
+	logoFx: NonNullable<ScenePreset["logoFx"]>,
+): Promise<Buffer> {
+	await page.emulateMedia({ reducedMotion: "no-preference" });
+	try {
+		await page.waitForTimeout(FX_SETTLE_MS);
+		await page.evaluate(
+			({ event, variant, source }) => {
+				window.dispatchEvent(
+					new CustomEvent(event, { detail: { variant, source } }),
+				);
+			},
+			{
+				event: LOGO_FX_EVENT,
+				variant: logoFx.variant,
+				source: LOGO_FX_SOURCE.ACTION,
+			},
+		);
+		await page.waitForTimeout(logoFx.atMs);
+		await page.evaluate(() => {
+			for (const animation of document.getAnimations()) animation.pause();
+		});
+		return await page.screenshot({
+			path,
+			animations: "allow",
+			caret: "hide",
+			scale: "device",
+		});
+	} finally {
+		// A paused effect never ends on its own: finish it so the player frees the
+		// stage and the effect layers are removed before the next scene loads.
+		await page.evaluate(() => {
+			for (const animation of document.getAnimations()) animation.finish();
+		});
+		await page.emulateMedia({ reducedMotion: "reduce" });
+	}
 }
