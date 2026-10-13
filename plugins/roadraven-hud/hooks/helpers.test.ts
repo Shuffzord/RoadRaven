@@ -28,6 +28,7 @@ import {
 	shownKind,
 	since,
 } from "./roadmap";
+import { ravenSuffix, ravenWord, SPINNER_VERBS, TITLE_MAX } from "./spinner";
 import { AMBER, luminance, rgbOf, solid, toPalette } from "./theme";
 
 test("rgbOf and solid flatten rgba over the background", () => {
@@ -307,4 +308,25 @@ test("flatten counts each node's done and total direct children", () => {
 		["b", 1, 1],
 		["c", 0, 0],
 	]);
+});
+
+test("ravenWord is one fixed verb per mode, taken from the list", () => {
+	for (const [mode, verb] of Object.entries(SPINNER_VERBS)) {
+		expect(ravenWord(mode)).toBe(verb);
+		expect(ravenWord(mode)).toBe(verb);
+	}
+	expect(new Set(Object.values(SPINNER_VERBS)).size).toBe(5);
+	expect(ravenWord("unheard-of")).toBe(SPINNER_VERBS.thinking);
+});
+
+test("ravenSuffix appends the active title after any existing suffix, truncated", () => {
+	expect(ravenSuffix("…", "Wire auth")).toBe("… · RR ▸ Wire auth");
+	expect(ravenSuffix("…", undefined)).toBe("… · RR");
+	expect(ravenSuffix(undefined, "x")).toBe("… · RR ▸ x");
+	expect(ravenSuffix("", "x")).toBe(" · RR ▸ x");
+	const exact = "b".repeat(TITLE_MAX);
+	expect(ravenSuffix("", exact)).toBe(` · RR ▸ ${exact}`);
+	expect(ravenSuffix("", `${exact}c`)).toBe(
+		` · RR ▸ ${"b".repeat(TITLE_MAX - 1)}…`,
+	);
 });

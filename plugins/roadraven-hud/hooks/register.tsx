@@ -78,6 +78,7 @@ import {
 	withNotes,
 	workCounts,
 } from "./roadmap";
+import { ravenSuffix, ravenWord, SPINNER } from "./spinner";
 import { AMBER, toPalette } from "./theme";
 
 const PANE = "roadraven";
@@ -1294,10 +1295,34 @@ async function readData($: EngineInterface): Promise<Data> {
 	};
 }
 
+// Answering now: a snapshot is drawn (`seenRevision` is empty before the first and after a failed read).
+async function isConnected($: EngineInterface) {
+	return (
+		(await read($, error)) === null && (await read($, seenRevision)) !== ""
+	);
+}
+
+// The spinner's props with the raven word and the first active node; nothing else is touched.
+async function ravenProps<
+	E extends { props: { mode: string; suffix: string } },
+>($: EngineInterface, e: E): Promise<E> {
+	const { active } = workCounts((await read($, snapshot)).nodes);
+	const { mode, suffix } = e.props;
+	return {
+		...e,
+		props: {
+			...e.props,
+			word: ravenWord(mode),
+			suffix: ravenSuffix(suffix, active[0]?.title),
+		},
+	};
+}
+
 // --- hooks --------------------------------------------------------------------------------------
 
 export const register: Register = (on, options) => {
 	const themeChoice = String(options.theme ?? "follow-app");
+	const isRavenSpinner = options.spinner === SPINNER.RAVEN;
 	// Agent tool call → its spawn: effort is only on the tool input, so carry it across by tool_use_id.
 	const efforts = new Map<string, string>();
 	const rememberEffort = (e: ToolCallInput) => {
@@ -1358,6 +1383,11 @@ export const register: Register = (on, options) => {
 		if (e.agentId) await finishAgent($, e.agentId, tokensOf(e.usage));
 		return next(e);
 	});
+
+	// Props only, never a tree: Claude Code keeps drawing its own spinner, elapsed time and tokens.
+	on("ui.render", { component: "Spinner" }, async ($, e, next) =>
+		next(isRavenSpinner && (await isConnected($)) ? await ravenProps($, e) : e),
+	);
 
 	on("ui.render", { component: "Pane", requestId: PANE }, async ($, e) => {
 		const v: View = {
