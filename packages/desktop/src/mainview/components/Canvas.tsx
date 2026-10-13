@@ -9,6 +9,7 @@ import { useCanvasViewport } from "../hooks/useCanvasViewport";
 import { useFileActions } from "../hooks/useFileActions";
 import { useInlineRename } from "../hooks/useInlineRename";
 import { useKeyboardRouter } from "../hooks/useKeyboardRouter";
+import { useLogoFx } from "../hooks/useLogoFx";
 import { useNodeDrag } from "../hooks/useNodeDrag";
 import { useRecentFiles } from "../hooks/useRecentFiles";
 import { pruneCollapsed, shownChildCount } from "../lib/collapseTree";
@@ -168,6 +169,9 @@ export function Canvas() {
 
 	// The canvas container: every pan/fit measurement is taken against its rect.
 	const containerRef = useRef<HTMLDivElement>(null);
+
+	// v0.9.1: the watermark's stage, which plays LOGO_FX_EVENT effects.
+	const logoStageRef = useLogoFx();
 
 	// Viewport truth (RC1) — the store is the single owner; this hook keeps it
 	// honest about d3 gestures without paying a full tree re-render per frame.
@@ -470,21 +474,27 @@ export function Canvas() {
 					}
 				}}
 			>
-				{/* Watermark logo -- uses CSS mask so color follows theme */}
+				{/* Watermark logo -- uses CSS mask so color follows theme. Its
+				    800x800 stage also hosts the logo effects (useLogoFx). */}
 				<div
+					ref={logoStageRef}
 					aria-hidden="true"
-					className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] opacity-[0.04] pointer-events-none select-none bg-rv-text-primary"
-					style={{
-						maskImage: `url(${ravenLogo})`,
-						maskSize: "contain",
-						maskRepeat: "no-repeat",
-						maskPosition: "center",
-						WebkitMaskImage: `url(${ravenLogo})`,
-						WebkitMaskSize: "contain",
-						WebkitMaskRepeat: "no-repeat",
-						WebkitMaskPosition: "center",
-					}}
-				/>
+					className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] pointer-events-none select-none"
+				>
+					<div
+						className="absolute inset-0 opacity-[0.04] bg-rv-text-primary"
+						style={{
+							maskImage: `url(${ravenLogo})`,
+							maskSize: "contain",
+							maskRepeat: "no-repeat",
+							maskPosition: "center",
+							WebkitMaskImage: `url(${ravenLogo})`,
+							WebkitMaskSize: "contain",
+							WebkitMaskRepeat: "no-repeat",
+							WebkitMaskPosition: "center",
+						}}
+					/>
+				</div>
 
 				{shownTree === null ? (
 					<WelcomeScreen
