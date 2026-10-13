@@ -124,6 +124,7 @@ export function workCounts(nodes: HudNode[]) {
 
 function toHudNode(n: RawNode, depth: number): HudNode {
 	const priority = n.metadata?.priority;
+	const children = n.children ?? [];
 	return {
 		id: n.id,
 		title: clean(n.title),
@@ -133,6 +134,8 @@ function toHudNode(n: RawNode, depth: number): HudNode {
 		notes: n.notes ? cleanNotes(n.notes) : undefined,
 		priority: typeof priority === "string" ? priority : undefined,
 		awaitingUat: awaitingUat(n),
+		done: children.filter((c) => c.status === "completed").length,
+		total: children.length,
 	};
 }
 

@@ -40,6 +40,8 @@
     // Claude Code mod: hooks/hooks.json names its module, and `claude plugin test`
     // runs its *.test.ts files; Claude Code loads both, nothing imports them.
     "plugins/roadraven-hud/hooks/register.tsx",
+    "plugins/roadraven-hud/hooks/raven-mark.tsx",
+    "plugins/roadraven-hud/hooks/bar.tsx",
     "plugins/roadraven-hud/hooks/register.test.ts",
     "plugins/roadraven-hud/hooks/helpers.test.ts"
   ],

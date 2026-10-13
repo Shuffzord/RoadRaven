@@ -53,6 +53,8 @@ Work the RoadRaven roadmap node "<title>" (nodeId <id>). This is a one-off task 
 
 **Files and environment it reads.** `settings.json` and `themes/*.json` in RoadRaven's user-data folder, plus the theme copies bundled with the mod, to follow the app's theme. It reads the `XDG_CONFIG_HOME` and `HOME` environment variables only to find that folder; their values are never sent anywhere. Agent labels are kept in Claude Code's plugin store (`$.store`), per roadmap file.
 
+**Claude Code settings it reads.** Once per session start, your merged Claude Code settings (`$.settings.read`), for two keys only: `prefersReducedMotion` and `axScreenReader`. When either is `true`, the raven in the pane's header is drawn as one still frame and progress bars jump to a new count instead of easing. Nothing is written to your settings, and their values are never sent anywhere.
+
 ## Install
 
 | Setup | Command |
@@ -65,7 +67,7 @@ Work the RoadRaven roadmap node "<title>" (nodeId <id>). This is a one-off task 
 
 | Section | Shows | Actions |
 | --- | --- | --- |
-| Active work | In-progress nodes with the agent on each: name, model, effort, elapsed time, current action, tokens when done | none |
+| Active work | In-progress nodes with the agent on each: name, model, effort, elapsed time, current action, tokens when done; a progress bar of done/total children for a node that has children | none |
 | UAT | Nodes with type `uat` that are ready | Pass / Fail per item, a note on each marked item, optional batch note, then "Send N decision(s) to orchestrator" |
 | Backlog | `not-started` nodes (`[show]` / `[hide]`) | **Run**: asks first (Start agent / Cancel), then a one-off sub-agent on the node, orchestrator told. **Next**: sets `metadata.priority = "next"`, taken first by the orchestrate and work-node skills |
 

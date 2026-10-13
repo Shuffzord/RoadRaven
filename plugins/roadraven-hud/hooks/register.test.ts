@@ -1,6 +1,15 @@
 import type { On } from "claude-code";
-import { type Engine, expect, mock, test } from "claude-code/testing";
+import {
+	type Engine,
+	expect,
+	type Mounted,
+	mock,
+	test,
+} from "claude-code/testing";
+import { barKey, EASE_MS } from "./bar";
+import { MARK_MIN_COLUMNS } from "./draw";
 import { CHOICE } from "./plan";
+import { MARK_CYCLE_MS, MARK_KEY, MARK_MODE, MARK_TICK_MS } from "./raven-mark";
 
 const STORE_KEY = "attribution:/work/plan.roadraven.json";
 // Attribution a previous session left behind: the agent that worked n1.
@@ -995,4 +1004,133 @@ test("a Pass without a note appends nothing to the node's notes", async ($, on) 
 	await ui.press({ key: "uat-submit" });
 	expect(r.writes("updateNodes")).toHaveLength(1);
 	expect(r.writes("updateNodeNotes")).toEqual([]);
+});
+
+// --- the raven mark and the progress bars -------------------------------------------------------
+
+const SURFACES = ["terminal", "desktop"] as const;
+const paneOn = (surface: (typeof SURFACES)[number], bodyColumns = 80) => ({
+	...PANE_PROPS,
+	surface,
+	props: { title: "RoadRaven", isFocused: true, bodyColumns } as never,
+});
+type PaneUi = Mounted<(typeof SURFACES)[number], "Pane">;
+const open = ($: Engine) =>
+	$.command.run({ command: "roadraven", args: "" } as never);
+
+test("the header holds the raven mark: animated by default, livelier while an agent runs", async ($, on) => {
+	rig(on, { current: answerOk });
+	on("agent.spawn", () => ({ model: "claude-haiku-5-5", agentId: "z1" }));
+	await open($);
+	const uis: PaneUi[] = [];
+	for (const surface of SURFACES) {
+		const ui = await $.ui.mount(paneOn(surface));
+		uis.push(ui);
+		expect((await ui.find({ key: MARK_KEY }))?.props.props).toMatchObject({
+			still: false,
+			mode: MARK_MODE.IDLE,
+		});
+		const seen = new Set<string>();
+		for (let t = 0; t < MARK_CYCLE_MS.idle; t += MARK_TICK_MS) {
+			seen.add(JSON.stringify(await ui.drawn({ in: MARK_KEY })));
+			await ui.advance(MARK_TICK_MS);
+		}
+		expect(seen.size).toBeGreaterThan(1);
+	}
+	await $.agent.spawn({
+		prompt: "p",
+		description: "worker",
+		name: "worker",
+		subagentType: "general-purpose",
+		parentModel: "claude-opus-5-5",
+		tool_use_id: "t1",
+	} as never);
+	for (const ui of uis)
+		expect((await ui.find({ key: MARK_KEY }))?.props.props).toMatchObject({
+			still: false,
+			mode: MARK_MODE.BUSY,
+		});
+});
+
+for (const setting of ["prefersReducedMotion", "axScreenReader"] as const)
+	test(`${setting} draws the mark as one still frame`, async ($, on) => {
+		rig(on, { current: answerOk });
+		const start = sessions($, on);
+		on("settings.read", () => ({ value: { [setting]: true } }));
+		await start();
+		await open($);
+		for (const surface of SURFACES) {
+			const ui = await $.ui.mount(paneOn(surface));
+			expect((await ui.find({ key: MARK_KEY }))?.props.props).toMatchObject({
+				still: true,
+			});
+			const before = JSON.stringify(await ui.drawn({ in: MARK_KEY }));
+			for (let t = 0; t < MARK_CYCLE_MS.idle; t += MARK_TICK_MS) {
+				await ui.advance(MARK_TICK_MS);
+				expect(JSON.stringify(await ui.drawn({ in: MARK_KEY }))).toBe(before);
+			}
+		}
+	});
+
+test(`the mark hides below ${MARK_MIN_COLUMNS} columns rather than wrapping`, async ($, on) => {
+	rig(on, { current: answerOk });
+	await open($);
+	for (const surface of SURFACES) {
+		const ui = await $.ui.mount(paneOn(surface, MARK_MIN_COLUMNS - 1));
+		expect(await ui.find({ key: MARK_KEY })).toBeUndefined();
+		expect(await ui.find({ text: /RoadRaven/ })).toBeDefined();
+		expect(await ui.find({ text: /1 active · 1 awaiting UAT/ })).toBeDefined();
+		await ui.redraw(paneOn(surface, MARK_MIN_COLUMNS).props);
+		expect(await ui.find({ key: MARK_KEY })).toBeDefined();
+		expect(await ui.find({ text: /1 active · 1 awaiting UAT/ })).toBeDefined();
+	}
+});
+
+const barText = async (ui: PaneUi) =>
+	(await ui.find({ in: barKey("p1"), type: "Text" }))?.text;
+
+test("an active node with children shows its progress bar; a leaf shows none", async ($, on) => {
+	rig(on, { current: answerOk });
+	await open($);
+	for (const surface of SURFACES) {
+		const ui = await $.ui.mount(paneOn(surface));
+		expect(await barText(ui)).toBe("██████░░░░░░  50%  1/2");
+		expect(await ui.find({ key: barKey("n1") })).toBeUndefined();
+	}
+});
+
+// The pane drawn on both surfaces with p1 at 1/2, then u5 completed: p1 is 2/2.
+async function completeP1($: Engine, on: On, isStill: boolean) {
+	const answer = { current: answerOk };
+	rig(on, answer);
+	const start = sessions($, on);
+	on("settings.read", () => ({ value: { prefersReducedMotion: isStill } }));
+	await start();
+	await open($);
+	const uis: PaneUi[] = [];
+	for (const surface of SURFACES) uis.push(await $.ui.mount(paneOn(surface)));
+	const done = withStatus("u5", "completed");
+	answer.current = (c) => answerRR(c, done);
+	await open($);
+	return uis;
+}
+
+const FULL_BAR = "████████████ 100%  2/2";
+const fullCells = async (ui: PaneUi) =>
+	[...((await barText(ui)) ?? "")].filter((ch) => ch === "█").length;
+
+test(`a new done count eases the bar over ${EASE_MS} ms`, async ($, on) => {
+	for (const ui of await completeP1($, on, false)) {
+		expect(await barText(ui)).toBe("██████░░░░░░ 100%  2/2");
+		await ui.advance(EASE_MS / 2);
+		expect(await fullCells(ui)).toBeGreaterThan(6);
+		expect(await fullCells(ui)).toBeLessThan(12);
+		await ui.advance(EASE_MS);
+		expect(await barText(ui)).toBe(FULL_BAR);
+	}
+});
+
+test("a new done count jumps the bar under reduced motion", async ($, on) => {
+	for (const ui of await completeP1($, on, true))
+		expect(await barText(ui)).toBe(FULL_BAR);
 });

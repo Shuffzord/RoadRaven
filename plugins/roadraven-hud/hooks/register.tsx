@@ -1,13 +1,20 @@
 import type { EngineInterface, Register, ToolCallInput } from "claude-code";
 import { atom, read, update } from "claude-code";
 
-import type { HudAgent, HudError, HudNode, HudPalette } from "../types";
+import type {
+	HudAgent,
+	HudError,
+	HudMotion,
+	HudNode,
+	HudPalette,
+} from "../types";
 import {
 	type Data,
 	drawAgent,
 	drawFixing,
 	drawFullNotes,
 	drawHeader,
+	drawProgress,
 	drawSaved,
 	drawSent,
 	drawUatTitle,
@@ -121,6 +128,7 @@ const uatNotes = atom({ ...S, key: "uatNotes" } as const, {
 const refreshing = atom({ ...S, key: "refreshing" } as const, "idle");
 // `filePath@revision` of the snapshot drawn; "" after a failed read, so the next answer is drawn.
 const seenRevision = atom({ ...S, key: "seenRevision" } as const, "");
+const motion = atom({ ...S, key: "motion" } as const, { still: false });
 
 // --- RoadRaven and the session ---------------------------------------------------------------
 
@@ -500,6 +508,15 @@ async function clearInFlight($: EngineInterface) {
 	await update($, refreshing, () => "idle");
 	await update($, isSending, () => false);
 	await update($, starting, () => ({}));
+}
+
+// Claude Code's reduced-motion and screen-reader settings: either keeps the pane's animations still.
+// Settings that can't be read leave them moving, as Claude Code's own defaults do.
+async function readMotion($: EngineInterface): Promise<HudMotion> {
+	const s = await $.settings.read().catch((): Record<string, unknown> => ({}));
+	return {
+		still: s.prefersReducedMotion === true || s.axScreenReader === true,
+	};
 }
 
 // Unreachable for a minute: ask every 30s instead of every 4s.
@@ -935,6 +952,7 @@ function drawActiveNode($: EngineInterface, v: View, d: Data, n: HudNode) {
 				</Box>
 				{drawGoTo($, v, n)}
 			</Box>
+			{drawProgress(v, n, d.still)}
 			{a ? drawAgent(v, a, d.act[a.id]) : drawUnowned(v, n, ownerId)}
 		</Box>
 	);
@@ -1183,6 +1201,7 @@ function drawPane($: EngineInterface, v: View, d: Data) {
 				v,
 				d.snap.title,
 				`${working} active · ${awaiting} awaiting UAT · ${uat.length} UAT · ${backlog.length} backlog`,
+				d,
 			)}
 			{drawActive($, v, d, active, loose)}
 			{drawUat($, v, d, uat, nodes.filter(isFixingUat), waiting)}
@@ -1238,6 +1257,7 @@ async function readData($: EngineInterface): Promise<Data> {
 		confirmId,
 		confirmNotes,
 		starts,
+		moving,
 	] = await Promise.all([
 		read($, snapshot),
 		read($, agents),
@@ -1253,6 +1273,7 @@ async function readData($: EngineInterface): Promise<Data> {
 		read($, confirmRun),
 		read($, runNotes),
 		read($, starting),
+		read($, motion),
 	]);
 	return {
 		snap,
@@ -1269,6 +1290,7 @@ async function readData($: EngineInterface): Promise<Data> {
 		confirmId,
 		confirmNotes,
 		starts,
+		still: moving.still,
 	};
 }
 
@@ -1289,6 +1311,8 @@ export const register: Register = (on, options) => {
 
 	on("session.start", async ($, e, next) => {
 		await update($, startedAt, () => Date.now());
+		const m = await readMotion($);
+		await update($, motion, () => m);
 		await clearInFlight($);
 		await $.command.register({
 			name: "roadraven",
@@ -1340,6 +1364,7 @@ export const register: Register = (on, options) => {
 			els: $.ui.resolve(e),
 			P: await read($, palette),
 			themeChoice,
+			columns: e.props.bodyColumns,
 		};
 		const err = await read($, error);
 		return err ? drawError($, v, err) : drawPane($, v, await readData($));
