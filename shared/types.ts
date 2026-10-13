@@ -104,6 +104,8 @@ export interface AppSettings {
 	};
 	/** v0.8.2 A8: reopen the most recent roadmap on launch. Absent = true. */
 	reopenLastFile?: boolean;
+	/** v0.9.1: animate the background logo (action effects + idle). Absent = true. */
+	logoEffects?: boolean;
 	/** v0.8.2: expanded sidebar width in px, set by dragging its right edge. */
 	sidebarWidth?: number;
 	/** v0.8.2: node search also matches notes (the search-box toggle). Absent = false. */

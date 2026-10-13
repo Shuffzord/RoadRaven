@@ -17,6 +17,9 @@ interface UiState {
 	/** Clamps to [SIDEBAR_MIN_WIDTH, SIDEBAR_MAX_WIDTH]. */
 	setSidebarWidth: (width: number) => void;
 	resetSidebarWidth: () => void;
+	/** v0.9.1: background-logo effects; persisted via AppSettings.logoEffects. */
+	logoEffectsEnabled: boolean;
+	setLogoEffectsEnabled: (enabled: boolean) => void;
 }
 
 export const useUiStore = create<UiState>((set) => ({
@@ -32,4 +35,6 @@ export const useUiStore = create<UiState>((set) => ({
 			),
 		}),
 	resetSidebarWidth: () => set({ sidebarWidth: SIDEBAR_DEFAULT_WIDTH }),
+	logoEffectsEnabled: true,
+	setLogoEffectsEnabled: (enabled) => set({ logoEffectsEnabled: enabled }),
 }));

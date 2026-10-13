@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
 	LOGO_FX_COOLDOWN_MS,
+	LOGO_FX_SOURCE,
 	LOGO_FX_VARIANT,
 	type LogoFxVariant,
 } from "../../../src/mainview/lib/logoFx/constants";
@@ -139,6 +140,44 @@ describe("logo FX player", () => {
 		expect(player.current()).toBeNull();
 		clock.t = 500 + LOGO_FX_COOLDOWN_MS - 1;
 		expect(player.request(LOGO_FX_VARIANT.SHIMMER)).toBe(false);
+	});
+
+	it("cancelIdle() stops an idle-sourced effect (D-3)", () => {
+		const { runs, player } = setup();
+		player.request(LOGO_FX_VARIANT.BIT_DRIFT, LOGO_FX_SOURCE.IDLE);
+
+		player.cancelIdle();
+
+		expect(runs[0].cancelled).toBe(true);
+		expect(player.current()).toBeNull();
+	});
+
+	it("cancelIdle() leaves an action-sourced effect playing (D-3)", () => {
+		const { runs, player } = setup();
+		player.request(LOGO_FX_VARIANT.SHIMMER, LOGO_FX_SOURCE.ACTION);
+
+		player.cancelIdle();
+
+		expect(runs[0].cancelled).toBe(false);
+		expect(player.current()).toBe(LOGO_FX_VARIANT.SHIMMER);
+	});
+
+	it("treats a request without a source as an action", () => {
+		const { runs, player } = setup();
+		player.request(LOGO_FX_VARIANT.POWER_SURGE);
+
+		player.cancelIdle();
+
+		expect(runs[0].cancelled).toBe(false);
+	});
+
+	it("lets Glitch still pre-empt an action-sourced effect", () => {
+		const { runs, player } = setup();
+		player.request(LOGO_FX_VARIANT.STATUS_AURORA, LOGO_FX_SOURCE.ACTION);
+
+		expect(player.request(LOGO_FX_VARIANT.GLITCH)).toBe(true);
+
+		expect(runs[0].cancelled).toBe(true);
 	});
 
 	it("is silent under reduced motion", () => {

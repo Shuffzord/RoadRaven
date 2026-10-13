@@ -69,10 +69,16 @@ vi.mock("react-d3-tree", async () => {
 import { Canvas } from "../../../src/mainview/components/Canvas";
 import {
 	LOGO_FX_EVENT,
+	LOGO_FX_IDLE_MAX_MS,
+	LOGO_FX_SOURCE,
 	LOGO_FX_VARIANT,
+	type LogoFxSource,
 	type LogoFxVariant,
 } from "../../../src/mainview/lib/logoFx/constants";
+import { LOGO_FX_EFFECTS } from "../../../src/mainview/lib/logoFx/effects";
+import { useEventApiStore } from "../../../src/mainview/store/eventApiStore";
 import { useRoadmapStore } from "../../../src/mainview/store/roadmapStore";
+import { useUiStore } from "../../../src/mainview/store/uiStore";
 
 const SCHEMA: RoadmapSchema = {
 	version: "1.0",
@@ -113,10 +119,10 @@ function renderStage(): { stage: HTMLElement; unmount: () => void } {
 	return { stage, unmount };
 }
 
-function play(variant: LogoFxVariant | string): void {
+function play(variant: LogoFxVariant | string, source?: LogoFxSource): void {
 	act(() => {
 		window.dispatchEvent(
-			new CustomEvent(LOGO_FX_EVENT, { detail: { variant } }),
+			new CustomEvent(LOGO_FX_EVENT, { detail: { variant, source } }),
 		);
 	});
 }
@@ -132,6 +138,10 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+	vi.useRealTimers();
+	vi.restoreAllMocks();
+	useUiStore.setState({ logoEffectsEnabled: true });
+	useEventApiStore.setState({ connectedCount: 0 });
 	delete (Element.prototype as { animate?: unknown }).animate;
 	delete (document as { hidden?: boolean }).hidden;
 	vi.unstubAllGlobals();
@@ -176,9 +186,11 @@ describe("Canvas logo stage", () => {
 	it.each([
 		"pointerdown",
 		"keydown",
-	])("cancels the effect on any %s", (type) => {
+	])("cancels an idle-sourced effect on any %s (D-3)", (type) => {
 		const { stage } = renderStage();
-		play(LOGO_FX_VARIANT.STATUS_AURORA);
+		// Any variant can carry the idle source; Bit drift itself draws on a
+		// 2D canvas, which jsdom lacks.
+		play(LOGO_FX_VARIANT.SHIMMER, LOGO_FX_SOURCE.IDLE);
 		expect(stage.childElementCount).toBe(2);
 
 		act(() => {
@@ -186,6 +198,20 @@ describe("Canvas logo stage", () => {
 		});
 
 		expect(stage.childElementCount).toBe(1);
+	});
+
+	it.each([
+		"pointerdown",
+		"keydown",
+	])("lets an action-sourced effect play through a %s (D-3)", (type) => {
+		const { stage } = renderStage();
+		play(LOGO_FX_VARIANT.STATUS_AURORA, LOGO_FX_SOURCE.ACTION);
+
+		act(() => {
+			document.body.dispatchEvent(new Event(type, { bubbles: true }));
+		});
+
+		expect(stage.childElementCount).toBe(2);
 	});
 
 	it("cancels the effect when the window is hidden", () => {
@@ -213,6 +239,99 @@ describe("Canvas logo stage", () => {
 
 		play(LOGO_FX_VARIANT.GLITCH);
 		expect(stage.childElementCount).toBe(1);
+	});
+
+	it("is silent with the Preferences setting off, and plays again once it is back on", () => {
+		const { stage } = renderStage();
+		act(() => useUiStore.getState().setLogoEffectsEnabled(false));
+
+		play(LOGO_FX_VARIANT.GLITCH);
+		expect(stage.childElementCount).toBe(1);
+
+		act(() => useUiStore.getState().setLogoEffectsEnabled(true));
+		play(LOGO_FX_VARIANT.SHIMMER);
+		expect(stage.childElementCount).toBe(2);
+	});
+
+	it("stops a playing effect when the setting is switched off", () => {
+		const { stage } = renderStage();
+		play(LOGO_FX_VARIANT.SHIMMER);
+
+		act(() => useUiStore.getState().setLogoEffectsEnabled(false));
+
+		expect(stage.childElementCount).toBe(1);
+	});
+
+	it("plays a store-triggered effect with 0 node-card and 0 canvas re-renders", () => {
+		const { stage } = renderStage();
+		renders.clear();
+		const treeBefore = treeRenders.count;
+
+		act(() => useEventApiStore.getState().setState({ connectedCount: 1 }));
+
+		expect(stage.childElementCount).toBe(2);
+		expect([...renders.entries()]).toEqual([]);
+		expect(treeRenders.count).toBe(treeBefore);
+	});
+
+	it("adds no renders to a status change beyond what the change itself causes", () => {
+		const blockRenders = (enabled: boolean) => {
+			const { stage, unmount } = renderStage();
+			act(() => useUiStore.getState().setLogoEffectsEnabled(enabled));
+			renders.clear();
+			const treeBefore = treeRenders.count;
+			act(() =>
+				useRoadmapStore.getState().updateNodeStatus(NODES[1].id, "blocked"),
+			);
+			const result = {
+				cards: [...renders.entries()],
+				tree: treeRenders.count - treeBefore,
+				layers: stage.childElementCount,
+			};
+			unmount();
+			useRoadmapStore.getState().updateNodeStatus(NODES[1].id, "not-started");
+			return result;
+		};
+
+		const off = blockRenders(false);
+		const on = blockRenders(true);
+
+		expect(off.layers).toBe(1);
+		expect(on.layers).toBe(3);
+		expect(on.cards).toEqual(off.cards);
+		expect(on.tree).toBe(off.tree);
+	});
+
+	it("plays Bit drift from the idle timer only while the setting is on", () => {
+		vi.useFakeTimers();
+		const drift = vi
+			.spyOn(LOGO_FX_EFFECTS, LOGO_FX_VARIANT.BIT_DRIFT)
+			.mockReturnValue({ finished: Promise.resolve(), cancel: vi.fn() });
+		act(() => useUiStore.getState().setLogoEffectsEnabled(false));
+		renderStage();
+
+		act(() => vi.advanceTimersByTime(LOGO_FX_IDLE_MAX_MS * 3));
+		expect(drift).not.toHaveBeenCalled();
+
+		act(() => useUiStore.getState().setLogoEffectsEnabled(true));
+		act(() => vi.advanceTimersByTime(LOGO_FX_IDLE_MAX_MS));
+		expect(drift).toHaveBeenCalled();
+	});
+
+	it("never schedules the idle Bit drift under reduced motion", () => {
+		vi.useFakeTimers();
+		vi.stubGlobal("matchMedia", (query: string) => ({
+			matches: query.includes("prefers-reduced-motion"),
+			media: query,
+			addEventListener: vi.fn(),
+			removeEventListener: vi.fn(),
+		}));
+		const drift = vi.spyOn(LOGO_FX_EFFECTS, LOGO_FX_VARIANT.BIT_DRIFT);
+		renderStage();
+
+		act(() => vi.advanceTimersByTime(LOGO_FX_IDLE_MAX_MS * 3));
+
+		expect(drift).not.toHaveBeenCalled();
 	});
 
 	it("leaves the static watermark alone under reduced motion", () => {

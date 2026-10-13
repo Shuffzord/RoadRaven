@@ -1,6 +1,8 @@
 import {
 	LOGO_FX_COOLDOWN_MS,
 	LOGO_FX_PRIORITY,
+	LOGO_FX_SOURCE,
+	type LogoFxSource,
 	type LogoFxVariant,
 } from "./constants";
 
@@ -19,15 +21,21 @@ export interface LogoFxPlayerDeps {
 }
 
 export interface LogoFxPlayer {
-	/** Plays `variant` if the rules allow it; true when it started. */
-	request(variant: LogoFxVariant): boolean;
+	/**
+	 * Plays `variant` if the rules allow it; true when it started. `source`
+	 * defaults to "action".
+	 */
+	request(variant: LogoFxVariant, source?: LogoFxSource): boolean;
 	/** Stops the running effect, if any; the cooldown starts now. */
 	cancel(): void;
+	/** Stops the running effect only when the idle timer started it (D-3). */
+	cancelIdle(): void;
 	current(): LogoFxVariant | null;
 }
 
 interface Run {
 	variant: LogoFxVariant;
+	source: LogoFxSource;
 	handle: LogoFxHandle;
 }
 
@@ -64,19 +72,22 @@ export function createLogoFxPlayer(deps: LogoFxPlayerDeps): LogoFxPlayer {
 	};
 
 	return {
-		request(variant) {
+		request(variant, source = LOGO_FX_SOURCE.ACTION) {
 			if (!deps.enabled() || deps.reducedMotion()) return false;
 			const other = blocker();
 			if (other && LOGO_FX_PRIORITY[variant] <= LOGO_FX_PRIORITY[other]) {
 				return false;
 			}
 			cancel();
-			const run: Run = { variant, handle: deps.run(variant) };
+			const run: Run = { variant, source, handle: deps.run(variant) };
 			running = run;
 			run.handle.finished.then(() => end(run));
 			return true;
 		},
 		cancel,
+		cancelIdle() {
+			if (running?.source === LOGO_FX_SOURCE.IDLE) cancel();
+		},
 		current: () => running?.variant ?? null,
 	};
 }
