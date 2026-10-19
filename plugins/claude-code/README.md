@@ -45,12 +45,12 @@ installed, the wizard defers to it.
 your installed app (the app warns on a major.minor mismatch):
 
 ```bash
-claude mcp add -s user roadraven -- npx -y @roadraven/mcp@0.9.0
+claude mcp add -s user roadraven -- npx -y @roadraven/mcp@0.9.1
 ```
 
 To add a short RoadRaven section to a `CLAUDE.md` (it asks whether to use
 the current project or `~/.claude/CLAUDE.md`), run
-`npx -y @roadraven/mcp@0.9.0 init`.
+`npx -y @roadraven/mcp@0.9.1 init`.
 
 ## Skills
 

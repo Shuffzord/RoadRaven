@@ -3,6 +3,32 @@
 All notable changes to RoadRaven are documented in this file. The format
 follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.9.1] - 2026-10-19
+
+### Added
+
+- **The background raven reacts to your roadmap.** The faint RoadRaven logo
+  behind the canvas plays a short effect when something happens:
+  - an agent connects: a pulse runs along the circuit lines;
+  - a node is completed: a shimmer;
+  - every node in a group is completed: a colour aurora;
+  - a file opens or an agent updates several nodes at once: a power surge;
+  - a node is blocked or a save fails: a glitch.
+
+  While nothing is happening, bits drift off the logo every 10 to 60 seconds.
+  Effects never stack, they stop when the window is hidden, and they stay off
+  when your system asks for reduced motion. To turn them off, clear
+  **Preferences › Appearance › Animate the background logo**.
+- **The RoadRaven pane in Claude Code has a raven.** A small animated raven
+  sits in the pane's header. It moves faster while agents are working and
+  holds still with reduced motion or a screen reader. Progress bars now slide
+  to their new value instead of jumping.
+- **Optional raven spinner.** Set the RoadRaven HUD plugin's `spinner` option
+  to `raven`, and Claude Code's spinner uses raven verbs while RoadRaven is
+  connected. It also shows the node an agent is working on, for example
+  `Circling… · RR ▸ Wire auth`. The default, `classic`, leaves the spinner
+  unchanged.
+
 ## [0.9.0] - 2026-10-12
 
 ### Added
