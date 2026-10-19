@@ -8,14 +8,29 @@ import type {
 	HudSent,
 	HudSnapshot,
 } from "../types";
+import { type BarProps, barKey, barLine } from "./bar";
 import type { Decision } from "./plan";
+import {
+	MARK_KEY,
+	MARK_MODE,
+	type MarkMode,
+	type MarkProps,
+} from "./raven-mark";
 import { kTokens, lastFailure, shortModel, since } from "./roadmap";
 
 const NOTES_LONG = 80;
+// Below this many body columns the header drops the raven mark rather than wrap around it.
+export const MARK_MIN_COLUMNS = 48;
 
 type Els = Elements[keyof Elements];
 // What a drawing needs besides `$`, which the engine requires be passed on its own.
-export type View = { els: Els; P: HudPalette; themeChoice: string };
+// `columns`: the pane body's width in cells.
+export type View = {
+	els: Els;
+	P: HudPalette;
+	themeChoice: string;
+	columns: number;
+};
 export type Data = {
 	snap: HudSnapshot;
 	who: Record<string, HudAgent>;
@@ -31,6 +46,7 @@ export type Data = {
 	confirmId: string;
 	confirmNotes: string;
 	starts: Record<string, true>;
+	still: boolean;
 };
 
 export function pill({ els, P }: View, label: string, count: number) {
@@ -51,20 +67,76 @@ export const quiet = ({ els, P }: View, text: string) => (
 	<els.Text color={P.tertiary}> {text}</els.Text>
 );
 
-export function drawHeader({ els, P }: View, title: string, counts: string) {
-	const { Box, Text } = els;
+const titleLine = ({ els, P }: View, brand: string, title: string) => (
+	<els.Text wrap="truncate-end">
+		<els.Text color={P.accent} bold>
+			{brand}
+		</els.Text>
+		<els.Text color={P.primary}> {title}</els.Text>
+	</els.Text>
+);
+
+// Livelier while any agent runs.
+const markMode = (d: Data): MarkMode =>
+	Object.values(d.who).some((a) => !a.isDone) ? MARK_MODE.BUSY : MARK_MODE.IDLE;
+
+// The animated raven, where the surface runs a Client and the pane is wide enough for it.
+function drawMark({ els, P, columns }: View, d: Data) {
+	if (!("Client" in els) || columns < MARK_MIN_COLUMNS) return null;
+	const props: MarkProps = {
+		still: d.still,
+		mode: markMode(d),
+		body: P.accent,
+		hi: P.primary,
+	};
+	return <els.Client key={MARK_KEY} module="./raven-mark.tsx" props={props} />;
+}
+
+export function drawHeader(v: View, title: string, counts: string, d: Data) {
+	const { Box, Text } = v.els;
+	const mark = drawMark(v, d);
+	const countLine = (
+		<Text color={v.P.tertiary}>
+			{counts} · {v.P.name}
+		</Text>
+	);
+	if (!mark)
+		return (
+			<Box justifyContent="space-between">
+				{titleLine(v, "◆ RoadRaven", title)}
+				{countLine}
+			</Box>
+		);
 	return (
-		<Box justifyContent="space-between">
-			<Text wrap="truncate-end">
-				<Text color={P.accent} bold>
-					◆ RoadRaven
-				</Text>
-				<Text color={P.primary}> {title}</Text>
-			</Text>
-			<Text color={P.tertiary}>
-				{counts} · {P.name}
-			</Text>
+		<Box>
+			{mark}
+			<Box flexDirection="column" flexGrow={1} marginLeft={2}>
+				{titleLine(v, "RoadRaven", title)}
+				{countLine}
+			</Box>
 		</Box>
+	);
+}
+
+// A node's done/total children as a bar that eases to a new count; none for a leaf.
+export function drawProgress({ els, P }: View, n: HudNode, still: boolean) {
+	if (!n.total) return null;
+	const props: BarProps = {
+		done: n.done ?? 0,
+		total: n.total,
+		still,
+		fill: P.completed,
+		rest: P.notStarted,
+		label: P.tertiary,
+	};
+	return (
+		<els.Box marginLeft={4}>
+			{"Client" in els ? (
+				<els.Client key={barKey(n.id)} module="./bar.tsx" props={props} />
+			) : (
+				barLine(els.Text, props, props.done / props.total)
+			)}
+		</els.Box>
 	);
 }
 

@@ -28,6 +28,13 @@
 				"contrast",
 				"high-contrast"
 			]
+		},
+		"spinner": {
+			"type": "string",
+			"title": "Claude Code spinner",
+			"description": "raven swaps the spinner's word for a raven verb and adds the node an agent is working on; classic leaves it as Claude Code draws it",
+			"default": "classic",
+			"options": ["classic", "raven"]
 		}
 	}
 }

@@ -1,13 +1,20 @@
 import type { EngineInterface, Register, ToolCallInput } from "claude-code";
 import { atom, read, update } from "claude-code";
 
-import type { HudAgent, HudError, HudNode, HudPalette } from "../types";
+import type {
+	HudAgent,
+	HudError,
+	HudMotion,
+	HudNode,
+	HudPalette,
+} from "../types";
 import {
 	type Data,
 	drawAgent,
 	drawFixing,
 	drawFullNotes,
 	drawHeader,
+	drawProgress,
 	drawSaved,
 	drawSent,
 	drawUatTitle,
@@ -71,6 +78,7 @@ import {
 	withNotes,
 	workCounts,
 } from "./roadmap";
+import { ravenSuffix, ravenWord, SPINNER } from "./spinner";
 import { AMBER, toPalette } from "./theme";
 
 const PANE = "roadraven";
@@ -121,6 +129,7 @@ const uatNotes = atom({ ...S, key: "uatNotes" } as const, {
 const refreshing = atom({ ...S, key: "refreshing" } as const, "idle");
 // `filePath@revision` of the snapshot drawn; "" after a failed read, so the next answer is drawn.
 const seenRevision = atom({ ...S, key: "seenRevision" } as const, "");
+const motion = atom({ ...S, key: "motion" } as const, { still: false });
 
 // --- RoadRaven and the session ---------------------------------------------------------------
 
@@ -500,6 +509,15 @@ async function clearInFlight($: EngineInterface) {
 	await update($, refreshing, () => "idle");
 	await update($, isSending, () => false);
 	await update($, starting, () => ({}));
+}
+
+// Claude Code's reduced-motion and screen-reader settings: either keeps the pane's animations still.
+// Settings that can't be read leave them moving, as Claude Code's own defaults do.
+async function readMotion($: EngineInterface): Promise<HudMotion> {
+	const s = await $.settings.read().catch((): Record<string, unknown> => ({}));
+	return {
+		still: s.prefersReducedMotion === true || s.axScreenReader === true,
+	};
 }
 
 // Unreachable for a minute: ask every 30s instead of every 4s.
@@ -935,6 +953,7 @@ function drawActiveNode($: EngineInterface, v: View, d: Data, n: HudNode) {
 				</Box>
 				{drawGoTo($, v, n)}
 			</Box>
+			{drawProgress(v, n, d.still)}
 			{a ? drawAgent(v, a, d.act[a.id]) : drawUnowned(v, n, ownerId)}
 		</Box>
 	);
@@ -1183,6 +1202,7 @@ function drawPane($: EngineInterface, v: View, d: Data) {
 				v,
 				d.snap.title,
 				`${working} active · ${awaiting} awaiting UAT · ${uat.length} UAT · ${backlog.length} backlog`,
+				d,
 			)}
 			{drawActive($, v, d, active, loose)}
 			{drawUat($, v, d, uat, nodes.filter(isFixingUat), waiting)}
@@ -1238,6 +1258,7 @@ async function readData($: EngineInterface): Promise<Data> {
 		confirmId,
 		confirmNotes,
 		starts,
+		moving,
 	] = await Promise.all([
 		read($, snapshot),
 		read($, agents),
@@ -1253,6 +1274,7 @@ async function readData($: EngineInterface): Promise<Data> {
 		read($, confirmRun),
 		read($, runNotes),
 		read($, starting),
+		read($, motion),
 	]);
 	return {
 		snap,
@@ -1269,6 +1291,30 @@ async function readData($: EngineInterface): Promise<Data> {
 		confirmId,
 		confirmNotes,
 		starts,
+		still: moving.still,
+	};
+}
+
+// Answering now: a snapshot is drawn (`seenRevision` is empty before the first and after a failed read).
+async function isConnected($: EngineInterface) {
+	return (
+		(await read($, error)) === null && (await read($, seenRevision)) !== ""
+	);
+}
+
+// The spinner's props with the raven word and the first active node; nothing else is touched.
+async function ravenProps<
+	E extends { props: { mode: string; suffix: string } },
+>($: EngineInterface, e: E): Promise<E> {
+	const { active } = workCounts((await read($, snapshot)).nodes);
+	const { mode, suffix } = e.props;
+	return {
+		...e,
+		props: {
+			...e.props,
+			word: ravenWord(mode),
+			suffix: ravenSuffix(suffix, active[0]?.title),
+		},
 	};
 }
 
@@ -1276,6 +1322,7 @@ async function readData($: EngineInterface): Promise<Data> {
 
 export const register: Register = (on, options) => {
 	const themeChoice = String(options.theme ?? "follow-app");
+	const isRavenSpinner = options.spinner === SPINNER.RAVEN;
 	// Agent tool call → its spawn: effort is only on the tool input, so carry it across by tool_use_id.
 	const efforts = new Map<string, string>();
 	const rememberEffort = (e: ToolCallInput) => {
@@ -1289,6 +1336,8 @@ export const register: Register = (on, options) => {
 
 	on("session.start", async ($, e, next) => {
 		await update($, startedAt, () => Date.now());
+		const m = await readMotion($);
+		await update($, motion, () => m);
 		await clearInFlight($);
 		await $.command.register({
 			name: "roadraven",
@@ -1335,11 +1384,17 @@ export const register: Register = (on, options) => {
 		return next(e);
 	});
 
+	// Props only, never a tree: Claude Code keeps drawing its own spinner, elapsed time and tokens.
+	on("ui.render", { component: "Spinner" }, async ($, e, next) =>
+		next(isRavenSpinner && (await isConnected($)) ? await ravenProps($, e) : e),
+	);
+
 	on("ui.render", { component: "Pane", requestId: PANE }, async ($, e) => {
 		const v: View = {
 			els: $.ui.resolve(e),
 			P: await read($, palette),
 			themeChoice,
+			columns: e.props.bodyColumns,
 		};
 		const err = await read($, error);
 		return err ? drawError($, v, err) : drawPane($, v, await readData($));

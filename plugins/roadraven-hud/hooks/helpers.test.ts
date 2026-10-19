@@ -1,5 +1,15 @@
 import { expect, test } from "claude-code/testing";
 
+import { BAR_CELLS, barGlyphs, eased, progressText } from "./bar";
+import {
+	type Frame,
+	frameAt,
+	MARK_CYCLE_MS,
+	MARK_MODE,
+	MARK_TICK_MS,
+	type MarkMode,
+	STILL_FRAME,
+} from "./raven-mark";
 import {
 	awaitingUat,
 	clean,
@@ -18,6 +28,7 @@ import {
 	shownKind,
 	since,
 } from "./roadmap";
+import { ravenSuffix, ravenWord, SPINNER_VERBS, TITLE_MAX } from "./spinner";
 import { AMBER, luminance, rgbOf, solid, toPalette } from "./theme";
 
 test("rgbOf and solid flatten rgba over the background", () => {
@@ -207,4 +218,115 @@ test("codeOf reads the code of a structured tool error, and nothing else", () =>
 	expect(
 		codeOf("the reply mentions Error (stale_write) later"),
 	).toBeUndefined();
+});
+
+const frameText = (f: Frame) => f.map((row) => row.map((r) => r.text).join(""));
+const distinctFrames = (mode: MarkMode, ms: number) =>
+	new Set(
+		Array.from({ length: ms / MARK_TICK_MS }, (_, i) =>
+			JSON.stringify(frameAt(i * MARK_TICK_MS, mode)),
+		),
+	).size;
+
+test("frameAt is deterministic and cycles, idle and busy alike", () => {
+	for (const mode of [MARK_MODE.IDLE, MARK_MODE.BUSY]) {
+		expect(frameAt(1234, mode)).toEqual(frameAt(1234, mode));
+		expect(frameAt(1234 + MARK_CYCLE_MS[mode], mode)).toEqual(
+			frameAt(1234, mode),
+		);
+		expect(distinctFrames(mode, MARK_CYCLE_MS[mode])).toBeGreaterThan(1);
+	}
+	// Busy is the livelier loop: more distinct frames in the same time.
+	const span = MARK_CYCLE_MS.idle;
+	expect(distinctFrames(MARK_MODE.BUSY, span)).toBeGreaterThan(
+		distinctFrames(MARK_MODE.IDLE, span),
+	);
+});
+
+test("the mark draws at most 8 frames a second", () => {
+	expect(1000 / MARK_TICK_MS).toBeLessThanOrEqual(8);
+	for (const mode of [MARK_MODE.IDLE, MARK_MODE.BUSY])
+		for (let t = 0; t < MARK_CYCLE_MS[mode]; t += MARK_TICK_MS)
+			expect(frameAt(t + MARK_TICK_MS - 1, mode)).toEqual(frameAt(t, mode));
+});
+
+test("the still frame is the perched raven: three rows with an eye and a beak", () => {
+	const rows = frameText(STILL_FRAME);
+	expect(rows).toEqual(frameText(frameAt(0, MARK_MODE.IDLE)));
+	expect(rows).toHaveLength(3);
+	expect(rows.join("\n")).toContain("◉");
+	expect(rows[0]).toMatch(/▖$/); // the beak's tip
+	expect(new Set(rows.map((r) => [...r].length)).size).toBe(1);
+});
+
+test("eased hits its endpoints exactly and stays between them", () => {
+	expect(eased(0.25, 0.75, 0)).toBe(0.25);
+	expect(eased(0.25, 0.75, 1)).toBe(0.75);
+	expect(eased(0.25, 0.75, -1)).toBe(0.25);
+	expect(eased(0.25, 0.75, 2)).toBe(0.75);
+	const mid = eased(0.25, 0.75, 0.5);
+	expect(mid).toBeGreaterThan(0.5); // eases out: most of the way by half time
+	expect(mid).toBeLessThan(0.75);
+	expect(eased(1, 0, 1)).toBe(0);
+});
+
+test("the progress bar fills in eighths and labels percent and done/total", () => {
+	expect(progressText(0, 0, 4)).toBe("░░░░░░░░░░░░   0%  0/4");
+	expect(progressText(1, 4, 4)).toBe("████████████ 100%  4/4");
+	expect(progressText(7 / 11, 7, 11)).toBe("███████▋░░░░  64%  7/11");
+	expect(progressText(1 / 2, 1, 2)).toBe("██████░░░░░░  50%  1/2");
+	// One eighth of one cell is the smallest step; less rounds to nothing.
+	expect(barGlyphs(1 / (BAR_CELLS * 8)).filled).toBe("▏");
+	expect(barGlyphs(1 / (BAR_CELLS * 20)).filled).toBe("");
+	expect(barGlyphs(0.999).filled).toBe("█".repeat(BAR_CELLS));
+	for (const f of [0, 0.01, 0.3, 0.5, 0.77, 1]) {
+		const { filled, empty } = barGlyphs(f);
+		expect([...filled, ...empty]).toHaveLength(BAR_CELLS);
+	}
+});
+
+test("flatten counts each node's done and total direct children", () => {
+	const nodes = flatten([
+		{
+			id: "p",
+			title: "P",
+			status: "in-progress",
+			children: [
+				{ id: "a", title: "A", status: "completed" },
+				{
+					id: "b",
+					title: "B",
+					status: "in-progress",
+					children: [{ id: "c", title: "C", status: "completed" }],
+				},
+			],
+		},
+	]);
+	expect(nodes.map((n) => [n.id, n.done, n.total])).toEqual([
+		["p", 1, 2],
+		["a", 0, 0],
+		["b", 1, 1],
+		["c", 0, 0],
+	]);
+});
+
+test("ravenWord is one fixed verb per mode, taken from the list", () => {
+	for (const [mode, verb] of Object.entries(SPINNER_VERBS)) {
+		expect(ravenWord(mode)).toBe(verb);
+		expect(ravenWord(mode)).toBe(verb);
+	}
+	expect(new Set(Object.values(SPINNER_VERBS)).size).toBe(5);
+	expect(ravenWord("unheard-of")).toBe(SPINNER_VERBS.thinking);
+});
+
+test("ravenSuffix appends the active title after any existing suffix, truncated", () => {
+	expect(ravenSuffix("…", "Wire auth")).toBe("… · RR ▸ Wire auth");
+	expect(ravenSuffix("…", undefined)).toBe("… · RR");
+	expect(ravenSuffix(undefined, "x")).toBe("… · RR ▸ x");
+	expect(ravenSuffix("", "x")).toBe(" · RR ▸ x");
+	const exact = "b".repeat(TITLE_MAX);
+	expect(ravenSuffix("", exact)).toBe(` · RR ▸ ${exact}`);
+	expect(ravenSuffix("", `${exact}c`)).toBe(
+		` · RR ▸ ${"b".repeat(TITLE_MAX - 1)}…`,
+	);
 });

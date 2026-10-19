@@ -1,4 +1,8 @@
 import type { LayoutKnobs } from "../../src/mainview/lib/layoutKnobs";
+import {
+	LOGO_FX_VARIANT,
+	type LogoFxVariant,
+} from "../../src/mainview/lib/logoFx/constants";
 import type { FixtureId } from "./fixtures/index";
 
 /**
@@ -25,6 +29,11 @@ export interface ScenePreset {
 	focal?: string;
 	/** `"none"` = zero plugin badges; a list = each plugin id has >= 1 badge. */
 	attribution: "none" | readonly string[];
+	/**
+	 * Play a logo effect and freeze it `atMs` into its run before the shot;
+	 * omitted = motion stays reduced and no effect layer is ever on screen.
+	 */
+	logoFx?: { variant: LogoFxVariant; atMs: number };
 }
 
 const VIEWPORT = { width: 1600, height: 1200 } as const;
@@ -62,6 +71,28 @@ export const SCENES: readonly ScenePreset[] = [
 		focal: "10000000-0000-4000-8000-000000000000",
 		viewport: VIEWPORT,
 		attribution: "none",
+	},
+	{
+		id: "rr-fx-circuit",
+		title: "RoadRaven 0.8.6 — circuit pulse",
+		fixture: "roadraven",
+		subtreeRoot: "current",
+		layout: "LR",
+		focal: "currentPhase",
+		viewport: VIEWPORT,
+		attribution: AGENTS,
+		logoFx: { variant: LOGO_FX_VARIANT.CIRCUIT_PULSE, atMs: 1100 },
+	},
+	{
+		id: "rr-fx-aurora",
+		title: "RoadRaven 0.8.6 — status aurora",
+		fixture: "roadraven",
+		subtreeRoot: "current",
+		layout: "LR",
+		focal: "currentPhase",
+		viewport: VIEWPORT,
+		attribution: AGENTS,
+		logoFx: { variant: LOGO_FX_VARIANT.STATUS_AURORA, atMs: 1500 },
 	},
 ];
 

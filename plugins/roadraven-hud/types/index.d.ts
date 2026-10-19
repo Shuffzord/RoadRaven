@@ -18,7 +18,13 @@ export type HudNode = {
 	notes?: string;
 	priority?: string;
 	awaitingUat?: number;
+	// Direct children, and how many of them are completed.
+	done?: number;
+	total?: number;
 };
+
+// Read from Claude Code settings at session start: still under reduced motion or a screen reader.
+export type HudMotion = { still: boolean };
 
 export type HudSent = { count: number; at: number; isAwake: boolean };
 
@@ -85,6 +91,7 @@ declare module "claude-code" {
 			uatNotes: HudUatNotes;
 			refreshing: HudRefresh;
 			seenRevision: string;
+			motion: HudMotion;
 		};
 	}
 }

@@ -1,6 +1,16 @@
 import type { On } from "claude-code";
-import { type Engine, expect, mock, test } from "claude-code/testing";
+import {
+	type Engine,
+	expect,
+	type Mounted,
+	mock,
+	test,
+} from "claude-code/testing";
+import { barKey, EASE_MS } from "./bar";
+import { MARK_MIN_COLUMNS } from "./draw";
 import { CHOICE } from "./plan";
+import { MARK_CYCLE_MS, MARK_KEY, MARK_MODE, MARK_TICK_MS } from "./raven-mark";
+import { SPINNER, SPINNER_VERBS, TITLE_MAX } from "./spinner";
 
 const STORE_KEY = "attribution:/work/plan.roadraven.json";
 // Attribution a previous session left behind: the agent that worked n1.
@@ -996,3 +1006,268 @@ test("a Pass without a note appends nothing to the node's notes", async ($, on) 
 	expect(r.writes("updateNodes")).toHaveLength(1);
 	expect(r.writes("updateNodeNotes")).toEqual([]);
 });
+
+// --- the raven mark and the progress bars -------------------------------------------------------
+
+const SURFACES = ["terminal", "desktop"] as const;
+const paneOn = (surface: (typeof SURFACES)[number], bodyColumns = 80) => ({
+	...PANE_PROPS,
+	surface,
+	props: { title: "RoadRaven", isFocused: true, bodyColumns } as never,
+});
+type PaneUi = Mounted<(typeof SURFACES)[number], "Pane">;
+const open = ($: Engine) =>
+	$.command.run({ command: "roadraven", args: "" } as never);
+
+test("the header holds the raven mark: animated by default, livelier while an agent runs", async ($, on) => {
+	rig(on, { current: answerOk });
+	on("agent.spawn", () => ({ model: "claude-haiku-5-5", agentId: "z1" }));
+	await open($);
+	const uis: PaneUi[] = [];
+	for (const surface of SURFACES) {
+		const ui = await $.ui.mount(paneOn(surface));
+		uis.push(ui);
+		expect((await ui.find({ key: MARK_KEY }))?.props.props).toMatchObject({
+			still: false,
+			mode: MARK_MODE.IDLE,
+		});
+		const seen = new Set<string>();
+		for (let t = 0; t < MARK_CYCLE_MS.idle; t += MARK_TICK_MS) {
+			seen.add(JSON.stringify(await ui.drawn({ in: MARK_KEY })));
+			await ui.advance(MARK_TICK_MS);
+		}
+		expect(seen.size).toBeGreaterThan(1);
+	}
+	await $.agent.spawn({
+		prompt: "p",
+		description: "worker",
+		name: "worker",
+		subagentType: "general-purpose",
+		parentModel: "claude-opus-5-5",
+		tool_use_id: "t1",
+	} as never);
+	for (const ui of uis)
+		expect((await ui.find({ key: MARK_KEY }))?.props.props).toMatchObject({
+			still: false,
+			mode: MARK_MODE.BUSY,
+		});
+});
+
+for (const setting of ["prefersReducedMotion", "axScreenReader"] as const)
+	test(`${setting} draws the mark as one still frame`, async ($, on) => {
+		rig(on, { current: answerOk });
+		const start = sessions($, on);
+		on("settings.read", () => ({ value: { [setting]: true } }));
+		await start();
+		await open($);
+		for (const surface of SURFACES) {
+			const ui = await $.ui.mount(paneOn(surface));
+			expect((await ui.find({ key: MARK_KEY }))?.props.props).toMatchObject({
+				still: true,
+			});
+			const before = JSON.stringify(await ui.drawn({ in: MARK_KEY }));
+			for (let t = 0; t < MARK_CYCLE_MS.idle; t += MARK_TICK_MS) {
+				await ui.advance(MARK_TICK_MS);
+				expect(JSON.stringify(await ui.drawn({ in: MARK_KEY }))).toBe(before);
+			}
+		}
+	});
+
+test(`the mark hides below ${MARK_MIN_COLUMNS} columns rather than wrapping`, async ($, on) => {
+	rig(on, { current: answerOk });
+	await open($);
+	for (const surface of SURFACES) {
+		const ui = await $.ui.mount(paneOn(surface, MARK_MIN_COLUMNS - 1));
+		expect(await ui.find({ key: MARK_KEY })).toBeUndefined();
+		expect(await ui.find({ text: /RoadRaven/ })).toBeDefined();
+		expect(await ui.find({ text: /1 active · 1 awaiting UAT/ })).toBeDefined();
+		await ui.redraw(paneOn(surface, MARK_MIN_COLUMNS).props);
+		expect(await ui.find({ key: MARK_KEY })).toBeDefined();
+		expect(await ui.find({ text: /1 active · 1 awaiting UAT/ })).toBeDefined();
+	}
+});
+
+const barText = async (ui: PaneUi) =>
+	(await ui.find({ in: barKey("p1"), type: "Text" }))?.text;
+
+test("an active node with children shows its progress bar; a leaf shows none", async ($, on) => {
+	rig(on, { current: answerOk });
+	await open($);
+	for (const surface of SURFACES) {
+		const ui = await $.ui.mount(paneOn(surface));
+		expect(await barText(ui)).toBe("██████░░░░░░  50%  1/2");
+		expect(await ui.find({ key: barKey("n1") })).toBeUndefined();
+	}
+});
+
+// The pane drawn on both surfaces with p1 at 1/2, then u5 completed: p1 is 2/2.
+async function completeP1($: Engine, on: On, isStill: boolean) {
+	const answer = { current: answerOk };
+	rig(on, answer);
+	const start = sessions($, on);
+	on("settings.read", () => ({ value: { prefersReducedMotion: isStill } }));
+	await start();
+	await open($);
+	const uis: PaneUi[] = [];
+	for (const surface of SURFACES) uis.push(await $.ui.mount(paneOn(surface)));
+	const done = withStatus("u5", "completed");
+	answer.current = (c) => answerRR(c, done);
+	await open($);
+	return uis;
+}
+
+const FULL_BAR = "████████████ 100%  2/2";
+const fullCells = async (ui: PaneUi) =>
+	[...((await barText(ui)) ?? "")].filter((ch) => ch === "█").length;
+
+test(`a new done count eases the bar over ${EASE_MS} ms`, async ($, on) => {
+	for (const ui of await completeP1($, on, false)) {
+		expect(await barText(ui)).toBe("██████░░░░░░ 100%  2/2");
+		await ui.advance(EASE_MS / 2);
+		expect(await fullCells(ui)).toBeGreaterThan(6);
+		expect(await fullCells(ui)).toBeLessThan(12);
+		await ui.advance(EASE_MS);
+		expect(await barText(ui)).toBe(FULL_BAR);
+	}
+});
+
+test("a new done count jumps the bar under reduced motion", async ($, on) => {
+	for (const ui of await completeP1($, on, true))
+		expect(await barText(ui)).toBe(FULL_BAR);
+});
+
+// --- the opt-in raven spinner -------------------------------------------------------------------
+
+const spinnerOn = (
+	surface: (typeof SURFACES)[number],
+	props: { word?: string; suffix?: string; mode?: string } = {},
+) => ({
+	plugin: "roadraven-hud",
+	surface,
+	component: "Spinner",
+	requestId: "main",
+	props: {
+		word: "Sauteing",
+		message: null,
+		suffix: "…",
+		mode: "thinking",
+		...props,
+	} as never,
+});
+
+// What the engine would draw: the props the plugins above it left in place.
+function spinnerSeen(on: On) {
+	const seen: Record<string, unknown>[] = [];
+	on("ui.render", { component: "Spinner" }, (_$, e) => {
+		seen.push({ ...e.props });
+		return { type: "Text", props: {}, children: [] } as never;
+	});
+	return seen;
+}
+
+for (const surface of SURFACES) {
+	test(
+		`spinner classic leaves the props untouched on ${surface}`,
+		{ options: { spinner: SPINNER.CLASSIC } },
+		async ($, on) => {
+			rig(on, { current: answerOk });
+			const seen = spinnerSeen(on);
+			await open($);
+			await $.ui.mount(spinnerOn(surface));
+			expect(seen.at(-1)).toEqual({
+				word: "Sauteing",
+				message: null,
+				suffix: "…",
+				mode: "thinking",
+			});
+		},
+	);
+
+	test(`spinner defaults to classic on ${surface}`, async ($, on) => {
+		rig(on, { current: answerOk });
+		const seen = spinnerSeen(on);
+		await open($);
+		await $.ui.mount(spinnerOn(surface));
+		expect(seen.at(-1)?.word).toBe("Sauteing");
+	});
+
+	test(
+		`spinner raven names the active node on ${surface}`,
+		{ options: { spinner: SPINNER.RAVEN } },
+		async ($, on) => {
+			rig(on, { current: answerOk });
+			const seen = spinnerSeen(on);
+			await open($);
+			await $.ui.mount(spinnerOn(surface, { mode: "tool-use" }));
+			expect(seen.at(-1)).toMatchObject({
+				word: SPINNER_VERBS["tool-use"],
+				message: null,
+				mode: "tool-use",
+				suffix: "… · RR ▸ Wire auth",
+			});
+		},
+	);
+
+	test(
+		`spinner raven keeps another mod's suffix on ${surface}`,
+		{ options: { spinner: SPINNER.RAVEN } },
+		async ($, on) => {
+			rig(on, { current: answerOk });
+			const seen = spinnerSeen(on);
+			await open($);
+			await $.ui.mount(spinnerOn(surface, { suffix: "… [other]" }));
+			expect(String(seen.at(-1)?.suffix)).toBe("… [other] · RR ▸ Wire auth");
+		},
+	);
+
+	test(
+		`spinner raven truncates a long title on ${surface}`,
+		{ options: { spinner: SPINNER.RAVEN } },
+		async ($, on) => {
+			const long = "A".repeat(TITLE_MAX + 20);
+			const rm = JSON.parse(JSON.stringify(roadmap).replace("Wire auth", long));
+			rig(on, { current: (c) => answerRR(c, rm) });
+			const seen = spinnerSeen(on);
+			await open($);
+			await $.ui.mount(spinnerOn(surface));
+			expect(String(seen.at(-1)?.suffix)).toBe(
+				`… · RR ▸ ${"A".repeat(TITLE_MAX - 1)}…`,
+			);
+		},
+	);
+
+	test(
+		`spinner raven with no active node says only RR on ${surface}`,
+		{ options: { spinner: SPINNER.RAVEN } },
+		async ($, on) => {
+			const rm = JSON.parse(
+				JSON.stringify(roadmap).replaceAll('"in-progress"', '"completed"'),
+			);
+			rig(on, { current: (c) => answerRR(c, rm) });
+			const seen = spinnerSeen(on);
+			await open($);
+			await $.ui.mount(spinnerOn(surface));
+			expect(seen.at(-1)?.suffix).toBe("… · RR");
+		},
+	);
+
+	test(
+		`spinner raven offline leaves the props untouched on ${surface}`,
+		{ options: { spinner: SPINNER.RAVEN } },
+		async ($, on) => {
+			rig(on, {
+				current: () =>
+					new Error("Error (app_not_running): RoadRaven is not running."),
+			});
+			const seen = spinnerSeen(on);
+			await open($).catch(() => undefined);
+			await $.ui.mount(spinnerOn(surface));
+			expect(seen.at(-1)).toEqual({
+				word: "Sauteing",
+				message: null,
+				suffix: "…",
+				mode: "thinking",
+			});
+		},
+	);
+}

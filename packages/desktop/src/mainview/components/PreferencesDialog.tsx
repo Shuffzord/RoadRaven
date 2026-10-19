@@ -13,6 +13,7 @@ import {
 	UPDATE_RESTART_LABEL,
 	UPDATE_STATUS_TESTID,
 } from "../lib/domContract";
+import { LOGO_EFFECTS_LABEL } from "../lib/logoFx/constants";
 import { slugify } from "../lib/themeEditor";
 import {
 	checkForUpdates,
@@ -25,6 +26,7 @@ import { useEventApiStore } from "../store/eventApiStore";
 import { usePreferencesStore } from "../store/preferencesStore";
 import { useSetupStore } from "../store/setupStore";
 import { userThemeFiles, useThemeStore } from "../store/themeStore";
+import { useUiStore } from "../store/uiStore";
 import { useUpdateStore } from "../store/updateStore";
 import { getBuiltInTheme, resolveThemeFile, THEME_IDS } from "../themes";
 import {
@@ -340,6 +342,28 @@ function UpdateSection({
 	);
 }
 
+/** A settings checkbox: label on the left, box on the right. */
+function CheckboxRow(props: {
+	id: string;
+	label: string;
+	checked: boolean;
+	onChange: (checked: boolean) => void;
+}) {
+	return (
+		<div style={dialogFieldRowStyle}>
+			<label htmlFor={props.id} style={dialogFieldLabelStyle}>
+				{props.label}
+			</label>
+			<input
+				id={props.id}
+				type="checkbox"
+				checked={props.checked}
+				onChange={(e) => props.onChange(e.target.checked)}
+			/>
+		</div>
+	);
+}
+
 function describeEventApi(
 	status: "off" | "listening" | "error",
 	port: number | null,
@@ -392,6 +416,12 @@ export function PreferencesDialog() {
 		electroview?.rpc?.request.saveSettings({ settings: patch }).catch(() => {
 			// RPC unavailable outside Electrobun (HMR dev server).
 		});
+	};
+
+	// Saved, and applied live: the canvas reads the ui store.
+	const setLogoEffects = (enabled: boolean): void => {
+		update({ logoEffects: enabled });
+		useUiStore.getState().setLogoEffectsEnabled(enabled);
 	};
 
 	const commitPort = (): void => {
@@ -463,6 +493,12 @@ export function PreferencesDialog() {
 									<ThemePicker />
 								</div>
 								<ThemeFileActions id={id} />
+								<CheckboxRow
+									id={`${id}-logo-fx`}
+									label={LOGO_EFFECTS_LABEL}
+									checked={settings.logoEffects !== false}
+									onChange={setLogoEffects}
+								/>
 							</section>
 
 							<section
@@ -472,19 +508,12 @@ export function PreferencesDialog() {
 								<h3 id={`${id}-startup`} style={dialogSectionHeadingStyle}>
 									Startup
 								</h3>
-								<div style={dialogFieldRowStyle}>
-									<label htmlFor={`${id}-reopen`} style={dialogFieldLabelStyle}>
-										Reopen last roadmap on launch
-									</label>
-									<input
-										id={`${id}-reopen`}
-										type="checkbox"
-										checked={settings.reopenLastFile !== false}
-										onChange={(e) =>
-											update({ reopenLastFile: e.target.checked })
-										}
-									/>
-								</div>
+								<CheckboxRow
+									id={`${id}-reopen`}
+									label="Reopen last roadmap on launch"
+									checked={settings.reopenLastFile !== false}
+									onChange={(checked) => update({ reopenLastFile: checked })}
+								/>
 							</section>
 
 							<section

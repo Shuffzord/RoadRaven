@@ -37,7 +37,27 @@ beforeEach(() => {
 afterEach(() => {
 	cleanup();
 	resetStore();
-	useUiStore.setState({ sidebarWidth: SIDEBAR_DEFAULT_WIDTH });
+	useUiStore.setState({
+		sidebarWidth: SIDEBAR_DEFAULT_WIDTH,
+		logoEffectsEnabled: true,
+	});
+});
+
+describe("useUiSettingsHydration — logoEffects", () => {
+	it("loads a saved false into the ui store", async () => {
+		await hydrate({ logoEffects: false });
+		expect(useUiStore.getState().logoEffectsEnabled).toBe(false);
+	});
+
+	it("leaves effects on when the key is absent", async () => {
+		await hydrate({});
+		expect(useUiStore.getState().logoEffectsEnabled).toBe(true);
+	});
+
+	it("ignores a non-boolean value", async () => {
+		await hydrate({ logoEffects: "no" });
+		expect(useUiStore.getState().logoEffectsEnabled).toBe(true);
+	});
 });
 
 describe("useUiSettingsHydration — searchInNotes", () => {

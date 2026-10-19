@@ -253,7 +253,7 @@ async function captureAll(
 			await expectAttribution(page, preset);
 			const path = capturePath(preset.id, themeId);
 			await mkdir(dirname(path), { recursive: true });
-			const image = await captureScene(page, path);
+			const image = await captureScene(page, path, preset.logoFx);
 			const focal = await sceneFocal(page, preset, fixture);
 			await writePromos(browser, `${preset.id}-${themeId}`, { image, focal });
 			const scale = QUALITY_PROFILES[CAPTURE_QUALITY];
@@ -343,7 +343,7 @@ async function sceneSnapshot(
 	const scene = sceneFixture(preset, fixture);
 	await loadScene(page, preset, scene, themeId);
 	const shot = `${preset.id}-${themeId}-${Date.now()}.png`;
-	await captureScene(page, test.info().outputPath(shot));
+	await captureScene(page, test.info().outputPath(shot), preset.logoFx);
 	const state = await page.evaluate(async () => {
 		const storePath = "/store/roadmapStore.ts";
 		const viewPath = "/store/fileViewStore.ts";
@@ -367,6 +367,7 @@ test("scene reset: A → B → A", async ({ page }) => {
 	const timeline = getScene("rr-timeline");
 	const first = await sceneSnapshot(page, timeline, roadraven, "dark");
 	await sceneSnapshot(page, getScene("rr-detail"), roadraven, "light");
+	await sceneSnapshot(page, getScene("rr-fx-circuit"), roadraven, "dark");
 	const again = await sceneSnapshot(page, timeline, roadraven, "dark");
 	// Fit-view's zoom differs in the ~7th digit between loads of the SAME scene
 	// (a card moves ~1e-4 px), so geometry is compared to 0.005 px.

@@ -50,11 +50,13 @@ import {
 	UPDATE_RESTART_LABEL,
 	UPDATE_STATUS_TESTID,
 } from "../../../src/mainview/lib/domContract";
+import { LOGO_EFFECTS_LABEL } from "../../../src/mainview/lib/logoFx/constants";
 import { describeUpdateState } from "../../../src/mainview/lib/updateActions";
 import { useEventApiStore } from "../../../src/mainview/store/eventApiStore";
 import { usePreferencesStore } from "../../../src/mainview/store/preferencesStore";
 import { useSetupStore } from "../../../src/mainview/store/setupStore";
 import { useThemeStore } from "../../../src/mainview/store/themeStore";
+import { useUiStore } from "../../../src/mainview/store/uiStore";
 import { useUpdateStore } from "../../../src/mainview/store/updateStore";
 import { THEME_IDS, themeForId } from "../../../src/mainview/themes";
 
@@ -72,6 +74,8 @@ const portInput = () =>
 	screen.getByLabelText("WebSocket port") as HTMLInputElement;
 const reopenBox = () =>
 	screen.getByLabelText("Reopen last roadmap on launch") as HTMLInputElement;
+const logoBox = () =>
+	screen.getByLabelText(LOGO_EFFECTS_LABEL) as HTMLInputElement;
 const agentBox = () =>
 	screen.getByLabelText(
 		"Allow AI agents to edit roadmaps (MCP)",
@@ -233,6 +237,27 @@ describe("PreferencesDialog", () => {
 		expect(rpc.saveSettings).toHaveBeenCalledWith({
 			settings: { reopenLastFile: false },
 		});
+	});
+
+	it("the logo effects checkbox defaults on and reflects a saved false", async () => {
+		await openDialog();
+		expect(logoBox().checked).toBe(true);
+		cleanup();
+
+		await openDialog({ logoEffects: false });
+		expect(logoBox().checked).toBe(false);
+	});
+
+	it("the logo effects checkbox saves logoEffects and applies it live", async () => {
+		await openDialog();
+
+		fireEvent.click(logoBox());
+
+		expect(rpc.saveSettings).toHaveBeenCalledWith({
+			settings: { logoEffects: false },
+		});
+		expect(useUiStore.getState().logoEffectsEnabled).toBe(false);
+		useUiStore.setState({ logoEffectsEnabled: true });
 	});
 
 	it("Integrations closes Preferences and opens the setup wizard", async () => {
