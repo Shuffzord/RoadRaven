@@ -146,7 +146,7 @@ server.registerTool(
 	{
 		title: "Find RoadRaven nodes by structured filter",
 		description:
-			"Search nodes by AND-combined filter: titleContains (case-insensitive substring), status, type, metaKey + metaValue, parentId. All fields optional. Returns matching nodes (without their children; use parentId or getNode for those) with their parent IDs.",
+			"Search nodes by AND-combined filter: titleContains (case-insensitive substring), status (one status, or a list of statuses to get e.g. all open work in one call), type, metaKey + metaValue, parentId. All fields optional. Set omitNotes for a short list without notes and timestamps. Returns matching nodes (without their children; use parentId or getNode for those) with their parent IDs.",
 		inputSchema: FindNodesInputSchema,
 	},
 	findNodesCallback(wsClient),

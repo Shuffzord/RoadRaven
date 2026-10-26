@@ -150,20 +150,33 @@ export function getRoadmapCallback(wsClient: WsClientLike) {
 	};
 }
 
-type FoundNode = { node: { children?: unknown }; [key: string]: unknown };
+type FoundNode = {
+	node: NoteNode & { status?: unknown };
+	[key: string]: unknown;
+};
 
 // findNodes: each match comes back without its subtree, so a status query that
-// matches the root cannot return the whole tree. Notes, metadata and parentId stay.
+// matches the root cannot return the whole tree. Notes, metadata and parentId stay
+// unless `omitNotes` is set. A `status` list is applied here: the app is asked
+// without it (v0.9.2 D-1), so both options work with any app version.
 export function findNodesCallback(wsClient: WsClientLike) {
-	return agentToolCallback("findNodes", wsClient, (r) => {
-		const res = r as { nodes?: FoundNode[] } | undefined;
-		if (!Array.isArray(res?.nodes)) return r;
-		return {
-			...res,
-			nodes: res.nodes.map(({ node: { children: _, ...node }, ...m }) => ({
-				...m,
-				node,
-			})),
-		};
-	});
+	return (args: Record<string, unknown> | undefined) => {
+		const { status, omitNotes, ...forwarded } = args ?? {};
+		const statuses = Array.isArray(status) ? (status as unknown[]) : undefined;
+		if (!statuses && status !== undefined) forwarded.status = status;
+		return agentToolCallback("findNodes", wsClient, (r) => {
+			const res = r as { nodes?: FoundNode[] } | undefined;
+			if (!Array.isArray(res?.nodes)) return r;
+			const kept = statuses
+				? res.nodes.filter((m) => statuses.includes(m.node.status))
+				: res.nodes;
+			return {
+				...res,
+				nodes: kept.map(({ node: { children: _, ...node }, ...m }) => {
+					if (omitNotes === true) stripNotes([node]);
+					return { ...m, node };
+				}),
+			};
+		})(forwarded);
+	};
 }

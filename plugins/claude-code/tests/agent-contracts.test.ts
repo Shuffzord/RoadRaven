@@ -67,6 +67,15 @@ describe("FindNodesInputSchema (D-03 AND-combined filter)", () => {
 			false,
 		);
 	});
+
+	it("accepts a status string or non-empty list and omitNotes; rejects an empty or non-string list", () => {
+		const ok = (v: unknown) => FindNodesInputSchema.safeParse(v).success;
+		expect(ok({ status: "blocked" })).toBe(true);
+		expect(ok({ status: ["in-progress", "blocked"] })).toBe(true);
+		expect(ok({ omitNotes: true })).toBe(true);
+		expect(ok({ status: [] })).toBe(false);
+		expect(ok({ status: [1] })).toBe(false);
+	});
 });
 
 describe("UpdateNodeMetadataInputSchema (D-04 PATCH semantics: null = delete)", () => {

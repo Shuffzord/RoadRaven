@@ -64,11 +64,20 @@ export const FindNodesInputSchema = z.object({
 		.string()
 		.optional()
 		.describe("Case-insensitive substring against node.title"),
-	status: z.string().optional(),
+	status: z
+		.union([z.string(), z.array(z.string()).min(1)])
+		.optional()
+		.describe(
+			'One status, or a list of statuses to match any of (e.g. ["in-progress", "blocked"] for open work)',
+		),
 	type: z.string().optional(),
 	metaKey: z.string().optional(),
 	metaValue: z.unknown().optional(),
 	parentId: IdString.optional(),
+	omitNotes: z
+		.boolean()
+		.optional()
+		.describe("Leave out notes and the createdAt/updatedAt timestamps"),
 });
 
 // -- Create tools -------------------------------------------------------------
