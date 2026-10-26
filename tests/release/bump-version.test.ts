@@ -52,6 +52,31 @@ describe("bump-version.ts", () => {
 		expect(plugins.map((p: { version: string }) => p.version)).toEqual(["9.8.7", "9.8.7"]);
 	});
 
+	it("sets each workspace package's version in bun.lock", () => {
+		cpSync(join(ROOT, "bun.lock"), join(cwd, "bun.lock"));
+		const res = run("9.8.7");
+		expect(res.status).toBe(0);
+		const lock = readFileSync(join(cwd, "bun.lock"), "utf8");
+		for (const ws of ["packages/core", "packages/desktop", "plugins/claude-code"]) {
+			expect(lock).toMatch(
+				new RegExp(`"${ws}": \\{\\s*"name": "[^"]+",\\s*"version": "9\\.8\\.7"`),
+			);
+		}
+	});
+
+	it("writes nothing when a workspace entry is missing from bun.lock", () => {
+		const lock = readFileSync(join(ROOT, "bun.lock"), "utf8").replace(
+			'"plugins/claude-code": {',
+			'"plugins/renamed": {',
+		);
+		writeFileSync(join(cwd, "bun.lock"), lock);
+		const res = run("9.8.7");
+		expect(res.status).toBe(1);
+		expect(res.stderr).toContain("bun.lock");
+		expect(readFileSync(join(cwd, "bun.lock"), "utf8")).toBe(lock);
+		expect(json("packages/core/package.json").version).not.toBe("9.8.7");
+	});
+
 	it("writes nothing when the hud marketplace entry cannot be matched", () => {
 		const market = join(cwd, ".claude-plugin/marketplace.json");
 		const original = readFileSync(market, "utf8").replace("roadraven-hud", "renamed");
