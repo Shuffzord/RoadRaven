@@ -73,7 +73,7 @@ import {
 	type RawNode,
 	roadmapTitle,
 	shownKind,
-	uatTypes,
+	uatQueries,
 	withNotes,
 	workCounts,
 } from "./roadmap";
@@ -343,10 +343,13 @@ async function announceUat($: EngineInterface, pending: HudNode[]) {
 	await saveAttribution($);
 }
 
-async function findUat($: EngineInterface, types: string[]) {
+async function findUat(
+	$: EngineInterface,
+	queries: { type: string; status: string }[],
+) {
 	const found: RawNode[] = [];
-	for (const type of types) {
-		const r = await callRR($, "findNodes", { type });
+	for (const query of queries) {
+		const r = await callRR($, "findNodes", query);
 		found.push(...(r.nodes ?? []).map((f: { node: RawNode }) => f.node));
 	}
 	return found;
@@ -372,7 +375,7 @@ async function uatNotesFor($: EngineInterface, nodes: HudNode[], key: string) {
 	const kept = await read($, uatNotes);
 	if (kept.sig === key) return kept.notes;
 	try {
-		const notes = notesById(await findUat($, uatTypes(nodes)));
+		const notes = notesById(await findUat($, uatQueries(nodes)));
 		await update($, uatNotes, () => ({ sig: key, notes, isFailing: false }));
 		return notes;
 	} catch (err) {

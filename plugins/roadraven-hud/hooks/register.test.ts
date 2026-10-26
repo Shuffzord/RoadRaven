@@ -209,7 +209,13 @@ test("a server that isn't connected yet reads as connecting, and Retry asks agai
 });
 
 // What RoadRaven answers: getRoadmap leaves notes out on omitNotes; findNodes and getNode carry them.
-type N = { id: string; type?: string; notes?: string; children?: N[] };
+type N = {
+	id: string;
+	status?: string;
+	type?: string;
+	notes?: string;
+	children?: N[];
+};
 const strip = ({ notes: _, children, ...rest }: N): N =>
 	children ? { ...rest, children: children.map(strip) } : rest;
 const walk = (list: N[]): N[] =>
@@ -224,6 +230,7 @@ const ANSWERS: Record<string, (c: Q, rm: Rm) => unknown> = {
 	findNodes: (c, rm) => ({
 		nodes: walk(rm.schema.nodes)
 			.filter((n) => n.type === c.args.type)
+			.filter((n) => c.args.status === undefined || n.status === c.args.status)
 			.map((node) => ({ node, parentId: null })),
 	}),
 	getNode: (c, rm) => ({
@@ -479,7 +486,35 @@ test("polls ask for the tree without notes and fetch UAT notes with findNodes", 
 	expect(r.writes("getRoadmap").map((c) => c.args)).toEqual([
 		{ omitNotes: true },
 	]);
-	expect(r.writes("findNodes").map((c) => c.args.type)).toEqual(["uat", "UAT"]);
+	expect(r.writes("findNodes").map((c) => c.args)).toEqual([
+		{ type: "uat", status: "in-progress" },
+		{ type: "uat", status: "blocked" },
+	]);
+});
+
+// Claude Code swaps a tool result over its MCP output limit for a plain-text notice.
+const MCP_LIMIT = 20_000;
+const overLimit = (text: string) =>
+	text.length > MCP_LIMIT
+		? `Error: result (${text.length} characters across 1 line) exceeds maximum allowed tokens.`
+		: text;
+
+test("accepted UATs with long notes don't push the ready ones' notes over the MCP output limit", async ($, on) => {
+	const done = Array.from({ length: 30 }, (_, i) => ({
+		id: `done${i}`,
+		title: `Accepted ${i}`,
+		status: "completed",
+		type: "uat",
+		notes: "x".repeat(2000),
+	}));
+	const big = JSON.parse(JSON.stringify(roadmap));
+	big.schema.nodes[0].children.push(...done);
+	rig(on, { current: (c) => overLimit(answerRR(c, big)) });
+	await $.command.run({ command: "roadraven", args: "" } as never);
+	const ui = await $.ui.mount(PANE_PROPS);
+	expect(await ui.find({ text: /Open the app/ })).toBeDefined();
+	await ui.press({ key: "notes-u1" });
+	expect(await ui.find({ text: /Then\*\* log in/ })).toBeDefined();
 });
 
 // Notes written to a node, as the app answers it: with the next revision.
