@@ -13,7 +13,7 @@ import {
 } from "../src/tools/schemas";
 
 describe("AgentErrorCode enum (RESEARCH §9 / D-11/D-12/D-13 + WR-01/WR-04)", () => {
-	it("contains exactly 18 codes: 13 originals + invalid_input (WR-01) + autosave_timeout (WR-04) + stale_write (v0.7 CONC-01) + batch_validation_failed (v0.7 Phase 2) + duplicate_id (v0.7 Phase 4)", () => {
+	it("contains exactly 19 codes: 13 originals + invalid_input (WR-01) + autosave_timeout (WR-04) + stale_write (v0.7 CONC-01) + batch_validation_failed (v0.7 Phase 2) + duplicate_id (v0.7 Phase 4) + result_too_large (v0.9.2)", () => {
 		const expected = new Set<AgentErrorCode>([
 			"app_not_running",
 			"no_file_loaded",
@@ -33,9 +33,10 @@ describe("AgentErrorCode enum (RESEARCH §9 / D-11/D-12/D-13 + WR-01/WR-04)", ()
 			"stale_write",
 			"batch_validation_failed",
 			"duplicate_id",
+			"result_too_large",
 		] as const);
 		expect(new Set(AGENT_ERROR_CODES)).toEqual(expected);
-		expect(AGENT_ERROR_CODES.length).toBe(18);
+		expect(AGENT_ERROR_CODES.length).toBe(19);
 	});
 });
 
@@ -66,6 +67,15 @@ describe("FindNodesInputSchema (D-03 AND-combined filter)", () => {
 		expect(FindNodesInputSchema.safeParse({ parentId: "" }).success).toBe(
 			false,
 		);
+	});
+
+	it("accepts a status string or non-empty list and omitNotes; rejects an empty or non-string list", () => {
+		const ok = (v: unknown) => FindNodesInputSchema.safeParse(v).success;
+		expect(ok({ status: "blocked" })).toBe(true);
+		expect(ok({ status: ["in-progress", "blocked"] })).toBe(true);
+		expect(ok({ omitNotes: true })).toBe(true);
+		expect(ok({ status: [] })).toBe(false);
+		expect(ok({ status: [1] })).toBe(false);
 	});
 });
 

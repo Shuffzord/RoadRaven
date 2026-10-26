@@ -162,11 +162,17 @@ describe.each(listSkillDirs())("skill %s", (skill) => {
 		}
 	});
 
-	it("reads the tree with getRoadmap({ omitNotes: true })", () => {
+	it("reads the tree with getRoadmap({ omitNotes: true, hideCompleted: true }) or one phase with { rootId, depth }", () => {
 		for (const file of skillFiles(skill)) {
 			const calls = read(file).match(/getRoadmap\([^)]*\)/g) ?? [];
 			for (const call of calls) {
-				expect(call, file).toBe("getRoadmap({ omitNotes: true })");
+				expect(
+					[
+						"getRoadmap({ omitNotes: true, hideCompleted: true })",
+						"getRoadmap({ rootId, depth })",
+					],
+					file,
+				).toContain(call);
 			}
 		}
 	});

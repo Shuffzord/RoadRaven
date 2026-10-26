@@ -43,6 +43,7 @@ export const codeOf = (text: string) => /^Error \(([a-z_]+)\)/.exec(text)?.[1];
 const CODE_KINDS: Record<string, HudConnKind> = {
 	app_not_running: "offline",
 	no_file_loaded: "noFile",
+	result_too_large: "tooLarge",
 };
 
 const CONN_RULES: [HudConnKind, RegExp][] = [
@@ -155,18 +156,17 @@ export function flatten(list: RawNode[], depth = 0): HudNode[] {
 	]);
 }
 
-// Each spelling of the UAT type in the tree (findNodes matches type exactly).
-export const uatTypes = (nodes: HudNode[]) => [
-	...new Set(nodes.filter(isUat).map((n) => n.type ?? "")),
-];
-
-// Which UAT nodes there are and their statuses: UAT notes are fetched again only when it changes.
-export const uatSig = (nodes: HudNode[]) =>
-	nodes
-		.filter(isUat)
-		.map((n) => `${n.id}:${n.status}`)
-		.sort()
-		.join(",");
+// The findNodes filters for the UAT items the pane draws notes for: each spelling of the type
+// (findNodes matches it exactly) with each status shown. Accepted UATs are left out: their notes
+// add up past Claude Code's MCP output limit on a long roadmap, and the pane never draws them.
+export function uatQueries(nodes: HudNode[]) {
+	const queries = new Map<string, { type: string; status: string }>();
+	for (const n of nodes.filter((n) => isReadyUat(n) || isFixingUat(n))) {
+		const type = n.type ?? "";
+		queries.set(`${type}:${n.status}`, { type, status: n.status });
+	}
+	return [...queries.values()];
+}
 
 // findNodes results as notes by node id.
 export const notesById = (found: RawNode[]): Record<string, string> =>

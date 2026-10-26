@@ -16,8 +16,8 @@ The HUD runs inside Claude Code and talks only to the RoadRaven desktop app on y
 
 | Tool | When |
 |---|---|
-| `getRoadmap` (with `omitNotes`) | every few seconds while RoadRaven is running (30 s while it is unreachable), and before Send, Run and Next |
-| `findNodes` (`type: "uat"`) | when the set of UAT items or their statuses changes, to show their notes |
+| `getRoadmap` (with `omitNotes` and `hideCompleted`) | every few seconds while RoadRaven is running (30 s while it is unreachable), and before Send, Run and Next |
+| `findNodes` (`type: "uat"`, one `status` at a time) | when the roadmap changes, to show the notes of the in-progress and blocked UAT items |
 | `getNode` | when you first press Run on a node, to show its notes in the confirmation |
 | `updateNodes` | when you press Send (UAT statuses) or Next (sets `metadata.priority`) |
 | `updateNodeNotes` | when you press Send with an item note (appends it to that node) |

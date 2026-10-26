@@ -36,7 +36,7 @@ export type HudConnKind =
 	| "other";
 export type HudError = { kind: HudConnKind; detail: string };
 
-// UAT notes as last fetched, for the UAT signature they were fetched at (null: fetch again).
+// UAT notes as last fetched, for the `filePath@revision` they were fetched at (null: fetch again).
 export type HudUatNotes = {
 	sig: string | null;
 	notes: Record<string, string>;

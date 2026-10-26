@@ -98,8 +98,34 @@ server.registerTool(
 	{
 		title: "Get the loaded RoadRaven roadmap",
 		description:
-			"Return the full schema tree from the desktop app, with live-event statuses merged in, plus the current `revision` (pass it as expectedRevision on writes to detect stale reads). Pass omitNotes: true for polling (large roadmaps exceed the tool-result limit): it leaves out notes and the createdAt/updatedAt timestamps; fetch notes with getNode/findNodes. Requires the app to be running and a file to be loaded.",
-		inputSchema: z.object({ omitNotes: z.boolean().optional() }),
+			"Return the full schema tree from the desktop app, with live-event statuses merged in, plus the current `revision` (pass it as expectedRevision on writes to detect stale reads). Long roadmaps can exceed the tool-result limit, so trim the answer: for a long roadmap or for polling, pass omitNotes: true and hideCompleted: true; to read one phase, pass rootId (that node's id) and depth. A stub is one line { id, title, status, type, childCount } standing in for a node whose children are left out; read those children with rootId set to the stub's id. Notes can also be fetched with getNode/findNodes. Requires the app to be running and a file to be loaded.",
+		inputSchema: z.object({
+			omitNotes: z
+				.boolean()
+				.optional()
+				.describe("Leave out notes and the createdAt/updatedAt timestamps."),
+			hideCompleted: z
+				.boolean()
+				.optional()
+				.describe(
+					"Show a node as a stub when it and everything under it is completed. A completed node with any open descendant stays in full.",
+				),
+			rootId: z
+				.string()
+				.min(1)
+				.optional()
+				.describe(
+					"Answer only this node and its subtree; the answer adds rootId and ancestorIds (root-to-parent). An unknown id gives node_not_found.",
+				),
+			depth: z
+				.number()
+				.int()
+				.min(0)
+				.optional()
+				.describe(
+					"Levels of children to keep below the top nodes (the rootId node, else the top-level nodes); the next level comes back as stubs. 0 = the top nodes only, their children as stubs.",
+				),
+		}),
 	},
 	getRoadmapCallback(wsClient),
 );
@@ -120,7 +146,7 @@ server.registerTool(
 	{
 		title: "Find RoadRaven nodes by structured filter",
 		description:
-			"Search nodes by AND-combined filter: titleContains (case-insensitive substring), status, type, metaKey + metaValue, parentId. All fields optional. Returns matching nodes (without their children; use parentId or getNode for those) with their parent IDs.",
+			"Search nodes by AND-combined filter: titleContains (case-insensitive substring), status (one status, or a list of statuses to get e.g. all open work in one call), type, metaKey + metaValue, parentId. All fields optional. Set omitNotes for a short list without notes and timestamps. Returns matching nodes (without their children; use parentId or getNode for those) with their parent IDs.",
 		inputSchema: FindNodesInputSchema,
 	},
 	findNodesCallback(wsClient),

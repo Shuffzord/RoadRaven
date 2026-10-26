@@ -209,7 +209,13 @@ test("a server that isn't connected yet reads as connecting, and Retry asks agai
 });
 
 // What RoadRaven answers: getRoadmap leaves notes out on omitNotes; findNodes and getNode carry them.
-type N = { id: string; type?: string; notes?: string; children?: N[] };
+type N = {
+	id: string;
+	status?: string;
+	type?: string;
+	notes?: string;
+	children?: N[];
+};
 const strip = ({ notes: _, children, ...rest }: N): N =>
 	children ? { ...rest, children: children.map(strip) } : rest;
 const walk = (list: N[]): N[] =>
@@ -224,6 +230,7 @@ const ANSWERS: Record<string, (c: Q, rm: Rm) => unknown> = {
 	findNodes: (c, rm) => ({
 		nodes: walk(rm.schema.nodes)
 			.filter((n) => n.type === c.args.type)
+			.filter((n) => c.args.status === undefined || n.status === c.args.status)
 			.map((node) => ({ node, parentId: null })),
 	}),
 	getNode: (c, rm) => ({
@@ -253,6 +260,19 @@ test("a roadmap over Claude Code's MCP output limit reads as too large, with Ret
 	expect(await ui.find({ text: /too large for Claude Code/ })).toBeDefined();
 	expect(await ui.find({ text: /JSON Parse/ })).toBeUndefined();
 	expect(await ui.find({ key: "rr-retry" })).toBeDefined();
+});
+
+test("a result_too_large answer reads as too large, not as unreachable", async ($, on) => {
+	rig(on, {
+		current: () =>
+			new Error(
+				"Error (result_too_large): The answer is 55,326 characters, over the 40,000-character limit for one tool result. Pass omitNotes: true and hideCompleted: true, or read one branch with rootId and depth.",
+			),
+	});
+	await $.command.run({ command: "roadraven", args: "" } as never);
+	const ui = await $.ui.mount(PANE_PROPS);
+	expect(await ui.find({ text: /too large for Claude Code/ })).toBeDefined();
+	expect(await ui.find({ text: /Can't reach RoadRaven/ })).toBeUndefined();
 });
 
 // --- the write paths ------------------------------------------------------------------------------
@@ -477,12 +497,63 @@ test("polls ask for the tree without notes and fetch UAT notes with findNodes", 
 	const r = rig(on, answer);
 	await $.command.run({ command: "roadraven", args: "" } as never);
 	expect(r.writes("getRoadmap").map((c) => c.args)).toEqual([
-		{ omitNotes: true },
+		{ omitNotes: true, hideCompleted: true },
 	]);
-	expect(r.writes("findNodes").map((c) => c.args.type)).toEqual(["uat", "UAT"]);
+	expect(r.writes("findNodes").map((c) => c.args)).toEqual([
+		{ type: "uat", status: "in-progress" },
+		{ type: "uat", status: "blocked" },
+	]);
 });
 
-test("UAT notes are fetched again only when a UAT status changes", async ($, on) => {
+// Claude Code swaps a tool result over its MCP output limit for a plain-text notice.
+const MCP_LIMIT = 20_000;
+const overLimit = (text: string) =>
+	text.length > MCP_LIMIT
+		? `Error: result (${text.length} characters across 1 line) exceeds maximum allowed tokens.`
+		: text;
+
+test("accepted UATs with long notes don't push the ready ones' notes over the MCP output limit", async ($, on) => {
+	const done = Array.from({ length: 30 }, (_, i) => ({
+		id: `done${i}`,
+		title: `Accepted ${i}`,
+		status: "completed",
+		type: "uat",
+		notes: "x".repeat(2000),
+	}));
+	const big = JSON.parse(JSON.stringify(roadmap));
+	big.schema.nodes[0].children.push(...done);
+	rig(on, { current: (c) => overLimit(answerRR(c, big)) });
+	await $.command.run({ command: "roadraven", args: "" } as never);
+	const ui = await $.ui.mount(PANE_PROPS);
+	expect(await ui.find({ text: /Open the app/ })).toBeDefined();
+	await ui.press({ key: "notes-u1" });
+	expect(await ui.find({ text: /Then\*\* log in/ })).toBeDefined();
+});
+
+// Notes written to a node, as the app answers it: with the next revision.
+const withNodeNotes = (id: string, notes: string) => {
+	const next: Rm & { revision: number } = JSON.parse(JSON.stringify(roadmap));
+	const node = walk(next.schema.nodes).find((n) => n.id === id);
+	if (node) node.notes = notes;
+	return { ...next, revision: roadmap.revision + 1 };
+};
+
+test("notes written to a UAT after it was created show on the next poll, from any session", async ($, on) => {
+	const answer = { current: answerOk };
+	rig(on, answer);
+	await $.command.run({ command: "roadraven", args: "" } as never);
+	const ui = await $.ui.mount(PANE_PROPS);
+	expect(await ui.find({ key: "notes-u5" })).toBeUndefined();
+	// Another session or a sub-agent fills the notes: no RoadRaven tool call runs in this one.
+	const filled = withNodeNotes("u5", "Search for raven\n**Then** it is found");
+	answer.current = (c) => answerRR(c, filled);
+	await $.command.run({ command: "roadraven", args: "" } as never);
+	expect(await ui.find({ text: /Search for raven/ })).toBeDefined();
+	await ui.press({ key: "notes-u5" });
+	expect(await ui.find({ text: /Then\*\* it is found/ })).toBeDefined();
+});
+
+test("UAT notes are fetched again only when the roadmap revision changes", async ($, on) => {
 	const answer = { current: answerOk };
 	const r = rig(on, answer);
 	await $.command.run({ command: "roadraven", args: "" } as never);
@@ -1089,6 +1160,31 @@ test(`the mark hides below ${MARK_MIN_COLUMNS} columns rather than wrapping`, as
 
 const barText = async (ui: PaneUi) =>
 	(await ui.find({ in: barKey("p1"), type: "Text" }))?.text;
+
+// With hideCompleted the server sends a fully completed child as a stub: no children, a childCount.
+test("completed children sent as stubs still count toward the bar", async ($, on) => {
+	const stub = (id: string) => ({
+		id,
+		title: id,
+		status: "completed",
+		type: "task",
+		childCount: 3,
+	});
+	const tree = JSON.parse(JSON.stringify(roadmap));
+	const p1 = walk(tree.schema.nodes).find((n) => n.id === "p1");
+	if (p1)
+		p1.children = [
+			stub("s1"),
+			stub("s2"),
+			...(p1.children ?? []).filter((c) => c.status !== "completed"),
+		];
+	rig(on, { current: (c) => answerRR(c, tree) });
+	await open($);
+	for (const surface of SURFACES) {
+		const ui = await $.ui.mount(paneOn(surface));
+		expect(await barText(ui)).toMatch(/ 2\/3$/);
+	}
+});
 
 test("an active node with children shows its progress bar; a leaf shows none", async ($, on) => {
 	rig(on, { current: answerOk });
