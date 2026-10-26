@@ -16,6 +16,7 @@
 // (see plugins/claude-code/src/wsClient.ts Plan 06-02), so they take the formatting path.
 import { APP_NOT_RUNNING_MESSAGE, readSentinel } from "../sentinel";
 import type { AgentErrorCode } from "./errors";
+import { type RoadmapResult, shapeRoadmap } from "./shapeTree";
 
 // Typed against AGENT_ERROR_CODES, so a renamed or removed code fails tsc.
 const APP_NOT_RUNNING: AgentErrorCode = "app_not_running";
@@ -127,18 +128,25 @@ function stripNotes(nodes: NoteNode[]): void {
 	}
 }
 
-// getRoadmap with optional `omitNotes`: the arg is consumed here (the app never
-// sees it) and notes and timestamps are stripped from the successful result.
+// getRoadmap with optional `rootId`, `depth`, `hideCompleted` and `omitNotes`,
+// applied in that order. All are consumed here: the app is always asked with no
+// arguments (v0.9.2 D-1), so the options work with any app version.
 // Errors and non-object results pass through untouched.
 export function getRoadmapCallback(wsClient: WsClientLike) {
-	const lean = agentToolCallback("getRoadmap", wsClient, (r) => {
-		stripNotes((r as { schema?: { nodes?: NoteNode[] } })?.schema?.nodes ?? []);
-		return r;
-	});
-	const full = agentToolCallback("getRoadmap", wsClient);
 	return (args: Record<string, unknown> | undefined) => {
-		const { omitNotes, ...rest } = args ?? {};
-		return (omitNotes === true ? lean : full)(rest);
+		const { omitNotes, hideCompleted, rootId, depth } = args ?? {};
+		const opts = {
+			rootId: typeof rootId === "string" ? rootId : undefined,
+			depth: typeof depth === "number" ? depth : undefined,
+			hideCompleted: hideCompleted === true,
+		};
+		return agentToolCallback("getRoadmap", wsClient, (r) => {
+			const res = r as RoadmapResult | undefined;
+			if (!Array.isArray(res?.schema?.nodes)) return r;
+			const out = shapeRoadmap(res, opts);
+			if (omitNotes === true) stripNotes(out.schema.nodes as NoteNode[]);
+			return out;
+		})({});
 	};
 }
 
