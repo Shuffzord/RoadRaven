@@ -160,14 +160,6 @@ export const uatTypes = (nodes: HudNode[]) => [
 	...new Set(nodes.filter(isUat).map((n) => n.type ?? "")),
 ];
 
-// Which UAT nodes there are and their statuses: UAT notes are fetched again only when it changes.
-export const uatSig = (nodes: HudNode[]) =>
-	nodes
-		.filter(isUat)
-		.map((n) => `${n.id}:${n.status}`)
-		.sort()
-		.join(",");
-
 // findNodes results as notes by node id.
 export const notesById = (found: RawNode[]): Record<string, string> =>
 	Object.fromEntries(found.flatMap((n) => (n.notes ? [[n.id, n.notes]] : [])));

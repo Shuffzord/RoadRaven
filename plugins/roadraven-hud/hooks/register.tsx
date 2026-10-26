@@ -73,7 +73,6 @@ import {
 	type RawNode,
 	roadmapTitle,
 	shownKind,
-	uatSig,
 	uatTypes,
 	withNotes,
 	workCounts,
@@ -366,25 +365,20 @@ async function noteNotesFailure(
 	await update($, uatNotes, (u) => ({ ...u, isFailing: true }));
 }
 
-// The pane draws UAT notes only: fetched when the UAT nodes or their statuses change,
-// and on a failure the last ones fetched stay drawn.
-async function uatNotesFor($: EngineInterface, nodes: HudNode[]) {
-	const sig = uatSig(nodes);
+// The pane draws UAT notes only: fetched once per roadmap revision (`key`), since a notes edit
+// from any session moves the revision but nothing in the notes-free tree; on a failure the
+// last ones fetched stay drawn.
+async function uatNotesFor($: EngineInterface, nodes: HudNode[], key: string) {
 	const kept = await read($, uatNotes);
-	if (kept.sig === sig) return kept.notes;
+	if (kept.sig === key) return kept.notes;
 	try {
 		const notes = notesById(await findUat($, uatTypes(nodes)));
-		await update($, uatNotes, () => ({ sig, notes, isFailing: false }));
+		await update($, uatNotes, () => ({ sig: key, notes, isFailing: false }));
 		return notes;
 	} catch (err) {
 		await noteNotesFailure($, kept.isFailing, err);
 		return kept.notes;
 	}
-}
-
-// Notes edited without a status change: the next refresh fetches them again.
-async function forgetUatNotes($: EngineInterface) {
-	await update($, uatNotes, (u) => ({ ...u, sig: null }));
 }
 
 // Owners of nodes that left the tree (deleted, or another file's) are dropped.
@@ -400,7 +394,7 @@ type Schema = { nodes?: RawNode[]; title?: unknown };
 
 async function applySnapshot($: EngineInterface, schema: Schema, key: string) {
 	const lean = flatten(schema.nodes ?? []);
-	const nodes = withNotes(lean, await uatNotesFor($, lean));
+	const nodes = withNotes(lean, await uatNotesFor($, lean, key));
 	await update($, snapshot, () => ({
 		title: roadmapTitle(schema.nodes ?? [], schema.title),
 		nodes,
@@ -723,7 +717,6 @@ async function submitUat(
 		$.ui.toast(`RoadRaven · couldn't send UAT decisions: ${plainError(err)}`);
 	}
 	await update($, isSending, () => false);
-	await forgetUatNotes($);
 	await refresh($, themeChoice);
 }
 
@@ -1364,7 +1357,6 @@ export const register: Register = (on, options) => {
 		if (!RR_TOOL.test(e.tool)) return next(e);
 		const ran = await next(e);
 		await linkOwner($, e);
-		await forgetUatNotes($);
 		void refresh($, themeChoice).catch(() => undefined);
 		return ran;
 	});

@@ -482,7 +482,30 @@ test("polls ask for the tree without notes and fetch UAT notes with findNodes", 
 	expect(r.writes("findNodes").map((c) => c.args.type)).toEqual(["uat", "UAT"]);
 });
 
-test("UAT notes are fetched again only when a UAT status changes", async ($, on) => {
+// Notes written to a node, as the app answers it: with the next revision.
+const withNodeNotes = (id: string, notes: string) => {
+	const next: Rm & { revision: number } = JSON.parse(JSON.stringify(roadmap));
+	const node = walk(next.schema.nodes).find((n) => n.id === id);
+	if (node) node.notes = notes;
+	return { ...next, revision: roadmap.revision + 1 };
+};
+
+test("notes written to a UAT after it was created show on the next poll, from any session", async ($, on) => {
+	const answer = { current: answerOk };
+	rig(on, answer);
+	await $.command.run({ command: "roadraven", args: "" } as never);
+	const ui = await $.ui.mount(PANE_PROPS);
+	expect(await ui.find({ key: "notes-u5" })).toBeUndefined();
+	// Another session or a sub-agent fills the notes: no RoadRaven tool call runs in this one.
+	const filled = withNodeNotes("u5", "Search for raven\n**Then** it is found");
+	answer.current = (c) => answerRR(c, filled);
+	await $.command.run({ command: "roadraven", args: "" } as never);
+	expect(await ui.find({ text: /Search for raven/ })).toBeDefined();
+	await ui.press({ key: "notes-u5" });
+	expect(await ui.find({ text: /Then\*\* it is found/ })).toBeDefined();
+});
+
+test("UAT notes are fetched again only when the roadmap revision changes", async ($, on) => {
 	const answer = { current: answerOk };
 	const r = rig(on, answer);
 	await $.command.run({ command: "roadraven", args: "" } as never);
