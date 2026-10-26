@@ -91,6 +91,18 @@ const textTargets = [
 		replacement: `@roadraven/mcp@${newVersion}`,
 		label: "@roadraven/mcp@... (plugin README)",
 	},
+	// bun.lock records each workspace package's version, and `bun install
+	// --lockfile-only` does not rewrite it (0.9.1 and 0.9.2 shipped hand
+	// fixes), so it is a text target like the rest. Only in a real checkout:
+	// the tests run this script in a temp copy that may have no bun.lock.
+	...(existsSync("bun.lock")
+		? ["packages/core", "packages/desktop", "plugins/claude-code"].map((ws) => ({
+				path: "bun.lock",
+				regex: new RegExp(`("${ws}": \\{\\s*"name": "[^"]+",\\s*"version": ")[^"]+"`),
+				replacement: `$1${newVersion}"`,
+				label: `"version": "..." (bun.lock ${ws})`,
+			}))
+		: []),
 ];
 
 type ParsedPkg = { path: string; pkg: { version?: string } };
@@ -134,17 +146,6 @@ for (const { path, pkg } of parsedPkgs) {
 }
 for (const { path, updated } of preparedText) {
 	writeFileSync(path, updated);
-}
-
-// bun.lock records each workspace package's version: refresh it so the lock
-// moves with the bump instead of showing up as a stray change later. Only in a
-// real checkout (the tests run this script in a temp copy without bun.lock).
-if (existsSync("bun.lock")) {
-	const lock = Bun.spawnSync(["bun", "install", "--lockfile-only"], { stdout: "ignore", stderr: "inherit" });
-	if (lock.exitCode !== 0) {
-		console.error("bun install --lockfile-only failed: update bun.lock by hand.");
-		process.exit(1);
-	}
 }
 
 console.log(

@@ -121,7 +121,8 @@ plugins/claude-code) and the literal pins in
 `plugins/claude-code/.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`
 and `plugins/claude-code/.mcp.json` (`@roadraven/mcp@X.Y.Z`), plus both
 version fields in `plugins/claude-code/server.json` (MCP Registry metadata)
-and every `@roadraven/mcp@X.Y.Z` pin in `plugins/claude-code/README.md`.
+and every `@roadraven/mcp@X.Y.Z` pin in `plugins/claude-code/README.md`,
+and the three workspace `version` fields in `bun.lock`.
 
 It does NOT touch prose: grep `README.md` and `docs/` for the previous
 version (`vX.Y.Z`, `@roadraven/mcp@X.Y.Z`) and update those pins by hand,
