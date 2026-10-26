@@ -3,6 +3,37 @@
 All notable changes to RoadRaven are documented in this file. The format
 follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.9.2] - 2026-10-26
+
+### Added
+
+- **Agents can read a large roadmap a piece at a time.** `getRoadmap` takes
+  new options, all off by default:
+  - `hideCompleted`: a branch that is completed all the way down comes back
+    as one short line (its title, status and how many children it has);
+  - `rootId`: just one node and what is under it;
+  - `depth`: only that many levels of children.
+- **`findNodes` finds several statuses in one call**, for example
+  `status: ["in-progress", "blocked"]` for all open work, and `omitNotes`
+  leaves the notes out of the list.
+
+### Changed
+
+- **A read that is too large says what to do.** When a `getRoadmap`,
+  `findNodes` or `getNode` answer would be cut off by Claude Code, the agent
+  now gets a `result_too_large` error with a smaller read to try, instead of
+  a notice it can't act on.
+- The `orchestrate` skill, the CLAUDE.md snippet from `init` and the
+  RoadRaven pane now read the roadmap without notes and without completed
+  branches, so they stay fast on long roadmaps.
+
+### Fixed
+
+- **UAT notes show in the RoadRaven pane again.** On a long roadmap, a UAT
+  item's notes and its "more" toggle never appeared, and notes written after
+  the item was created didn't show up. The pane now fetches only the notes of
+  the items it shows, and refreshes them whenever the roadmap changes.
+
 ## [0.9.1] - 2026-10-19
 
 ### Added

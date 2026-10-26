@@ -1,6 +1,6 @@
 {
 	"name": "roadraven",
-	"version": "0.9.1",
+	"version": "0.9.2",
 	"description": "RoadRaven MCP server plus two skills (orchestrate, work-node) for planning and running work as a live roadmap in the RoadRaven desktop app, which must be running.",
 	"author": {
 		"name": "Shuffzord",

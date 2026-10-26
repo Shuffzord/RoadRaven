@@ -1,6 +1,6 @@
 {
 	"name": "@roadraven/mcp",
-	"version": "0.9.1",
+	"version": "0.9.2",
 	"mcpName": "io.github.Shuffzord/roadraven",
 	"private": false,
 	"type": "module",
