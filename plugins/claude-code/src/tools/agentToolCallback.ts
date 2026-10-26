@@ -62,19 +62,58 @@ function formatStructuredError(e: {
 	};
 }
 
+// Claude Code refuses a tool result over its token limit with an opaque notice,
+// so the server refuses first with a hint (v0.9.2 D-2). 40,000 chars sits under the
+// 55,326-char answer Claude Code refused; a raised MAX_MCP_OUTPUT_TOKENS scales it
+// at 1.6 chars per token (40,000 / 25,000).
+const DEFAULT_LIMIT = 40_000;
+const CHARS_PER_TOKEN = 1.6;
+
+function resultLimit(env: Record<string, string | undefined>): number {
+	const tokens = Number(env.MAX_MCP_OUTPUT_TOKENS);
+	return Number.isInteger(tokens) && tokens > 0
+		? Math.floor(tokens * CHARS_PER_TOKEN)
+		: DEFAULT_LIMIT;
+}
+
+function tooLargeHint(method: string): string {
+	if (method === "getRoadmap") {
+		return "Pass omitNotes: true and hideCompleted: true, or read one branch with rootId and depth.";
+	}
+	if (method === "findNodes") {
+		return "Narrow the filter (status list, type, parentId) or pass omitNotes: true.";
+	}
+	return "Ask for less, for example one node with getNode.";
+}
+
+function tooLargeError(method: string, size: number, limit: number): McpResult {
+	const n = (v: number) => v.toLocaleString("en-US");
+	return formatStructuredError({
+		code: "result_too_large" satisfies AgentErrorCode,
+		message: `The answer is ${n(size)} characters, over the ${n(limit)}-character limit for one tool result.`,
+		hint: tooLargeHint(method),
+	});
+}
+
 // `shape` reshapes a successful result before it is serialised (compact JSON,
-// to keep tool results small); errors never reach it.
+// to keep tool results small); errors never reach it. The size guard runs on
+// the serialised, shaped text.
 export function agentToolCallback(
 	method: string,
 	wsClient: WsClientLike,
 	shape: (result: unknown) => unknown = (r) => r,
+	env: Record<string, string | undefined> = process.env,
 ): (args: Record<string, unknown> | undefined) => Promise<McpResult> {
 	return async (args) => {
 		try {
 			const result = await wsClient.request(method, args ?? {});
-			return {
-				content: [{ type: "text", text: JSON.stringify(shape(result)) }],
-			};
+			const text = JSON.stringify(shape(result));
+			const limit = resultLimit(env);
+			// JSON.stringify(undefined) is undefined at runtime; that passes through as before.
+			if (typeof text === "string" && text.length > limit) {
+				return tooLargeError(method, text.length, limit);
+			}
+			return { content: [{ type: "text", text }] };
 		} catch (err: unknown) {
 			const e = err as {
 				code?: string;
