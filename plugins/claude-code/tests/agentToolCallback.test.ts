@@ -81,10 +81,30 @@ describe("agentToolCallback result_too_large guard", () => {
 			"findNodes",
 			"Narrow the filter (status list, type, parentId) or pass omitNotes: true.",
 		],
-		["getNode", "Ask for less, for example one node with getNode."],
 	])("%s gets its own hint", async (method, hint) => {
 		const out = await callWith(method, 40_001);
 		expect(out.content[0].text.endsWith(` ${hint}`)).toBe(true);
+	});
+
+	it("getNode's hint names the nodeId from the call", async () => {
+		const client = {
+			request: vi.fn().mockResolvedValue(answerOfLength(40_001)),
+		};
+		const hint = (args: Record<string, unknown>) =>
+			agentToolCallback("getNode", client, (r) => r, {})(args);
+		expect((await hint({ nodeId: "n7" })).content[0].text).toMatch(
+			/ Read its subtree a level at a time with getRoadmap\(\{ rootId: "n7", depth: 1, omitNotes: true \}\)\.$/,
+		);
+		expect((await hint({})).content[0].text).toContain('rootId: "<nodeId>"');
+	});
+
+	it.each([
+		"openFile",
+		"createNode",
+	])("passes a %s success answer over the limit through unguarded", async (method) => {
+		const out = await callWith(method, 50_000);
+		expect(out.isError).toBeUndefined();
+		expect(out.content[0].text).toBe(JSON.stringify(answerOfLength(50_000)));
 	});
 
 	it("raises the limit to MAX_MCP_OUTPUT_TOKENS x 1.6", async () => {

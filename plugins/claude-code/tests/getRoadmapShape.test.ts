@@ -155,6 +155,33 @@ describe("getRoadmap rootId", () => {
 	});
 });
 
+describe("getRoadmap rootId with hideCompleted", () => {
+	it("returns a fully completed rootId node in full, with its children as stubs", async () => {
+		const { out } = await run({ rootId: "p1", hideCompleted: true });
+		const [top] = out.schema.nodes;
+		expect(top).toMatchObject({ id: "p1", notes: "p1 notes", createdAt: T });
+		expect(top.children).toEqual(
+			p1.children.map((c) => stub(c, c.type !== undefined)),
+		);
+	});
+
+	it("keeps the root of a fully completed roadmap a stub without rootId and full with it", async () => {
+		const done = node("d", "completed", [node("d1", "completed")]);
+		const reqTree = { ...tree, schema: { ...tree.schema, nodes: [done] } };
+		const ask = async (args: Record<string, unknown>) => {
+			const client = {
+				request: vi.fn().mockResolvedValue(structuredClone(reqTree)),
+			};
+			const res = await getRoadmapCallback(client)(args);
+			return JSON.parse(res.content[0].text).schema.nodes;
+		};
+		expect(await ask({ hideCompleted: true })).toEqual([stub(done)]);
+		const [full] = await ask({ rootId: "d", hideCompleted: true });
+		expect(full).toMatchObject({ id: "d", notes: "d notes" });
+		expect(full.children).toEqual([stub(done.children[0])]);
+	});
+});
+
 describe("getRoadmap depth", () => {
 	it("depth 0 keeps the top nodes and turns their children into stubs", async () => {
 		const { out } = await run({ depth: 0 });

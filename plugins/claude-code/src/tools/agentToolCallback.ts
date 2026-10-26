@@ -76,22 +76,33 @@ function resultLimit(env: Record<string, string | undefined>): number {
 		: DEFAULT_LIMIT;
 }
 
-function tooLargeHint(method: string): string {
-	if (method === "getRoadmap") {
-		return "Pass omitNotes: true and hideCompleted: true, or read one branch with rootId and depth.";
-	}
-	if (method === "findNodes") {
-		return "Narrow the filter (status list, type, parentId) or pass omitNotes: true.";
-	}
-	return "Ask for less, for example one node with getNode.";
-}
+// Only the read tools are guarded; a write's success answer always passes.
+const TOO_LARGE_HINTS: Record<
+	string,
+	(args: Record<string, unknown>) => string
+> = {
+	getRoadmap: () =>
+		"Pass omitNotes: true and hideCompleted: true, or read one branch with rootId and depth.",
+	findNodes: () =>
+		"Narrow the filter (status list, type, parentId) or pass omitNotes: true.",
+	getNode: ({ nodeId }) =>
+		`Read its subtree a level at a time with getRoadmap({ rootId: "${typeof nodeId === "string" ? nodeId : "<nodeId>"}", depth: 1, omitNotes: true }).`,
+};
 
-function tooLargeError(method: string, size: number, limit: number): McpResult {
+// JSON.stringify(undefined) is undefined at runtime; that passes through as before.
+function tooLarge(
+	method: string,
+	args: Record<string, unknown>,
+	text: string | undefined,
+	limit: number,
+): McpResult | undefined {
+	const hint = TOO_LARGE_HINTS[method]?.(args);
+	if (!hint || typeof text !== "string" || text.length <= limit) return;
 	const n = (v: number) => v.toLocaleString("en-US");
 	return formatStructuredError({
 		code: "result_too_large" satisfies AgentErrorCode,
-		message: `The answer is ${n(size)} characters, over the ${n(limit)}-character limit for one tool result.`,
-		hint: tooLargeHint(method),
+		message: `The answer is ${n(text.length)} characters, over the ${n(limit)}-character limit for one tool result.`,
+		hint,
 	});
 }
 
@@ -108,12 +119,11 @@ export function agentToolCallback(
 		try {
 			const result = await wsClient.request(method, args ?? {});
 			const text = JSON.stringify(shape(result));
-			const limit = resultLimit(env);
-			// JSON.stringify(undefined) is undefined at runtime; that passes through as before.
-			if (typeof text === "string" && text.length > limit) {
-				return tooLargeError(method, text.length, limit);
-			}
-			return { content: [{ type: "text", text }] };
+			return (
+				tooLarge(method, args ?? {}, text, resultLimit(env)) ?? {
+					content: [{ type: "text", text }],
+				}
+			);
 		} catch (err: unknown) {
 			const e = err as {
 				code?: string;
@@ -194,24 +204,42 @@ type FoundNode = {
 	[key: string]: unknown;
 };
 
+// A `status` list is sent as one app call per status (a string, which every app
+// version takes: v0.9.2 D-1) and the parts are joined in list order. A part
+// that is not `{ nodes: [...] }` makes the first part come back as is.
+function perStatusClient(
+	wsClient: WsClientLike,
+	statuses: unknown[],
+): WsClientLike {
+	return {
+		async request(method, params) {
+			const parts = await Promise.all(
+				statuses.map((s) => wsClient.request(method, { ...params, status: s })),
+			);
+			const lists = parts.map((p) => (p as { nodes?: unknown }).nodes);
+			if (parts.length === 0) return { nodes: [] };
+			if (!lists.every(Array.isArray)) return parts[0];
+			return { ...(parts[0] as object), nodes: lists.flat() };
+		},
+	};
+}
+
 // findNodes: each match comes back without its subtree, so a status query that
 // matches the root cannot return the whole tree. Notes, metadata and parentId stay
-// unless `omitNotes` is set. A `status` list is applied here: the app is asked
-// without it (v0.9.2 D-1), so both options work with any app version.
+// unless `omitNotes` is set. `omitNotes` is applied here, so it works with any app
+// version.
 export function findNodesCallback(wsClient: WsClientLike) {
 	return (args: Record<string, unknown> | undefined) => {
 		const { status, omitNotes, ...forwarded } = args ?? {};
 		const statuses = Array.isArray(status) ? (status as unknown[]) : undefined;
 		if (!statuses && status !== undefined) forwarded.status = status;
-		return agentToolCallback("findNodes", wsClient, (r) => {
+		const client = statuses ? perStatusClient(wsClient, statuses) : wsClient;
+		return agentToolCallback("findNodes", client, (r) => {
 			const res = r as { nodes?: FoundNode[] } | undefined;
 			if (!Array.isArray(res?.nodes)) return r;
-			const kept = statuses
-				? res.nodes.filter((m) => statuses.includes(m.node.status))
-				: res.nodes;
 			return {
 				...res,
-				nodes: kept.map(({ node: { children: _, ...node }, ...m }) => {
+				nodes: res.nodes.map(({ node: { children: _, ...node }, ...m }) => {
 					if (omitNotes === true) stripNotes([node]);
 					return { ...m, node };
 				}),

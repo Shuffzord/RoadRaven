@@ -118,11 +118,15 @@ export function shapeRoadmap(
 	r: RoadmapResult,
 	{ rootId, depth, hideCompleted = false }: ShapeOptions,
 ): RoadmapResult {
-	let out = r;
 	if (rootId !== undefined) {
+		// The rootId node is always expanded; only its descendants can be stubs.
 		const { node, ancestorIds } = findSubtree(r.schema.nodes, rootId);
-		out = { ...withNodes(r, [node]), rootId, ancestorIds };
+		return {
+			...withNodes(r, [expand(node, depth, hideCompleted)]),
+			rootId,
+			ancestorIds,
+		};
 	}
-	if (depth === undefined && !hideCompleted) return out;
-	return withNodes(out, shapeNodes(out.schema.nodes, depth, hideCompleted));
+	if (depth === undefined && !hideCompleted) return r;
+	return withNodes(r, shapeNodes(r.schema.nodes, depth, hideCompleted));
 }

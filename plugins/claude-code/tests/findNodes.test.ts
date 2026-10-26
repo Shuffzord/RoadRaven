@@ -65,21 +65,56 @@ describe("findNodes", () => {
 				mk("d", "not-started"),
 			],
 		});
+		// The app filters by one status string, so the mock answers per status.
+		const answer = (result: unknown, args: Record<string, unknown>) => {
+			const nodes = (result as { nodes?: ReturnType<typeof mk>[] }).nodes;
+			return typeof args.status === "string" && Array.isArray(nodes)
+				? { nodes: nodes.filter((m) => m.node.status === args.status) }
+				: result;
+		};
 		const run = async (args: Record<string, unknown>, result: unknown) => {
-			const client = { request: vi.fn().mockResolvedValue(result) };
+			const client = {
+				request: vi.fn((_m, a) => Promise.resolve(answer(result, a))),
+			};
 			const out = await findNodesCallback(client)(args);
 			return { client, body: JSON.parse(out.content[0].text) };
 		};
 
-		it("asks the app without status for a list and keeps only listed statuses, in order", async () => {
-			const { client, body } = await run(
-				{ status: ["in-progress", "blocked"], type: "uat" },
-				many(),
-			);
-			expect(client.request).toHaveBeenCalledWith("findNodes", { type: "uat" });
+		const perStatus = (args: Record<string, unknown>) =>
+			Promise.resolve(answer(many(), args));
+
+		it("asks the app once per listed status, keeps other filters, and joins in list order", async () => {
+			const client = { request: vi.fn((_m, a) => perStatus(a)) };
+			const out = await findNodesCallback(client)({
+				status: ["blocked", "in-progress"],
+				type: "uat",
+			});
+			expect(client.request.mock.calls).toEqual([
+				["findNodes", { type: "uat", status: "blocked" }],
+				["findNodes", { type: "uat", status: "in-progress" }],
+			]);
 			expect(
-				body.nodes.map((m: { node: { id: string } }) => m.node.id),
-			).toEqual(["a", "c"]);
+				JSON.parse(out.content[0].text).nodes.map(
+					(m: { node: { id: string } }) => m.node.id,
+				),
+			).toEqual(["c", "a"]);
+		});
+
+		it("answers the structured error when one of the per-status calls fails", async () => {
+			const client = {
+				request: vi.fn((_m, a) =>
+					a.status === "blocked"
+						? Promise.reject({ code: "no_file_loaded", message: "No file" })
+						: perStatus(a),
+				),
+			};
+			const out = await findNodesCallback(client)({
+				status: ["in-progress", "blocked"],
+			});
+			expect(out).toEqual({
+				content: [{ type: "text", text: "Error (no_file_loaded): No file" }],
+				isError: true,
+			});
 		});
 
 		it("forwards a string status to the app as before", async () => {
