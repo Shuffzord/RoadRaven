@@ -163,8 +163,9 @@ async function callRR(
 	throw new Error(last);
 }
 
-// Polls and re-reads leave notes out: a large roadmap's notes exceed Claude Code's tool-result limit.
-const LEAN = { omitNotes: true };
+// Polls and re-reads leave notes and completed subtrees out: on a large roadmap they exceed
+// Claude Code's tool-result limit. A server older than 0.9.2 drops hideCompleted and answers as before.
+const LEAN = { omitNotes: true, hideCompleted: true };
 
 async function freshRead($: EngineInterface) {
 	const { revision, schema = {} } = await callRR($, "getRoadmap", LEAN);

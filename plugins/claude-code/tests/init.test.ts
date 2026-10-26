@@ -26,8 +26,10 @@ describe("resolveClaudeMdPath", () => {
 });
 
 describe("CLAUDE_MD_SNIPPET", () => {
-	it("tells agents to read the roadmap with omitNotes: true", () => {
-		expect(CLAUDE_MD_SNIPPET).toContain("`getRoadmap` with `omitNotes: true`");
+	it("tells agents to read the roadmap with omitNotes: true and hideCompleted: true", () => {
+		expect(CLAUDE_MD_SNIPPET).toContain(
+			"`getRoadmap` with `omitNotes: true` and `hideCompleted: true`",
+		);
 	});
 });
 

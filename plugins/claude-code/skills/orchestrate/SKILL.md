@@ -67,8 +67,8 @@ memory; its next save wins), no changing app settings.
 ```
 
 - Put the goal node where the human says, or under the open document's top
-  node (`getRoadmap({ omitNotes: true })` shows the tree, `getNode()` one
-  node's notes; `findNodes({ titleContains })` finds by name).
+  node (`getRoadmap({ omitNotes: true, hideCompleted: true })` shows the tree,
+  `getRoadmap({ rootId, depth })` one phase; `getNode()` one node's notes; `findNodes({ titleContains })` finds by name).
 - Call `getTypeConfig()` and `getStatusConfig()` first. Use a `type` id only
   if the document defines it; otherwise leave `type` out rather than invent
   one. Statuses are always `not-started`, `in-progress`, `completed` or

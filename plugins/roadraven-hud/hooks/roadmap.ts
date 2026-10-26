@@ -43,6 +43,7 @@ export const codeOf = (text: string) => /^Error \(([a-z_]+)\)/.exec(text)?.[1];
 const CODE_KINDS: Record<string, HudConnKind> = {
 	app_not_running: "offline",
 	no_file_loaded: "noFile",
+	result_too_large: "tooLarge",
 };
 
 const CONN_RULES: [HudConnKind, RegExp][] = [

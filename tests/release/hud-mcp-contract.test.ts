@@ -32,6 +32,7 @@ describe("HUD ↔ MCP server tool text", () => {
 		["stale_write", "other"],
 		["no_file_loaded", "noFile"],
 		["app_not_running", "offline"],
+		["result_too_large", "tooLarge"],
 	])("a structured %s error reads as its code (%s)", async (code, kind) => {
 		const text = await textFor({
 			error: { code, message: "m", hint: "h", data: { x: 1 } },

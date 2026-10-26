@@ -262,6 +262,19 @@ test("a roadmap over Claude Code's MCP output limit reads as too large, with Ret
 	expect(await ui.find({ key: "rr-retry" })).toBeDefined();
 });
 
+test("a result_too_large answer reads as too large, not as unreachable", async ($, on) => {
+	rig(on, {
+		current: () =>
+			new Error(
+				"Error (result_too_large): The answer is 55,326 characters, over the 40,000-character limit for one tool result. Pass omitNotes: true and hideCompleted: true, or read one branch with rootId and depth.",
+			),
+	});
+	await $.command.run({ command: "roadraven", args: "" } as never);
+	const ui = await $.ui.mount(PANE_PROPS);
+	expect(await ui.find({ text: /too large for Claude Code/ })).toBeDefined();
+	expect(await ui.find({ text: /Can't reach RoadRaven/ })).toBeUndefined();
+});
+
 // --- the write paths ------------------------------------------------------------------------------
 
 type Call = { server: string; tool: string; args: Record<string, unknown> };
@@ -484,7 +497,7 @@ test("polls ask for the tree without notes and fetch UAT notes with findNodes", 
 	const r = rig(on, answer);
 	await $.command.run({ command: "roadraven", args: "" } as never);
 	expect(r.writes("getRoadmap").map((c) => c.args)).toEqual([
-		{ omitNotes: true },
+		{ omitNotes: true, hideCompleted: true },
 	]);
 	expect(r.writes("findNodes").map((c) => c.args)).toEqual([
 		{ type: "uat", status: "in-progress" },
@@ -1147,6 +1160,31 @@ test(`the mark hides below ${MARK_MIN_COLUMNS} columns rather than wrapping`, as
 
 const barText = async (ui: PaneUi) =>
 	(await ui.find({ in: barKey("p1"), type: "Text" }))?.text;
+
+// With hideCompleted the server sends a fully completed child as a stub: no children, a childCount.
+test("completed children sent as stubs still count toward the bar", async ($, on) => {
+	const stub = (id: string) => ({
+		id,
+		title: id,
+		status: "completed",
+		type: "task",
+		childCount: 3,
+	});
+	const tree = JSON.parse(JSON.stringify(roadmap));
+	const p1 = walk(tree.schema.nodes).find((n) => n.id === "p1");
+	if (p1)
+		p1.children = [
+			stub("s1"),
+			stub("s2"),
+			...(p1.children ?? []).filter((c) => c.status !== "completed"),
+		];
+	rig(on, { current: (c) => answerRR(c, tree) });
+	await open($);
+	for (const surface of SURFACES) {
+		const ui = await $.ui.mount(paneOn(surface));
+		expect(await barText(ui)).toMatch(/ 2\/3$/);
+	}
+});
 
 test("an active node with children shows its progress bar; a leaf shows none", async ($, on) => {
 	rig(on, { current: answerOk });
